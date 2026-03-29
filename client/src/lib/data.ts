@@ -1,5 +1,5 @@
-// Design: Warm Pastoral Command Center
-// Data layer for church dashboard - loads consolidated JSON from CDN
+// Lumen Metrix — Data Layer
+// "Light through measurement"
 
 const DATA_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663419960068/EmzMXpmCwkQz2biKeRL4cm/dashboard_data_73bd7a27.json";
 
@@ -156,15 +156,36 @@ let cachedData: DashboardData | null = null;
 
 export async function loadDashboardData(): Promise<DashboardData> {
   if (cachedData) return cachedData;
-  
   const response = await fetch(DATA_URL);
   if (!response.ok) throw new Error("Failed to load dashboard data");
-  
   cachedData = await response.json();
   return cachedData!;
 }
 
-// Utility functions
+// Lumen Metrix Brand Colors
+export const CAMPUS_COLORS: Record<string, string> = {
+  Canton: "#C2703E",
+  Jasper: "#4A7FB5",
+  Online: "#8B6DAF",
+  "All Campuses": "#E8913A",
+};
+
+export const CAMPUS_COLORS_LIGHT: Record<string, string> = {
+  Canton: "#F0D4BC",
+  Jasper: "#B8D4F0",
+  Online: "#D4C4E8",
+  "All Campuses": "#F5DDB8",
+};
+
+export const CHART_COLORS = [
+  "#E8913A", // Lumen Amber
+  "#4A7FB5", // Mountain Blue
+  "#4A7C59", // Sage Green
+  "#8B6DAF", // Soft Violet
+  "#C2703E", // Terracotta
+  "#D4A843", // Harvest Gold
+];
+
 export const MONTH_NAMES = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
@@ -174,20 +195,6 @@ export const MONTH_FULL = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
 ];
-
-export const CAMPUS_COLORS: Record<string, string> = {
-  Canton: "#b5713a",
-  Jasper: "#4a6fa5",
-  Online: "#7c6daf",
-  "All Campuses": "#4a7c59",
-};
-
-export const CAMPUS_COLORS_LIGHT: Record<string, string> = {
-  Canton: "#e8c9a8",
-  Jasper: "#a8c0e0",
-  Online: "#c4b8e0",
-  "All Campuses": "#a8d4b8",
-};
 
 export function formatCurrency(value: number): string {
   if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;

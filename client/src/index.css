@@ -3,6 +3,12 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * LUMEN METRIX — Brand Design System
+ * Warm amber primary, parchment backgrounds, DM Sans headings, Inter body, DM Mono data
+ * "Light through measurement" — clarity, warmth, precision
+ */
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -40,48 +46,60 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --font-sans: "Instrument Sans", system-ui, sans-serif;
-  --font-heading: "Outfit", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-heading: "DM Sans", system-ui, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, monospace;
+  /* Brand colors as theme tokens */
+  --color-lumen-amber: oklch(0.72 0.14 65);
+  --color-lumen-amber-dark: oklch(0.62 0.14 65);
+  --color-lumen-amber-light: oklch(0.85 0.08 75);
   --color-canton: oklch(0.62 0.12 55);
-  --color-jasper: oklch(0.52 0.1 250);
+  --color-jasper: oklch(0.55 0.1 245);
   --color-online: oklch(0.55 0.12 290);
-  --color-sage: oklch(0.52 0.08 155);
+  --color-success: oklch(0.52 0.1 155);
+  --color-warning: oklch(0.72 0.12 85);
+  --color-danger: oklch(0.58 0.14 30);
 }
 
 :root {
   --radius: 0.5rem;
-  --background: oklch(0.985 0.003 90);
-  --foreground: oklch(0.18 0.02 100);
-  --card: oklch(0.995 0.002 90);
-  --card-foreground: oklch(0.18 0.02 100);
-  --popover: oklch(0.995 0.002 90);
-  --popover-foreground: oklch(0.18 0.02 100);
-  --primary: oklch(0.52 0.08 155);
-  --primary-foreground: oklch(0.98 0.005 90);
-  --secondary: oklch(0.96 0.008 90);
-  --secondary-foreground: oklch(0.35 0.02 100);
-  --muted: oklch(0.95 0.005 90);
-  --muted-foreground: oklch(0.50 0.015 100);
-  --accent: oklch(0.95 0.01 90);
-  --accent-foreground: oklch(0.18 0.02 100);
-  --destructive: oklch(0.58 0.22 25);
-  --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.90 0.01 90);
-  --input: oklch(0.90 0.01 90);
-  --ring: oklch(0.52 0.08 155);
-  --sidebar: oklch(0.97 0.005 90);
-  --sidebar-foreground: oklch(0.18 0.02 100);
-  --sidebar-primary: oklch(0.52 0.08 155);
-  --sidebar-primary-foreground: oklch(0.98 0.005 90);
-  --sidebar-accent: oklch(0.94 0.01 90);
-  --sidebar-accent-foreground: oklch(0.18 0.02 100);
-  --sidebar-border: oklch(0.90 0.01 90);
-  --sidebar-ring: oklch(0.52 0.08 155);
-  --chart-1: oklch(0.62 0.12 55);
-  --chart-2: oklch(0.52 0.1 250);
-  --chart-3: oklch(0.55 0.12 290);
-  --chart-4: oklch(0.52 0.08 155);
-  --chart-5: oklch(0.65 0.15 80);
+  /* Parchment-warm foundation */
+  --background: oklch(0.985 0.004 85);
+  --foreground: oklch(0.15 0.01 50);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0.01 50);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0.01 50);
+  /* Lumen Amber primary */
+  --primary: oklch(0.72 0.14 65);
+  --primary-foreground: oklch(1 0 0);
+  /* Warm neutral secondary */
+  --secondary: oklch(0.96 0.005 85);
+  --secondary-foreground: oklch(0.35 0.015 50);
+  --muted: oklch(0.955 0.005 85);
+  --muted-foreground: oklch(0.52 0.01 250);
+  --accent: oklch(0.95 0.008 85);
+  --accent-foreground: oklch(0.15 0.01 50);
+  --destructive: oklch(0.58 0.14 30);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.91 0.008 85);
+  --input: oklch(0.91 0.008 85);
+  --ring: oklch(0.72 0.14 65);
+  /* Sidebar */
+  --sidebar: oklch(0.17 0.01 50);
+  --sidebar-foreground: oklch(0.88 0.005 85);
+  --sidebar-primary: oklch(0.72 0.14 65);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.22 0.01 50);
+  --sidebar-accent-foreground: oklch(0.92 0.005 85);
+  --sidebar-border: oklch(0.25 0.01 50);
+  --sidebar-ring: oklch(0.72 0.14 65);
+  /* Chart palette */
+  --chart-1: oklch(0.72 0.14 65);
+  --chart-2: oklch(0.55 0.1 245);
+  --chart-3: oklch(0.52 0.1 155);
+  --chart-4: oklch(0.55 0.12 290);
+  --chart-5: oklch(0.62 0.12 55);
 }
 
 @layer base {
@@ -90,10 +108,12 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: "Instrument Sans", system-ui, sans-serif;
+    font-family: "Inter", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: "Outfit", system-ui, sans-serif;
+    font-family: "DM Sans", system-ui, sans-serif;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -137,18 +157,54 @@
     }
   }
 
+  /* Data values — DM Mono for tabular precision */
   .stat-value {
-    font-family: "Outfit", system-ui, sans-serif;
-    font-weight: 700;
+    font-family: "DM Mono", ui-monospace, monospace;
+    font-weight: 500;
     font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
   }
 
-  .campus-canton { color: oklch(0.62 0.12 55); }
-  .campus-jasper { color: oklch(0.52 0.1 250); }
-  .campus-online { color: oklch(0.55 0.12 290); }
-  .campus-all { color: oklch(0.52 0.08 155); }
+  /* Section headings */
+  .section-title {
+    font-family: "DM Sans", system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 0.875rem;
+    letter-spacing: -0.01em;
+  }
 
-  .border-canton { border-left: 3px solid oklch(0.62 0.12 55); }
-  .border-jasper { border-left: 3px solid oklch(0.52 0.1 250); }
-  .border-online { border-left: 3px solid oklch(0.55 0.12 290); }
+  /* Micro labels */
+  .micro-label {
+    font-family: "Inter", system-ui, sans-serif;
+    font-weight: 500;
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* Campus color accents */
+  .campus-canton { color: oklch(0.62 0.12 55); }
+  .campus-jasper { color: oklch(0.55 0.1 245); }
+  .campus-online { color: oklch(0.55 0.12 290); }
+
+  /* Sidebar nav item */
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: oklch(0.7 0.005 85);
+    transition: all 0.15s ease;
+  }
+  .sidebar-item:hover {
+    background: oklch(0.22 0.01 50);
+    color: oklch(0.92 0.005 85);
+  }
+  .sidebar-item.active {
+    background: oklch(0.72 0.14 65 / 0.12);
+    color: oklch(0.82 0.1 65);
+  }
 }

@@ -21,12 +21,12 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
-        <DataProvider>
-          <TooltipProvider>
+        <TooltipProvider>
+          <DataProvider>
             <Toaster />
             <Router />
-          </TooltipProvider>
-        </DataProvider>
+          </DataProvider>
+        </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );
