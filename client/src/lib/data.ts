@@ -2,7 +2,7 @@
 // "Light through measurement"
 // Rebuilt from raw campus tab sheets for full data integrity
 
-const DATA_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663419960068/EmzMXpmCwkQz2biKeRL4cm/dashboard_data_v3_64787907.json";
+const DATA_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663419960068/EmzMXpmCwkQz2biKeRL4cm/dashboard_data_v3_e47d21d1.json";
 
 // ============================================================
 // Raw JSON types (matching v3 schema)
