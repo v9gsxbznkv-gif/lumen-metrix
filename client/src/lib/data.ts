@@ -1,7 +1,7 @@
 // Lumen Metrix — Data Layer
 // "Light through measurement"
 
-const DATA_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663419960068/EmzMXpmCwkQz2biKeRL4cm/dashboard_data_9744c33d.json";
+const DATA_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663419960068/EmzMXpmCwkQz2biKeRL4cm/dashboard_data_97cca0aa.json";
 
 export interface AttendanceRecord {
   year: number;
