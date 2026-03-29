@@ -95,8 +95,7 @@ export default function OverviewTab() {
   // KPIs
   const kpis = useMemo(() => {
     if (!data) return null;
-    const fullYears = filteredYears.filter((y) => y <= 2024);
-    const latestYear = fullYears[fullYears.length - 1] ?? 2024;
+    const latestYear = filteredYears[filteredYears.length - 1] ?? 2026;
     const priorYear = latestYear - 1;
 
     const totals = data.attendance.total_annual;
@@ -161,7 +160,7 @@ export default function OverviewTab() {
           label="Avg Weekly Attendance"
           value={formatNumber(kpis.attendance)}
           change={kpis.attendanceChange}
-          subtitle={`${kpis.year} full year`}
+          subtitle={`${kpis.year}${kpis.year === 2026 ? ' YTD' : ''}`}
           icon={<Users className="w-5 h-5" />}
           borderColor={CAMPUS_COLORS[filters.campus]}
         />
@@ -169,7 +168,7 @@ export default function OverviewTab() {
           label="Annual Tithes"
           value={formatCurrency(kpis.giving)}
           change={kpis.givingChange}
-          subtitle={`${kpis.year} total`}
+          subtitle={`${kpis.year}${kpis.year === 2026 ? ' YTD' : ''}`}
           icon={<DollarSign className="w-5 h-5" />}
           borderColor={CAMPUS_COLORS[filters.campus]}
         />
@@ -184,21 +183,21 @@ export default function OverviewTab() {
           label="First Time Guests"
           value={formatNumber(kpis.ftg)}
           change={kpis.ftgChange}
-          subtitle={`${kpis.year} total`}
+          subtitle={`${kpis.year}${kpis.year === 2026 ? ' YTD' : ''}`}
           icon={<Heart className="w-5 h-5" />}
         />
         <KpiCard
           label="Salvations"
           value={formatNumber(kpis.salvations)}
           change={kpis.salvationsChange}
-          subtitle={`${kpis.year} total`}
+          subtitle={`${kpis.year}${kpis.year === 2026 ? ' YTD' : ''}`}
           icon={<Heart className="w-5 h-5" />}
         />
         <KpiCard
           label="Baptisms"
           value={formatNumber(kpis.baptisms)}
           change={kpis.baptismsChange}
-          subtitle={`${kpis.year} total`}
+          subtitle={`${kpis.year}${kpis.year === 2026 ? ' YTD' : ''}`}
           icon={<HandHelping className="w-5 h-5" />}
         />
       </div>

@@ -37,8 +37,8 @@ export default function CompareTab() {
   const { data, filters } = useData();
   const [mode, setMode] = useState<CompareMode>("event");
   const [selectedEvent, setSelectedEvent] = useState("easter");
-  const [yearA, setYearA] = useState(2024);
-  const [yearB, setYearB] = useState(2025);
+  const [yearA, setYearA] = useState(2025);
+  const [yearB, setYearB] = useState(2026);
   const [customMonthA, setCustomMonthA] = useState(4);
   const [customMonthB, setCustomMonthB] = useState(4);
 

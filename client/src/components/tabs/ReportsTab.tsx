@@ -644,7 +644,7 @@ function ReportPreview({ report, onClose }: { report: ReportConfig; onClose: () 
   const filteredYears = data.meta.years.filter(
     (y) => y >= report.yearStart && y <= report.yearEnd
   );
-  const latestYear = filteredYears.filter((y) => y <= 2024).pop() ?? 2024;
+  const latestYear = filteredYears[filteredYears.length - 1] ?? 2026;
   const campus = report.campus;
   const enabledSections = report.sections.filter((s) => s.enabled);
 

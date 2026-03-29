@@ -28,7 +28,7 @@ export default function NextStepsTab() {
     return data.meta.years.filter((y) => y >= filters.yearStart && y <= filters.yearEnd);
   }, [data, filters]);
 
-  const latestYear = useMemo(() => filteredYears.filter((y) => y <= 2024).pop() ?? 2024, [filteredYears]);
+  const latestYear = useMemo(() => filteredYears[filteredYears.length - 1] ?? 2026, [filteredYears]);
 
   const metricTrend = useMemo(() => {
     if (!data) return [];

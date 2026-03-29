@@ -24,7 +24,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [filters, setFilters] = useState<Filters>({
     campus: "All Campuses",
     yearStart: 2013,
-    yearEnd: 2025,
+    yearEnd: 2026,
   });
 
   useEffect(() => {
