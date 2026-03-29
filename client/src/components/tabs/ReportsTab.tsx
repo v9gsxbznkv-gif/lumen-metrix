@@ -650,29 +650,37 @@ function ReportPreview({ report, onClose }: { report: ReportConfig; onClose: () 
 
   const TT = { fontSize: 12, borderRadius: 8, border: "1px solid #E8E5DE", boxShadow: "0 4px 12px rgba(0,0,0,0.06)", fontFamily: "'Inter'" };
 
-  // Compute metrics
+  // Compute metrics (v3 flat structure)
   const getAtt = (y: number) => {
-    const t = data.attendance.total_annual;
-    const match = campus === "All Campuses" ? t.find((r) => r.year === y && r.campus === "All Campuses") : t.find((r) => r.year === y && r.campus === campus);
+    const t = data.attendance;
+    if (campus === "All Campuses") {
+      const match = t.find((r: { year: number; campus: string; subgroup: string }) => r.year === y && r.campus === "All Campuses" && r.subgroup === "Total");
+      return match?.avg_weekly ?? 0;
+    }
+    const match = t.find((r: { year: number; campus: string; subgroup: string }) => r.year === y && r.campus === campus && r.subgroup === "Total");
     return match?.avg_weekly ?? 0;
   };
 
   const getGiving = (y: number) => {
-    const t = data.giving.tithes_annual;
-    const match = campus === "All Campuses" ? t.find((r) => r.year === y && r.campus === "All Campuses") : t.find((r) => r.year === y && r.campus === campus);
+    const t = data.giving;
+    if (campus === "All Campuses") {
+      const match = t.find((r: { year: number; campus: string }) => r.year === y && r.campus === "All Campuses");
+      return match?.total ?? 0;
+    }
+    const match = t.find((r: { year: number; campus: string }) => r.year === y && r.campus === campus);
     return match?.total ?? 0;
   };
 
   const getGpc = (y: number) => {
     const g = data.computed.giving_per_capita;
-    const match = campus === "All Campuses" ? g.find((r) => r.year === y && r.campus === "All Campuses") : g.find((r) => r.year === y && r.campus === campus);
+    const match = campus === "All Campuses" ? g.find((r: { year: number; campus: string }) => r.year === y && r.campus === "All Campuses") : g.find((r: { year: number; campus: string }) => r.year === y && r.campus === campus);
     return match?.giving_per_capita ?? 0;
   };
 
   const getNS = (y: number, metric: string) => {
-    const ns = data.next_steps.annual;
-    if (campus === "All Campuses") return ns.filter((n) => n.year === y && n.metric === metric).reduce((s, n) => s + n.total, 0);
-    return ns.find((n) => n.year === y && n.campus === campus && n.metric === metric)?.total ?? 0;
+    const ns = data.next_steps;
+    if (campus === "All Campuses") return ns.filter((n: { year: number; metric: string; campus: string; total: number }) => n.year === y && n.metric === metric && n.campus === "All Campuses").reduce((s: number, n: { total: number }) => s + n.total, 0);
+    return ns.find((n: { year: number; campus: string; metric: string }) => n.year === y && n.campus === campus && n.metric === metric)?.total ?? 0;
   };
 
   // Trend data
