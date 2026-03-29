@@ -12,6 +12,8 @@ import AttendanceTab from "@/components/tabs/AttendanceTab";
 import GivingTab from "@/components/tabs/GivingTab";
 import NextStepsTab from "@/components/tabs/NextStepsTab";
 import HealthTab from "@/components/tabs/HealthTab";
+import CompareTab from "@/components/tabs/CompareTab";
+import ReportsTab from "@/components/tabs/ReportsTab";
 import LumenLogo from "@/components/LumenLogo";
 import { Loader2 } from "lucide-react";
 
@@ -21,6 +23,8 @@ const TAB_META: Record<TabId, { title: string; subtitle: string }> = {
   giving: { title: "Giving", subtitle: "Tithes, offerings, and giving per capita analysis" },
   nextsteps: { title: "Next Steps", subtitle: "First-time guests, salvations, baptisms, and assimilation" },
   health: { title: "Health Metrics", subtitle: "Volunteer ratios, growth rates, and organizational health" },
+  compare: { title: "Compare", subtitle: "Side-by-side event and date comparisons across years" },
+  reports: { title: "Reports", subtitle: "Build, schedule, and export custom executive reports" },
 };
 
 export default function Home() {
@@ -76,6 +80,8 @@ export default function Home() {
           {activeTab === "giving" && <GivingTab />}
           {activeTab === "nextsteps" && <NextStepsTab />}
           {activeTab === "health" && <HealthTab />}
+          {activeTab === "compare" && <CompareTab />}
+          {activeTab === "reports" && <ReportsTab />}
         </div>
 
         {/* Footer */}

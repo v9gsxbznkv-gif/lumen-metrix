@@ -3,7 +3,6 @@
  * Dark charcoal sidebar with amber active states
  * SaaS-grade persistent left nav
  */
-import { useState } from "react";
 import LumenLogo from "./LumenLogo";
 import {
   LayoutDashboard,
@@ -14,16 +13,20 @@ import {
   ChevronLeft,
   ChevronRight,
   Church,
+  ArrowLeftRight,
+  FileText,
 } from "lucide-react";
 
-export type TabId = "overview" | "attendance" | "giving" | "nextsteps" | "health";
+export type TabId = "overview" | "attendance" | "giving" | "nextsteps" | "health" | "compare" | "reports";
 
-const NAV_ITEMS: { id: TabId; label: string; icon: React.ElementType }[] = [
-  { id: "overview", label: "Overview", icon: LayoutDashboard },
+const NAV_ITEMS: { id: TabId; label: string; icon: React.ElementType; section?: string }[] = [
+  { id: "overview", label: "Overview", icon: LayoutDashboard, section: "Dashboard" },
   { id: "attendance", label: "Attendance", icon: Users },
   { id: "giving", label: "Giving", icon: DollarSign },
   { id: "nextsteps", label: "Next Steps", icon: Heart },
   { id: "health", label: "Health", icon: Activity },
+  { id: "compare", label: "Compare", icon: ArrowLeftRight, section: "Tools" },
+  { id: "reports", label: "Reports", icon: FileText },
 ];
 
 interface SidebarProps {
@@ -34,6 +37,8 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activeTab, onTabChange, collapsed, onToggle }: SidebarProps) {
+  let lastSection = "";
+
   return (
     <aside
       className={`fixed left-0 top-0 h-screen z-30 transition-all duration-200 ease-in-out flex flex-col ${
@@ -66,38 +71,51 @@ export default function Sidebar({ activeTab, onTabChange, collapsed, onToggle }:
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 px-2 space-y-0.5">
+      <nav className="flex-1 px-2 space-y-0.5 overflow-y-auto">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
+          const showSection = item.section && item.section !== lastSection;
+          if (item.section) lastSection = item.section;
+
           return (
-            <button
-              key={item.id}
-              onClick={() => onTabChange(item.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-[13px] font-medium transition-all duration-150 ${
-                collapsed ? "justify-center" : ""
-              }`}
-              style={{
-                background: isActive ? "rgba(232,145,58,0.12)" : "transparent",
-                color: isActive ? "#F5C882" : "#9CA3AF",
-              }}
-              onMouseEnter={(e) => {
-                if (!isActive) {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.05)";
-                  e.currentTarget.style.color = "#E8E5DE";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive) {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.color = "#9CA3AF";
-                }
-              }}
-              title={collapsed ? item.label : undefined}
-            >
-              <Icon className="w-4 h-4 shrink-0" />
-              {!collapsed && <span>{item.label}</span>}
-            </button>
+            <div key={item.id}>
+              {showSection && !collapsed && (
+                <p
+                  className="text-[9px] font-bold uppercase tracking-[0.12em] px-3 pt-4 pb-1.5"
+                  style={{ color: "#6B7280" }}
+                >
+                  {item.section}
+                </p>
+              )}
+              {showSection && collapsed && <div className="h-3" />}
+              <button
+                onClick={() => onTabChange(item.id)}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-[13px] font-medium transition-all duration-150 ${
+                  collapsed ? "justify-center" : ""
+                }`}
+                style={{
+                  background: isActive ? "rgba(232,145,58,0.12)" : "transparent",
+                  color: isActive ? "#F5C882" : "#9CA3AF",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                    e.currentTarget.style.color = "#E8E5DE";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = "transparent";
+                    e.currentTarget.style.color = "#9CA3AF";
+                  }
+                }}
+                title={collapsed ? item.label : undefined}
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                {!collapsed && <span>{item.label}</span>}
+              </button>
+            </div>
           );
         })}
       </nav>
