@@ -1,0 +1,98 @@
+{
+  "query": "SELECT year, campus, subgroup, avgWeekly, total, source FROM attendance WHERE year = 2026 AND subgroup IN ('Total','Adults','Kids','Students') ORDER BY campus, subgroup;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, campus, subgroup, avgWeekly, total, source FROM attendance WHERE year = 2026 AND subgroup IN ('Total','Adults','Kids','Students') ORDER BY campus, subgroup;",
+  "rows": [
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "Total",
+      "avgWeekly": "3968",
+      "total": "47616",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "campus": "Canton",
+      "subgroup": "Adults",
+      "avgWeekly": "1944",
+      "total": "23327",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "campus": "Canton",
+      "subgroup": "Kids",
+      "avgWeekly": "486",
+      "total": "5826",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "campus": "Canton",
+      "subgroup": "Students",
+      "avgWeekly": "410",
+      "total": "4101",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "campus": "Canton",
+      "subgroup": "Total",
+      "avgWeekly": "2789",
+      "total": "33469",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "campus": "Jasper",
+      "subgroup": "Adults",
+      "avgWeekly": "462",
+      "total": "4617",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "campus": "Jasper",
+      "subgroup": "Kids",
+      "avgWeekly": "115",
+      "total": "1147",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "campus": "Jasper",
+      "subgroup": "Students",
+      "avgWeekly": "73",
+      "total": "734",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "campus": "Jasper",
+      "subgroup": "Total",
+      "avgWeekly": "542",
+      "total": "6498",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "campus": "Online",
+      "subgroup": "Adults",
+      "avgWeekly": "637",
+      "total": "7649",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "campus": "Online",
+      "subgroup": "Total",
+      "avgWeekly": "637",
+      "total": "7649",
+      "source": "spreadsheet"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tcampus\tsubgroup\tavgWeekly\ttotal\tsource\n2026\tAll Campuses\tTotal\t3968\t47616\tspreadsheet\n2026\tCanton\tAdults\t1944\t23327\tspreadsheet\n2026\tCanton\tKids\t486\t5826\tspreadsheet\n2026\tCanton\tStudents\t410\t4101\tspreadsheet\n2026\tCanton\tTotal\t2789\t33469\tspreadsheet\n2026\tJasper\tAdults\t462\t4617\tspreadsheet\n2026\tJasper\tKids\t115\t1147\tspreadsheet\n2026\tJasper\tStudents\t73\t734\tspreadsheet\n2026\tJasper\tTotal\t542\t6498\tspreadsheet\n2026\tOnline\tAdults\t637\t7649\tspreadsheet\n2026\tOnline\tTotal\t637\t7649\tspreadsheet\n",
+  "stderr": "",
+  "execution_time_ms": 139
+}

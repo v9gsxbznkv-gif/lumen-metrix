@@ -133,13 +133,22 @@ export default function HealthTab() {
     });
   }, [data, filters, filteredYears]);
 
-  // Serving breakdown — no subgroups in v3, just total per campus
+  // Serving breakdown — sum Canton + Jasper when All Campuses is selected
+  // (the pre-aggregated All Campuses row was excluded from the DB query to avoid double-counting)
   const servingInfo = useMemo(() => {
     if (!data) return null;
-    const campus =
-      filters.campus === "All Campuses" ? "All Campuses" : filters.campus;
+    if (filters.campus === "All Campuses") {
+      const campusRows = data.serving.filter(
+        (s) => s.year === latestYear && ["Canton", "Jasper"].includes(s.campus)
+      );
+      if (campusRows.length === 0) return null;
+      return {
+        avg_weekly: campusRows.reduce((sum, s) => sum + s.avg_weekly, 0),
+        total: campusRows.reduce((sum, s) => sum + s.total, 0),
+      };
+    }
     const match = data.serving.find(
-      (s) => s.year === latestYear && s.campus === campus
+      (s) => s.year === latestYear && s.campus === filters.campus
     );
     return match ? { avg_weekly: match.avg_weekly, total: match.total } : null;
   }, [data, filters, latestYear]);
@@ -180,18 +189,21 @@ export default function HealthTab() {
     const maxMonth = getMaxMonth(data, latestYear);
     const compMonths = Array.from({ length: maxMonth }, (_, i) => i + 1);
 
-    // Partial-year-aware growth: compare same months
-    let attGrowth: number;
+    // Partial-year-aware growth: compare avg_weekly (YTD average) for same period.
+    // The annual row's avg_weekly already represents the YTD average for partial years,
+    // so comparing avg_weekly directly is an apples-to-apples same-period comparison.
+    // For the prior year, we use the same-period avg_weekly from monthly data.
+    const currAttAvg = getAttAvg(data.attendance, latestYear, filters.campus);
+    let prevAttAvg: number;
     if (partial) {
-      const currAtt = getAttendanceForMonths(data, latestYear, filters.campus, compMonths).total;
-      const prevAtt = getAttendanceForMonths(data, latestYear - 1, filters.campus, compMonths).total;
-      attGrowth = prevAtt > 0 ? ((currAtt - prevAtt) / prevAtt) * 100 : 0;
+      // Sum monthly totals for same months in prior year, then derive avg_weekly
+      const priorMonthly = getAttendanceForMonths(data, latestYear - 1, filters.campus, compMonths);
+      prevAttAvg = priorMonthly.avgWeekly;
     } else {
-      const currAtt = getAttAvg(data.attendance, latestYear, filters.campus);
-      const prevAtt = getAttAvg(data.attendance, latestYear - 1, filters.campus);
-      attGrowth = prevAtt > 0 ? ((currAtt - prevAtt) / prevAtt) * 100 : 0;
+      prevAttAvg = getAttAvg(data.attendance, latestYear - 1, filters.campus);
     }
-    const currAtt = getAttAvg(data.attendance, latestYear, filters.campus);
+    const attGrowth = prevAttAvg > 0 ? ((currAttAvg - prevAttAvg) / prevAttAvg) * 100 : 0;
+    const currAtt = currAttAvg;
 
     const campus =
       filters.campus === "All Campuses" ? "All Campuses" : filters.campus;
@@ -205,16 +217,32 @@ export default function HealthTab() {
       gpc.find((g) => g.year === latestYear && g.campus === campus)
         ?.giving_per_capita ?? 0;
 
-    const ftg = data.next_steps
-      .filter(
-        (n) =>
-          n.year === latestYear &&
-          n.metric === "FTG" &&
-          (campus === "All Campuses"
-            ? n.campus === "All Campuses"
-            : n.campus === campus)
-      )
-      .reduce((s, n) => s + n.total, 0);
+    // FTG: use monthly data for same-period comparison, summing individual campuses
+    // when "All Campuses" is selected (no pre-aggregated All Campuses monthly row).
+    const INDIVIDUAL_CAMPUSES = ["Canton", "Jasper", "Online"];
+    const ftgMonthly = data.next_steps_monthly.filter(
+      (n) =>
+        n.year === latestYear &&
+        n.metric === "FTG" &&
+        compMonths.includes(n.month) &&
+        (campus === "All Campuses" ? INDIVIDUAL_CAMPUSES.includes(n.campus) : n.campus === campus)
+    );
+    // Fall back to annual total if no monthly data
+    let ftg: number;
+    if (ftgMonthly.length > 0) {
+      ftg = ftgMonthly.reduce((s, n) => s + n.count, 0);
+    } else {
+      ftg = data.next_steps
+        .filter(
+          (n) =>
+            n.year === latestYear &&
+            n.metric === "FTG" &&
+            (campus === "All Campuses"
+              ? INDIVIDUAL_CAMPUSES.includes(n.campus)
+              : n.campus === campus)
+        )
+        .reduce((s, n) => s + n.total, 0);
+    }
     const weeks = partial ? Math.round(maxMonth * 4.33) : 52;
     const ftgPerWeek = ftg / weeks;
     const ftgPct = currAtt > 0 ? (ftgPerWeek / currAtt) * 100 : 0;

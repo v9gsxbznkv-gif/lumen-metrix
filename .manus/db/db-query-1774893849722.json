@@ -1,0 +1,73 @@
+{
+  "query": "SELECT campus, subgroup, month, total, avgWeekly FROM attendance_monthly WHERE year = 2026 AND subgroup = 'Adults' ORDER BY campus, month;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT campus, subgroup, month, total, avgWeekly FROM attendance_monthly WHERE year = 2026 AND subgroup = 'Adults' ORDER BY campus, month;",
+  "rows": [
+    {
+      "campus": "Canton",
+      "subgroup": "Adults",
+      "month": "1",
+      "total": "8251",
+      "avgWeekly": "2063"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Adults",
+      "month": "2",
+      "total": "6298",
+      "avgWeekly": "1574"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Adults",
+      "month": "3",
+      "total": "8778",
+      "avgWeekly": "2194"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Adults",
+      "month": "1",
+      "total": "1516",
+      "avgWeekly": "505"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Adults",
+      "month": "2",
+      "total": "1309",
+      "avgWeekly": "436"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Adults",
+      "month": "3",
+      "total": "1792",
+      "avgWeekly": "448"
+    },
+    {
+      "campus": "Online",
+      "subgroup": "Adults",
+      "month": "1",
+      "total": "2688",
+      "avgWeekly": "672"
+    },
+    {
+      "campus": "Online",
+      "subgroup": "Adults",
+      "month": "2",
+      "total": "2707",
+      "avgWeekly": "677"
+    },
+    {
+      "campus": "Online",
+      "subgroup": "Adults",
+      "month": "3",
+      "total": "2254",
+      "avgWeekly": "564"
+    }
+  ],
+  "messages": [],
+  "stdout": "campus\tsubgroup\tmonth\ttotal\tavgWeekly\nCanton\tAdults\t1\t8251\t2063\nCanton\tAdults\t2\t6298\t1574\nCanton\tAdults\t3\t8778\t2194\nJasper\tAdults\t1\t1516\t505\nJasper\tAdults\t2\t1309\t436\nJasper\tAdults\t3\t1792\t448\nOnline\tAdults\t1\t2688\t672\nOnline\tAdults\t2\t2707\t677\nOnline\tAdults\t3\t2254\t564\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

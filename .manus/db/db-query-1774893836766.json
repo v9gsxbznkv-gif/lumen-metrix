@@ -1,0 +1,250 @@
+{
+  "query": "SELECT year, campus, subgroup, month, total, avgWeekly FROM attendance_monthly WHERE year = 2026 ORDER BY campus, subgroup, month LIMIT 30;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, campus, subgroup, month, total, avgWeekly FROM attendance_monthly WHERE year = 2026 ORDER BY campus, subgroup, month LIMIT 30;",
+  "rows": [
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "Abide Men's Night",
+      "month": "1",
+      "total": "719",
+      "avgWeekly": "719"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "Abide Men's Night",
+      "month": "1",
+      "total": "719",
+      "avgWeekly": "719"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "Abide Women's Night",
+      "month": "2",
+      "total": "737",
+      "avgWeekly": "737"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "Abide Women's Night",
+      "month": "2",
+      "total": "737",
+      "avgWeekly": "737"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "month": "1",
+      "total": "42",
+      "avgWeekly": "42"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "month": "1",
+      "total": "38",
+      "avgWeekly": "38"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "month": "1",
+      "total": "38",
+      "avgWeekly": "38"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "month": "1",
+      "total": "38",
+      "avgWeekly": "38"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "month": "1",
+      "total": "42",
+      "avgWeekly": "42"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "month": "1",
+      "total": "35",
+      "avgWeekly": "35"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "month": "1",
+      "total": "35",
+      "avgWeekly": "35"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "month": "1",
+      "total": "38",
+      "avgWeekly": "38"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "month": "2",
+      "total": "31",
+      "avgWeekly": "31"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "month": "2",
+      "total": "46",
+      "avgWeekly": "46"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "month": "2",
+      "total": "31",
+      "avgWeekly": "31"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "month": "2",
+      "total": "39",
+      "avgWeekly": "39"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "month": "2",
+      "total": "46",
+      "avgWeekly": "46"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "month": "2",
+      "total": "39",
+      "avgWeekly": "39"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "month": "3",
+      "total": "38",
+      "avgWeekly": "38"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "month": "3",
+      "total": "25",
+      "avgWeekly": "25"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "month": "3",
+      "total": "28",
+      "avgWeekly": "28"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "month": "3",
+      "total": "20",
+      "avgWeekly": "20"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "month": "3",
+      "total": "20",
+      "avgWeekly": "20"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "month": "3",
+      "total": "38",
+      "avgWeekly": "38"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "month": "3",
+      "total": "28",
+      "avgWeekly": "28"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "month": "3",
+      "total": "25",
+      "avgWeekly": "25"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "month": "4",
+      "total": "1",
+      "avgWeekly": "1"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "YA Gathering",
+      "month": "1",
+      "total": "4",
+      "avgWeekly": "4"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "YA Gathering",
+      "month": "1",
+      "total": "4",
+      "avgWeekly": "4"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "YA Gathering",
+      "month": "2",
+      "total": "11",
+      "avgWeekly": "11"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tcampus\tsubgroup\tmonth\ttotal\tavgWeekly\n2026\tAll Campuses\tAbide Men's Night\t1\t719\t719\n2026\tAll Campuses\tAbide Men's Night\t1\t719\t719\n2026\tAll Campuses\tAbide Women's Night\t2\t737\t737\n2026\tAll Campuses\tAbide Women's Night\t2\t737\t737\n2026\tAll Campuses\tESL Class\t1\t42\t42\n2026\tAll Campuses\tESL Class\t1\t38\t38\n2026\tAll Campuses\tESL Class\t1\t38\t38\n2026\tAll Campuses\tESL Class\t1\t38\t38\n2026\tAll Campuses\tESL Class\t1\t42\t42\n2026\tAll Campuses\tESL Class\t1\t35\t35\n2026\tAll Campuses\tESL Class\t1\t35\t35\n2026\tAll Campuses\tESL Class\t1\t38\t38\n2026\tAll Campuses\tESL Class\t2\t31\t31\n2026\tAll Campuses\tESL Class\t2\t46\t46\n2026\tAll Campuses\tESL Class\t2\t31\t31\n2026\tAll Campuses\tESL Class\t2\t39\t39\n2026\tAll Campuses\tESL Class\t2\t46\t46\n2026\tAll Campuses\tESL Class\t2\t39\t39\n2026\tAll Campuses\tESL Class\t3\t38\t38\n2026\tAll Campuses\tESL Class\t3\t25\t25\n2026\tAll Campuses\tESL Class\t3\t28\t28\n2026\tAll Campuses\tESL Class\t3\t20\t20\n2026\tAll Campuses\tESL Class\t3\t20\t20\n2026\tAll Campuses\tESL Class\t3\t38\t38\n2026\tAll Campuses\tESL Class\t3\t28\t28\n2026\tAll Campuses\tESL Class\t3\t25\t25\n2026\tAll Campuses\tESL Class\t4\t1\t1\n2026\tAll Campuses\tYA Gathering\t1\t4\t4\n2026\tAll Campuses\tYA Gathering\t1\t4\t4\n2026\tAll Campuses\tYA Gathering\t2\t11\t11\n",
+  "stderr": "",
+  "execution_time_ms": 200
+}

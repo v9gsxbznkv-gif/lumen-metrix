@@ -1,0 +1,64 @@
+{
+  "query": "SELECT campus, subgroup, avgWeekly, total FROM attendance WHERE year = 2025 AND subgroup = 'Total' ORDER BY campus;\nSELECT campus, subgroup, avgWeekly, total FROM attendance WHERE year = 2026 AND subgroup = 'Total' ORDER BY campus;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT campus, subgroup, avgWeekly, total FROM attendance WHERE year = 2025 AND subgroup = 'Total' ORDER BY campus;\nSELECT campus, subgroup, avgWeekly, total FROM attendance WHERE year = 2026 AND subgroup = 'Total' ORDER BY campus;",
+  "rows": [
+    {
+      "campus": "All Campuses",
+      "subgroup": "Total",
+      "avgWeekly": "3951",
+      "total": "205476"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Total",
+      "avgWeekly": "2901",
+      "total": "150865"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Total",
+      "avgWeekly": "569",
+      "total": "29601"
+    },
+    {
+      "campus": "Online",
+      "subgroup": "Total",
+      "avgWeekly": "490",
+      "total": "25010"
+    },
+    {
+      "campus": "campus",
+      "subgroup": "subgroup",
+      "avgWeekly": "avgWeekly",
+      "total": "total"
+    },
+    {
+      "campus": "All Campuses",
+      "subgroup": "Total",
+      "avgWeekly": "3968",
+      "total": "47616"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Total",
+      "avgWeekly": "2789",
+      "total": "33469"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Total",
+      "avgWeekly": "542",
+      "total": "6498"
+    },
+    {
+      "campus": "Online",
+      "subgroup": "Total",
+      "avgWeekly": "637",
+      "total": "7649"
+    }
+  ],
+  "messages": [],
+  "stdout": "campus\tsubgroup\tavgWeekly\ttotal\nAll Campuses\tTotal\t3951\t205476\nCanton\tTotal\t2901\t150865\nJasper\tTotal\t569\t29601\nOnline\tTotal\t490\t25010\ncampus\tsubgroup\tavgWeekly\ttotal\nAll Campuses\tTotal\t3968\t47616\nCanton\tTotal\t2789\t33469\nJasper\tTotal\t542\t6498\nOnline\tTotal\t637\t7649\n",
+  "stderr": "",
+  "execution_time_ms": 165
+}

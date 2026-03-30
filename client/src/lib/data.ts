@@ -191,10 +191,25 @@ let cachedData: DashboardData | null = null;
 
 function computeGPC(
   attendance: RawAttendance[],
-  giving: RawGiving[]
+  giving: RawGiving[],
+  attendanceMonthly: RawAttendanceMonthly[],
+  givingMonthly: RawGivingMonthly[]
 ): GivingPerCapita[] {
   const results: GivingPerCapita[] = [];
   const campuses = ["Canton", "Jasper", "All Campuses"];
+
+  // Determine the max month with data across all years
+  const monthsByYear: Record<number, number> = {};
+  for (const r of givingMonthly) {
+    if (!monthsByYear[r.year] || r.month > monthsByYear[r.year]) {
+      monthsByYear[r.year] = r.month;
+    }
+  }
+  for (const r of attendanceMonthly) {
+    if (!monthsByYear[r.year] || r.month > monthsByYear[r.year]) {
+      monthsByYear[r.year] = r.month;
+    }
+  }
 
   for (const g of giving) {
     if (!campuses.includes(g.campus)) continue;
@@ -203,8 +218,16 @@ function computeGPC(
     );
     if (!att || att.avg_weekly === 0) continue;
 
-    const weeks = g.year === 2026 ? 13 : 52;
-    const gpc = g.total / att.avg_weekly;
+    const maxMonth = monthsByYear[g.year] ?? 12;
+    const isPartial = maxMonth < 12;
+
+    // For partial years: scale giving to full-year equivalent for a fair per-capita
+    // by dividing by fraction of year elapsed, then divide by avg_weekly attendance.
+    // This gives an annualized GPC that's comparable across years.
+    const yearFraction = maxMonth / 12;
+    const annualizedGiving = isPartial ? g.total / yearFraction : g.total;
+    const weeks = 52;
+    const gpc = annualizedGiving / att.avg_weekly;
     const weeklyGpc = gpc / weeks;
 
     results.push({
@@ -224,10 +247,11 @@ function computeVolunteerRatio(
   serving: RawServing[]
 ): VolunteerRatio[] {
   const results: VolunteerRatio[] = [];
-  const campuses = ["Canton", "Jasper", "All Campuses"];
+  const individualCampuses = ["Canton", "Jasper"];
 
+  // Compute ratio for each individual campus
   for (const s of serving) {
-    if (!campuses.includes(s.campus)) continue;
+    if (!individualCampuses.includes(s.campus)) continue;
     const att = attendance.find(
       (a) => a.year === s.year && a.campus === s.campus && a.subgroup === "Total"
     );
@@ -245,6 +269,51 @@ function computeVolunteerRatio(
       pct: Math.round(pct * 1000) / 1000,
     });
   }
+
+  // Compute "All Campuses" aggregate by summing individual campus rows.
+  // We never rely on a pre-aggregated "All Campuses" serving row to avoid
+  // double-counting (that row was excluded from the DB query).
+  const years = Array.from(new Set(serving.map((s) => s.year)));
+  for (const year of years) {
+    const campusServing = serving.filter(
+      (s) => s.year === year && individualCampuses.includes(s.campus)
+    );
+    if (campusServing.length === 0) continue;
+
+    const totalVols = campusServing.reduce((sum, s) => sum + s.avg_weekly, 0);
+    if (totalVols === 0) continue;
+
+    // Use the "All Campuses" Total attendance record if available,
+    // otherwise sum individual campus records.
+    let totalAtt = 0;
+    const allCampusAtt = attendance.find(
+      (a) => a.year === year && a.campus === "All Campuses" && a.subgroup === "Total"
+    );
+    if (allCampusAtt && allCampusAtt.avg_weekly > 0) {
+      totalAtt = allCampusAtt.avg_weekly;
+    } else {
+      totalAtt = individualCampuses.reduce((sum, c) => {
+        const att = attendance.find(
+          (a) => a.year === year && a.campus === c && a.subgroup === "Total"
+        );
+        return sum + (att?.avg_weekly ?? 0);
+      }, 0);
+    }
+    if (totalAtt === 0) continue;
+
+    const ratio = totalAtt / totalVols;
+    const pct = totalVols / totalAtt;
+
+    results.push({
+      year,
+      campus: "All Campuses",
+      avg_volunteers: totalVols,
+      avg_attendance: totalAtt,
+      ratio: Math.round(ratio * 10) / 10,
+      pct: Math.round(pct * 1000) / 1000,
+    });
+  }
+
   return results;
 }
 
@@ -252,7 +321,7 @@ function computeVolunteerRatio(
  * Transform raw data (from either API or CDN) into DashboardData.
  */
 function transformRawData(raw: RawDashboard): DashboardData {
-  const gpc = computeGPC(raw.attendance, raw.giving);
+  const gpc = computeGPC(raw.attendance, raw.giving, raw.attendance_monthly, raw.giving_monthly);
   const vr = computeVolunteerRatio(raw.attendance, raw.serving);
 
   return {

@@ -62,6 +62,13 @@
 - [x] Update Data Source section to reflect new source strategy
 - [x] Publish updated site with auto-sync enabled
 
+## Bug Fixes (Round 3)
+- [x] Fix Health page Attendance Growth: now compares YTD avg_weekly vs same-period prior year avg_weekly (apples-to-apples)
+- [x] Fix Health page Volunteer Ratio: computeVolunteerRatio now builds All Campuses aggregate by summing Canton+Jasper rows
+- [x] Fix Health page Giving Per Capita: computeGPC now annualizes partial-year giving before dividing by avg_weekly attendance
+- [x] Fix Health page FTG Rate: now uses monthly next_steps data for same-period count, summing individual campuses for All Campuses
+- [x] Fix year dropdown width cutoff: increased from 80px to 90px so "2026" displays fully
+
 ## Bug Fixes (Round 2)
 - [x] Fix "All Campuses" volunteer avg weekly calculation — excluded pre-aggregated row from DB query, frontend now sums Canton + Jasper dynamically
 - [x] Fix 2026 missing from year dropdown — sourceFilter was requiring source='pco' for 2026+ but all data is still source='spreadsheet'; relaxed filter to allow any source for all years, and year list now built from all tables not just attendance/giving

@@ -57,7 +57,7 @@ export default function DashboardHeader({ title, subtitle }: DashboardHeaderProp
           value={String(filters.yearStart)}
           onValueChange={(v) => setFilters((f) => ({ ...f, yearStart: Number(v) }))}
         >
-          <SelectTrigger className="w-[80px] h-8 text-xs bg-card border-border/60">
+          <SelectTrigger className="w-[90px] h-8 text-xs bg-card border-border/60">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -73,7 +73,7 @@ export default function DashboardHeader({ title, subtitle }: DashboardHeaderProp
           value={String(filters.yearEnd)}
           onValueChange={(v) => setFilters((f) => ({ ...f, yearEnd: Number(v) }))}
         >
-          <SelectTrigger className="w-[80px] h-8 text-xs bg-card border-border/60">
+          <SelectTrigger className="w-[90px] h-8 text-xs bg-card border-border/60">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
