@@ -119,4 +119,4 @@
 - [x] SettingsTab: stack settings panels vertically
 - [x] KpiCard: reduce padding and font sizes on mobile
 - [x] Add global mobile utility CSS (table-scroll, responsive chart containers)
-- [ ] Publish updated site with public visibility
+- [x] Publish updated site with public visibility
