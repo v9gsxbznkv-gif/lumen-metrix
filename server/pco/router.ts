@@ -50,7 +50,7 @@ export const pcoRouter = router({
   getAuthorizeUrl: publicProcedure
     .input(z.object({ origin: z.string() }))
     .query(({ input }) => {
-      const redirectUri = `${input.origin}/api/pco/callback`;
+      const redirectUri = `${input.origin}/auth/callback`;
       const state = Buffer.from(JSON.stringify({ origin: input.origin })).toString("base64url");
       const url = getPcoAuthorizeUrl(redirectUri, state);
       return { url, redirectUri };

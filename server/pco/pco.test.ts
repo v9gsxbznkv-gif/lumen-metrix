@@ -46,7 +46,7 @@ describe("pco.getAuthorizeUrl", () => {
     expect(result.url).toContain("scope=");
 
     // Redirect URI should use the provided origin
-    expect(result.redirectUri).toBe("https://app.lumenmetrix.com/api/pco/callback");
+    expect(result.redirectUri).toBe("https://app.lumenmetrix.com/auth/callback");
 
     // URL should contain the encoded redirect URI
     expect(result.url).toContain(encodeURIComponent(result.redirectUri));
@@ -263,12 +263,12 @@ describe("PCO OAuth URL helpers", () => {
   it("getPcoAuthorizeUrl builds correct URL", async () => {
     const { getPcoAuthorizeUrl } = await import("./client");
 
-    const url = getPcoAuthorizeUrl("https://app.lumenmetrix.com/api/pco/callback", "test-state");
+    const url = getPcoAuthorizeUrl("https://app.lumenmetrix.com/auth/callback", "test-state");
 
     expect(url).toContain("api.planningcenteronline.com/oauth/authorize");
     expect(url).toContain("response_type=code");
     expect(url).toContain("state=test-state");
-    expect(url).toContain(encodeURIComponent("https://app.lumenmetrix.com/api/pco/callback"));
+    expect(url).toContain(encodeURIComponent("https://app.lumenmetrix.com/auth/callback"));
   });
 
   it("PCO_SCOPES includes all required modules", async () => {

@@ -43,3 +43,6 @@
 - [x] Connect frontend data layer to backend API (hybrid: DB + static JSON fallback)
 - [x] Write vitest tests for PCO router and sync logic (19 tests passing)
 - [x] Push updated code to GitHub (v9gsxbznkv-gif/lumen-metrix)
+
+## Bug Fixes
+- [x] Fix PCO OAuth sign-in error: changed callback path from /api/pco/callback to /auth/callback to match PCO registered URLs

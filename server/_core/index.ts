@@ -37,7 +37,7 @@ async function startServer() {
   registerOAuthRoutes(app);
 
   // PCO OAuth callback (authorization code exchange)
-  app.get("/api/pco/callback", async (req, res) => {
+  app.get("/auth/callback", async (req, res) => {
     try {
       const { code, state } = req.query as { code?: string; state?: string };
       if (!code) {
@@ -53,7 +53,7 @@ async function startServer() {
         } catch {}
       }
 
-      const redirectUri = `${origin}/api/pco/callback`;
+      const redirectUri = `${origin}/auth/callback`;
 
       // Dynamic import to avoid circular deps
       const { exchangeCodeForTokens, storeTokens, PcoClient } = await import("../pco/client");
