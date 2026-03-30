@@ -359,8 +359,8 @@ async function loadFromApi(): Promise<RawDashboard | null> {
     if (!response.ok) return null;
 
     const json = await response.json();
-    // tRPC wraps the result in { result: { data: { json: ... } } }
-    const data = json?.result?.data?.json;
+    // tRPC wraps the result in { result: { data: ... } } where data is the RawDashboard
+    const data = json?.result?.data;
     if (!data) return null;
 
     // Verify we have actual data (not empty)
