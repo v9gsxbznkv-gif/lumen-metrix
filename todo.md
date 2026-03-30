@@ -141,4 +141,10 @@
 
 ## Giving Calculation Fix (Round 10)
 - [x] Fix giving YTD comparison: getMaxMonth now uses giving_monthly as primary source (not attendance), capped at current month for current year. Stray April attendance row no longer inflates the comparison period.
+- [x] Publish updated site with public visibility
+
+
+## Health Page Volunteer Ratio Fix (Round 11)
+- [x] Fix Volunteer-to-Attendance Ratio chart: added fallback computation when precomputed ratio is missing
+- [x] Relabel Volunteer Ratio metric: changed label to "Volunteer-to-Attendee Ratio (%)" to clarify it's a percentage
 - [ ] Publish updated site with public visibility

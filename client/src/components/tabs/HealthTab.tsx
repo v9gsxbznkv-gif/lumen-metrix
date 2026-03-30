@@ -234,7 +234,32 @@ export default function HealthTab() {
     const volMatch = vr.find(
       (v) => v.year === latestYear && v.campus === campus
     );
-    const volRatio = volMatch ? volMatch.pct * 100 : 0;
+    // If no precomputed ratio, calculate from raw data as fallback
+    let volRatio = 0;
+    if (volMatch) {
+      volRatio = volMatch.pct * 100;
+    } else if (campus === "All Campuses") {
+      const campusRows = data.serving.filter(
+        (s) => s.year === latestYear && ["Canton", "Jasper"].includes(s.campus)
+      );
+      const totalVols = campusRows.reduce((sum, s) => sum + s.avg_weekly, 0);
+      const allCampusAtt = data.attendance.find(
+        (a) => a.year === latestYear && a.campus === "All Campuses" && a.subgroup === "Total"
+      );
+      if (totalVols > 0 && allCampusAtt && allCampusAtt.avg_weekly > 0) {
+        volRatio = (totalVols / allCampusAtt.avg_weekly) * 100;
+      }
+    } else {
+      const servingRow = data.serving.find(
+        (s) => s.year === latestYear && s.campus === campus
+      );
+      const attRow = data.attendance.find(
+        (a) => a.year === latestYear && a.campus === campus && a.subgroup === "Total"
+      );
+      if (servingRow && attRow && servingRow.avg_weekly > 0 && attRow.avg_weekly > 0) {
+        volRatio = (servingRow.avg_weekly / attRow.avg_weekly) * 100;
+      }
+    }
 
     const gpcVal =
       gpc.find((g) => g.year === latestYear && g.campus === campus)
@@ -285,7 +310,7 @@ export default function HealthTab() {
         benchmark: "Target: 5-10% annual growth",
       },
       {
-        metric: "Volunteer Ratio",
+        metric: "Volunteer-to-Attendee Ratio (%)",
         value: `${volRatio.toFixed(1)}%`,
         status:
           volRatio > 20

@@ -1,0 +1,28 @@
+{
+  "query": "SELECT year, campus, avgWeekly, source FROM serving WHERE year = 2026 ORDER BY campus;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, campus, avgWeekly, source FROM serving WHERE year = 2026 ORDER BY campus;",
+  "rows": [
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "avgWeekly": "1625",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "campus": "Canton",
+      "avgWeekly": "418",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "campus": "Jasper",
+      "avgWeekly": "123",
+      "source": "spreadsheet"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tcampus\tavgWeekly\tsource\n2026\tAll Campuses\t1625\tspreadsheet\n2026\tCanton\t418\tspreadsheet\n2026\tJasper\t123\tspreadsheet\n",
+  "stderr": "",
+  "execution_time_ms": 61
+}
