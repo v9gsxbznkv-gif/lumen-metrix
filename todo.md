@@ -88,3 +88,12 @@
 - [x] Add Weekly Report to dashboard sidebar navigation
 - [x] Write vitest tests for weekly report procedures (9 tests)
 - [x] Publish updated site with Weekly Report feature
+
+## Password Login Feature (Round 6)
+- [x] Add dashboard password to env/secrets (DASHBOARD_PASSWORD, defaults to Test123)
+- [x] Add tRPC procedures: dashboardAuth.login (verify password, set cookie) and dashboardAuth.check (validate session) and dashboardAuth.logout
+- [x] Build LoginPage component with Lumen Metrix branding and single password field
+- [x] Gate Home.tsx to show LoginPage until authenticated (30-day session cookie)
+- [x] Add logout button to Sidebar (bottom, red hover, collapses to icon)
+- [x] Write vitest tests for dashboardAuth procedures (8 tests, 47 total)
+- [ ] Publish updated site with public visibility

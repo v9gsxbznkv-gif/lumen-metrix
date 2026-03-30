@@ -21,6 +21,7 @@ import {
   ArrowLeftRight,
   Activity,
   CalendarClock,
+  LogOut,
 } from "lucide-react";
 
 export type TabId =
@@ -61,9 +62,10 @@ interface SidebarProps {
   onTabChange: (tab: TabId) => void;
   collapsed: boolean;
   onToggle: () => void;
+  onLogout?: () => void;
 }
 
-export default function Sidebar({ activeTab, onTabChange, collapsed, onToggle }: SidebarProps) {
+export default function Sidebar({ activeTab, onTabChange, collapsed, onToggle, onLogout }: SidebarProps) {
   let lastSection = "";
 
   return (
@@ -164,6 +166,29 @@ export default function Sidebar({ activeTab, onTabChange, collapsed, onToggle }:
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
+
+        {/* Logout button */}
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            className={`w-full flex items-center gap-3 px-3 py-2 mt-1 rounded-md text-[13px] font-medium transition-all duration-150 ${
+              collapsed ? "justify-center" : ""
+            }`}
+            style={{ color: "#6B7280" }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(239,68,68,0.08)";
+              e.currentTarget.style.color = "#FCA5A5";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.color = "#6B7280";
+            }}
+            title={collapsed ? "Log out" : undefined}
+          >
+            <LogOut className="w-4 h-4 shrink-0" />
+            {!collapsed && <span>Log out</span>}
+          </button>
+        )}
 
         {/* Powered by branding */}
         {!collapsed && (

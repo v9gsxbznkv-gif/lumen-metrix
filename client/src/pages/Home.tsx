@@ -5,6 +5,7 @@
  */
 import { useState } from "react";
 import { useData } from "@/contexts/DataContext";
+import { trpc } from "@/lib/trpc";
 import Sidebar, { type TabId } from "@/components/Sidebar";
 import DashboardHeader from "@/components/DashboardHeader";
 import OverviewTab from "@/components/tabs/OverviewTab";
@@ -22,6 +23,7 @@ import WeeklyReportTab from "@/components/tabs/WeeklyReportTab";
 import AIAnalystTab from "@/components/tabs/AIAnalystTab";
 import SettingsTab from "@/components/tabs/SettingsTab";
 import LumenLogo from "@/components/LumenLogo";
+import LoginPage from "@/pages/LoginPage";
 import { Loader2 } from "lucide-react";
 
 const TAB_META: Record<TabId, { title: string; subtitle: string }> = {
@@ -45,6 +47,42 @@ export default function Home() {
   const { data, loading, error } = useData();
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const utils = trpc.useUtils();
+
+  // Password gate — check session cookie via server
+  const authCheck = trpc.dashboardAuth.check.useQuery(undefined, {
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+
+  const logoutDash = trpc.dashboardAuth.logout.useMutation({
+    onSuccess: () => {
+      utils.dashboardAuth.check.setData(undefined, { isAuthenticated: false });
+    },
+  });
+
+  // Show a minimal loading screen while the session check is in-flight
+  if (authCheck.isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#F9F7F4" }}>
+        <div className="text-center">
+          <LumenLogo variant="icon" size={40} className="mx-auto mb-4" />
+          <Loader2 className="w-5 h-5 animate-spin mx-auto" style={{ color: "#E8913A" }} />
+        </div>
+      </div>
+    );
+  }
+
+  // Not authenticated — show login page
+  if (!authCheck.data?.isAuthenticated) {
+    return (
+      <LoginPage
+        onAuthenticated={() =>
+          utils.dashboardAuth.check.setData(undefined, { isAuthenticated: true })
+        }
+      />
+    );
+  }
 
   if (loading) {
     return (
@@ -79,6 +117,7 @@ export default function Home() {
         onTabChange={setActiveTab}
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        onLogout={() => logoutDash.mutate()}
       />
 
       {/* Main content area */}
