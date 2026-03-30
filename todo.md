@@ -138,3 +138,7 @@
 - [x] Fix Volunteer-to-Attendee Ratio chart: use undefined for missing data + connectNulls so line connects valid points
 - [x] Fix Year-over-Year Growth Rate chart: use same-period comparison for partial years (Q1 2026 vs Q1 2025)
 - [x] Publish updated site with public visibility
+
+## Giving Calculation Fix (Round 10)
+- [x] Fix giving YTD comparison: getMaxMonth now uses giving_monthly as primary source (not attendance), capped at current month for current year. Stray April attendance row no longer inflates the comparison period.
+- [ ] Publish updated site with public visibility

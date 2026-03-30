@@ -516,15 +516,35 @@ export function getYoYChange(
  * Returns 12 for complete years, or the highest month with data for partial years.
  */
 export function getMaxMonth(data: DashboardData, year: number): number {
-  const months = new Set<number>();
+  // Use giving_monthly as the primary source for determining the "latest month"
+  // because giving data is the most reliable indicator of a complete month.
+  // Stray attendance rows (e.g. a single ESL Class entry in April) should not
+  // inflate the comparison period.
+  const givingMonths = new Set<number>();
   for (const r of data.giving_monthly) {
-    if (r.year === year) months.add(r.month);
+    if (r.year === year) givingMonths.add(r.month);
   }
+
+  if (givingMonths.size > 0) {
+    const maxGiving = Math.max(...Array.from(givingMonths));
+    // For the current year, also cap at the current calendar month
+    // (don't count a month that hasn't finished yet unless data exists).
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1; // 1-indexed
+    if (year === currentYear) {
+      return Math.min(maxGiving, currentMonth);
+    }
+    return maxGiving;
+  }
+
+  // Fallback: use attendance_monthly if no giving data exists
+  const attMonths = new Set<number>();
   for (const r of data.attendance_monthly) {
-    if (r.year === year) months.add(r.month);
+    if (r.year === year) attMonths.add(r.month);
   }
-  if (months.size === 0) return 12;
-  return Math.max(...Array.from(months));
+  if (attMonths.size === 0) return 12;
+  return Math.max(...Array.from(attMonths));
 }
 
 /**

@@ -1,0 +1,16 @@
+{
+  "query": "SELECT campus, subgroup, total, avgWeekly FROM attendance_monthly WHERE year = 2026 AND month = 4;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT campus, subgroup, total, avgWeekly FROM attendance_monthly WHERE year = 2026 AND month = 4;",
+  "rows": [
+    {
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "total": "1",
+      "avgWeekly": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "campus\tsubgroup\ttotal\tavgWeekly\nAll Campuses\tESL Class\t1\t1\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}

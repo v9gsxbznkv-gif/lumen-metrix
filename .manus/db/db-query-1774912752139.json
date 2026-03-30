@@ -1,0 +1,22 @@
+{
+  "query": "SELECT DISTINCT month FROM attendance_monthly WHERE year = 2026 ORDER BY month;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT month FROM attendance_monthly WHERE year = 2026 ORDER BY month;",
+  "rows": [
+    {
+      "month": "1"
+    },
+    {
+      "month": "2"
+    },
+    {
+      "month": "3"
+    },
+    {
+      "month": "4"
+    }
+  ],
+  "messages": [],
+  "stdout": "month\n1\n2\n3\n4\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}
