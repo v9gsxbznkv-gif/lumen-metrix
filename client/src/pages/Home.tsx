@@ -1,7 +1,7 @@
 /*
  * Lumen Metrix — Main Dashboard Layout
- * Sidebar + content area SaaS pattern
- * Full proposal navigation: Dashboard, People, Giving, Attendance, Volunteers, Events, Visitors, Campuses, Compare, Health, Reports, AI, Settings
+ * Desktop: fixed sidebar + content area
+ * Mobile: hamburger overlay + full-width content
  */
 import { useState } from "react";
 import { useData } from "@/contexts/DataContext";
@@ -47,6 +47,7 @@ export default function Home() {
   const { data, loading, error } = useData();
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const utils = trpc.useUtils();
 
   // Password gate — check session cookie via server
@@ -99,7 +100,7 @@ export default function Home() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center max-w-md">
+        <div className="text-center max-w-md px-4">
           <LumenLogo variant="full" size={32} className="mx-auto mb-6" />
           <p className="text-destructive font-semibold mb-2">Unable to load data</p>
           <p className="text-sm text-muted-foreground">{error}</p>
@@ -118,14 +119,21 @@ export default function Home() {
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
         onLogout={() => logoutDash.mutate()}
+        mobileOpen={mobileOpen}
+        onMobileToggle={() => setMobileOpen(!mobileOpen)}
       />
 
-      {/* Main content area */}
+      {/* Main content area — offset by sidebar on desktop, full-width on mobile */}
       <main
-        className="transition-all duration-200 ease-in-out min-h-screen"
-        style={{ marginLeft: sidebarCollapsed ? 60 : 220 }}
+        className="transition-all duration-200 ease-in-out min-h-screen pt-14 md:pt-0"
+        style={{ marginLeft: "var(--sidebar-offset, 0px)" }}
       >
-        <div className="px-6 lg:px-8 py-6 max-w-[1400px]">
+        <style>{`
+          @media (min-width: 768px) {
+            main { --sidebar-offset: ${sidebarCollapsed ? 60 : 220}px; }
+          }
+        `}</style>
+        <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-[1400px]">
           <DashboardHeader title={meta.title} subtitle={meta.subtitle} />
 
           {activeTab === "dashboard" && <OverviewTab />}
@@ -145,7 +153,7 @@ export default function Home() {
         </div>
 
         {/* Footer */}
-        <footer className="px-6 lg:px-8 pb-6">
+        <footer className="px-4 sm:px-6 lg:px-8 pb-6">
           <div className="border-t border-border/40 pt-4 flex items-center justify-between">
             <p className="text-[10px] text-muted-foreground/50">
               Data from 2014 — 2026 &middot; Updated {new Date().toLocaleDateString()}

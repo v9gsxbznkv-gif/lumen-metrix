@@ -207,4 +207,20 @@
     background: oklch(0.72 0.14 65 / 0.12);
     color: oklch(0.82 0.1 65);
   }
+
+  /* Mobile-responsive table wrapper */
+  .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Mobile KPI card adjustments */
+  @media (max-width: 640px) {
+    .stat-value {
+      font-size: 1.25rem !important;
+    }
+    .micro-label {
+      font-size: 0.5625rem;
+    }
+  }
 }

@@ -127,11 +127,11 @@ export default function CampusesTab() {
       )}
 
       {/* Campus Scorecards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-5">
         {scorecards.map((sc) => (
           <div
             key={sc.campus}
-            className="bg-card rounded-lg border-2 p-5"
+            className="bg-card rounded-lg border-2 p-4 sm:p-5"
             style={{ borderColor: `${CAMPUS_COLORS[sc.campus]}40` }}
           >
             <div className="flex items-center gap-2 mb-4">
@@ -172,7 +172,7 @@ export default function CampusesTab() {
 
               <div className="h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
                   <p className="text-[9px] text-muted-foreground uppercase tracking-wider">FTG</p>
                   <p className="text-sm font-bold" style={{ fontFamily: "'DM Mono', monospace" }}>{formatNumber(sc.ftgNow)}</p>
@@ -196,10 +196,10 @@ export default function CampusesTab() {
       </div>
 
       {/* Attendance Comparison + Radar */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-card rounded-lg border border-border/60 p-5">
-          <h3 className="text-sm font-semibold mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Avg Weekly Attendance by Campus</h3>
-          <ResponsiveContainer width="100%" height={300}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
+          <h3 className="text-sm font-semibold mb-3 sm:mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Avg Weekly Attendance by Campus</h3>
+          <ResponsiveContainer width="100%" height={220}>
             <BarChart data={campusYearData}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
               <XAxis dataKey="year" tick={{ fontSize: 11, fill: "#9CA3AF" }} />
@@ -213,9 +213,9 @@ export default function CampusesTab() {
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-card rounded-lg border border-border/60 p-5">
-          <h3 className="text-sm font-semibold mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Campus Comparison Radar — {latestYear}</h3>
-          <ResponsiveContainer width="100%" height={300}>
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
+          <h3 className="text-sm font-semibold mb-3 sm:mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Campus Comparison Radar — {latestYear}</h3>
+          <ResponsiveContainer width="100%" height={220}>
             <RadarChart data={radarData}>
               <PolarGrid stroke="rgba(255,255,255,0.1)" />
               <PolarAngleAxis dataKey="metric" tick={{ fontSize: 11, fill: "#9CA3AF" }} />
@@ -231,8 +231,8 @@ export default function CampusesTab() {
       </div>
 
       {/* Campus Share Table */}
-      <div className="bg-card rounded-lg border border-border/60 p-5">
-        <h3 className="text-sm font-semibold mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Campus Share — {latestYear}</h3>
+      <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
+        <h3 className="text-sm font-semibold mb-3 sm:mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Campus Share — {latestYear}</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>

@@ -16,7 +16,7 @@ interface KpiCardProps {
 export default function KpiCard({ label, value, change, subtitle, borderColor, icon }: KpiCardProps) {
   return (
     <div
-      className="bg-card rounded-lg p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] border border-border/60 transition-all hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+      className="bg-card rounded-lg p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] border border-border/60 transition-all hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
       style={borderColor ? { borderLeft: `3px solid ${borderColor}` } : undefined}
     >
       <div className="flex items-start justify-between gap-2">

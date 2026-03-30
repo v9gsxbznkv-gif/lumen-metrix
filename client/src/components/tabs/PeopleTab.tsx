@@ -101,7 +101,7 @@ export default function PeopleTab() {
       )}
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <KpiCard label="First-Time Guests" value={formatNumber(ftgNow)} change={ftgChange} subtitle={`${latestYear} ${partial ? "YTD" : ""}`} borderColor="#E8913A" icon={<Users className="w-4 h-4" />} />
         <KpiCard label="Salvations" value={formatNumber(salvNow)} change={salvChange} subtitle={`${latestYear} ${partial ? "YTD" : ""}`} borderColor="#4A7C59" icon={<Heart className="w-4 h-4" />} />
         <KpiCard label="Baptisms" value={formatNumber(baptNow)} change={baptChange} subtitle={`${latestYear} ${partial ? "YTD" : ""}`} borderColor="#4A7FB5" icon={<Droplets className="w-4 h-4" />} />
@@ -109,9 +109,9 @@ export default function PeopleTab() {
       </div>
 
       {/* Assimilation Funnel */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-card rounded-lg border border-border/60 p-5">
-          <h3 className="text-sm font-semibold mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Assimilation Funnel</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
+          <h3 className="text-sm font-semibold mb-3 sm:mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Assimilation Funnel</h3>
           <div className="space-y-3">
             {funnelData.map((item, i) => {
               const maxVal = Math.max(...funnelData.map((d) => d.value), 1);
@@ -143,8 +143,8 @@ export default function PeopleTab() {
         </div>
 
         {/* Conversion Rates */}
-        <div className="bg-card rounded-lg border border-border/60 p-5">
-          <h3 className="text-sm font-semibold mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Conversion Rates</h3>
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
+          <h3 className="text-sm font-semibold mb-3 sm:mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Conversion Rates</h3>
           <div className="space-y-4">
             {conversionRates.map((cr) => (
               <div key={cr.label}>
@@ -167,9 +167,9 @@ export default function PeopleTab() {
       </div>
 
       {/* Multi-year Trend */}
-      <div className="bg-card rounded-lg border border-border/60 p-5">
-        <h3 className="text-sm font-semibold mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Multi-Year Trends</h3>
-        <ResponsiveContainer width="100%" height={300}>
+      <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
+        <h3 className="text-sm font-semibold mb-3 sm:mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Multi-Year Trends</h3>
+        <ResponsiveContainer width="100%" height={220}>
           <AreaChart data={trendData}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
             <XAxis dataKey="year" tick={{ fontSize: 11, fill: "#9CA3AF" }} />
@@ -185,10 +185,10 @@ export default function PeopleTab() {
       </div>
 
       {/* Monthly Breakdown + Campus Breakdown */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-card rounded-lg border border-border/60 p-5">
-          <h3 className="text-sm font-semibold mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>{latestYear} Monthly Breakdown</h3>
-          <ResponsiveContainer width="100%" height={250}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
+          <h3 className="text-sm font-semibold mb-3 sm:mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>{latestYear} Monthly Breakdown</h3>
+          <ResponsiveContainer width="100%" height={220}>
             <BarChart data={monthlyData}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
               <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#9CA3AF" }} />
@@ -202,8 +202,8 @@ export default function PeopleTab() {
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-card rounded-lg border border-border/60 p-5">
-          <h3 className="text-sm font-semibold mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>{latestYear} Campus Breakdown</h3>
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
+          <h3 className="text-sm font-semibold mb-3 sm:mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>{latestYear} Campus Breakdown</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>

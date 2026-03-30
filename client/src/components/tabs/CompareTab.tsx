@@ -218,8 +218,8 @@ export default function CompareTab() {
   return (
     <div className="space-y-5">
       {/* Controls */}
-      <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-        <div className="flex flex-wrap items-end gap-4">
+      <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <div className="flex flex-wrap items-end gap-3 sm:gap-4">
           <div>
             <label className="micro-label text-muted-foreground block mb-1.5">
               Compare By
@@ -337,79 +337,20 @@ export default function CompareTab() {
             </div>
           </div>
         </div>
-
-        {mode === "event" && (
-          <p className="text-[11px] text-muted-foreground mt-3">
-            <CalendarDays className="w-3 h-3 inline mr-1" />
-            {event.description}
-            {metricsA?.date &&
-              ` — ${formatEventDate(metricsA.date)} vs ${metricsB?.date ? formatEventDate(metricsB.date) : "N/A"}`}
-          </p>
-        )}
       </div>
 
-      {/* Comparison Cards */}
+      {/* Comparison */}
       {metricsA && metricsB && (
-        <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
-          {comparisonMetrics.map((m) => {
-            const change = m.a > 0 ? ((m.b - m.a) / m.a) * 100 : 0;
-            const isUp = change > 0;
-            const isFlat = Math.abs(change) < 0.5;
-            return (
-              <div
-                key={m.label}
-                className="bg-card rounded-lg border border-border/60 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
-              >
-                <p className="micro-label text-muted-foreground mb-2">
-                  {m.label}
-                </p>
-                <div className="flex items-baseline gap-2 mb-1">
-                  <span className="stat-value text-lg">{m.format(m.b)}</span>
-                  {!isFlat && (
-                    <span
-                      className={`inline-flex items-center gap-0.5 text-[11px] font-semibold ${isUp ? "text-[#4A7C59]" : "text-[#C45B4A]"}`}
-                    >
-                      {isUp ? (
-                        <TrendingUp className="w-3 h-3" />
-                      ) : (
-                        <TrendingDown className="w-3 h-3" />
-                      )}
-                      {change >= 0 ? "+" : ""}
-                      {change.toFixed(1)}%
-                    </span>
-                  )}
-                  {isFlat && (
-                    <span className="inline-flex items-center gap-0.5 text-[11px] text-muted-foreground">
-                      <Minus className="w-3 h-3" /> flat
-                    </span>
-                  )}
-                </div>
-                <p className="text-[10px] text-muted-foreground">
-                  was {m.format(m.a)} in {yearA}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Side-by-side bar chart */}
-      {metricsA && metricsB && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-            <h3 className="section-title mb-4">
-              {labelA} vs {labelB} — Attendance & Next Steps
-            </h3>
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart
-                data={barData.filter((d) => d.metric !== "Total Giving")}
-                layout="vertical"
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="#E8E5DE"
-                  horizontal={false}
-                />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+          {/* Bar chart */}
+          <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+            <h3 className="section-title mb-1">Metric Comparison</h3>
+            <p className="text-[11px] text-muted-foreground mb-3 sm:mb-4">
+              {labelA} vs. {labelB}
+            </p>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={barData} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="#E8E5DE" />
                 <XAxis
                   type="number"
                   tick={{ fontSize: 11, fontFamily: "'DM Mono'" }}
@@ -419,87 +360,117 @@ export default function CompareTab() {
                 <YAxis
                   type="category"
                   dataKey="metric"
+                  width={110}
                   tick={{ fontSize: 11, fontFamily: "'Inter'" }}
                   tickLine={false}
                   axisLine={false}
-                  width={120}
                 />
-                <Tooltip contentStyle={TT} />
+                <Tooltip
+                  cursor={{ fill: "#F7F6F3" }}
+                  contentStyle={TT}
+                  formatter={(value: number, name: string) => {
+                    const metric = comparisonMetrics.find(
+                      (m) => m.label === (barData.find(b => b[name] === value)?.metric)
+                    );
+                    return metric ? metric.format(value) : value;
+                  }}
+                />
                 <Legend
                   wrapperStyle={{ fontSize: 12, fontFamily: "'Inter'" }}
                   iconType="circle"
                   iconSize={8}
                 />
-                <Bar
-                  dataKey={String(yearA)}
-                  fill="#C2703E"
-                  radius={[0, 3, 3, 0]}
-                  maxBarSize={18}
-                  opacity={0.7}
-                />
-                <Bar
-                  dataKey={String(yearB)}
-                  fill="#E8913A"
-                  radius={[0, 3, 3, 0]}
-                  maxBarSize={18}
-                />
+                <Bar dataKey={String(yearA)} name={labelA} fill="#E8913A" />
+                <Bar dataKey={String(yearB)} name={labelB} fill="#4A7C59" />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-            <h3 className="section-title mb-4">
-              {labelA} vs {labelB} — Giving
-            </h3>
-            <div className="flex items-center justify-center gap-8 h-[280px]">
-              <div className="text-center">
-                <p className="micro-label text-muted-foreground mb-2">
-                  {labelA}
-                </p>
-                <p
-                  className="stat-value text-3xl"
-                  style={{ color: "#C2703E" }}
-                >
-                  {formatCurrency(metricsA.totalGiving)}
-                </p>
+          {/* Data table */}
+          <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+            <h3 className="section-title mb-1">Side-by-Side</h3>
+            <p className="text-[11px] text-muted-foreground mb-3 sm:mb-4">
+              Raw numbers for the two selected periods
+            </p>
+            <div className="table-scroll">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border/60 text-left">
+                    <th className="py-2 font-semibold">Metric</th>
+                    <th className="py-2 font-semibold text-right">{labelA}</th>
+                    <th className="py-2 font-semibold text-right">{labelB}</th>
+                    <th className="py-2 font-semibold text-right">Change</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {comparisonMetrics.map((m) => {
+                    const change = m.b - m.a;
+                    const pctChange = m.a !== 0 ? (change / m.a) * 100 : 0;
+                    const isIncrease = change > 0;
+                    const isDecrease = change < 0;
+
+                    return (
+                      <tr key={m.label} className="border-b border-border/60 last:border-0">
+                        <td className="py-2.5 font-medium">{m.label}</td>
+                        <td className="py-2.5 text-right font-mono">{m.format(m.a)}</td>
+                        <td className="py-2.5 text-right font-mono">{m.format(m.b)}</td>
+                        <td className="py-2.5 text-right font-mono text-xs">
+                          <span
+                            className={`flex items-center justify-end gap-1 ${
+                              isIncrease
+                                ? "text-green-600"
+                                : isDecrease
+                                ? "text-red-500"
+                                : "text-muted-foreground"
+                            }`}>
+                            {isIncrease ? (
+                              <TrendingUp className="w-3.5 h-3.5" />
+                            ) : isDecrease ? (
+                              <TrendingDown className="w-3.5 h-3.5" />
+                            ) : (
+                              <Minus className="w-3.5 h-3.5" />
+                            )}
+                            {pctChange.toFixed(1)}%
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* KPI Grid */}
+      {metricsA && metricsB && (
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <h3 className="section-title mb-1">Period Dates</h3>
+          <p className="text-[11px] text-muted-foreground mb-3 sm:mb-4">
+            The specific dates being compared based on your selection
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <div className="bg-background/60 rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-[#E8913A]/10 text-[#E8913A] rounded-full p-2">
+                  <CalendarDays className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Period A</p>
+                  <p className="font-bold text-sm">{formatEventDate(metricsA.date)}</p>
+                </div>
               </div>
-              <div className="flex flex-col items-center">
-                <ArrowLeftRight className="w-5 h-5 text-muted-foreground/40 mb-2" />
-                {(() => {
-                  const change =
-                    metricsA.totalGiving > 0
-                      ? ((metricsB.totalGiving - metricsA.totalGiving) /
-                          metricsA.totalGiving) *
-                        100
-                      : 0;
-                  const isUp = change > 0;
-                  return (
-                    <div
-                      className={`text-center px-4 py-2 rounded-lg ${isUp ? "bg-[#4A7C59]/10" : "bg-[#C45B4A]/10"}`}
-                    >
-                      <p
-                        className={`stat-value text-xl ${isUp ? "text-[#4A7C59]" : "text-[#C45B4A]"}`}
-                      >
-                        {change >= 0 ? "+" : ""}
-                        {change.toFixed(1)}%
-                      </p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
-                        {isUp ? "increase" : "decrease"}
-                      </p>
-                    </div>
-                  );
-                })()}
-              </div>
-              <div className="text-center">
-                <p className="micro-label text-muted-foreground mb-2">
-                  {labelB}
-                </p>
-                <p
-                  className="stat-value text-3xl"
-                  style={{ color: "#E8913A" }}
-                >
-                  {formatCurrency(metricsB.totalGiving)}
-                </p>
+            </div>
+            <div className="bg-background/60 rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-[#4A7C59]/10 text-[#4A7C59] rounded-full p-2">
+                  <CalendarDays className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Period B</p>
+                  <p className="font-bold text-sm">{formatEventDate(metricsB.date)}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -508,14 +479,14 @@ export default function CompareTab() {
 
       {/* Multi-year event trend */}
       {mode === "event" && eventTrend.length > 2 && (
-        <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <h3 className="section-title mb-1">
             {event.name} — Multi-Year Trend
           </h3>
-          <p className="text-[11px] text-muted-foreground mb-4">
+          <p className="text-[11px] text-muted-foreground mb-3 sm:mb-4">
             How this event has performed across all available years
           </p>
-          <ResponsiveContainer width="100%" height={260}>
+          <ResponsiveContainer width="100%" height={220}>
             <BarChart data={eventTrend}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E8E5DE" />
               <XAxis
@@ -568,7 +539,7 @@ export default function CompareTab() {
       )}
 
       {/* Quick presets */}
-      <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+      <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         <h3 className="section-title mb-3">Quick Comparisons</h3>
         <div className="flex flex-wrap gap-2">
           {[

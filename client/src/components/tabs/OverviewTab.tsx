@@ -230,7 +230,7 @@ export default function OverviewTab() {
   return (
     <div className="space-y-5">
       {/* KPI Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
         <KpiCard
           label="Avg Weekly Attendance"
           value={formatNumber(kpis.attendance)}
@@ -285,13 +285,13 @@ export default function OverviewTab() {
       )}
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
         {/* Attendance Trend */}
-        <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <h3 className="section-title mb-4 text-card-foreground">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <h3 className="section-title mb-3 sm:mb-4 text-card-foreground">
             Average Weekly Attendance
           </h3>
-          <ResponsiveContainer width="100%" height={260}>
+          <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={attendanceTrend}>
               <defs>
                 {campusKeys.map((key) => (
@@ -348,11 +348,11 @@ export default function OverviewTab() {
         </div>
 
         {/* Giving Trend */}
-        <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <h3 className="section-title mb-4 text-card-foreground">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <h3 className="section-title mb-3 sm:mb-4 text-card-foreground">
             Annual Tithes & Offerings
           </h3>
-          <ResponsiveContainer width="100%" height={260}>
+          <ResponsiveContainer width="100%" height={220}>
             <BarChart data={givingTrend}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E8E5DE" />
               <XAxis
@@ -387,11 +387,11 @@ export default function OverviewTab() {
 
       {/* Campus Comparison */}
       {filters.campus === "All Campuses" && (
-        <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <h3 className="section-title mb-4 text-card-foreground">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <h3 className="section-title mb-3 sm:mb-4 text-card-foreground">
             Campus Attendance Comparison — Avg Weekly
           </h3>
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={220}>
             <BarChart data={campusComparison}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E8E5DE" />
               <XAxis

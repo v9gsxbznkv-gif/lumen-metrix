@@ -78,7 +78,7 @@ export default function EventsTab() {
   return (
     <div className="space-y-6">
       {/* Event Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
         {eventData.map(({ name, yearMetrics }) => {
           const latest = yearMetrics[yearMetrics.length - 1];
           const prior = yearMetrics.length > 1 ? yearMetrics[yearMetrics.length - 2] : null;
@@ -88,14 +88,14 @@ export default function EventsTab() {
           const givChange = prior && prior.giving > 0 ? ((latest.giving - prior.giving) / prior.giving * 100) : null;
 
           return (
-            <div key={name} className="bg-card rounded-lg border border-border/60 p-5">
+            <div key={name} className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
               <div className="flex items-center gap-2 mb-3">
                 <CalendarDays className="w-4 h-4" style={{ color: "#E8913A" }} />
                 <h3 className="text-sm font-semibold" style={{ fontFamily: "'DM Sans', sans-serif" }}>{name}</h3>
                 <span className="ml-auto text-[10px] text-muted-foreground">{MONTH_NAMES[latest.month - 1]} {latest.year}</span>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 mb-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <div>
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Attendance</p>
                   <p className="text-lg font-bold" style={{ fontFamily: "'DM Mono', monospace" }}>{formatNumber(latest.attendance)}</p>
@@ -122,7 +122,7 @@ export default function EventsTab() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border/30">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-border/30">
                 <div>
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider">FTG</p>
                   <p className="text-sm font-bold" style={{ fontFamily: "'DM Mono', monospace" }}>{formatNumber(latest.ftg)}</p>
@@ -139,9 +139,9 @@ export default function EventsTab() {
 
       {/* Easter Multi-Year Chart */}
       {easterChartData.length > 0 && (
-        <div className="bg-card rounded-lg border border-border/60 p-5">
-          <h3 className="text-sm font-semibold mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Easter Month — Multi-Year Comparison</h3>
-          <ResponsiveContainer width="100%" height={300}>
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
+          <h3 className="text-sm font-semibold mb-3 sm:mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Easter Month — Multi-Year Comparison</h3>
+          <ResponsiveContainer width="100%" height={220}>
             <BarChart data={easterChartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
               <XAxis dataKey="year" tick={{ fontSize: 11, fill: "#9CA3AF" }} />
@@ -158,8 +158,8 @@ export default function EventsTab() {
       )}
 
       {/* Event History Table */}
-      <div className="bg-card rounded-lg border border-border/60 p-5">
-        <h3 className="text-sm font-semibold mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Event Performance History</h3>
+      <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
+        <h3 className="text-sm font-semibold mb-3 sm:mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Event Performance History</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>

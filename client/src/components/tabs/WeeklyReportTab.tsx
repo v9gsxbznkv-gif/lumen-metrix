@@ -243,8 +243,8 @@ export default function WeeklyReportTab() {
 
       {/* Auto-generation schedule settings */}
       {showScheduleSettings && (
-        <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <div className="flex items-center gap-2 mb-3 sm:mb-4 flex-wrap">
             <Settings className="w-4 h-4" style={{ color: "#E8913A" }} />
             <h3 className="text-sm font-semibold">Auto-Generation Schedule</h3>
           </div>
@@ -436,7 +436,7 @@ export default function WeeklyReportTab() {
               <h3 className="text-sm font-semibold">Campus Breakdown</h3>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto"><table className="w-full text-sm min-w-[500px]">
                 <thead>
                   <tr className="border-b border-border/40">
                     <th className="text-left px-5 py-2.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -473,7 +473,7 @@ export default function WeeklyReportTab() {
                     ))}
                   </tr>
                 </tbody>
-              </table>
+              </table></div>
             </div>
           </div>
 
@@ -496,7 +496,7 @@ export default function WeeklyReportTab() {
                   <span className="text-[10px] text-muted-foreground">{compData.label}</span>
                 </div>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+                  <div className="overflow-x-auto"><table className="w-full text-sm min-w-[500px]">
                     <thead>
                       <tr className="border-b border-border/40">
                         <th className="text-left px-5 py-2.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -536,7 +536,7 @@ export default function WeeklyReportTab() {
                         );
                       })}
                     </tbody>
-                  </table>
+                  </table></div>
                 </div>
               </div>
             );

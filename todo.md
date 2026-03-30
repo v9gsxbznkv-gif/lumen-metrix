@@ -96,4 +96,27 @@
 - [x] Gate Home.tsx to show LoginPage until authenticated (30-day session cookie)
 - [x] Add logout button to Sidebar (bottom, red hover, collapses to icon)
 - [x] Write vitest tests for dashboardAuth procedures (8 tests, 47 total)
+- [x] Publish updated site with public visibility
+
+## Mobile Responsiveness (Round 7)
+- [x] Login page: optimize for phone screens (full-width card, proper padding)
+- [x] Sidebar: convert to hamburger/overlay menu on mobile (< 768px)
+- [x] DashboardHeader: make year/campus dropdowns full-width and touch-friendly on mobile
+- [x] Home.tsx layout: remove fixed sidebar margin on mobile, use full-width content
+- [x] OverviewTab: stack metric cards vertically, resize charts for mobile width
+- [x] PeopleTab: stack cards and make tables horizontally scrollable
+- [x] GivingTab: stack cards and resize charts for mobile
+- [x] AttendanceTab: stack cards and resize charts for mobile
+- [x] VolunteersTab: stack cards and resize charts for mobile
+- [x] EventsTab: stack cards and make tables scrollable
+- [x] VisitorsTab: stack cards and resize charts for mobile
+- [x] CampusesTab: make campus comparison tables scrollable
+- [x] CompareTab: make comparison tables scrollable, stack controls
+- [x] HealthTab: stack health score cards, resize gauges
+- [x] ReportsTab: stack report builder controls, make preview scrollable
+- [x] WeeklyReportTab: stack cards and comparison tables
+- [x] AIAnalystTab: ensure chat interface works on mobile
+- [x] SettingsTab: stack settings panels vertically
+- [x] KpiCard: reduce padding and font sizes on mobile
+- [x] Add global mobile utility CSS (table-scroll, responsive chart containers)
 - [ ] Publish updated site with public visibility

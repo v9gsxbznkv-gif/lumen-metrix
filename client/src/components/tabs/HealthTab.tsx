@@ -308,21 +308,21 @@ export default function HealthTab() {
   return (
     <div className="space-y-5">
       {/* Health Score Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {healthScores.map((score) => {
           const config = STATUS_CONFIG[score.status];
           const Icon = config.icon;
           return (
             <div
               key={score.metric}
-              className="bg-card rounded-lg border border-border/60 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
+              className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
             >
               <div className="flex items-center justify-between mb-2.5">
                 <p className="micro-label text-muted-foreground">
                   {score.metric}
                 </p>
                 <span
-                  className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full"
+                  className="inline-flex items-center gap-1.5 micro-label"
                   style={{ color: config.color, backgroundColor: config.bg }}
                 >
                   <Icon className="w-3 h-3" />
@@ -338,12 +338,12 @@ export default function HealthTab() {
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <h3 className="section-title mb-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <h3 className="section-title mb-3 sm:mb-4">
             Volunteer-to-Attendee Ratio (%)
           </h3>
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={220}>
             <LineChart data={volunteerTrend}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E8E5DE" />
               <XAxis
@@ -397,14 +397,14 @@ export default function HealthTab() {
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <h3 className="section-title mb-4">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <h3 className="section-title mb-3 sm:mb-4">
             Serving Summary — {latestYear}
           </h3>
           {servingInfo ? (
             <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-4 bg-muted/40 rounded-lg">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div className="text-center p-4 sm:p-5 bg-muted/40 rounded-lg">
                   <p className="micro-label text-muted-foreground mb-1.5">
                     Avg Weekly Volunteers
                   </p>
@@ -412,7 +412,7 @@ export default function HealthTab() {
                     {formatNumber(servingInfo.avg_weekly)}
                   </p>
                 </div>
-                <div className="text-center p-4 bg-muted/40 rounded-lg">
+                <div className="text-center p-4 sm:p-5 bg-muted/40 rounded-lg">
                   <p className="micro-label text-muted-foreground mb-1.5">
                     Total Volunteer Instances
                   </p>
@@ -434,9 +434,9 @@ export default function HealthTab() {
         </div>
       </div>
 
-      <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-        <h3 className="section-title mb-4">Year-over-Year Growth Rate (%)</h3>
-        <ResponsiveContainer width="100%" height={260}>
+      <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <h3 className="section-title mb-3 sm:mb-4">Year-over-Year Growth Rate (%)</h3>
+        <ResponsiveContainer width="100%" height={220}>
           <ComposedChart data={growthTrend.slice(1)}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E8E5DE" />
             <XAxis

@@ -207,12 +207,12 @@ export default function GivingTab() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <h3 className="section-title mb-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <h3 className="section-title mb-3 sm:mb-4">
             Giving Per Capita — Annual Trend
           </h3>
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={220}>
             <ComposedChart data={gpcTrend}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E8E5DE" />
               <XAxis
@@ -269,11 +269,11 @@ export default function GivingTab() {
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <h3 className="section-title mb-4">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <h3 className="section-title mb-3 sm:mb-4">
             Monthly Giving Pattern — {latestYear}
           </h3>
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={220}>
             <BarChart data={monthlyGiving}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E8E5DE" />
               <XAxis
@@ -304,11 +304,11 @@ export default function GivingTab() {
       </div>
 
       {filters.campus === "All Campuses" && (
-        <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <h3 className="section-title mb-4">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <h3 className="section-title mb-3 sm:mb-4">
             Campus Giving Comparison — Annual Tithes
           </h3>
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={220}>
             <BarChart data={campusGiving}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E8E5DE" />
               <XAxis
@@ -350,11 +350,11 @@ export default function GivingTab() {
       )}
 
       {givingByType.length > 0 && (
-        <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <h3 className="section-title mb-4">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <h3 className="section-title mb-3 sm:mb-4">
             Giving Breakdown by Type — {latestYear}
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             {givingByType.map((item) => (
               <div
                 key={item.type}

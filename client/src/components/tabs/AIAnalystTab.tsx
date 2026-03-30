@@ -51,7 +51,7 @@ export default function AIAnalystTab() {
 
     // Attendance questions
     if (q.includes("attendance") || q.includes("weekly") && (q.includes("average") || q.includes("avg"))) {
-      const yearMatch = q.match(/20\d{2}/);
+      const yearMatch = q.match(/20\\d{2}/);
       const year = yearMatch ? parseInt(yearMatch[0]) : latestYear;
       const isPartial = isPartialYear(data, year);
 
@@ -63,9 +63,9 @@ export default function AIAnalystTab() {
         return `${c}: ${formatNumber(att.reduce((s, r) => s + r.avg_weekly, 0))}`;
       }).join(" | ");
 
-      return `**Average Weekly Attendance for ${year}${isPartial ? " (YTD)" : ""}:**\n\n` +
-        `Total: **${formatNumber(total)}** per week\n\n` +
-        `Campus breakdown: ${campusBreakdown}\n\n` +
+      return `**Average Weekly Attendance for ${year}${isPartial ? " (YTD)" : ""}:**\\n\\n` +
+        `Total: **${formatNumber(total)}** per week\\n\\n` +
+        `Campus breakdown: ${campusBreakdown}\\n\\n` +
         (isPartial ? `_Note: ${year} data covers Jan–${MONTH_NAMES[maxMonth - 1]} only._` : "");
     }
 
@@ -74,11 +74,11 @@ export default function AIAnalystTab() {
       if (q.includes("per capita") || q.includes("gpc")) {
         const gpcData = data.computed.giving_per_capita.filter((r) => r.campus === "All Campuses").sort((a, b) => a.year - b.year);
         const lines = gpcData.slice(-5).map((r) => `${r.year}: $${r.giving_per_capita} annual ($${r.weekly_gpc}/wk)`);
-        return `**Giving Per Capita Trend (All Campuses):**\n\n${lines.join("\n")}\n\n` +
+        return `**Giving Per Capita Trend (All Campuses):**\\n\\n${lines.join("\\n")}\\n\\n` +
           `_GPC = Total Giving / Avg Weekly Attendance. Higher GPC indicates stronger per-person generosity._`;
       }
 
-      const yearMatch = q.match(/20\d{2}/);
+      const yearMatch = q.match(/20\\d{2}/);
       const year = yearMatch ? parseInt(yearMatch[0]) : latestYear;
       const giving = data.giving.filter((r) => r.year === year);
       const allGiving = giving.filter((r) => r.campus === "All Campuses");
@@ -87,36 +87,36 @@ export default function AIAnalystTab() {
       if (q.includes("canton") && q.includes("jasper") || q.includes("compare") || q.includes("comparison")) {
         const canton = giving.filter((r) => r.campus === "Canton").reduce((s, r) => s + r.total, 0);
         const jasper = giving.filter((r) => r.campus === "Jasper").reduce((s, r) => s + r.total, 0);
-        return `**Giving Comparison — ${year}:**\n\n` +
-          `Canton: **${formatCurrency(canton)}**\nJasper: **${formatCurrency(jasper)}**\n\n` +
+        return `**Giving Comparison — ${year}:**\\n\\n` +
+          `Canton: **${formatCurrency(canton)}**\\nJasper: **${formatCurrency(jasper)}**\\n\\n` +
           `Canton represents ${total > 0 ? ((canton / total) * 100).toFixed(1) : 0}% of total giving.`;
       }
 
-      return `**Total Giving for ${year}:** ${formatCurrency(total)}\n\n` +
-        `General: ${formatCurrency(allGiving.reduce((s, r) => s + r.general, 0))}\n` +
+      return `**Total Giving for ${year}:** ${formatCurrency(total)}\\n\\n` +
+        `General: ${formatCurrency(allGiving.reduce((s, r) => s + r.general, 0))}\\n` +
         `Designated: ${formatCurrency(allGiving.reduce((s, r) => s + r.designated, 0))}`;
     }
 
     // FTG / Conversion questions
     if (q.includes("ftg") || q.includes("first time") || q.includes("first-time") || q.includes("conversion") || q.includes("guest")) {
-      const yearMatch = q.match(/20\d{2}/);
+      const yearMatch = q.match(/20\\d{2}/);
       const year = yearMatch ? parseInt(yearMatch[0]) : latestYear;
       const ftg = data.next_steps.filter((r) => r.year === year && r.metric === "FTG").reduce((s, r) => s + r.total, 0);
       const salv = data.next_steps.filter((r) => r.year === year && r.metric === "Salvations").reduce((s, r) => s + r.total, 0);
       const bapt = data.next_steps.filter((r) => r.year === year && r.metric === "Baptisms").reduce((s, r) => s + r.total, 0);
       const stew = data.next_steps.filter((r) => r.year === year && r.metric === "Stewardship").reduce((s, r) => s + r.total, 0);
 
-      return `**Assimilation Funnel — ${year}:**\n\n` +
-        `First-Time Guests: **${formatNumber(ftg)}**\n` +
-        `Salvations: **${formatNumber(salv)}** (${ftg > 0 ? ((salv / ftg) * 100).toFixed(1) : 0}% of FTG)\n` +
-        `Baptisms: **${formatNumber(bapt)}** (${salv > 0 ? ((bapt / salv) * 100).toFixed(1) : 0}% of Salvations)\n` +
-        `New Stewards: **${formatNumber(stew)}** (${bapt > 0 ? ((stew / bapt) * 100).toFixed(1) : 0}% of Baptisms)\n\n` +
+      return `**Assimilation Funnel — ${year}:**\\n\\n` +
+        `First-Time Guests: **${formatNumber(ftg)}**\\n` +
+        `Salvations: **${formatNumber(salv)}** (${ftg > 0 ? ((salv / ftg) * 100).toFixed(1) : 0}% of FTG)\\n` +
+        `Baptisms: **${formatNumber(bapt)}** (${salv > 0 ? ((bapt / salv) * 100).toFixed(1) : 0}% of Salvations)\\n` +
+        `New Stewards: **${formatNumber(stew)}** (${bapt > 0 ? ((stew / bapt) * 100).toFixed(1) : 0}% of Baptisms)\\n\\n` +
         `Overall FTG → Steward rate: **${ftg > 0 ? ((stew / ftg) * 100).toFixed(1) : 0}%**`;
     }
 
     // Volunteer questions
     if (q.includes("volunteer") || q.includes("serving") || q.includes("ratio")) {
-      const yearMatch = q.match(/20\d{2}/);
+      const yearMatch = q.match(/20\\d{2}/);
       const year = yearMatch ? parseInt(yearMatch[0]) : latestYear;
       const vr = data.computed.volunteer_ratio.filter((r) => r.year === year);
       const all = vr.find((r) => r.campus === "All Campuses");
@@ -125,11 +125,11 @@ export default function AIAnalystTab() {
         const campusLines = vr.filter((r) => r.campus !== "All Campuses").map((r) =>
           `${r.campus}: ${formatNumber(r.avg_volunteers)} volunteers (${(r.pct * 100).toFixed(1)}%, ${r.ratio}:1)`
         );
-        return `**Volunteer Metrics — ${year}:**\n\n` +
-          `Avg Weekly Volunteers: **${formatNumber(all.avg_volunteers)}**\n` +
-          `Volunteer %: **${(all.pct * 100).toFixed(1)}%** of attendance\n` +
-          `Ratio: **${all.ratio}:1** (attendees per volunteer)\n\n` +
-          `Campus breakdown:\n${campusLines.join("\n")}`;
+        return `**Volunteer Metrics — ${year}:**\\n\\n` +
+          `Avg Weekly Volunteers: **${formatNumber(all.avg_volunteers)}**\\n` +
+          `Volunteer %: **${(all.pct * 100).toFixed(1)}%** of attendance\\n` +
+          `Ratio: **${all.ratio}:1** (attendees per volunteer)\\n\\n` +
+          `Campus breakdown:\\n${campusLines.join("\\n")}`;
       }
       return `Volunteer data for ${year} is not available.`;
     }
@@ -151,25 +151,25 @@ export default function AIAnalystTab() {
         return `${y} (${MONTH_NAMES[m - 1]}): Attendance ${formatNumber(att)}, Giving ${formatCurrency(giv)}`;
       });
 
-      return `**Easter Month Performance (Last 5 Years):**\n\n${lines.join("\n")}`;
+      return `**Easter Month Performance (Last 5 Years):**\\n\\n${lines.join("\\n")}`;
     }
 
     // Baptism questions
     if (q.includes("baptism") || q.includes("baptize")) {
-      const years = q.match(/20\d{2}/g);
+      const years = q.match(/20\\d{2}/g);
       if (years && years.length >= 2) {
         const y1 = parseInt(years[0]);
         const y2 = parseInt(years[1]);
         const b1 = data.next_steps.filter((r) => r.year === y1 && r.metric === "Baptisms").reduce((s, r) => s + r.total, 0);
         const b2 = data.next_steps.filter((r) => r.year === y2 && r.metric === "Baptisms").reduce((s, r) => s + r.total, 0);
         const change = b1 > 0 ? ((b2 - b1) / b1 * 100).toFixed(1) : "N/A";
-        return `**Baptisms Comparison:**\n\n${y1}: **${formatNumber(b1)}**\n${y2}: **${formatNumber(b2)}**\nChange: **${change}%**`;
+        return `**Baptisms Comparison:**\\n\\n${y1}: **${formatNumber(b1)}**\\n${y2}: **${formatNumber(b2)}**\\nChange: **${change}%**`;
       }
       const year = years ? parseInt(years[0]) : latestYear;
       const bapt = data.next_steps.filter((r) => r.year === year && r.metric === "Baptisms");
       const total = bapt.reduce((s, r) => s + r.total, 0);
       const byCampus = ["Canton", "Jasper"].map((c) => `${c}: ${formatNumber(bapt.filter((r) => r.campus === c).reduce((s, r) => s + r.total, 0))}`);
-      return `**Baptisms for ${year}:** ${formatNumber(total)}\n\n${byCampus.join(" | ")}`;
+      return `**Baptisms for ${year}:** ${formatNumber(total)}\\n\\n${byCampus.join(" | ")}`;
     }
 
     // Growth questions
@@ -188,19 +188,19 @@ export default function AIAnalystTab() {
         `**${c.campus}**: ${c.growth >= 0 ? "+" : ""}${c.growth.toFixed(1)}% (${formatNumber(c.att1)} → ${formatNumber(c.att2)})`
       );
 
-      return `**Campus Growth Rate (${recentYears[0]}–${recentYears[recentYears.length - 1]}):**\n\n${lines.join("\n")}\n\n` +
+      return `**Campus Growth Rate (${recentYears[0]}–${recentYears[recentYears.length - 1]}):**\\n\\n${lines.join("\\n")}\\n\\n` +
         `Highest growth: **${campusGrowth[0].campus}** at ${campusGrowth[0].growth >= 0 ? "+" : ""}${campusGrowth[0].growth.toFixed(1)}%`;
     }
 
     // Default response
-    return `I can help you analyze your church data. Here are some things I can answer:\n\n` +
-      `- Attendance trends and averages\n` +
-      `- Giving totals and per capita analysis\n` +
-      `- FTG and conversion funnel metrics\n` +
-      `- Volunteer ratios and trends\n` +
-      `- Easter and event performance\n` +
-      `- Campus comparisons and growth rates\n` +
-      `- Baptism and salvation numbers\n\n` +
+    return `I can help you analyze your church data. Here are some things I can answer:\\n\\n` +
+      `- Attendance trends and averages\\n` +
+      `- Giving totals and per capita analysis\\n` +
+      `- FTG and conversion funnel metrics\\n` +
+      `- Volunteer ratios and trends\\n` +
+      `- Easter and event performance\\n` +
+      `- Campus comparisons and growth rates\\n` +
+      `- Baptism and salvation numbers\\n\\n` +
       `Try asking a specific question about your metrics!`;
   };
 
@@ -226,7 +226,10 @@ export default function AIAnalystTab() {
     setTimeout(() => {
       const userMsg: Message = { role: "user", content: q, timestamp: new Date() };
       setMessages((prev) => [...prev, userMsg]);
+      setInput("");
       setIsTyping(true);
+
+      // Simulate slight delay for natural feel
       setTimeout(() => {
         const response = analyzeQuestion(q);
         const assistantMsg: Message = { role: "assistant", content: response, timestamp: new Date() };
@@ -237,7 +240,7 @@ export default function AIAnalystTab() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-180px)]">
+    <div className="flex flex-col h-[calc(100vh-140px)] sm:h-[calc(100vh-140px)] sm:h-[calc(100vh-180px)]">
       {/* Chat messages */}
       <div className="flex-1 overflow-y-auto space-y-4 pb-4">
         {messages.length === 0 && (
@@ -273,7 +276,7 @@ export default function AIAnalystTab() {
               </div>
             )}
             <div
-              className={`max-w-[80%] rounded-lg px-4 py-3 text-sm ${
+              className={`max-w-[80%] rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 text-sm ${
                 msg.role === "user"
                   ? "bg-[#E8913A] text-white"
                   : "bg-card border border-border/60"
@@ -281,9 +284,9 @@ export default function AIAnalystTab() {
             >
               {msg.role === "assistant" ? (
                 <div className="prose prose-sm prose-invert max-w-none" style={{ fontSize: 13 }}>
-                  {msg.content.split("\n").map((line, j) => {
+                  {msg.content.split("\\n").map((line, j) => {
                     if (line.startsWith("**") && line.endsWith("**")) {
-                      return <p key={j} className="font-bold mb-1">{line.replace(/\*\*/g, "")}</p>;
+                      return <p key={j} className="font-bold mb-1">{line.replace(/\\*\\*/g, "")}</p>;
                     }
                     if (line.startsWith("_") && line.endsWith("_")) {
                       return <p key={j} className="italic text-muted-foreground text-xs mt-2">{line.replace(/_/g, "")}</p>;
@@ -296,7 +299,7 @@ export default function AIAnalystTab() {
                       <p key={j} className="mb-0.5">
                         {parts.map((part, k) =>
                           part.startsWith("**") && part.endsWith("**")
-                            ? <strong key={k} style={{ color: "#F5C882" }}>{part.replace(/\*\*/g, "")}</strong>
+                            ? <strong key={k} style={{ color: "#F5C882" }}>{part.replace(/\\*\\*/g, "")}</strong>
                             : <span key={k}>{part}</span>
                         )}
                       </p>
@@ -320,7 +323,7 @@ export default function AIAnalystTab() {
             <div className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center" style={{ background: "rgba(232,145,58,0.12)" }}>
               <Bot className="w-3.5 h-3.5" style={{ color: "#E8913A" }} />
             </div>
-            <div className="bg-card border border-border/60 rounded-lg px-4 py-3">
+            <div className="bg-card border border-border/60 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3">
               <div className="flex gap-1">
                 <span className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: "0ms" }} />
                 <span className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: "150ms" }} />
@@ -335,7 +338,7 @@ export default function AIAnalystTab() {
 
       {/* Input */}
       <div className="border-t border-border/40 pt-4">
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <input
             ref={inputRef}
             type="text"

@@ -182,7 +182,7 @@ export default function ReportsTab() {
         </div>
 
         {/* Report name */}
-        <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <label className="micro-label text-muted-foreground block mb-1.5">Report Name</label>
           <input
             type="text"
@@ -194,7 +194,7 @@ export default function ReportsTab() {
         </div>
 
         {/* Filters */}
-        <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <h4 className="text-xs font-semibold mb-3" style={{ fontFamily: "'DM Sans'" }}>Data Scope</h4>
           <div className="flex flex-wrap gap-4">
             <div>
@@ -234,7 +234,7 @@ export default function ReportsTab() {
         </div>
 
         {/* Section toggles */}
-        <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <h4 className="text-xs font-semibold mb-3" style={{ fontFamily: "'DM Sans'" }}>Report Sections</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {editingReport.sections.map((section) => (
@@ -442,7 +442,7 @@ export default function ReportsTab() {
             const enabledCount = sections.filter((s) => s.enabled).length;
             const sectionTypes = Array.from(new Set(sections.filter((s) => s.enabled).map((s) => s.type)));
             return (
-              <div key={report.reportId} className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#E8913A]/20 transition-colors">
+              <div key={report.reportId} className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#E8913A]/20 transition-colors">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
                     <h4 className="text-sm font-semibold" style={{ fontFamily: "'DM Sans'" }}>{report.name}</h4>
@@ -532,7 +532,7 @@ export default function ReportsTab() {
       )}
 
       {/* Templates */}
-      <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+      <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         <h3 className="section-title mb-3">Report Templates</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
@@ -635,7 +635,7 @@ function ScheduleEditor({
         </div>
       </div>
 
-      <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+      <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         <div className="space-y-4">
           {/* Enable toggle */}
           <label className="flex items-center gap-3 cursor-pointer">
@@ -872,7 +872,7 @@ function SendReportDialog({
         </div>
       </div>
 
-      <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+      <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         <div className="space-y-4">
           <div>
             <label className="micro-label text-muted-foreground block mb-1.5">Recipient Email</label>
@@ -1001,7 +1001,7 @@ function ReportPreview({ report, onClose }: { report: ReportConfig; onClose: () 
 
       {/* Attendance Overview */}
       {enabledSections.some((s) => s.id === "att_overview") && (
-        <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <h3 className="section-title mb-3">Attendance Overview</h3>
           <div className="grid grid-cols-3 gap-4">
             <div className="text-center p-3 bg-muted/30 rounded-lg">
@@ -1032,7 +1032,7 @@ function ReportPreview({ report, onClose }: { report: ReportConfig; onClose: () 
 
       {/* Attendance Trend */}
       {enabledSections.some((s) => s.id === "att_trend") && (
-        <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <h3 className="section-title mb-4">Attendance Trend</h3>
           <ResponsiveContainer width="100%" height={240}>
             <LineChart data={trendData}>
@@ -1048,7 +1048,7 @@ function ReportPreview({ report, onClose }: { report: ReportConfig; onClose: () 
 
       {/* Giving Summary */}
       {enabledSections.some((s) => s.id === "giving_overview") && (
-        <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <h3 className="section-title mb-3">Giving Summary</h3>
           <div className="grid grid-cols-3 gap-4">
             <div className="text-center p-3 bg-muted/30 rounded-lg">
@@ -1072,7 +1072,7 @@ function ReportPreview({ report, onClose }: { report: ReportConfig; onClose: () 
 
       {/* GPC */}
       {enabledSections.some((s) => s.id === "giving_gpc") && (
-        <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <h3 className="section-title mb-4">Giving Per Capita Trend</h3>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={trendData}>
@@ -1088,7 +1088,7 @@ function ReportPreview({ report, onClose }: { report: ReportConfig; onClose: () 
 
       {/* Assimilation Funnel */}
       {enabledSections.some((s) => s.id === "ns_funnel") && (
-        <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <h3 className="section-title mb-4">Assimilation Funnel — {latestYear}{partial ? " YTD" : ""}</h3>
           {(() => {
             const funnel = [
@@ -1124,7 +1124,7 @@ function ReportPreview({ report, onClose }: { report: ReportConfig; onClose: () 
 
       {/* Next Steps Trend */}
       {enabledSections.some((s) => s.id === "ns_trend") && (
-        <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <h3 className="section-title mb-4">Next Steps Trend</h3>
           <ResponsiveContainer width="100%" height={240}>
             <LineChart data={trendData}>
@@ -1143,7 +1143,7 @@ function ReportPreview({ report, onClose }: { report: ReportConfig; onClose: () 
 
       {/* Health Scorecard — uses partial-year-aware formulas */}
       {enabledSections.some((s) => s.id === "health_scores") && (
-        <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <h3 className="section-title mb-3">Health Scorecard — {latestYear}{partial ? " YTD" : ""}</h3>
           {(() => {
             // Partial-year-aware attendance growth
@@ -1219,7 +1219,7 @@ function ReportPreview({ report, onClose }: { report: ReportConfig; onClose: () 
 
       {/* Volunteer Ratio */}
       {enabledSections.some((s) => s.id === "health_volunteer") && (
-        <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <h3 className="section-title mb-4">Volunteer Ratio Trend</h3>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={trendData.map((t) => {

@@ -87,7 +87,7 @@ export default function VisitorsTab() {
       )}
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <KpiCard label="Total First-Time Guests" value={formatNumber(ftgNow)} change={ftgChange} subtitle={`${latestYear} ${partial ? "YTD" : ""}`} borderColor="#E8913A" icon={<UserPlus className="w-4 h-4" />} />
         <KpiCard label="Avg Weekly FTG" value={formatNumber(avgWeeklyFTG)} subtitle="Per Sunday" borderColor="#4A7FB5" icon={<TrendingUp className="w-4 h-4" />} />
         <KpiCard label="FTG % of Attendance" value={`${ftgPctOfAttendance.toFixed(1)}%`} subtitle="Visitor rate" borderColor="#4A7C59" icon={<Target className="w-4 h-4" />} />
@@ -95,10 +95,10 @@ export default function VisitorsTab() {
       </div>
 
       {/* FTG Trend + Monthly */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-card rounded-lg border border-border/60 p-5">
-          <h3 className="text-sm font-semibold mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>FTG Multi-Year Trend</h3>
-          <ResponsiveContainer width="100%" height={280}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
+          <h3 className="text-sm font-semibold mb-3 sm:mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>FTG Multi-Year Trend</h3>
+          <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={trendData}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
               <XAxis dataKey="year" tick={{ fontSize: 11, fill: "#9CA3AF" }} />
@@ -109,9 +109,9 @@ export default function VisitorsTab() {
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-card rounded-lg border border-border/60 p-5">
-          <h3 className="text-sm font-semibold mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>{latestYear} Monthly FTG by Campus</h3>
-          <ResponsiveContainer width="100%" height={280}>
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
+          <h3 className="text-sm font-semibold mb-3 sm:mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>{latestYear} Monthly FTG by Campus</h3>
+          <ResponsiveContainer width="100%" height={220}>
             <BarChart data={monthlyFTG}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
               <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#9CA3AF" }} />
@@ -126,9 +126,9 @@ export default function VisitorsTab() {
       </div>
 
       {/* Campus Scorecard */}
-      <div className="bg-card rounded-lg border border-border/60 p-5">
-        <h3 className="text-sm font-semibold mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Campus Visitor Scorecard — {latestYear}</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
+        <h3 className="text-sm font-semibold mb-3 sm:mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Campus Visitor Scorecard — {latestYear}</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
           {campusFTG.map((c) => (
             <div key={c.campus} className="rounded-lg p-4" style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${CAMPUS_COLORS[c.campus]}30` }}>
               <div className="flex items-center gap-2 mb-3">

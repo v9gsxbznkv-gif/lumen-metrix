@@ -235,11 +235,11 @@ export default function AttendanceTab() {
         ))}
       </div>
 
-      <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-        <h3 className="section-title mb-4">
+      <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <h3 className="section-title mb-3 sm:mb-4">
           Attendance by Demographic — Multi-Year Trend
         </h3>
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={220}>
           <AreaChart data={demographicTrend}>
             <defs>
               {["Adults", "Kids", "Students"].map((key) => (
@@ -297,10 +297,10 @@ export default function AttendanceTab() {
         </ResponsiveContainer>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <h3 className="section-title mb-4">Monthly Pattern — {latestYear}</h3>
-          <ResponsiveContainer width="100%" height={260}>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div className="lg:col-span-2 bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <h3 className="section-title mb-3 sm:mb-4">Monthly Pattern — {latestYear}</h3>
+          <ResponsiveContainer width="100%" height={220}>
             <LineChart data={monthlyPattern}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E8E5DE" />
               <XAxis
@@ -334,8 +334,8 @@ export default function AttendanceTab() {
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <h3 className="section-title mb-4">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <h3 className="section-title mb-3 sm:mb-4">
             Kids Environments — {latestYear} Avg
           </h3>
           <div className="space-y-3.5">

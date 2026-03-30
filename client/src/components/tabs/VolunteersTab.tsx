@@ -98,7 +98,7 @@ export default function VolunteersTab() {
       )}
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <KpiCard label="Avg Weekly Volunteers" value={formatNumber(avgVolunteers)} change={volChange} subtitle={`${latestYear} ${partial ? "YTD" : ""}`} borderColor="#E8913A" icon={<Users className="w-4 h-4" />} />
         <KpiCard label="Volunteer %" value={`${volunteerPct.toFixed(1)}%`} subtitle="Of total attendance" borderColor="#4A7C59" icon={<Percent className="w-4 h-4" />} />
         <KpiCard label="Attendee:Volunteer" value={`${volunteerRatio.toFixed(1)}:1`} subtitle="Ratio" borderColor="#4A7FB5" icon={<TrendingUp className="w-4 h-4" />} />
@@ -106,10 +106,10 @@ export default function VolunteersTab() {
       </div>
 
       {/* Multi-year Trend */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-card rounded-lg border border-border/60 p-5">
-          <h3 className="text-sm font-semibold mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Volunteer Trend (Avg Weekly)</h3>
-          <ResponsiveContainer width="100%" height={280}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
+          <h3 className="text-sm font-semibold mb-3 sm:mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Volunteer Trend (Avg Weekly)</h3>
+          <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={trendData}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
               <XAxis dataKey="year" tick={{ fontSize: 11, fill: "#9CA3AF" }} />
@@ -120,9 +120,9 @@ export default function VolunteersTab() {
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-card rounded-lg border border-border/60 p-5">
-          <h3 className="text-sm font-semibold mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Volunteer % of Attendance</h3>
-          <ResponsiveContainer width="100%" height={280}>
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
+          <h3 className="text-sm font-semibold mb-3 sm:mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Volunteer % of Attendance</h3>
+          <ResponsiveContainer width="100%" height={220}>
             <LineChart data={trendData}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
               <XAxis dataKey="year" tick={{ fontSize: 11, fill: "#9CA3AF" }} />
@@ -135,10 +135,10 @@ export default function VolunteersTab() {
       </div>
 
       {/* Monthly + Campus */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-card rounded-lg border border-border/60 p-5">
-          <h3 className="text-sm font-semibold mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>{latestYear} Monthly Volunteers</h3>
-          <ResponsiveContainer width="100%" height={250}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
+          <h3 className="text-sm font-semibold mb-3 sm:mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>{latestYear} Monthly Volunteers</h3>
+          <ResponsiveContainer width="100%" height={220}>
             <BarChart data={monthlyData}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
               <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#9CA3AF" }} />
@@ -149,8 +149,8 @@ export default function VolunteersTab() {
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-card rounded-lg border border-border/60 p-5">
-          <h3 className="text-sm font-semibold mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Campus Comparison — {latestYear}</h3>
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
+          <h3 className="text-sm font-semibold mb-3 sm:mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Campus Comparison — {latestYear}</h3>
           <div className="space-y-4">
             {campusData.map((c) => (
               <div key={c.campus} className="rounded-lg p-4" style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${CAMPUS_COLORS[c.campus]}30` }}>
@@ -158,7 +158,7 @@ export default function VolunteersTab() {
                   <span className="w-3 h-3 rounded-full" style={{ background: CAMPUS_COLORS[c.campus] }} />
                   <span className="text-sm font-semibold">{c.campus}</span>
                 </div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
                   <div>
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Avg Vol</p>
                     <p className="text-base font-bold" style={{ fontFamily: "'DM Mono', monospace" }}>{formatNumber(c.avgVolunteers)}</p>

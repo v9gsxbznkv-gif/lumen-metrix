@@ -46,7 +46,7 @@ export default function LoginPage({ onAuthenticated }: LoginPageProps) {
     >
       {/* Card */}
       <div
-        className="w-full max-w-sm rounded-2xl shadow-lg px-8 py-10"
+        className="w-full max-w-sm rounded-2xl shadow-lg px-6 sm:px-8 py-8 sm:py-10"
         style={{ background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.06)" }}
       >
         {/* Logo */}

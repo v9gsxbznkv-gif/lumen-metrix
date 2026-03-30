@@ -93,7 +93,7 @@ function PcoConnectionSection() {
   const isConnected = connectionStatus?.connected === true;
 
   return (
-    <div className="bg-card rounded-lg border border-border/60 p-5">
+    <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Link2 className="w-4 h-4" style={{ color: "#E8913A" }} />
@@ -214,8 +214,8 @@ function AutoSyncSection() {
   const isConnected = connectionStatus?.connected === true;
 
   return (
-    <div className="bg-card rounded-lg border border-border/60 p-5">
-      <div className="flex items-center gap-2 mb-4">
+    <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
+      <div className="flex items-center gap-2 mb-3 sm:mb-4 flex-wrap">
         <Clock className="w-4 h-4" style={{ color: "#E8913A" }} />
         <h3 className="text-sm font-semibold">Auto-Sync Scheduler</h3>
       </div>
@@ -307,8 +307,8 @@ function SyncControlsSection() {
   const isConnected = connectionStatus?.connected === true;
 
   return (
-    <div className="bg-card rounded-lg border border-border/60 p-5">
-      <div className="flex items-center gap-2 mb-4">
+    <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
+      <div className="flex items-center gap-2 mb-3 sm:mb-4 flex-wrap">
         <RefreshCw className="w-4 h-4" style={{ color: "#E8913A" }} />
         <h3 className="text-sm font-semibold">PCO Sync Controls</h3>
       </div>
@@ -495,12 +495,12 @@ export default function SettingsTab() {
   return (
     <div className="space-y-6 max-w-3xl">
       {/* Church Profile */}
-      <div className="bg-card rounded-lg border border-border/60 p-5">
-        <div className="flex items-center gap-2 mb-4">
+      <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4 flex-wrap">
           <Building2 className="w-4 h-4" style={{ color: "#E8913A" }} />
           <h3 className="text-sm font-semibold">Church Profile</h3>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div>
             <label className="text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">Church Name</label>
             <div className="bg-muted/30 rounded-md px-3 py-2 text-sm">Revolution Church</div>
@@ -538,8 +538,8 @@ export default function SettingsTab() {
       <AutoSyncSection />
 
       {/* Data Source */}
-      <div className="bg-card rounded-lg border border-border/60 p-5">
-        <div className="flex items-center gap-2 mb-4">
+      <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4 flex-wrap">
           <Database className="w-4 h-4" style={{ color: "#E8913A" }} />
           <h3 className="text-sm font-semibold">Data Source</h3>
         </div>
@@ -576,8 +576,8 @@ export default function SettingsTab() {
       </div>
 
       {/* Data Integrity Notes */}
-      <div className="bg-card rounded-lg border border-border/60 p-5">
-        <div className="flex items-center gap-2 mb-4">
+      <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4 flex-wrap">
           <Info className="w-4 h-4" style={{ color: "#E8913A" }} />
           <h3 className="text-sm font-semibold">Data Integrity Notes</h3>
         </div>
@@ -593,8 +593,8 @@ export default function SettingsTab() {
       </div>
 
       {/* About */}
-      <div className="bg-card rounded-lg border border-border/60 p-5">
-        <div className="flex items-center gap-2 mb-4">
+      <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4 flex-wrap">
           <ExternalLink className="w-4 h-4" style={{ color: "#E8913A" }} />
           <h3 className="text-sm font-semibold">About Lumen Metrix</h3>
         </div>

@@ -1,8 +1,9 @@
 /*
  * Lumen Metrix — Sidebar Navigation
- * Matches Kalon proposal nav: Dashboard, People, Giving, Attendance, Volunteers, Events, Visitors, Campuses, Reports, AI Analyst, Settings
- * Dark charcoal sidebar with amber active states
+ * Desktop: fixed sidebar (collapsible)
+ * Mobile (<768px): hamburger overlay drawer
  */
+import { useEffect } from "react";
 import LumenLogo from "./LumenLogo";
 import {
   LayoutDashboard,
@@ -22,6 +23,8 @@ import {
   Activity,
   CalendarClock,
   LogOut,
+  Menu,
+  X,
 } from "lucide-react";
 
 export type TabId =
@@ -63,31 +66,62 @@ interface SidebarProps {
   collapsed: boolean;
   onToggle: () => void;
   onLogout?: () => void;
+  mobileOpen: boolean;
+  onMobileToggle: () => void;
 }
 
-export default function Sidebar({ activeTab, onTabChange, collapsed, onToggle, onLogout }: SidebarProps) {
+export default function Sidebar({
+  activeTab,
+  onTabChange,
+  collapsed,
+  onToggle,
+  onLogout,
+  mobileOpen,
+  onMobileToggle,
+}: SidebarProps) {
   let lastSection = "";
 
-  return (
-    <aside
-      className={`fixed left-0 top-0 h-screen z-30 transition-all duration-200 ease-in-out flex flex-col ${
-        collapsed ? "w-[60px]" : "w-[220px]"
-      }`}
-      style={{ background: "#1C1917" }}
-    >
+  // Lock body scroll when mobile drawer is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
+
+  function handleTabChange(tab: TabId) {
+    onTabChange(tab);
+    // Close mobile drawer on tab selection
+    if (mobileOpen) onMobileToggle();
+  }
+
+  const navContent = (
+    <>
       {/* Logo area */}
       <div className="px-3 pt-5 pb-4 flex items-center gap-2">
-        {collapsed ? (
+        {collapsed && !mobileOpen ? (
           <div className="w-full flex justify-center">
             <LumenLogo variant="icon" size={26} />
           </div>
         ) : (
           <LumenLogo variant="full" size={24} light />
         )}
+        {/* Mobile close button */}
+        <button
+          onClick={onMobileToggle}
+          className="md:hidden ml-auto p-1 rounded"
+          style={{ color: "#9CA3AF" }}
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Church name badge */}
-      {!collapsed && (
+      {(!collapsed || mobileOpen) && (
         <div className="mx-3 mb-4 px-3 py-2 rounded-md" style={{ background: "rgba(255,255,255,0.05)" }}>
           <div className="flex items-center gap-2">
             <Church className="w-3.5 h-3.5" style={{ color: "#E8913A" }} />
@@ -106,10 +140,11 @@ export default function Sidebar({ activeTab, onTabChange, collapsed, onToggle, o
           const isActive = activeTab === item.id;
           const showSection = item.section && item.section !== lastSection;
           if (item.section) lastSection = item.section;
+          const showLabel = !collapsed || mobileOpen;
 
           return (
             <div key={item.id}>
-              {showSection && !collapsed && (
+              {showSection && showLabel && (
                 <p
                   className="text-[9px] font-bold uppercase tracking-[0.12em] px-3 pt-4 pb-1.5"
                   style={{ color: "#6B7280" }}
@@ -117,11 +152,11 @@ export default function Sidebar({ activeTab, onTabChange, collapsed, onToggle, o
                   {item.section}
                 </p>
               )}
-              {showSection && collapsed && <div className="h-3" />}
+              {showSection && !showLabel && <div className="h-3" />}
               <button
-                onClick={() => onTabChange(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-[13px] font-medium transition-all duration-150 ${
-                  collapsed ? "justify-center" : ""
+                onClick={() => handleTabChange(item.id)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-md text-[13px] font-medium transition-all duration-150 ${
+                  !showLabel ? "justify-center" : ""
                 }`}
                 style={{
                   background: isActive ? "rgba(232,145,58,0.12)" : "transparent",
@@ -139,21 +174,22 @@ export default function Sidebar({ activeTab, onTabChange, collapsed, onToggle, o
                     e.currentTarget.style.color = "#9CA3AF";
                   }
                 }}
-                title={collapsed ? item.label : undefined}
+                title={!showLabel ? item.label : undefined}
               >
                 <Icon className="w-4 h-4 shrink-0" />
-                {!collapsed && <span>{item.label}</span>}
+                {showLabel && <span>{item.label}</span>}
               </button>
             </div>
           );
         })}
       </nav>
 
-      {/* Collapse toggle */}
+      {/* Bottom area */}
       <div className="px-2 pb-4">
+        {/* Collapse toggle — desktop only */}
         <button
           onClick={onToggle}
-          className="w-full flex items-center justify-center py-2 rounded-md transition-colors"
+          className="hidden md:flex w-full items-center justify-center py-2 rounded-md transition-colors"
           style={{ color: "#6B7280" }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = "rgba(255,255,255,0.05)";
@@ -171,8 +207,8 @@ export default function Sidebar({ activeTab, onTabChange, collapsed, onToggle, o
         {onLogout && (
           <button
             onClick={onLogout}
-            className={`w-full flex items-center gap-3 px-3 py-2 mt-1 rounded-md text-[13px] font-medium transition-all duration-150 ${
-              collapsed ? "justify-center" : ""
+            className={`w-full flex items-center gap-3 px-3 py-2.5 md:py-2 mt-1 rounded-md text-[13px] font-medium transition-all duration-150 ${
+              !collapsed || mobileOpen ? "" : "justify-center"
             }`}
             style={{ color: "#6B7280" }}
             onMouseEnter={(e) => {
@@ -183,15 +219,15 @@ export default function Sidebar({ activeTab, onTabChange, collapsed, onToggle, o
               e.currentTarget.style.background = "transparent";
               e.currentTarget.style.color = "#6B7280";
             }}
-            title={collapsed ? "Log out" : undefined}
+            title={collapsed && !mobileOpen ? "Log out" : undefined}
           >
             <LogOut className="w-4 h-4 shrink-0" />
-            {!collapsed && <span>Log out</span>}
+            {(!collapsed || mobileOpen) && <span>Log out</span>}
           </button>
         )}
 
         {/* Powered by branding */}
-        {!collapsed && (
+        {(!collapsed || mobileOpen) && (
           <div className="mt-3 pt-3 border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
             <p className="text-[9px] text-center" style={{ color: "#6B7280" }}>
               Powered by
@@ -202,6 +238,50 @@ export default function Sidebar({ activeTab, onTabChange, collapsed, onToggle, o
           </div>
         )}
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile top bar */}
+      <div
+        className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center gap-3 px-4 py-3"
+        style={{ background: "#1C1917" }}
+      >
+        <button onClick={onMobileToggle} className="p-1" style={{ color: "#E8E5DE" }}>
+          <Menu className="w-5 h-5" />
+        </button>
+        <LumenLogo variant="full" size={20} light />
+      </div>
+
+      {/* Mobile overlay backdrop */}
+      {mobileOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-40 bg-black/50"
+          onClick={onMobileToggle}
+        />
+      )}
+
+      {/* Mobile slide-out drawer */}
+      <aside
+        className={`md:hidden fixed left-0 top-0 h-screen z-50 w-[260px] flex flex-col transition-transform duration-250 ease-in-out ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+        style={{ background: "#1C1917" }}
+      >
+        {navContent}
+      </aside>
+
+      {/* Desktop sidebar */}
+      <aside
+        className={`hidden md:flex fixed left-0 top-0 h-screen z-30 transition-all duration-200 ease-in-out flex-col ${
+          collapsed ? "w-[60px]" : "w-[220px]"
+        }`}
+        style={{ background: "#1C1917" }}
+      >
+        {(() => { lastSection = ""; return null; })()}
+        {navContent}
+      </aside>
+    </>
   );
 }
