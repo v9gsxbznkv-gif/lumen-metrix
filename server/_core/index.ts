@@ -44,16 +44,9 @@ async function startServer() {
         return res.status(400).send("Missing authorization code from Planning Center.");
       }
 
-      // Decode state to get the origin
-      let origin = `${req.protocol}://${req.get("host")}`;
-      if (state) {
-        try {
-          const decoded = JSON.parse(Buffer.from(state, "base64url").toString());
-          if (decoded.origin) origin = decoded.origin;
-        } catch {}
-      }
-
-      const redirectUri = `${origin}/auth/callback`;
+      // Use the fixed registered redirect URI from environment
+      const { ENV } = await import("../_core/env");
+      const redirectUri = ENV.pcoRedirectUri;
 
       // Dynamic import to avoid circular deps
       const { exchangeCodeForTokens, storeTokens, PcoClient } = await import("../pco/client");

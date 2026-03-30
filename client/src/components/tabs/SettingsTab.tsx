@@ -52,9 +52,7 @@ function formatDate(d: Date | string | null | undefined): string {
 // ─── PCO Connection Section (OAuth 2.0) ──────────────────────────────────────
 function PcoConnectionSection() {
   const { data: connectionStatus, refetch } = trpc.pco.getConnectionStatus.useQuery();
-  const { data: authorizeData } = trpc.pco.getAuthorizeUrl.useQuery(
-    { origin: window.location.origin },
-  );
+  const { data: authorizeData } = trpc.pco.getAuthorizeUrl.useQuery();
 
   const testMutation = trpc.pco.testConnection.useMutation({
     onSuccess: (result) => {

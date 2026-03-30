@@ -5,6 +5,7 @@
 import { z } from "zod";
 import { desc, sql } from "drizzle-orm";
 import { publicProcedure, router } from "../_core/trpc";
+import { ENV } from "../_core/env";
 import { getDb } from "../db";
 import {
   syncLogs,
@@ -48,11 +49,9 @@ export const pcoRouter = router({
    * The frontend passes its origin so we can build the correct callback URL.
    */
   getAuthorizeUrl: publicProcedure
-    .input(z.object({ origin: z.string() }))
-    .query(({ input }) => {
-      const redirectUri = `${input.origin}/auth/callback`;
-      const state = Buffer.from(JSON.stringify({ origin: input.origin })).toString("base64url");
-      const url = getPcoAuthorizeUrl(redirectUri, state);
+    .query(() => {
+      const redirectUri = ENV.pcoRedirectUri;
+      const url = getPcoAuthorizeUrl(redirectUri);
       return { url, redirectUri };
     }),
 

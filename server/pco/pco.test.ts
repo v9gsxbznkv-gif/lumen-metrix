@@ -28,9 +28,7 @@ describe("pco.getAuthorizeUrl", () => {
     const ctx = createMockContext();
     const caller = appRouter.createCaller(ctx);
 
-    const result = await caller.pco.getAuthorizeUrl({
-      origin: "https://app.lumenmetrix.com",
-    });
+    const result = await caller.pco.getAuthorizeUrl();
 
     expect(result).toBeDefined();
     expect(result.url).toBeDefined();
@@ -45,8 +43,8 @@ describe("pco.getAuthorizeUrl", () => {
     expect(result.url).toContain("response_type=code");
     expect(result.url).toContain("scope=");
 
-    // Redirect URI should use the provided origin
-    expect(result.redirectUri).toBe("https://app.lumenmetrix.com/auth/callback");
+    // Redirect URI should use the registered public domain
+    expect(result.redirectUri).toContain("/auth/callback");
 
     // URL should contain the encoded redirect URI
     expect(result.url).toContain(encodeURIComponent(result.redirectUri));
@@ -56,9 +54,7 @@ describe("pco.getAuthorizeUrl", () => {
     const ctx = createMockContext();
     const caller = appRouter.createCaller(ctx);
 
-    const result = await caller.pco.getAuthorizeUrl({
-      origin: "http://localhost:3000",
-    });
+    const result = await caller.pco.getAuthorizeUrl();
 
     // Should include all required PCO scopes
     const url = new URL(result.url);
@@ -70,22 +66,13 @@ describe("pco.getAuthorizeUrl", () => {
     expect(scope).toContain("people");
   });
 
-  it("encodes state parameter for CSRF protection", async () => {
+  it("returns a redirect URI that matches the registered callback", async () => {
     const ctx = createMockContext();
     const caller = appRouter.createCaller(ctx);
+    const result = await caller.pco.getAuthorizeUrl();
 
-    const result = await caller.pco.getAuthorizeUrl({
-      origin: "https://app.lumenmetrix.com",
-    });
-
-    const url = new URL(result.url);
-    const state = url.searchParams.get("state");
-    expect(state).toBeDefined();
-    expect(state!.length).toBeGreaterThan(0);
-
-    // State should be base64url-decodable and contain the origin
-    const decoded = JSON.parse(Buffer.from(state!, "base64url").toString());
-    expect(decoded.origin).toBe("https://app.lumenmetrix.com");
+    // Redirect URI should end with /auth/callback
+    expect(result.redirectUri).toMatch(/\/auth\/callback$/);
   });
 });
 

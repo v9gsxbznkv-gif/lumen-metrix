@@ -10,4 +10,5 @@ export const ENV = {
   // Planning Center Online API credentials
   pcoAppId: process.env.PCO_APP_ID ?? "",
   pcoSecret: process.env.PCO_SECRET ?? "",
+  pcoRedirectUri: process.env.PCO_REDIRECT_URI ?? "https://churchdash-emzmxpmc.manus.space/auth/callback",
 };

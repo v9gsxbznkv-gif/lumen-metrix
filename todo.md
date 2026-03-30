@@ -46,3 +46,4 @@
 
 ## Bug Fixes
 - [x] Fix PCO OAuth sign-in error: changed callback path from /api/pco/callback to /auth/callback to match PCO registered URLs
+- [x] Fix PCO OAuth redirect URI: hardcoded to use PCO_REDIRECT_URI env var (churchdash-emzmxpmc.manus.space/auth/callback) instead of dynamic origin
