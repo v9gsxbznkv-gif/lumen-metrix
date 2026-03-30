@@ -47,4 +47,4 @@
 ## Bug Fixes
 - [x] Fix PCO OAuth sign-in error: changed callback path from /api/pco/callback to /auth/callback to match PCO registered URLs
 - [x] Fix PCO OAuth redirect URI: hardcoded to use PCO_REDIRECT_URI env var (churchdash-emzmxpmc.manus.space/auth/callback) instead of dynamic origin
-- [ ] Fix 404 on /auth/callback after PCO authorization — publish latest code with callback route
+- [x] Fix 404 on /auth/callback after PCO authorization — Manus gateway intercepts /auth/ paths, changed to /api/pco/callback which passes through to Express

@@ -37,7 +37,7 @@ async function startServer() {
   registerOAuthRoutes(app);
 
   // PCO OAuth callback (authorization code exchange)
-  app.get("/auth/callback", async (req, res) => {
+  app.get("/api/pco/callback", async (req, res) => {
     try {
       const { code, state } = req.query as { code?: string; state?: string };
       if (!code) {

@@ -44,7 +44,7 @@ describe("pco.getAuthorizeUrl", () => {
     expect(result.url).toContain("scope=");
 
     // Redirect URI should use the registered public domain
-    expect(result.redirectUri).toContain("/auth/callback");
+    expect(result.redirectUri).toContain("/api/pco/callback");
 
     // URL should contain the encoded redirect URI
     expect(result.url).toContain(encodeURIComponent(result.redirectUri));
@@ -71,8 +71,8 @@ describe("pco.getAuthorizeUrl", () => {
     const caller = appRouter.createCaller(ctx);
     const result = await caller.pco.getAuthorizeUrl();
 
-    // Redirect URI should end with /auth/callback
-    expect(result.redirectUri).toMatch(/\/auth\/callback$/);
+    // Redirect URI should end with /api/pco/callback
+    expect(result.redirectUri).toMatch(/\/api\/pco\/callback$/);
   });
 });
 
