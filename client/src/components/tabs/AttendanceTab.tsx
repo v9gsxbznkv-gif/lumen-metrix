@@ -12,6 +12,7 @@ import {
   isPartialYear,
   getMaxMonth,
   getTotalAttendance,
+  getAttendanceForMonths,
   MONTH_NAMES,
 } from "@/lib/data";
 import {
@@ -127,32 +128,29 @@ export default function AttendanceTab() {
   const maxMonth = useMemo(() => data ? getMaxMonth(data, latestYear) : 12, [data, latestYear]);
   const compMonths = useMemo(() => Array.from({ length: maxMonth }, (_, i) => i + 1), [maxMonth]);
 
-  // Canonical total attendance — same source as Overview page
+  // Canonical total attendance — uses getAttendanceForMonths which routes to
+  // the pre-computed Total record for full years, and monthly sums for partial years.
+  // This is the SAME function the Overview page uses, guaranteeing identical numbers.
   const totalKpi = useMemo(() => {
     if (!data) return { current: 0, prior: 0, change: undefined as ReturnType<typeof getYoYChange> | undefined };
-    const cur = getTotalAttendance(data.attendance, latestYear, filters.campus);
-    const prev = getTotalAttendance(data.attendance, latestYear - 1, filters.campus);
+    const allMonths = Array.from({ length: 12 }, (_, i) => i + 1);
     if (partial) {
-      const subgroups = ["Adults", "Kids", "Students", "Young Adults"];
-      const campusFilter = (m: { campus: string }) =>
-        filters.campus === "All Campuses" || m.campus === filters.campus;
-      const currTotal = data.attendance_monthly
-        .filter((m) => m.year === latestYear && compMonths.includes(m.month) && subgroups.includes(m.subgroup) && campusFilter(m))
-        .reduce((s, m) => s + m.total, 0);
-      const prevTotal = data.attendance_monthly
-        .filter((m) => m.year === latestYear - 1 && compMonths.includes(m.month) && subgroups.includes(m.subgroup) && campusFilter(m))
-        .reduce((s, m) => s + m.total, 0);
-      const weeks = compMonths.length * 4.33;
+      // Partial year: compare same months only
+      const cur = getAttendanceForMonths(data, latestYear, filters.campus, compMonths);
+      const prev = getAttendanceForMonths(data, latestYear - 1, filters.campus, compMonths);
       return {
-        current: Math.round(currTotal / weeks),
-        prior: Math.round(prevTotal / weeks),
-        change: getYoYChange(currTotal, prevTotal),
+        current: cur.avgWeekly,
+        prior: prev.avgWeekly,
+        change: getYoYChange(cur.avgWeekly, prev.avgWeekly),
       };
     }
+    // Full year: getAttendanceForMonths uses pre-computed Total (same as Overview)
+    const cur = getAttendanceForMonths(data, latestYear, filters.campus, allMonths);
+    const prev = getAttendanceForMonths(data, latestYear - 1, filters.campus, allMonths);
     return {
-      current: cur.avg_weekly,
-      prior: prev.avg_weekly,
-      change: getYoYChange(cur.avg_weekly, prev.avg_weekly),
+      current: cur.avgWeekly,
+      prior: prev.avgWeekly,
+      change: getYoYChange(cur.avgWeekly, prev.avgWeekly),
     };
   }, [data, filters, latestYear, partial, compMonths]);
 

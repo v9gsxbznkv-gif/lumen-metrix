@@ -398,7 +398,12 @@ export function isPartialYear(data: DashboardData, year: number): boolean {
 
 /**
  * Get attendance total for specific months of a year/campus.
- * Sums Adults + Kids + Students + Young Adults subgroups for the given months.
+ *
+ * For full years (months 1-12), returns the pre-computed Total record directly
+ * so both Overview and Attendance pages show the identical number.
+ *
+ * For partial years, sums Adults + Kids + Students + Young Adults monthly totals
+ * and estimates weeks from Canton Adults (most reliable week-count source).
  */
 export function getAttendanceForMonths(
   data: DashboardData,
@@ -406,26 +411,44 @@ export function getAttendanceForMonths(
   campus: string,
   months: number[]
 ): { total: number; avgWeekly: number } {
+  // Full year fast-path: use the pre-computed Total record (ground truth)
+  if (months.length === 12) {
+    const rec = getTotalAttendance(data.attendance, year, campus);
+    return { total: rec.total, avgWeekly: rec.avg_weekly };
+  }
+
+  // Partial year: sum per-campus monthly totals for main subgroups
   const mainSubgroups = ["Adults", "Kids", "Students", "Young Adults"];
+  // Determine which campuses to include
+  const campusList =
+    campus === "All Campuses" ? ["Canton", "Jasper", "Online"] : [campus];
+
   let total = 0;
   let weekCount = 0;
 
   for (const r of data.attendance_monthly) {
-    if (r.year === year && months.includes(r.month) && mainSubgroups.includes(r.subgroup)) {
-      if (campus === "All Campuses" || r.campus === campus) {
-        total += r.total;
-      }
+    if (
+      r.year === year &&
+      months.includes(r.month) &&
+      mainSubgroups.includes(r.subgroup) &&
+      campusList.includes(r.campus)
+    ) {
+      total += r.total;
     }
   }
 
-  // Estimate weeks from the months
+  // Estimate week count from the primary campus Adults row (most reliable)
+  const primaryCampus = campus === "All Campuses" ? "Canton" : campus;
   for (const r of data.attendance_monthly) {
-    if (r.year === year && months.includes(r.month) && r.subgroup === "Adults") {
-      if (campus === "All Campuses" ? r.campus === "Canton" : r.campus === campus) {
-        if (r.avg_weekly > 0 && r.total > 0) {
-          weekCount += Math.round(r.total / r.avg_weekly);
-        }
-      }
+    if (
+      r.year === year &&
+      months.includes(r.month) &&
+      r.subgroup === "Adults" &&
+      r.campus === primaryCampus &&
+      r.avg_weekly > 0 &&
+      r.total > 0
+    ) {
+      weekCount += Math.round(r.total / r.avg_weekly);
     }
   }
 
