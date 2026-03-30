@@ -148,3 +148,6 @@
 - [x] Fix Volunteer-to-Attendance Ratio chart: added fallback computation when precomputed ratio is missing
 - [x] Relabel Volunteer Ratio metric: changed label to "Volunteer-to-Attendee Ratio (%)" to clarify it's a percentage
 - [ ] Publish updated site with public visibility
+
+## Weekly Report 2026 Bug (Round 12)
+- [x] Fix Weekly Report page showing no data for 2026 (works for other years) — April 2026 ESL Class row was already deleted (likely during earlier Health page fix). Weekly Report now correctly returns March 2026 data with 3 campuses (Canton, Jasper, Online) and totals.attendance = 3829
