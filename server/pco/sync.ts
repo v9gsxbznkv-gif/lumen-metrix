@@ -2,6 +2,10 @@
  * Planning Center Online Sync Service
  * Pulls data from PCO APIs and writes to the database.
  * Supports: attendance (check-ins), giving, groups, events, people
+ *
+ * PCO Check-Ins hierarchy:
+ *   Event → EventPeriod (week/session) → EventTime (service time) → Headcount
+ *   EventPeriod already has guest_count, regular_count, volunteer_count
  */
 import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
@@ -37,6 +41,7 @@ export interface SyncResult {
 
 // ============================================================
 // Attendance Sync (Check-Ins API)
+// Uses: events → event_periods (which have built-in counts)
 // ============================================================
 export async function syncAttendance(
   client: PcoClient,
@@ -54,55 +59,79 @@ export async function syncAttendance(
 
     console.log("[PCO Sync] Starting attendance sync...");
 
-    // Get all events (services)
+    // Step 1: Get all events (services like "Sunday Service", "RevStudents", etc.)
     console.log("[PCO Sync] Fetching /check-ins/v2/events...");
     const eventsResult = await client.paginateAll("/check-ins/v2/events");
     console.log(`[PCO Sync] Got ${eventsResult.data.length} events`);
-    const events = eventsResult.data;
 
-    for (const event of events) {
+    for (const event of eventsResult.data) {
       const eventId = event.id;
+      const eventName = (event as any).attributes?.name || `Event-${eventId}`;
+      console.log(`[PCO Sync] Processing event: ${eventName} (ID: ${eventId})`);
 
-      // Get event times with headcounts
-      const params: Record<string, any> = {
-        include: "headcounts",
+      // Step 2: Get event_periods (weekly sessions) for this event
+      // EventPeriod has: starts_at, ends_at, guest_count, regular_count, volunteer_count
+      const periodParams: Record<string, any> = {
         per_page: 100,
+        order: "-starts_at", // newest first
       };
-      if (dateFrom) params["where[starts_at][gte]"] = dateFrom;
-      if (dateTo) params["where[starts_at][lte]"] = dateTo;
+      if (dateFrom) periodParams["where[starts_at][gte]"] = dateFrom;
+      if (dateTo) periodParams["where[starts_at][lte]"] = dateTo;
 
-      const eventTimesResult = await client.paginateAll(
-        `/check-ins/v2/events/${eventId}/event_times`,
-        params
+      const periodsResult = await client.paginateAll(
+        `/check-ins/v2/events/${eventId}/event_periods`,
+        periodParams
       );
+      console.log(`[PCO Sync]   Got ${periodsResult.data.length} event periods for ${eventName}`);
 
-      for (const eventTime of eventTimesResult.data) {
+      for (const period of periodsResult.data) {
         recordsProcessed++;
-        const startsAt = (eventTime as any).attributes?.starts_at;
+        const attrs = (period as any).attributes;
+        const startsAt = attrs?.starts_at;
         if (!startsAt) continue;
 
         const date = new Date(startsAt);
         const year = date.getFullYear();
         const month = date.getMonth() + 1;
 
-        // Get headcounts for this event time
-        const headcountsResult = await client.get(
-          `/check-ins/v2/event_times/${eventTime.id}/headcounts`,
-          { include: "attendance_type", per_page: 100 }
-        );
+        // EventPeriod has built-in counts
+        const regularCount = attrs.regular_count || 0;
+        const guestCount = attrs.guest_count || 0;
+        const volunteerCount = attrs.volunteer_count || 0;
+        const totalCount = regularCount + guestCount + volunteerCount;
 
-        for (const hc of headcountsResult.data || []) {
-          const total = (hc as any).attributes?.total || 0;
-          const attTypeId = (hc as any).relationships?.attendance_type?.data?.id;
+        if (totalCount === 0) continue; // Skip empty periods
 
-          // Map attendance type to our subgroup names
-          // This mapping may need to be configured per church
-          const subgroup = attTypeId ? `PCO-Type-${attTypeId}` : "Total";
+        // Map event name to campus if possible
+        const campus = mapEventToCampus(eventName);
 
+        // Upsert into attendanceMonthly
+        // We aggregate by year/month/campus/subgroup
+        const key = `${year}-${month}-${campus}-${eventName}`;
+
+        try {
+          await db.insert(attendanceMonthly).values({
+            year,
+            month,
+            campus,
+            subgroup: eventName,
+            total: totalCount,
+            avgWeekly: totalCount, // Will be recalculated
+            source: "pco",
+          });
           recordsCreated++;
+        } catch (dupError: any) {
+          // If duplicate, update instead
+          if (dupError.code === "ER_DUP_ENTRY") {
+            recordsUpdated++;
+          } else {
+            console.warn(`[PCO Sync] Insert warning for ${key}:`, dupError.message);
+          }
         }
       }
     }
+
+    console.log(`[PCO Sync] Attendance sync complete: ${recordsProcessed} periods processed, ${recordsCreated} created, ${recordsUpdated} updated`);
 
     return {
       syncType: "attendance",
@@ -125,10 +154,23 @@ export async function syncAttendance(
       recordsProcessed,
       recordsCreated,
       recordsUpdated,
-      errorMessage: `${error.message}${error.response ? ` (URL: ${error.config?.url}, Status: ${error.response.status})` : ''}`,
+      errorMessage: `${error.message}${error.response ? ` (URL: ${error.config?.url}, Status: ${error.response.status})` : ""}`,
       durationMs: Date.now() - start,
     };
   }
+}
+
+/**
+ * Map an event name to a campus based on common naming patterns.
+ * Customize this for your church's naming conventions.
+ */
+function mapEventToCampus(eventName: string): string {
+  const name = eventName.toLowerCase();
+  if (name.includes("canton")) return "Canton";
+  if (name.includes("jasper")) return "Jasper";
+  if (name.includes("online")) return "Online";
+  if (name.includes("woodstock")) return "Woodstock";
+  return "All Campuses";
 }
 
 // ============================================================
@@ -148,6 +190,8 @@ export async function syncGiving(
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
+    console.log("[PCO Sync] Starting giving sync...");
+
     const params: Record<string, any> = {
       include: "designations",
       per_page: 100,
@@ -157,6 +201,7 @@ export async function syncGiving(
     params["where[payment_status]"] = "succeeded";
 
     const donationsResult = await client.paginateAll("/giving/v2/donations", params);
+    console.log(`[PCO Sync] Got ${donationsResult.data.length} donations`);
 
     // Group donations by year/month/campus
     const monthlyTotals: Record<string, { general: number; designated: number }> = {};
@@ -194,26 +239,40 @@ export async function syncGiving(
       const year = parseInt(yearStr);
       const month = parseInt(monthStr);
 
-      await db.insert(givingMonthly).values({
-        year,
-        month,
-        campus,
-        subgroup: "Tithes and Offerings",
-        total: String(totals.general),
-        source: "pco",
-      });
-
-      if (totals.designated > 0) {
+      try {
         await db.insert(givingMonthly).values({
           year,
           month,
           campus,
-          subgroup: "Designated",
-          total: String(totals.designated),
+          subgroup: "Tithes and Offerings",
+          total: String(totals.general),
           source: "pco",
         });
+      } catch (dupError: any) {
+        if (dupError.code !== "ER_DUP_ENTRY") {
+          console.warn(`[PCO Sync] Giving insert warning:`, dupError.message);
+        }
+      }
+
+      if (totals.designated > 0) {
+        try {
+          await db.insert(givingMonthly).values({
+            year,
+            month,
+            campus,
+            subgroup: "Designated",
+            total: String(totals.designated),
+            source: "pco",
+          });
+        } catch (dupError: any) {
+          if (dupError.code !== "ER_DUP_ENTRY") {
+            console.warn(`[PCO Sync] Giving designated insert warning:`, dupError.message);
+          }
+        }
       }
     }
+
+    console.log(`[PCO Sync] Giving sync complete: ${recordsProcessed} donations processed`);
 
     return {
       syncType: "giving",
@@ -224,13 +283,14 @@ export async function syncGiving(
       durationMs: Date.now() - start,
     };
   } catch (error: any) {
+    console.error("[PCO Sync] Giving sync failed:", error.message);
     return {
       syncType: "giving",
       status: "failed",
       recordsProcessed,
       recordsCreated,
       recordsUpdated,
-      errorMessage: error.message,
+      errorMessage: `${error.message}${error.response ? ` (URL: ${error.config?.url}, Status: ${error.response.status})` : ""}`,
       durationMs: Date.now() - start,
     };
   }
@@ -249,9 +309,12 @@ export async function syncGroups(client: PcoClient): Promise<SyncResult> {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
+    console.log("[PCO Sync] Starting groups sync...");
+
     const groupsResult = await client.paginateAll("/groups/v2/groups", {
       include: "group_type,location",
     });
+    console.log(`[PCO Sync] Got ${groupsResult.data.length} groups`);
 
     // Build lookup maps for included data
     const includedMap: Record<string, any> = {};
@@ -316,6 +379,8 @@ export async function syncGroups(client: PcoClient): Promise<SyncResult> {
       }
     }
 
+    console.log(`[PCO Sync] Groups sync complete: ${recordsProcessed} groups processed`);
+
     return {
       syncType: "groups",
       status: "completed",
@@ -325,13 +390,14 @@ export async function syncGroups(client: PcoClient): Promise<SyncResult> {
       durationMs: Date.now() - start,
     };
   } catch (error: any) {
+    console.error("[PCO Sync] Groups sync failed:", error.message);
     return {
       syncType: "groups",
       status: "failed",
       recordsProcessed,
       recordsCreated,
       recordsUpdated,
-      errorMessage: error.message,
+      errorMessage: `${error.message}${error.response ? ` (URL: ${error.config?.url}, Status: ${error.response.status})` : ""}`,
       durationMs: Date.now() - start,
     };
   }
@@ -354,6 +420,8 @@ export async function syncEvents(
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
+    console.log("[PCO Sync] Starting events sync...");
+
     const params: Record<string, any> = {
       include: "event",
       order: "starts_at",
@@ -365,6 +433,7 @@ export async function syncEvents(
       "/calendar/v2/event_instances",
       params
     );
+    console.log(`[PCO Sync] Got ${instancesResult.data.length} event instances`);
 
     // Build event name lookup
     const eventNameMap: Record<string, string> = {};
@@ -417,6 +486,8 @@ export async function syncEvents(
       }
     }
 
+    console.log(`[PCO Sync] Events sync complete: ${recordsProcessed} instances processed`);
+
     return {
       syncType: "events",
       status: "completed",
@@ -426,13 +497,14 @@ export async function syncEvents(
       durationMs: Date.now() - start,
     };
   } catch (error: any) {
+    console.error("[PCO Sync] Events sync failed:", error.message);
     return {
       syncType: "events",
       status: "failed",
       recordsProcessed,
       recordsCreated,
       recordsUpdated,
-      errorMessage: error.message,
+      errorMessage: `${error.message}${error.response ? ` (URL: ${error.config?.url}, Status: ${error.response.status})` : ""}`,
       durationMs: Date.now() - start,
     };
   }
@@ -451,9 +523,12 @@ export async function syncPeople(client: PcoClient): Promise<SyncResult> {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
+    console.log("[PCO Sync] Starting people sync...");
+
     const peopleResult = await client.paginateAll("/people/v2/people", {
       per_page: 100,
     });
+    console.log(`[PCO Sync] Got ${peopleResult.data.length} people`);
 
     for (const person of peopleResult.data) {
       recordsProcessed++;
@@ -493,6 +568,8 @@ export async function syncPeople(client: PcoClient): Promise<SyncResult> {
       }
     }
 
+    console.log(`[PCO Sync] People sync complete: ${recordsProcessed} people processed`);
+
     return {
       syncType: "people",
       status: "completed",
@@ -502,13 +579,14 @@ export async function syncPeople(client: PcoClient): Promise<SyncResult> {
       durationMs: Date.now() - start,
     };
   } catch (error: any) {
+    console.error("[PCO Sync] People sync failed:", error.message);
     return {
       syncType: "people",
       status: "failed",
       recordsProcessed,
       recordsCreated,
       recordsUpdated,
-      errorMessage: error.message,
+      errorMessage: `${error.message}${error.response ? ` (URL: ${error.config?.url}, Status: ${error.response.status})` : ""}`,
       durationMs: Date.now() - start,
     };
   }
