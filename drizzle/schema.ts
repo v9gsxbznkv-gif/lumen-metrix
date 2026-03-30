@@ -270,3 +270,41 @@ export const pcoTokens = mysqlTable("pco_tokens", {
 
 export type PcoToken = typeof pcoTokens.$inferSelect;
 export type InsertPcoToken = typeof pcoTokens.$inferInsert;
+
+// ============================================================
+// Saved Reports — persisted report configurations
+// ============================================================
+export const savedReports = mysqlTable("saved_reports", {
+  id: int("id").autoincrement().primaryKey(),
+  reportId: varchar("reportId", { length: 64 }).notNull().unique(), // client-generated ID
+  name: varchar("name", { length: 255 }).notNull(),
+  campus: varchar("campus", { length: 64 }).notNull(),
+  yearStart: int("yearStart").notNull(),
+  yearEnd: int("yearEnd").notNull(),
+  sections: json("sections").notNull(), // JSON array of ReportSection
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SavedReport = typeof savedReports.$inferSelect;
+export type InsertSavedReport = typeof savedReports.$inferInsert;
+
+// ============================================================
+// Report Schedules — recurring delivery configuration
+// ============================================================
+export const reportSchedules = mysqlTable("report_schedules", {
+  id: int("id").autoincrement().primaryKey(),
+  reportId: varchar("reportId", { length: 64 }).notNull().unique(), // FK to saved_reports.reportId
+  frequency: varchar("frequency", { length: 32 }).notNull(), // 'weekly', 'monthly', 'quarterly'
+  dayOfWeek: int("dayOfWeek"), // 0-6 for weekly
+  dayOfMonth: int("dayOfMonth"), // 1-28 for monthly/quarterly
+  email: varchar("email", { length: 320 }).notNull(),
+  enabled: boolean("enabled").default(true).notNull(),
+  lastSentAt: timestamp("lastSentAt"),
+  nextRunAt: timestamp("nextRunAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ReportSchedule = typeof reportSchedules.$inferSelect;
+export type InsertReportSchedule = typeof reportSchedules.$inferInsert;

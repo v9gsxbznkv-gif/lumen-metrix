@@ -1,19 +1,22 @@
 /*
  * Lumen Metrix — Reports Tab
- * Custom report builder with scheduling, saved reports, and PDF export
+ * Custom report builder with server-persisted reports, scheduling, and email delivery
  */
-import { useMemo, useState, useRef, useCallback } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useData } from "@/contexts/DataContext";
+import { trpc } from "@/lib/trpc";
 import {
-  formatCurrency, formatNumber, getYoYChange, CAMPUS_COLORS, CHART_COLORS, MONTH_NAMES,
+  formatCurrency, formatNumber, getYoYChange, MONTH_NAMES,
+  getMaxMonth, isPartialYear, getAttendanceForMonths,
 } from "@/lib/data";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Line,
 } from "recharts";
 import {
-  Plus, FileText, Clock, Trash2, Edit3, Download, Eye, Calendar, Send, X,
-  ChevronRight, CheckCircle, AlertCircle,
+  Plus, FileText, Clock, Trash2, Edit3, Download, Eye, Send, X,
+  ChevronRight, CheckCircle, Mail, CalendarClock, Loader2,
 } from "lucide-react";
+import { toast } from "sonner";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -24,24 +27,21 @@ interface ReportSection {
   enabled: boolean;
 }
 
+interface ScheduleConfig {
+  frequency: "weekly" | "monthly" | "quarterly";
+  dayOfWeek?: number;
+  dayOfMonth?: number;
+  email: string;
+  enabled: boolean;
+}
+
 interface ReportConfig {
-  id: string;
+  reportId: string;
   name: string;
   campus: string;
   yearStart: number;
   yearEnd: number;
   sections: ReportSection[];
-  createdAt: string;
-  schedule: ScheduleConfig | null;
-}
-
-interface ScheduleConfig {
-  frequency: "weekly" | "monthly" | "quarterly";
-  dayOfWeek?: number; // 0-6 for weekly
-  dayOfMonth?: number; // 1-28 for monthly
-  email: string;
-  enabled: boolean;
-  lastSent?: string;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -73,92 +73,80 @@ const FREQ_LABELS: Record<string, string> = {
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-// ─── LocalStorage helpers ────────────────────────────────────────────────────
-
-function loadSavedReports(): ReportConfig[] {
-  try {
-    const raw = localStorage.getItem("lumen_reports");
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveReports(reports: ReportConfig[]) {
-  localStorage.setItem("lumen_reports", JSON.stringify(reports));
-}
-
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function ReportsTab() {
   const { data, filters } = useData();
-  const [savedReports, setSavedReports] = useState<ReportConfig[]>(loadSavedReports);
+  const utils = trpc.useUtils();
+
+  // Server state
+  const { data: serverReports, isLoading } = trpc.reports.list.useQuery();
+  const saveMutation = trpc.reports.save.useMutation({
+    onSuccess: () => utils.reports.list.invalidate(),
+  });
+  const deleteMutation = trpc.reports.delete.useMutation({
+    onSuccess: () => utils.reports.list.invalidate(),
+  });
+  const saveScheduleMutation = trpc.reports.saveSchedule.useMutation({
+    onSuccess: () => utils.reports.list.invalidate(),
+  });
+  const deleteScheduleMutation = trpc.reports.deleteSchedule.useMutation({
+    onSuccess: () => utils.reports.list.invalidate(),
+  });
+  const sendReportMutation = trpc.reports.sendReport.useMutation();
+
+  // Local UI state
   const [editingReport, setEditingReport] = useState<ReportConfig | null>(null);
   const [previewReport, setPreviewReport] = useState<ReportConfig | null>(null);
   const [showScheduleFor, setShowScheduleFor] = useState<string | null>(null);
-  const printRef = useRef<HTMLDivElement>(null);
+  const [showSendFor, setShowSendFor] = useState<string | null>(null);
 
   const availableYears = useMemo(() => data?.meta.years ?? [], [data]);
+  const savedReports = serverReports ?? [];
 
   // ─── Create new report ─────────────────────────────────────────────────────
 
   const createNewReport = () => {
     const newReport: ReportConfig = {
-      id: `report_${Date.now()}`,
+      reportId: `report_${Date.now()}`,
       name: `Report — ${new Date().toLocaleDateString("en-US", { month: "short", year: "numeric" })}`,
       campus: filters.campus,
       yearStart: filters.yearStart,
       yearEnd: filters.yearEnd,
       sections: DEFAULT_SECTIONS.map((s) => ({ ...s })),
-      createdAt: new Date().toISOString(),
-      schedule: null,
     };
     setEditingReport(newReport);
   };
 
   // ─── Save report ──────────────────────────────────────────────────────────
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editingReport) return;
-    const existing = savedReports.findIndex((r) => r.id === editingReport.id);
-    let updated: ReportConfig[];
-    if (existing >= 0) {
-      updated = [...savedReports];
-      updated[existing] = editingReport;
-    } else {
-      updated = [...savedReports, editingReport];
+    try {
+      await saveMutation.mutateAsync({
+        reportId: editingReport.reportId,
+        name: editingReport.name,
+        campus: editingReport.campus,
+        yearStart: editingReport.yearStart,
+        yearEnd: editingReport.yearEnd,
+        sections: editingReport.sections,
+      });
+      toast.success("Report saved", { description: "Your report has been saved to the server." });
+      setEditingReport(null);
+    } catch {
+      toast.error("Failed to save report.");
     }
-    setSavedReports(updated);
-    saveReports(updated);
-    setEditingReport(null);
   };
 
   // ─── Delete report ─────────────────────────────────────────────────────────
 
-  const handleDelete = (id: string) => {
-    const updated = savedReports.filter((r) => r.id !== id);
-    setSavedReports(updated);
-    saveReports(updated);
-  };
-
-  // ─── Schedule management ───────────────────────────────────────────────────
-
-  const handleScheduleSave = (reportId: string, schedule: ScheduleConfig) => {
-    const updated = savedReports.map((r) =>
-      r.id === reportId ? { ...r, schedule } : r
-    );
-    setSavedReports(updated);
-    saveReports(updated);
-    setShowScheduleFor(null);
-  };
-
-  // ─── Print / Export ────────────────────────────────────────────────────────
-
-  const handleExport = (report: ReportConfig) => {
-    setPreviewReport(report);
-    setTimeout(() => {
-      window.print();
-    }, 500);
+  const handleDelete = async (reportId: string) => {
+    try {
+      await deleteMutation.mutateAsync({ reportId });
+      toast.success("Report deleted");
+    } catch {
+      toast.error("Failed to delete report.");
+    }
   };
 
   if (!data) return null;
@@ -171,7 +159,7 @@ export default function ReportsTab() {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="section-title">
-              {savedReports.some((r) => r.id === editingReport.id) ? "Edit Report" : "New Report"}
+              {savedReports.some((r) => r.reportId === editingReport.reportId) ? "Edit Report" : "New Report"}
             </h3>
             <p className="text-[11px] text-muted-foreground mt-0.5">Configure which metrics to include</p>
           </div>
@@ -184,10 +172,11 @@ export default function ReportsTab() {
             </button>
             <button
               onClick={handleSave}
-              className="px-4 py-1.5 text-xs font-medium rounded-md text-white transition-colors"
+              disabled={saveMutation.isPending}
+              className="px-4 py-1.5 text-xs font-medium rounded-md text-white transition-colors disabled:opacity-50"
               style={{ backgroundColor: "#E8913A" }}
             >
-              Save Report
+              {saveMutation.isPending ? "Saving..." : "Save Report"}
             </button>
           </div>
         </div>
@@ -311,18 +300,101 @@ export default function ReportsTab() {
   // ─── Schedule Editor ───────────────────────────────────────────────────────
 
   if (showScheduleFor) {
-    const report = savedReports.find((r) => r.id === showScheduleFor);
+    const report = savedReports.find((r) => r.reportId === showScheduleFor);
     if (!report) return null;
     return (
       <ScheduleEditor
-        report={report}
-        onSave={(schedule) => handleScheduleSave(report.id, schedule)}
+        report={{
+          reportId: report.reportId,
+          name: report.name,
+          campus: report.campus,
+          yearStart: report.yearStart,
+          yearEnd: report.yearEnd,
+          sections: report.sections as ReportSection[],
+        }}
+        existingSchedule={report.schedule}
+        onSave={async (schedule) => {
+          try {
+            await saveScheduleMutation.mutateAsync({
+              reportId: report.reportId,
+              schedule,
+            });
+            toast.success(
+              schedule.enabled ? "Schedule saved" : "Schedule disabled",
+              { description: schedule.enabled
+                ? `Report will be delivered ${FREQ_LABELS[schedule.frequency].toLowerCase()} to ${schedule.email}`
+                : "Scheduled delivery has been paused." }
+            );
+            setShowScheduleFor(null);
+          } catch {
+            toast.error("Failed to save schedule.");
+          }
+        }}
+        onDelete={async () => {
+          try {
+            await deleteScheduleMutation.mutateAsync({ reportId: report.reportId });
+            toast.success("Schedule removed");
+            setShowScheduleFor(null);
+          } catch {
+            toast.error("Failed to remove schedule.");
+          }
+        }}
         onCancel={() => setShowScheduleFor(null)}
+        isSaving={saveScheduleMutation.isPending}
+      />
+    );
+  }
+
+  // ─── Send Report Dialog ────────────────────────────────────────────────────
+
+  if (showSendFor) {
+    const report = savedReports.find((r) => r.reportId === showSendFor);
+    if (!report) return null;
+    return (
+      <SendReportDialog
+        report={{
+          reportId: report.reportId,
+          name: report.name,
+          campus: report.campus,
+          yearStart: report.yearStart,
+          yearEnd: report.yearEnd,
+          sections: report.sections as ReportSection[],
+        }}
+        defaultEmail={report.schedule?.email ?? ""}
+        onSend={async (email, summary) => {
+          try {
+            const result = await sendReportMutation.mutateAsync({
+              reportId: report.reportId,
+              reportName: report.name,
+              email,
+              reportSummary: summary,
+            });
+            if (result.success) {
+              toast.success("Report sent", { description: `Report delivered to ${email}` });
+            } else {
+              toast.error("Delivery issue", { description: "Report was generated but delivery may have failed. Check notifications." });
+            }
+            setShowSendFor(null);
+          } catch {
+            toast.error("Failed to send report.");
+          }
+        }}
+        onCancel={() => setShowSendFor(null)}
+        isSending={sendReportMutation.isPending}
       />
     );
   }
 
   // ─── Main: Saved Reports List ──────────────────────────────────────────────
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+        <span className="ml-2 text-sm text-muted-foreground">Loading reports...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
@@ -366,10 +438,11 @@ export default function ReportsTab() {
       {savedReports.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {savedReports.map((report) => {
-            const enabledCount = report.sections.filter((s) => s.enabled).length;
-            const sectionTypes = Array.from(new Set(report.sections.filter((s) => s.enabled).map((s) => s.type)));
+            const sections = report.sections as ReportSection[];
+            const enabledCount = sections.filter((s) => s.enabled).length;
+            const sectionTypes = Array.from(new Set(sections.filter((s) => s.enabled).map((s) => s.type)));
             return (
-              <div key={report.id} className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#E8913A]/20 transition-colors">
+              <div key={report.reportId} className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-[#E8913A]/20 transition-colors">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
                     <h4 className="text-sm font-semibold" style={{ fontFamily: "'DM Sans'" }}>{report.name}</h4>
@@ -390,8 +463,8 @@ export default function ReportsTab() {
 
                 {/* Schedule badge */}
                 {report.schedule?.enabled && (
-                  <div className="flex items-center gap-1.5 mb-3 px-2 py-1 rounded bg-[#4A7C59]/8 w-fit">
-                    <Clock className="w-3 h-3 text-[#4A7C59]" />
+                  <div className="flex items-center gap-1.5 mb-3 px-2 py-1 rounded bg-[#4A7C59]/10 w-fit">
+                    <CalendarClock className="w-3 h-3 text-[#4A7C59]" />
                     <span className="text-[10px] font-medium text-[#4A7C59]">
                       {FREQ_LABELS[report.schedule.frequency]} &middot; {report.schedule.email}
                     </span>
@@ -401,32 +474,52 @@ export default function ReportsTab() {
                 {/* Actions */}
                 <div className="flex items-center gap-2 pt-2 border-t border-border/40">
                   <button
-                    onClick={() => setPreviewReport(report)}
+                    onClick={() => setPreviewReport({
+                      reportId: report.reportId,
+                      name: report.name,
+                      campus: report.campus,
+                      yearStart: report.yearStart,
+                      yearEnd: report.yearEnd,
+                      sections: sections,
+                    })}
                     className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
                   >
                     <Eye className="w-3 h-3" /> View
                   </button>
                   <button
-                    onClick={() => setEditingReport({ ...report, sections: report.sections.map((s) => ({ ...s })) })}
+                    onClick={() => setEditingReport({
+                      reportId: report.reportId,
+                      name: report.name,
+                      campus: report.campus,
+                      yearStart: report.yearStart,
+                      yearEnd: report.yearEnd,
+                      sections: sections.map((s) => ({ ...s })),
+                    })}
                     className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
                   >
                     <Edit3 className="w-3 h-3" /> Edit
                   </button>
                   <button
-                    onClick={() => setShowScheduleFor(report.id)}
+                    onClick={() => setShowScheduleFor(report.reportId)}
                     className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
                   >
                     <Clock className="w-3 h-3" /> Schedule
                   </button>
                   <button
-                    onClick={() => handleExport(report)}
+                    onClick={() => setShowSendFor(report.reportId)}
                     className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
                   >
-                    <Download className="w-3 h-3" /> Export
+                    <Mail className="w-3 h-3" /> Send
+                  </button>
+                  <button
+                    onClick={() => window.print()}
+                    className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+                  >
+                    <Download className="w-3 h-3" /> PDF
                   </button>
                   <div className="flex-1" />
                   <button
-                    onClick={() => handleDelete(report.id)}
+                    onClick={() => handleDelete(report.reportId)}
                     className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded text-[#C45B4A]/60 hover:text-[#C45B4A] hover:bg-[#C45B4A]/5 transition-colors"
                   >
                     <Trash2 className="w-3 h-3" />
@@ -463,7 +556,7 @@ export default function ReportsTab() {
               key={template.name}
               onClick={() => {
                 const newReport: ReportConfig = {
-                  id: `report_${Date.now()}`,
+                  reportId: `report_${Date.now()}`,
                   name: template.name,
                   campus: filters.campus,
                   yearStart: filters.yearStart,
@@ -472,8 +565,6 @@ export default function ReportsTab() {
                     ...s,
                     enabled: template.sections.includes(s.id),
                   })),
-                  createdAt: new Date().toISOString(),
-                  schedule: null,
                 };
                 setEditingReport(newReport);
               }}
@@ -496,22 +587,26 @@ export default function ReportsTab() {
 
 function ScheduleEditor({
   report,
+  existingSchedule,
   onSave,
+  onDelete,
   onCancel,
+  isSaving,
 }: {
   report: ReportConfig;
+  existingSchedule: { frequency: string; dayOfWeek: number | null; dayOfMonth: number | null; email: string; enabled: boolean; nextRunAt: Date | string | null } | null;
   onSave: (schedule: ScheduleConfig) => void;
+  onDelete: () => void;
   onCancel: () => void;
+  isSaving: boolean;
 }) {
-  const [schedule, setSchedule] = useState<ScheduleConfig>(
-    report.schedule ?? {
-      frequency: "weekly",
-      dayOfWeek: 1,
-      dayOfMonth: 1,
-      email: "",
-      enabled: true,
-    }
-  );
+  const [schedule, setSchedule] = useState<ScheduleConfig>({
+    frequency: (existingSchedule?.frequency as ScheduleConfig["frequency"]) ?? "weekly",
+    dayOfWeek: existingSchedule?.dayOfWeek ?? 1,
+    dayOfMonth: existingSchedule?.dayOfMonth ?? 1,
+    email: existingSchedule?.email ?? "",
+    enabled: existingSchedule?.enabled ?? true,
+  });
 
   return (
     <div className="space-y-5">
@@ -521,11 +616,21 @@ function ScheduleEditor({
           <p className="text-[11px] text-muted-foreground mt-0.5">Set up automatic delivery</p>
         </div>
         <div className="flex items-center gap-2">
+          {existingSchedule && (
+            <button onClick={onDelete} className="px-3 py-1.5 text-xs font-medium rounded-md border border-[#C45B4A]/30 text-[#C45B4A] hover:bg-[#C45B4A]/5 transition-colors">
+              Remove Schedule
+            </button>
+          )}
           <button onClick={onCancel} className="px-3 py-1.5 text-xs font-medium rounded-md border border-border/60 text-muted-foreground hover:text-foreground transition-colors">
             Cancel
           </button>
-          <button onClick={() => onSave(schedule)} className="px-4 py-1.5 text-xs font-medium rounded-md text-white transition-colors" style={{ backgroundColor: "#E8913A" }}>
-            Save Schedule
+          <button
+            onClick={() => onSave(schedule)}
+            disabled={isSaving || (!schedule.email && schedule.enabled)}
+            className="px-4 py-1.5 text-xs font-medium rounded-md text-white transition-colors disabled:opacity-50"
+            style={{ backgroundColor: "#E8913A" }}
+          >
+            {isSaving ? "Saving..." : "Save Schedule"}
           </button>
         </div>
       </div>
@@ -578,7 +683,7 @@ function ScheduleEditor({
                 </div>
               )}
 
-              {schedule.frequency === "monthly" && (
+              {(schedule.frequency === "monthly" || schedule.frequency === "quarterly") && (
                 <div>
                   <label className="micro-label text-muted-foreground block mb-1.5">Day of Month</label>
                   <select
@@ -614,7 +719,7 @@ function ScheduleEditor({
                     {schedule.frequency === "weekly" && schedule.dayOfWeek !== undefined && (
                       <> on <strong>{DAY_NAMES[schedule.dayOfWeek]}s</strong></>
                     )}
-                    {schedule.frequency === "monthly" && schedule.dayOfMonth !== undefined && (
+                    {(schedule.frequency === "monthly" || schedule.frequency === "quarterly") && schedule.dayOfMonth !== undefined && (
                       <> on the <strong>{schedule.dayOfMonth}{getOrdinal(schedule.dayOfMonth)}</strong></>
                     )}
                     {schedule.email && <> to <strong>{schedule.email}</strong></>}
@@ -635,6 +740,169 @@ function getOrdinal(n: number): string {
   return s[(v - 20) % 10] || s[v] || s[0];
 }
 
+// ─── Send Report Dialog ─────────────────────────────────────────────────────
+
+function SendReportDialog({
+  report,
+  defaultEmail,
+  onSend,
+  onCancel,
+  isSending,
+}: {
+  report: ReportConfig;
+  defaultEmail: string;
+  onSend: (email: string, summary: string) => void;
+  onCancel: () => void;
+  isSending: boolean;
+}) {
+  const { data } = useData();
+  const [email, setEmail] = useState(defaultEmail);
+
+  // Build a text summary of the report data
+  const summary = useMemo(() => {
+    if (!data) return "";
+    const lines: string[] = [];
+    const filteredYears = data.meta.years.filter(
+      (y) => y >= report.yearStart && y <= report.yearEnd
+    );
+    const latestYear = filteredYears[filteredYears.length - 1] ?? 2026;
+    const campus = report.campus;
+
+    const getAtt = (y: number) => {
+      const t = data.attendance;
+      if (campus === "All Campuses") {
+        return t.find((r) => r.year === y && r.campus === "All Campuses" && r.subgroup === "Total")?.avg_weekly ?? 0;
+      }
+      return t.find((r) => r.year === y && r.campus === campus && r.subgroup === "Total")?.avg_weekly ?? 0;
+    };
+
+    const getGiving = (y: number) => {
+      if (campus === "All Campuses") {
+        return data.giving.find((r) => r.year === y && r.campus === "All Campuses")?.total ?? 0;
+      }
+      return data.giving.find((r) => r.year === y && r.campus === campus)?.total ?? 0;
+    };
+
+    const getNS = (y: number, metric: string) => {
+      if (campus === "All Campuses") return data.next_steps.filter((n) => n.year === y && n.metric === metric && n.campus === "All Campuses").reduce((s, n) => s + n.total, 0);
+      return data.next_steps.find((n) => n.year === y && n.campus === campus && n.metric === metric)?.total ?? 0;
+    };
+
+    lines.push(`Report: ${report.name}`);
+    lines.push(`Campus: ${campus} | Period: ${report.yearStart}-${report.yearEnd}`);
+    lines.push(`Generated: ${new Date().toLocaleDateString()}`);
+    lines.push("");
+
+    const enabledSections = report.sections.filter((s) => s.enabled);
+
+    if (enabledSections.some((s) => s.id === "att_overview")) {
+      lines.push("--- ATTENDANCE ---");
+      lines.push(`${latestYear} Avg Weekly: ${formatNumber(getAtt(latestYear))}`);
+      lines.push(`YoY Change: ${getYoYChange(getAtt(latestYear), getAtt(latestYear - 1)).label}`);
+      lines.push("");
+    }
+
+    if (enabledSections.some((s) => s.id === "giving_overview")) {
+      lines.push("--- GIVING ---");
+      lines.push(`${latestYear} Total: ${formatCurrency(getGiving(latestYear))}`);
+      lines.push(`YoY Change: ${getYoYChange(getGiving(latestYear), getGiving(latestYear - 1)).label}`);
+      lines.push("");
+    }
+
+    if (enabledSections.some((s) => s.id === "ns_funnel")) {
+      lines.push("--- NEXT STEPS ---");
+      lines.push(`FTG: ${formatNumber(getNS(latestYear, "FTG"))}`);
+      lines.push(`Salvations: ${formatNumber(getNS(latestYear, "Salvation"))}`);
+      lines.push(`Baptisms: ${formatNumber(getNS(latestYear, "Baptism"))}`);
+      lines.push("");
+    }
+
+    if (enabledSections.some((s) => s.id === "health_scores")) {
+      const currAtt = getAtt(latestYear);
+      const prevAtt = getAtt(latestYear - 1);
+      const attGrowth = prevAtt > 0 ? ((currAtt - prevAtt) / prevAtt) * 100 : 0;
+      const gpcMatch = data.computed.giving_per_capita.find(
+        (g) => g.year === latestYear && g.campus === (campus === "All Campuses" ? "All Campuses" : campus)
+      );
+      const gpcVal = gpcMatch?.giving_per_capita ?? 0;
+      const volMatch = data.computed.volunteer_ratio.find(
+        (v) => v.year === latestYear && v.campus === (campus === "All Campuses" ? "All Campuses" : campus)
+      );
+      const volRatio = volMatch ? volMatch.pct * 100 : 0;
+
+      lines.push("--- HEALTH SCORECARD ---");
+      lines.push(`Attendance Growth: ${attGrowth >= 0 ? "+" : ""}${attGrowth.toFixed(1)}%`);
+      lines.push(`Giving Per Capita: ${formatCurrency(gpcVal)}`);
+      lines.push(`Volunteer Ratio: ${volRatio.toFixed(1)}%`);
+      lines.push("");
+    }
+
+    return lines.join("\n");
+  }, [data, report]);
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="section-title">Send Report: {report.name}</h3>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            An AI-generated executive summary will be included
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={onCancel} className="px-3 py-1.5 text-xs font-medium rounded-md border border-border/60 text-muted-foreground hover:text-foreground transition-colors">
+            Cancel
+          </button>
+          <button
+            onClick={() => onSend(email, summary)}
+            disabled={isSending || !email}
+            className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium rounded-md text-white transition-colors disabled:opacity-50"
+            style={{ backgroundColor: "#E8913A" }}
+          >
+            {isSending ? (
+              <>
+                <Loader2 className="w-3 h-3 animate-spin" /> Generating & Sending...
+              </>
+            ) : (
+              <>
+                <Send className="w-3 h-3" /> Send Report
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <div className="space-y-4">
+          <div>
+            <label className="micro-label text-muted-foreground block mb-1.5">Recipient Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full max-w-sm h-9 px-3 text-sm rounded-md border border-border/60 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-[#E8913A]/40"
+              placeholder="pastor@revolutionchurch.com"
+            />
+          </div>
+
+          <div>
+            <label className="micro-label text-muted-foreground block mb-1.5">Report Preview</label>
+            <pre className="text-[11px] text-muted-foreground bg-muted/30 p-3 rounded-md border border-border/30 whitespace-pre-wrap max-h-60 overflow-y-auto font-mono">
+              {summary}
+            </pre>
+          </div>
+
+          <div className="p-3 rounded-md bg-[#4A7FB5]/5 border border-[#4A7FB5]/20">
+            <p className="text-[11px] text-[#4A7FB5]">
+              An AI-powered executive summary will be generated from this data and included in the notification delivery.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Report Preview Sub-component ────────────────────────────────────────────
 
 function ReportPreview({ report, onClose }: { report: ReportConfig; onClose: () => void }) {
@@ -647,40 +915,36 @@ function ReportPreview({ report, onClose }: { report: ReportConfig; onClose: () 
   const latestYear = filteredYears[filteredYears.length - 1] ?? 2026;
   const campus = report.campus;
   const enabledSections = report.sections.filter((s) => s.enabled);
+  const partial = isPartialYear(data, latestYear);
+  const maxMonth = getMaxMonth(data, latestYear);
 
   const TT = { fontSize: 12, borderRadius: 8, border: "1px solid #E8E5DE", boxShadow: "0 4px 12px rgba(0,0,0,0.06)", fontFamily: "'Inter'" };
 
-  // Compute metrics (v3 flat structure)
+  // Compute metrics
   const getAtt = (y: number) => {
     const t = data.attendance;
     if (campus === "All Campuses") {
-      const match = t.find((r: { year: number; campus: string; subgroup: string }) => r.year === y && r.campus === "All Campuses" && r.subgroup === "Total");
-      return match?.avg_weekly ?? 0;
+      return t.find((r) => r.year === y && r.campus === "All Campuses" && r.subgroup === "Total")?.avg_weekly ?? 0;
     }
-    const match = t.find((r: { year: number; campus: string; subgroup: string }) => r.year === y && r.campus === campus && r.subgroup === "Total");
-    return match?.avg_weekly ?? 0;
+    return t.find((r) => r.year === y && r.campus === campus && r.subgroup === "Total")?.avg_weekly ?? 0;
   };
 
   const getGiving = (y: number) => {
-    const t = data.giving;
     if (campus === "All Campuses") {
-      const match = t.find((r: { year: number; campus: string }) => r.year === y && r.campus === "All Campuses");
-      return match?.total ?? 0;
+      return data.giving.find((r) => r.year === y && r.campus === "All Campuses")?.total ?? 0;
     }
-    const match = t.find((r: { year: number; campus: string }) => r.year === y && r.campus === campus);
-    return match?.total ?? 0;
+    return data.giving.find((r) => r.year === y && r.campus === campus)?.total ?? 0;
   };
 
   const getGpc = (y: number) => {
     const g = data.computed.giving_per_capita;
-    const match = campus === "All Campuses" ? g.find((r: { year: number; campus: string }) => r.year === y && r.campus === "All Campuses") : g.find((r: { year: number; campus: string }) => r.year === y && r.campus === campus);
+    const match = campus === "All Campuses" ? g.find((r) => r.year === y && r.campus === "All Campuses") : g.find((r) => r.year === y && r.campus === campus);
     return match?.giving_per_capita ?? 0;
   };
 
   const getNS = (y: number, metric: string) => {
-    const ns = data.next_steps;
-    if (campus === "All Campuses") return ns.filter((n: { year: number; metric: string; campus: string; total: number }) => n.year === y && n.metric === metric && n.campus === "All Campuses").reduce((s: number, n: { total: number }) => s + n.total, 0);
-    return ns.find((n: { year: number; campus: string; metric: string }) => n.year === y && n.campus === campus && n.metric === metric)?.total ?? 0;
+    if (campus === "All Campuses") return data.next_steps.filter((n) => n.year === y && n.metric === metric && n.campus === "All Campuses").reduce((s, n) => s + n.total, 0);
+    return data.next_steps.find((n) => n.year === y && n.campus === campus && n.metric === metric)?.total ?? 0;
   };
 
   // Trend data
@@ -702,6 +966,7 @@ function ReportPreview({ report, onClose }: { report: ReportConfig; onClose: () 
           <h3 className="section-title">{report.name}</h3>
           <p className="text-[11px] text-muted-foreground mt-0.5">
             {campus} &middot; {report.yearStart}–{report.yearEnd} &middot; Generated {new Date().toLocaleDateString()}
+            {partial && ` (YTD through ${MONTH_NAMES[maxMonth - 1]})`}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -725,13 +990,22 @@ function ReportPreview({ report, onClose }: { report: ReportConfig; onClose: () 
         <p className="text-[10px] text-muted-foreground mt-1">Powered by Lumen Metrix</p>
       </div>
 
+      {/* Partial year notice */}
+      {partial && (
+        <div className="p-3 rounded-md bg-[#E8913A]/5 border border-[#E8913A]/20">
+          <p className="text-[11px] text-[#E8913A]">
+            {latestYear} is a partial year (Jan–{MONTH_NAMES[maxMonth - 1]}). Year-over-year comparisons use the same months from prior years.
+          </p>
+        </div>
+      )}
+
       {/* Attendance Overview */}
       {enabledSections.some((s) => s.id === "att_overview") && (
         <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <h3 className="section-title mb-3">Attendance Overview</h3>
           <div className="grid grid-cols-3 gap-4">
             <div className="text-center p-3 bg-muted/30 rounded-lg">
-              <p className="micro-label text-muted-foreground mb-1">Avg Weekly ({latestYear})</p>
+              <p className="micro-label text-muted-foreground mb-1">Avg Weekly ({latestYear}{partial ? " YTD" : ""})</p>
               <p className="stat-value text-2xl">{formatNumber(getAtt(latestYear))}</p>
               <p className="text-[10px] text-muted-foreground mt-1">
                 {getYoYChange(getAtt(latestYear), getAtt(latestYear - 1)).label} vs prior year
@@ -778,7 +1052,7 @@ function ReportPreview({ report, onClose }: { report: ReportConfig; onClose: () 
           <h3 className="section-title mb-3">Giving Summary</h3>
           <div className="grid grid-cols-3 gap-4">
             <div className="text-center p-3 bg-muted/30 rounded-lg">
-              <p className="micro-label text-muted-foreground mb-1">Annual Tithes ({latestYear})</p>
+              <p className="micro-label text-muted-foreground mb-1">{partial ? "YTD" : "Annual"} Tithes ({latestYear})</p>
               <p className="stat-value text-2xl">{formatCurrency(getGiving(latestYear))}</p>
               <p className="text-[10px] text-muted-foreground mt-1">
                 {getYoYChange(getGiving(latestYear), getGiving(latestYear - 1)).label} vs prior year
@@ -786,7 +1060,7 @@ function ReportPreview({ report, onClose }: { report: ReportConfig; onClose: () 
             </div>
             <div className="text-center p-3 bg-muted/30 rounded-lg">
               <p className="micro-label text-muted-foreground mb-1">Weekly Average</p>
-              <p className="stat-value text-2xl">{formatCurrency(getGiving(latestYear) / 52)}</p>
+              <p className="stat-value text-2xl">{formatCurrency(getGiving(latestYear) / (partial ? Math.round(maxMonth * 4.33) : 52))}</p>
             </div>
             <div className="text-center p-3 bg-muted/30 rounded-lg">
               <p className="micro-label text-muted-foreground mb-1">Total ({report.yearStart}–{latestYear})</p>
@@ -815,7 +1089,7 @@ function ReportPreview({ report, onClose }: { report: ReportConfig; onClose: () 
       {/* Assimilation Funnel */}
       {enabledSections.some((s) => s.id === "ns_funnel") && (
         <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <h3 className="section-title mb-4">Assimilation Funnel — {latestYear}</h3>
+          <h3 className="section-title mb-4">Assimilation Funnel — {latestYear}{partial ? " YTD" : ""}</h3>
           {(() => {
             const funnel = [
               { label: "First Time Guests", value: getNS(latestYear, "FTG"), color: "#4A7C59" },
@@ -867,33 +1141,74 @@ function ReportPreview({ report, onClose }: { report: ReportConfig; onClose: () 
         </div>
       )}
 
-      {/* Health Scorecard */}
+      {/* Health Scorecard — uses partial-year-aware formulas */}
       {enabledSections.some((s) => s.id === "health_scores") && (
         <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <h3 className="section-title mb-3">Health Scorecard — {latestYear}</h3>
+          <h3 className="section-title mb-3">Health Scorecard — {latestYear}{partial ? " YTD" : ""}</h3>
           {(() => {
-            const currAtt = getAtt(latestYear);
-            const prevAtt = getAtt(latestYear - 1);
-            const attGrowth = prevAtt > 0 ? ((currAtt - prevAtt) / prevAtt) * 100 : 0;
+            // Partial-year-aware attendance growth
+            const currAttAvg = getAtt(latestYear);
+            let prevAttAvg: number;
+            if (partial) {
+              const compMonths = Array.from({ length: maxMonth }, (_, i) => i + 1);
+              prevAttAvg = getAttendanceForMonths(data, latestYear - 1, campus, compMonths).avgWeekly;
+            } else {
+              prevAttAvg = getAtt(latestYear - 1);
+            }
+            const attGrowth = prevAttAvg > 0 ? ((currAttAvg - prevAttAvg) / prevAttAvg) * 100 : 0;
+
             const gpcVal = getGpc(latestYear);
-            const ftg = getNS(latestYear, "FTG");
-            const ftgPct = currAtt > 0 ? ((ftg / 52) / currAtt) * 100 : 0;
+
+            // Volunteer ratio from computed data
+            const volMatch = data.computed.volunteer_ratio.find(
+              (v) => v.year === latestYear && v.campus === (campus === "All Campuses" ? "All Campuses" : campus)
+            );
+            const volRatio = volMatch ? volMatch.pct * 100 : 0;
+
+            // FTG rate — partial-year-aware
+            const INDIVIDUAL_CAMPUSES = ["Canton", "Jasper", "Online"];
+            const ftgMonthly = data.next_steps_monthly.filter(
+              (n) =>
+                n.year === latestYear &&
+                n.metric === "FTG" &&
+                (campus === "All Campuses" ? INDIVIDUAL_CAMPUSES.includes(n.campus) : n.campus === campus)
+            );
+            let ftg: number;
+            if (ftgMonthly.length > 0) {
+              const compMonths = Array.from({ length: maxMonth }, (_, i) => i + 1);
+              ftg = ftgMonthly.filter((n) => compMonths.includes(n.month)).reduce((s, n) => s + n.count, 0);
+            } else {
+              ftg = data.next_steps
+                .filter(
+                  (n) =>
+                    n.year === latestYear &&
+                    n.metric === "FTG" &&
+                    (campus === "All Campuses" ? INDIVIDUAL_CAMPUSES.includes(n.campus) : n.campus === campus)
+                )
+                .reduce((s, n) => s + n.total, 0);
+            }
+            const weeks = partial ? Math.round(maxMonth * 4.33) : 52;
+            const ftgPerWeek = ftg / weeks;
+            const ftgPct = currAttAvg > 0 ? (ftgPerWeek / currAttAvg) * 100 : 0;
 
             const scores = [
               { metric: "Attendance Growth", value: `${attGrowth >= 0 ? "+" : ""}${attGrowth.toFixed(1)}%`, status: attGrowth > 5 ? "Excellent" : attGrowth > 0 ? "Good" : "Watch" },
+              { metric: "Volunteer Ratio", value: `${volRatio.toFixed(1)}%`, status: volRatio > 20 ? "Excellent" : volRatio > 15 ? "Good" : volRatio > 10 ? "Caution" : "Watch" },
               { metric: "Giving Per Capita", value: formatCurrency(gpcVal), status: gpcVal > 3000 ? "Excellent" : gpcVal > 2000 ? "Good" : "Watch" },
-              { metric: "FTG Rate", value: `${ftgPct.toFixed(1)}%`, status: ftgPct > 5 ? "Excellent" : ftgPct > 3 ? "Good" : "Watch" },
+              { metric: "FTG Rate", value: `${ftgPct.toFixed(1)}%`, status: ftgPct > 5 ? "Excellent" : ftgPct > 3 ? "Good" : ftgPct > 1 ? "Caution" : "Watch" },
             ];
 
             return (
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {scores.map((s) => (
                   <div key={s.metric} className="text-center p-3 bg-muted/30 rounded-lg">
                     <p className="micro-label text-muted-foreground mb-1">{s.metric}</p>
                     <p className="stat-value text-xl">{s.value}</p>
-                    <p className={`text-[10px] font-semibold mt-1 ${s.status === "Excellent" ? "text-[#4A7C59]" : s.status === "Good" ? "text-[#4A7FB5]" : "text-[#D4A843]"}`}>
-                      {s.status}
-                    </p>
+                    <p className={`text-[10px] font-medium mt-1 ${
+                      s.status === "Excellent" ? "text-[#4A7C59]" :
+                      s.status === "Good" ? "text-[#4A7FB5]" :
+                      s.status === "Caution" ? "text-[#E8913A]" : "text-[#C45B4A]"
+                    }`}>{s.status}</p>
                   </div>
                 ))}
               </div>
@@ -906,28 +1221,20 @@ function ReportPreview({ report, onClose }: { report: ReportConfig; onClose: () 
       {enabledSections.some((s) => s.id === "health_volunteer") && (
         <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <h3 className="section-title mb-4">Volunteer Ratio Trend</h3>
-          {(() => {
-            const vr = data.computed.volunteer_ratio;
-            const vrData = filteredYears.map((y) => {
-              const match = campus === "All Campuses"
-                ? vr.filter((v) => v.year === y)
-                : vr.filter((v) => v.year === y && v.campus === campus);
-              const totalVol = match.reduce((s, v) => s + v.avg_volunteers, 0);
-              const totalAtt = match.reduce((s, v) => s + v.avg_attendance, 0);
-              return { year: y, ratio: totalAtt > 0 ? Math.round((totalVol / totalAtt) * 1000) / 10 : 0 };
-            });
-            return (
-              <ResponsiveContainer width="100%" height={240}>
-                <LineChart data={vrData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E8E5DE" />
-                  <XAxis dataKey="year" tick={{ fontSize: 11, fontFamily: "'Inter'" }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 11, fontFamily: "'DM Mono'" }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} />
-                  <Tooltip contentStyle={TT} formatter={(v: number) => [`${v}%`, "Ratio"]} />
-                  <Line type="monotone" dataKey="ratio" stroke="#8B6DAF" strokeWidth={2} dot={{ r: 3 }} name="Volunteer %" />
-                </LineChart>
-              </ResponsiveContainer>
-            );
-          })()}
+          <ResponsiveContainer width="100%" height={240}>
+            <BarChart data={trendData.map((t) => {
+              const vol = data.computed.volunteer_ratio.find(
+                (v) => v.year === t.year && v.campus === (campus === "All Campuses" ? "All Campuses" : campus)
+              );
+              return { year: t.year, ratio: vol ? +(vol.pct * 100).toFixed(1) : 0 };
+            })}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E8E5DE" />
+              <XAxis dataKey="year" tick={{ fontSize: 11, fontFamily: "'Inter'" }} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 11, fontFamily: "'DM Mono'" }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} />
+              <Tooltip contentStyle={TT} formatter={(v: number) => [`${v}%`, "Ratio"]} />
+              <Bar dataKey="ratio" fill="#8B6DAF" radius={[3, 3, 0, 0]} maxBarSize={28} name="Volunteer Ratio" />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       )}
     </div>

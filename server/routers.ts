@@ -3,6 +3,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { pcoRouter } from "./pco/router";
+import { reportsRouter } from "./reports/router";
 
 export const appRouter = router({
   system: systemRouter,
@@ -19,6 +20,9 @@ export const appRouter = router({
 
   // Planning Center Online integration
   pco: pcoRouter,
+
+  // Reports — saved reports, scheduling, and delivery
+  reports: reportsRouter,
 });
 
 export type AppRouter = typeof appRouter;

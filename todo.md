@@ -72,3 +72,10 @@
 ## Bug Fixes (Round 2)
 - [x] Fix "All Campuses" volunteer avg weekly calculation — excluded pre-aggregated row from DB query, frontend now sums Canton + Jasper dynamically
 - [x] Fix 2026 missing from year dropdown — sourceFilter was requiring source='pco' for 2026+ but all data is still source='spreadsheet'; relaxed filter to allow any source for all years, and year list now built from all tables not just attendance/giving
+
+## Reports Page (Round 4)
+- [x] Fix Reports page so reports generate correctly (rewrote with tRPC backend, server-persisted reports)
+- [x] Add recurring schedule capability (weekly, monthly, quarterly) with DB persistence
+- [x] Add email delivery for reports via AI executive summary + owner notification
+- [x] Add vitest tests for reports router (11 tests)
+- [ ] Publish updated site with Reports fixes

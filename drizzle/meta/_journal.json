@@ -22,6 +22,13 @@
       "when": 1774837879262,
       "tag": "0002_glorious_ultimo",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1774902436886,
+      "tag": "0003_lively_ben_urich",
+      "breakpoints": true
     }
   ]
 }
