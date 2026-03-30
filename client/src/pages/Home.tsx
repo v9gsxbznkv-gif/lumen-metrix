@@ -40,7 +40,7 @@ const TAB_META: Record<TabId, { title: string; subtitle: string }> = {
 };
 
 export default function Home() {
-  const { loading, error } = useData();
+  const { data, loading, error } = useData();
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 

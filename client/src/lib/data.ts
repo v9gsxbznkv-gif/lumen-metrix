@@ -1,6 +1,6 @@
 // Lumen Metrix — Data Layer v3
 // "Light through measurement"
-// Rebuilt from raw campus tab sheets for full data integrity
+// Hybrid: loads from backend API (database) first, falls back to CDN JSON
 
 const DATA_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663419960068/EmzMXpmCwkQz2biKeRL4cm/dashboard_data_v3_e47d21d1.json";
 
@@ -198,7 +198,6 @@ function computeGPC(
 
   for (const g of giving) {
     if (!campuses.includes(g.campus)) continue;
-    // Find total attendance for this year/campus
     const att = attendance.find(
       (a) => a.year === g.year && a.campus === g.campus && a.subgroup === "Total"
     );
@@ -249,17 +248,14 @@ function computeVolunteerRatio(
   return results;
 }
 
-export async function loadDashboardData(): Promise<DashboardData> {
-  if (cachedData) return cachedData;
-  const response = await fetch(DATA_URL);
-  if (!response.ok) throw new Error("Failed to load dashboard data");
-  const raw: RawDashboard = await response.json();
-
-  // Compute derived metrics
+/**
+ * Transform raw data (from either API or CDN) into DashboardData.
+ */
+function transformRawData(raw: RawDashboard): DashboardData {
   const gpc = computeGPC(raw.attendance, raw.giving);
   const vr = computeVolunteerRatio(raw.attendance, raw.serving);
 
-  cachedData = {
+  return {
     attendance: raw.attendance,
     attendance_monthly: raw.attendance_monthly,
     giving: raw.giving,
@@ -273,12 +269,81 @@ export async function loadDashboardData(): Promise<DashboardData> {
       volunteer_ratio: vr,
     },
     meta: {
-      years: raw.years,
-      campuses: ["Canton", "Jasper", "Online", "All Campuses"],
+      years: raw.years || [],
+      campuses: raw.campuses || ["Canton", "Jasper", "Online", "All Campuses"],
     },
   };
+}
 
+/**
+ * Try loading data from the backend API (database).
+ * Returns null if the API is unavailable or returns no data.
+ */
+async function loadFromApi(): Promise<RawDashboard | null> {
+  try {
+    // Use tRPC batch endpoint to call pco.getDashboardData
+    const response = await fetch("/api/trpc/pco.getDashboardData", {
+      method: "GET",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!response.ok) return null;
+
+    const json = await response.json();
+    // tRPC wraps the result in { result: { data: { json: ... } } }
+    const data = json?.result?.data?.json;
+    if (!data) return null;
+
+    // Verify we have actual data (not empty)
+    if (
+      (!data.attendance || data.attendance.length === 0) &&
+      (!data.giving || data.giving.length === 0)
+    ) {
+      return null;
+    }
+
+    return data as RawDashboard;
+  } catch {
+    console.warn("[Data] Backend API unavailable, falling back to CDN");
+    return null;
+  }
+}
+
+/**
+ * Load data from CDN JSON (static fallback).
+ */
+async function loadFromCdn(): Promise<RawDashboard> {
+  const response = await fetch(DATA_URL);
+  if (!response.ok) throw new Error("Failed to load dashboard data from CDN");
+  return response.json();
+}
+
+/**
+ * Load dashboard data — tries backend API first, falls back to CDN.
+ */
+export async function loadDashboardData(): Promise<DashboardData> {
+  if (cachedData) return cachedData;
+
+  // Try backend API first (database has the latest data including PCO syncs)
+  const apiData = await loadFromApi();
+  if (apiData) {
+    console.log("[Data] Loaded from backend API (database)");
+    cachedData = transformRawData(apiData);
+    return cachedData;
+  }
+
+  // Fall back to CDN JSON (historical data)
+  console.log("[Data] Loading from CDN (static JSON fallback)");
+  const cdnData = await loadFromCdn();
+  cachedData = transformRawData(cdnData);
   return cachedData;
+}
+
+/**
+ * Force reload data from the backend (e.g., after a sync).
+ */
+export function invalidateDataCache(): void {
+  cachedData = null;
 }
 
 // ============================================================
@@ -419,7 +484,6 @@ export function getAttendanceForMonths(
 
   // Partial year: sum per-campus monthly totals for main subgroups
   const mainSubgroups = ["Adults", "Kids", "Students", "Young Adults"];
-  // Determine which campuses to include
   const campusList =
     campus === "All Campuses" ? ["Canton", "Jasper", "Online"] : [campus];
 

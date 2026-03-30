@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1774836407218,
+      "tag": "0000_normal_sersi",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1774836611266,
+      "tag": "0001_sad_taskmaster",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1774837879262,
+      "tag": "0002_glorious_ultimo",
+      "breakpoints": true
+    }
+  ]
+}
