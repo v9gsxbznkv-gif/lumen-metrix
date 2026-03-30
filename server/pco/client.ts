@@ -256,9 +256,11 @@ export class PcoClient {
     this.lastRequestTime = Date.now();
 
     try {
+      console.log(`[PCO API] GET ${url}`, params ? JSON.stringify(params) : '');
       const response = await this.client.get(url, { params });
       return response.data;
     } catch (error: any) {
+      console.error(`[PCO API] Error on GET ${url}:`, error.response?.status, error.message);
       // If 401, try refreshing the token once
       if (error.response?.status === 401) {
         console.log("[PCO] Got 401, attempting token refresh...");
@@ -346,7 +348,12 @@ export class PcoClient {
  * Returns null if no valid token is available.
  */
 export async function createAuthenticatedPcoClient(): Promise<PcoClient | null> {
+  console.log("[PCO] Creating authenticated client...");
   const token = await getValidAccessToken();
-  if (!token) return null;
+  if (!token) {
+    console.error("[PCO] No valid access token available");
+    return null;
+  }
+  console.log(`[PCO] Got token: ${token.substring(0, 20)}...`);
   return new PcoClient(token);
 }

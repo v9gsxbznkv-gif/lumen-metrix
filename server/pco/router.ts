@@ -105,10 +105,12 @@ export const pcoRouter = router({
       })
     )
     .mutation(async ({ input }) => {
+      console.log(`[PCO Sync] Triggering sync: ${input.syncType}`);
       const client = await createAuthenticatedPcoClient();
       if (!client) {
         throw new Error("Not connected to Planning Center. Go to Settings and connect your account.");
       }
+      console.log(`[PCO Sync] Client created, starting ${input.syncType} sync...`);
 
       let results;
       if (input.syncType === "full") {

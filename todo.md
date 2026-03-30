@@ -48,4 +48,6 @@
 - [x] Fix PCO OAuth sign-in error: changed callback path from /api/pco/callback to /auth/callback to match PCO registered URLs
 - [x] Fix PCO OAuth redirect URI: hardcoded to use PCO_REDIRECT_URI env var (churchdash-emzmxpmc.manus.space/auth/callback) instead of dynamic origin
 - [x] Fix 404 on /auth/callback after PCO authorization — Manus gateway intercepts /auth/ paths, changed to /api/pco/callback which passes through to Express
-- [ ] Fix attendance sync 404 error when pulling data from PCO
+- [x] Fix attendance sync 404 error: fixed fallback redirect URI in env.ts and republished
+- [ ] Fix PCO attendance sync 404: Check-Ins API returning 404, likely needs API version header or correct endpoint paths
+- [ ] Add better error logging to sync functions to capture exact failing URL and response

@@ -1,0 +1,46 @@
+{
+  "query": "SELECT * FROM sync_logs ORDER BY id DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT * FROM sync_logs ORDER BY id DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "3",
+      "syncType": "attendance",
+      "status": "failed",
+      "recordsProcessed": "0",
+      "recordsCreated": "0",
+      "recordsUpdated": "0",
+      "errorMessage": "Request failed with status code 404",
+      "startedAt": "2026-03-30 12:46:04",
+      "completedAt": "2026-03-30 12:46:05",
+      "durationMs": "933"
+    },
+    {
+      "id": "2",
+      "syncType": "attendance",
+      "status": "failed",
+      "recordsProcessed": "0",
+      "recordsCreated": "0",
+      "recordsUpdated": "0",
+      "errorMessage": "Request failed with status code 404",
+      "startedAt": "2026-03-30 12:36:59",
+      "completedAt": "2026-03-30 12:37:00",
+      "durationMs": "892"
+    },
+    {
+      "id": "1",
+      "syncType": "attendance",
+      "status": "failed",
+      "recordsProcessed": "0",
+      "recordsCreated": "0",
+      "recordsUpdated": "0",
+      "errorMessage": "Request failed with status code 404",
+      "startedAt": "2026-03-30 12:36:17",
+      "completedAt": "2026-03-30 12:36:18",
+      "durationMs": "894"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsyncType\tstatus\trecordsProcessed\trecordsCreated\trecordsUpdated\terrorMessage\tstartedAt\tcompletedAt\tdurationMs\n3\tattendance\tfailed\t0\t0\t0\tRequest failed with status code 404\t2026-03-30 12:46:04\t2026-03-30 12:46:05\t933\n2\tattendance\tfailed\t0\t0\t0\tRequest failed with status code 404\t2026-03-30 12:36:59\t2026-03-30 12:37:00\t892\n1\tattendance\tfailed\t0\t0\t0\tRequest failed with status code 404\t2026-03-30 12:36:17\t2026-03-30 12:36:18\t894\n",
+  "stderr": "",
+  "execution_time_ms": 87
+}

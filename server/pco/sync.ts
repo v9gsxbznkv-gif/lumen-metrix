@@ -52,8 +52,12 @@ export async function syncAttendance(
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
+    console.log("[PCO Sync] Starting attendance sync...");
+
     // Get all events (services)
+    console.log("[PCO Sync] Fetching /check-ins/v2/events...");
     const eventsResult = await client.paginateAll("/check-ins/v2/events");
+    console.log(`[PCO Sync] Got ${eventsResult.data.length} events`);
     const events = eventsResult.data;
 
     for (const event of events) {
@@ -109,13 +113,19 @@ export async function syncAttendance(
       durationMs: Date.now() - start,
     };
   } catch (error: any) {
+    console.error("[PCO Sync] Attendance sync failed:", error.message);
+    if (error.response) {
+      console.error("[PCO Sync] Response status:", error.response.status);
+      console.error("[PCO Sync] Response URL:", error.config?.url);
+      console.error("[PCO Sync] Response data:", JSON.stringify(error.response.data)?.substring(0, 500));
+    }
     return {
       syncType: "attendance",
       status: "failed",
       recordsProcessed,
       recordsCreated,
       recordsUpdated,
-      errorMessage: error.message,
+      errorMessage: `${error.message}${error.response ? ` (URL: ${error.config?.url}, Status: ${error.response.status})` : ''}`,
       durationMs: Date.now() - start,
     };
   }
