@@ -120,3 +120,16 @@
 - [x] KpiCard: reduce padding and font sizes on mobile
 - [x] Add global mobile utility CSS (table-scroll, responsive chart containers)
 - [x] Publish updated site with public visibility
+
+## Groups Page Feature (Round 8)
+- [x] Add groups_annual and groups_monthly schema tables to drizzle/schema.ts
+- [x] Seed historical groups data (2015-2026) for Canton and Jasper
+- [x] Add tRPC procedure groups.getData with campus/year filters, prior year comparison, monthly trends, campus breakdown, yearly trend
+- [x] Build GroupsTab frontend with 5 KPI cards: active groups, total members, leaders, avg attendance, participation rate
+- [x] Add 3 charts: monthly bar chart, members YoY line chart, multi-year area trend
+- [x] Add campus breakdown table with YoY change column
+- [x] Add key ratios section (members/group, members/leader, leaders/group)
+- [x] Add Groups to sidebar navigation (UsersRound icon, under Overview section)
+- [x] GroupsTab built mobile-responsive from the start (responsive grids, scrollable table)
+- [x] Write 9 vitest tests for groups.getData procedure (56 total tests passing)
+- [ ] Publish updated site with public visibility

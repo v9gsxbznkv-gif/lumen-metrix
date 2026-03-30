@@ -1,0 +1,8 @@
+{
+  "query": "SELECT year, campus, active_groups, total_members, total_leaders, avg_attendance FROM groups_annual WHERE campus IN ('Canton', 'Jasper') ORDER BY year, campus LIMIT 30;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, campus, active_groups, total_members, total_leaders, avg_attendance FROM groups_annual WHERE campus IN ('Canton', 'Jasper') ORDER BY year, campus LIMIT 30;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'active_groups' in 'field list'"
+  ]
+}

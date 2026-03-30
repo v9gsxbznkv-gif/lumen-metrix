@@ -25,6 +25,7 @@ import {
   LogOut,
   Menu,
   X,
+  UsersRound,
 } from "lucide-react";
 
 export type TabId =
@@ -34,6 +35,7 @@ export type TabId =
   | "attendance"
   | "volunteers"
   | "events"
+  | "groups"
   | "visitors"
   | "campuses"
   | "compare"
@@ -50,6 +52,7 @@ const NAV_ITEMS: { id: TabId; label: string; icon: React.ElementType; section?: 
   { id: "attendance", label: "Attendance", icon: UserCheck },
   { id: "volunteers", label: "Volunteers", icon: Activity },
   { id: "events", label: "Events", icon: CalendarDays },
+  { id: "groups", label: "Groups", icon: UsersRound },
   { id: "visitors", label: "Visitors", icon: UserPlus, section: "Insights" },
   { id: "campuses", label: "Campuses", icon: Building2 },
   { id: "compare", label: "Compare", icon: ArrowLeftRight },

@@ -192,6 +192,41 @@ export type ServingMonthlyRow = typeof servingMonthly.$inferSelect;
 export type InsertServingMonthly = typeof servingMonthly.$inferInsert;
 
 // ============================================================
+// Groups — annual aggregates by year/campus
+// ============================================================
+export const groupsAnnual = mysqlTable("groups_annual", {
+  id: int("id").autoincrement().primaryKey(),
+  year: int("year").notNull(),
+  campus: varchar("campus", { length: 64 }).notNull(),
+  activeGroups: int("activeGroups").default(0).notNull(),
+  totalMembers: int("totalMembers").default(0).notNull(),
+  totalLeaders: int("totalLeaders").default(0).notNull(),
+  avgAttendance: int("avgAttendance").default(0).notNull(), // avg weekly group attendance
+  source: varchar("source", { length: 32 }).default("spreadsheet").notNull(),
+});
+
+export type GroupsAnnualRow = typeof groupsAnnual.$inferSelect;
+export type InsertGroupsAnnual = typeof groupsAnnual.$inferInsert;
+
+// ============================================================
+// Groups Monthly — monthly breakdowns
+// ============================================================
+export const groupsMonthly = mysqlTable("groups_monthly", {
+  id: int("id").autoincrement().primaryKey(),
+  year: int("year").notNull(),
+  month: int("month").notNull(),
+  campus: varchar("campus", { length: 64 }).notNull(),
+  activeGroups: int("activeGroups").default(0).notNull(),
+  totalMembers: int("totalMembers").default(0).notNull(),
+  totalLeaders: int("totalLeaders").default(0).notNull(),
+  avgAttendance: int("avgAttendance").default(0).notNull(),
+  source: varchar("source", { length: 32 }).default("spreadsheet").notNull(),
+});
+
+export type GroupsMonthlyRow = typeof groupsMonthly.$inferSelect;
+export type InsertGroupsMonthly = typeof groupsMonthly.$inferInsert;
+
+// ============================================================
 // PCO Groups — synced from Planning Center Groups API
 // ============================================================
 export const pcoGroups = mysqlTable("pco_groups", {

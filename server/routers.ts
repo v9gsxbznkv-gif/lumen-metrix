@@ -6,6 +6,7 @@ import { publicProcedure, router } from "./_core/trpc";
 import { pcoRouter } from "./pco/router";
 import { reportsRouter } from "./reports/router";
 import { weeklyReportRouter } from "./weeklyReport/router";
+import { groupsRouter } from "./groups/router";
 import { z } from "zod";
 
 // Cookie name for the simple dashboard password session
@@ -65,6 +66,9 @@ export const appRouter = router({
 
   // Weekly Report — weekly snapshot with comparisons and auto-generation
   weeklyReport: weeklyReportRouter,
+
+  // Groups — active groups, members, leaders, attendance, participation rate
+  groups: groupsRouter,
 });
 
 export type AppRouter = typeof appRouter;

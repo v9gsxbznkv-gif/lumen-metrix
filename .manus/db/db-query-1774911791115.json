@@ -1,0 +1,218 @@
+{
+  "query": "SELECT year, campus, activeGroups, totalMembers, totalLeaders, avgAttendance FROM groups_annual ORDER BY year, campus;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, campus, activeGroups, totalMembers, totalLeaders, avgAttendance FROM groups_annual ORDER BY year, campus;",
+  "rows": [
+    {
+      "year": "2014",
+      "campus": "Canton",
+      "activeGroups": "18",
+      "totalMembers": "210",
+      "totalLeaders": "28",
+      "avgAttendance": "165"
+    },
+    {
+      "year": "2014",
+      "campus": "Jasper",
+      "activeGroups": "5",
+      "totalMembers": "55",
+      "totalLeaders": "8",
+      "avgAttendance": "42"
+    },
+    {
+      "year": "2015",
+      "campus": "Canton",
+      "activeGroups": "22",
+      "totalMembers": "260",
+      "totalLeaders": "34",
+      "avgAttendance": "205"
+    },
+    {
+      "year": "2015",
+      "campus": "Jasper",
+      "activeGroups": "6",
+      "totalMembers": "68",
+      "totalLeaders": "10",
+      "avgAttendance": "52"
+    },
+    {
+      "year": "2016",
+      "campus": "Canton",
+      "activeGroups": "28",
+      "totalMembers": "340",
+      "totalLeaders": "42",
+      "avgAttendance": "270"
+    },
+    {
+      "year": "2016",
+      "campus": "Jasper",
+      "activeGroups": "8",
+      "totalMembers": "85",
+      "totalLeaders": "12",
+      "avgAttendance": "65"
+    },
+    {
+      "year": "2017",
+      "campus": "Canton",
+      "activeGroups": "35",
+      "totalMembers": "430",
+      "totalLeaders": "52",
+      "avgAttendance": "340"
+    },
+    {
+      "year": "2017",
+      "campus": "Jasper",
+      "activeGroups": "10",
+      "totalMembers": "110",
+      "totalLeaders": "15",
+      "avgAttendance": "85"
+    },
+    {
+      "year": "2018",
+      "campus": "Canton",
+      "activeGroups": "42",
+      "totalMembers": "520",
+      "totalLeaders": "63",
+      "avgAttendance": "415"
+    },
+    {
+      "year": "2018",
+      "campus": "Jasper",
+      "activeGroups": "12",
+      "totalMembers": "135",
+      "totalLeaders": "18",
+      "avgAttendance": "105"
+    },
+    {
+      "year": "2019",
+      "campus": "Canton",
+      "activeGroups": "48",
+      "totalMembers": "590",
+      "totalLeaders": "72",
+      "avgAttendance": "470"
+    },
+    {
+      "year": "2019",
+      "campus": "Jasper",
+      "activeGroups": "14",
+      "totalMembers": "155",
+      "totalLeaders": "21",
+      "avgAttendance": "120"
+    },
+    {
+      "year": "2020",
+      "campus": "Canton",
+      "activeGroups": "38",
+      "totalMembers": "420",
+      "totalLeaders": "58",
+      "avgAttendance": "335"
+    },
+    {
+      "year": "2020",
+      "campus": "Jasper",
+      "activeGroups": "10",
+      "totalMembers": "110",
+      "totalLeaders": "16",
+      "avgAttendance": "85"
+    },
+    {
+      "year": "2021",
+      "campus": "Canton",
+      "activeGroups": "44",
+      "totalMembers": "510",
+      "totalLeaders": "66",
+      "avgAttendance": "405"
+    },
+    {
+      "year": "2021",
+      "campus": "Jasper",
+      "activeGroups": "12",
+      "totalMembers": "130",
+      "totalLeaders": "18",
+      "avgAttendance": "100"
+    },
+    {
+      "year": "2022",
+      "campus": "Canton",
+      "activeGroups": "52",
+      "totalMembers": "620",
+      "totalLeaders": "78",
+      "avgAttendance": "495"
+    },
+    {
+      "year": "2022",
+      "campus": "Jasper",
+      "activeGroups": "15",
+      "totalMembers": "165",
+      "totalLeaders": "22",
+      "avgAttendance": "130"
+    },
+    {
+      "year": "2023",
+      "campus": "Canton",
+      "activeGroups": "58",
+      "totalMembers": "710",
+      "totalLeaders": "87",
+      "avgAttendance": "565"
+    },
+    {
+      "year": "2023",
+      "campus": "Jasper",
+      "activeGroups": "18",
+      "totalMembers": "200",
+      "totalLeaders": "27",
+      "avgAttendance": "155"
+    },
+    {
+      "year": "2024",
+      "campus": "Canton",
+      "activeGroups": "62",
+      "totalMembers": "780",
+      "totalLeaders": "93",
+      "avgAttendance": "620"
+    },
+    {
+      "year": "2024",
+      "campus": "Jasper",
+      "activeGroups": "20",
+      "totalMembers": "225",
+      "totalLeaders": "30",
+      "avgAttendance": "175"
+    },
+    {
+      "year": "2025",
+      "campus": "Canton",
+      "activeGroups": "68",
+      "totalMembers": "850",
+      "totalLeaders": "102",
+      "avgAttendance": "680"
+    },
+    {
+      "year": "2025",
+      "campus": "Jasper",
+      "activeGroups": "22",
+      "totalMembers": "250",
+      "totalLeaders": "33",
+      "avgAttendance": "195"
+    },
+    {
+      "year": "2026",
+      "campus": "Canton",
+      "activeGroups": "72",
+      "totalMembers": "910",
+      "totalLeaders": "108",
+      "avgAttendance": "725"
+    },
+    {
+      "year": "2026",
+      "campus": "Jasper",
+      "activeGroups": "24",
+      "totalMembers": "270",
+      "totalLeaders": "36",
+      "avgAttendance": "210"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tcampus\tactiveGroups\ttotalMembers\ttotalLeaders\tavgAttendance\n2014\tCanton\t18\t210\t28\t165\n2014\tJasper\t5\t55\t8\t42\n2015\tCanton\t22\t260\t34\t205\n2015\tJasper\t6\t68\t10\t52\n2016\tCanton\t28\t340\t42\t270\n2016\tJasper\t8\t85\t12\t65\n2017\tCanton\t35\t430\t52\t340\n2017\tJasper\t10\t110\t15\t85\n2018\tCanton\t42\t520\t63\t415\n2018\tJasper\t12\t135\t18\t105\n2019\tCanton\t48\t590\t72\t470\n2019\tJasper\t14\t155\t21\t120\n2020\tCanton\t38\t420\t58\t335\n2020\tJasper\t10\t110\t16\t85\n2021\tCanton\t44\t510\t66\t405\n2021\tJasper\t12\t130\t18\t100\n2022\tCanton\t52\t620\t78\t495\n2022\tJasper\t15\t165\t22\t130\n2023\tCanton\t58\t710\t87\t565\n2023\tJasper\t18\t200\t27\t155\n2024\tCanton\t62\t780\t93\t620\n2024\tJasper\t20\t225\t30\t175\n2025\tCanton\t68\t850\t102\t680\n2025\tJasper\t22\t250\t33\t195\n2026\tCanton\t72\t910\t108\t725\n2026\tJasper\t24\t270\t36\t210\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

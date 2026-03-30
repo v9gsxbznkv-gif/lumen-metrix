@@ -14,6 +14,7 @@ import GivingTab from "@/components/tabs/GivingTab";
 import AttendanceTab from "@/components/tabs/AttendanceTab";
 import VolunteersTab from "@/components/tabs/VolunteersTab";
 import EventsTab from "@/components/tabs/EventsTab";
+import GroupsTab from "@/components/tabs/GroupsTab";
 import VisitorsTab from "@/components/tabs/VisitorsTab";
 import CampusesTab from "@/components/tabs/CampusesTab";
 import CompareTab from "@/components/tabs/CompareTab";
@@ -33,6 +34,7 @@ const TAB_META: Record<TabId, { title: string; subtitle: string }> = {
   attendance: { title: "Attendance", subtitle: "Weekly, monthly, and annual attendance by demographic" },
   volunteers: { title: "Volunteers", subtitle: "Volunteer counts, ratios, and serving trends" },
   events: { title: "Events", subtitle: "Key church event performance and year-over-year comparisons" },
+  groups: { title: "Groups", subtitle: "Active groups, members, leaders, attendance, and participation rate" },
   visitors: { title: "Visitors", subtitle: "First-time guest tracking, conversion rates, and trends" },
   campuses: { title: "Campuses", subtitle: "Side-by-side campus comparison and performance scorecards" },
   compare: { title: "Compare", subtitle: "Side-by-side event and date comparisons across years" },
@@ -142,6 +144,7 @@ export default function Home() {
           {activeTab === "attendance" && <AttendanceTab />}
           {activeTab === "volunteers" && <VolunteersTab />}
           {activeTab === "events" && <EventsTab />}
+          {activeTab === "groups" && <GroupsTab />}
           {activeTab === "visitors" && <VisitorsTab />}
           {activeTab === "campuses" && <CampusesTab />}
           {activeTab === "compare" && <CompareTab />}

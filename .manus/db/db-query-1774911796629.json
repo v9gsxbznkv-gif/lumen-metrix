@@ -1,0 +1,58 @@
+{
+  "query": "SELECT year, campus, activeGroups, totalMembers, totalLeaders, avgAttendance FROM groups_annual WHERE year >= 2024 ORDER BY year, campus;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, campus, activeGroups, totalMembers, totalLeaders, avgAttendance FROM groups_annual WHERE year >= 2024 ORDER BY year, campus;",
+  "rows": [
+    {
+      "year": "2024",
+      "campus": "Canton",
+      "activeGroups": "62",
+      "totalMembers": "780",
+      "totalLeaders": "93",
+      "avgAttendance": "620"
+    },
+    {
+      "year": "2024",
+      "campus": "Jasper",
+      "activeGroups": "20",
+      "totalMembers": "225",
+      "totalLeaders": "30",
+      "avgAttendance": "175"
+    },
+    {
+      "year": "2025",
+      "campus": "Canton",
+      "activeGroups": "68",
+      "totalMembers": "850",
+      "totalLeaders": "102",
+      "avgAttendance": "680"
+    },
+    {
+      "year": "2025",
+      "campus": "Jasper",
+      "activeGroups": "22",
+      "totalMembers": "250",
+      "totalLeaders": "33",
+      "avgAttendance": "195"
+    },
+    {
+      "year": "2026",
+      "campus": "Canton",
+      "activeGroups": "72",
+      "totalMembers": "910",
+      "totalLeaders": "108",
+      "avgAttendance": "725"
+    },
+    {
+      "year": "2026",
+      "campus": "Jasper",
+      "activeGroups": "24",
+      "totalMembers": "270",
+      "totalLeaders": "36",
+      "avgAttendance": "210"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tcampus\tactiveGroups\ttotalMembers\ttotalLeaders\tavgAttendance\n2024\tCanton\t62\t780\t93\t620\n2024\tJasper\t20\t225\t30\t175\n2025\tCanton\t68\t850\t102\t680\n2025\tJasper\t22\t250\t33\t195\n2026\tCanton\t72\t910\t108\t725\n2026\tJasper\t24\t270\t36\t210\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}
