@@ -1,35 +1,47 @@
 /*
  * Lumen Metrix — Main Dashboard Layout
  * Sidebar + content area SaaS pattern
- * DM Sans headings, Inter body, DM Mono data values
+ * Full proposal navigation: Dashboard, People, Giving, Attendance, Volunteers, Events, Visitors, Campuses, Compare, Health, Reports, AI, Settings
  */
 import { useState } from "react";
 import { useData } from "@/contexts/DataContext";
 import Sidebar, { type TabId } from "@/components/Sidebar";
 import DashboardHeader from "@/components/DashboardHeader";
 import OverviewTab from "@/components/tabs/OverviewTab";
-import AttendanceTab from "@/components/tabs/AttendanceTab";
+import PeopleTab from "@/components/tabs/PeopleTab";
 import GivingTab from "@/components/tabs/GivingTab";
-import NextStepsTab from "@/components/tabs/NextStepsTab";
-import HealthTab from "@/components/tabs/HealthTab";
+import AttendanceTab from "@/components/tabs/AttendanceTab";
+import VolunteersTab from "@/components/tabs/VolunteersTab";
+import EventsTab from "@/components/tabs/EventsTab";
+import VisitorsTab from "@/components/tabs/VisitorsTab";
+import CampusesTab from "@/components/tabs/CampusesTab";
 import CompareTab from "@/components/tabs/CompareTab";
+import HealthTab from "@/components/tabs/HealthTab";
 import ReportsTab from "@/components/tabs/ReportsTab";
+import AIAnalystTab from "@/components/tabs/AIAnalystTab";
+import SettingsTab from "@/components/tabs/SettingsTab";
 import LumenLogo from "@/components/LumenLogo";
 import { Loader2 } from "lucide-react";
 
 const TAB_META: Record<TabId, { title: string; subtitle: string }> = {
-  overview: { title: "Overview", subtitle: "Key metrics at a glance across all campuses" },
-  attendance: { title: "Attendance", subtitle: "Weekly, monthly, and annual attendance by demographic" },
+  dashboard: { title: "Dashboard", subtitle: "Key metrics at a glance across all campuses" },
+  people: { title: "People & Growth", subtitle: "Assimilation funnel, salvations, baptisms, and stewardship" },
   giving: { title: "Giving", subtitle: "Tithes, offerings, and giving per capita analysis" },
-  nextsteps: { title: "Next Steps", subtitle: "First-time guests, salvations, baptisms, and assimilation" },
-  health: { title: "Health Metrics", subtitle: "Volunteer ratios, growth rates, and organizational health" },
+  attendance: { title: "Attendance", subtitle: "Weekly, monthly, and annual attendance by demographic" },
+  volunteers: { title: "Volunteers", subtitle: "Volunteer counts, ratios, and serving trends" },
+  events: { title: "Events", subtitle: "Key church event performance and year-over-year comparisons" },
+  visitors: { title: "Visitors", subtitle: "First-time guest tracking, conversion rates, and trends" },
+  campuses: { title: "Campuses", subtitle: "Side-by-side campus comparison and performance scorecards" },
   compare: { title: "Compare", subtitle: "Side-by-side event and date comparisons across years" },
+  health: { title: "Health Metrics", subtitle: "Volunteer ratios, growth rates, and organizational health" },
   reports: { title: "Reports", subtitle: "Build, schedule, and export custom executive reports" },
+  ai: { title: "AI Analyst", subtitle: "Ask questions about your data in natural language" },
+  settings: { title: "Settings", subtitle: "Church profile, data sources, and dashboard configuration" },
 };
 
 export default function Home() {
   const { loading, error } = useData();
-  const [activeTab, setActiveTab] = useState<TabId>("overview");
+  const [activeTab, setActiveTab] = useState<TabId>("dashboard");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   if (loading) {
@@ -75,20 +87,26 @@ export default function Home() {
         <div className="px-6 lg:px-8 py-6 max-w-[1400px]">
           <DashboardHeader title={meta.title} subtitle={meta.subtitle} />
 
-          {activeTab === "overview" && <OverviewTab />}
-          {activeTab === "attendance" && <AttendanceTab />}
+          {activeTab === "dashboard" && <OverviewTab />}
+          {activeTab === "people" && <PeopleTab />}
           {activeTab === "giving" && <GivingTab />}
-          {activeTab === "nextsteps" && <NextStepsTab />}
-          {activeTab === "health" && <HealthTab />}
+          {activeTab === "attendance" && <AttendanceTab />}
+          {activeTab === "volunteers" && <VolunteersTab />}
+          {activeTab === "events" && <EventsTab />}
+          {activeTab === "visitors" && <VisitorsTab />}
+          {activeTab === "campuses" && <CampusesTab />}
           {activeTab === "compare" && <CompareTab />}
+          {activeTab === "health" && <HealthTab />}
           {activeTab === "reports" && <ReportsTab />}
+          {activeTab === "ai" && <AIAnalystTab />}
+          {activeTab === "settings" && <SettingsTab />}
         </div>
 
         {/* Footer */}
         <footer className="px-6 lg:px-8 pb-6">
           <div className="border-t border-border/40 pt-4 flex items-center justify-between">
             <p className="text-[10px] text-muted-foreground/50">
-              Data from 2013 — 2026 &middot; Updated {new Date().toLocaleDateString()}
+              Data from 2014 — 2026 &middot; Updated {new Date().toLocaleDateString()}
             </p>
             <div className="flex items-center gap-1.5">
               <span className="text-[9px] text-muted-foreground/40">Powered by</span>

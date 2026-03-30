@@ -23,7 +23,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>({
     campus: "All Campuses",
-    yearStart: 2013,
+    yearStart: 2014,
     yearEnd: 2026,
   });
 

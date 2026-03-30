@@ -1,32 +1,56 @@
 /*
  * Lumen Metrix — Sidebar Navigation
+ * Matches Kalon proposal nav: Dashboard, People, Giving, Attendance, Volunteers, Events, Visitors, Campuses, Reports, AI Analyst, Settings
  * Dark charcoal sidebar with amber active states
- * SaaS-grade persistent left nav
  */
 import LumenLogo from "./LumenLogo";
 import {
   LayoutDashboard,
   Users,
   DollarSign,
-  Heart,
-  Activity,
+  UserCheck,
+  CalendarDays,
+  UserPlus,
+  Building2,
+  FileText,
+  Sparkles,
+  Settings,
   ChevronLeft,
   ChevronRight,
   Church,
   ArrowLeftRight,
-  FileText,
+  Activity,
 } from "lucide-react";
 
-export type TabId = "overview" | "attendance" | "giving" | "nextsteps" | "health" | "compare" | "reports";
+export type TabId =
+  | "dashboard"
+  | "people"
+  | "giving"
+  | "attendance"
+  | "volunteers"
+  | "events"
+  | "visitors"
+  | "campuses"
+  | "compare"
+  | "reports"
+  | "health"
+  | "ai"
+  | "settings";
 
 const NAV_ITEMS: { id: TabId; label: string; icon: React.ElementType; section?: string }[] = [
-  { id: "overview", label: "Overview", icon: LayoutDashboard, section: "Dashboard" },
-  { id: "attendance", label: "Attendance", icon: Users },
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, section: "Overview" },
+  { id: "people", label: "People", icon: Users },
   { id: "giving", label: "Giving", icon: DollarSign },
-  { id: "nextsteps", label: "Next Steps", icon: Heart },
+  { id: "attendance", label: "Attendance", icon: UserCheck },
+  { id: "volunteers", label: "Volunteers", icon: Activity },
+  { id: "events", label: "Events", icon: CalendarDays },
+  { id: "visitors", label: "Visitors", icon: UserPlus, section: "Insights" },
+  { id: "campuses", label: "Campuses", icon: Building2 },
+  { id: "compare", label: "Compare", icon: ArrowLeftRight },
   { id: "health", label: "Health", icon: Activity },
-  { id: "compare", label: "Compare", icon: ArrowLeftRight, section: "Tools" },
-  { id: "reports", label: "Reports", icon: FileText },
+  { id: "reports", label: "Reports", icon: FileText, section: "Tools" },
+  { id: "ai", label: "AI Analyst", icon: Sparkles },
+  { id: "settings", label: "Settings", icon: Settings },
 ];
 
 interface SidebarProps {
