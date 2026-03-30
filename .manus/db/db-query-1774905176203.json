@@ -1,0 +1,46 @@
+{
+  "query": "SELECT year, month, campus, total FROM serving_monthly WHERE year = 2026 AND campus IN ('Canton','Jasper') ORDER BY month, campus LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, month, campus, total FROM serving_monthly WHERE year = 2026 AND campus IN ('Canton','Jasper') ORDER BY month, campus LIMIT 20;",
+  "rows": [
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "total": "1629"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Jasper",
+      "total": "499"
+    },
+    {
+      "year": "2026",
+      "month": "2",
+      "campus": "Canton",
+      "total": "1465"
+    },
+    {
+      "year": "2026",
+      "month": "2",
+      "campus": "Jasper",
+      "total": "432"
+    },
+    {
+      "year": "2026",
+      "month": "3",
+      "campus": "Canton",
+      "total": "1924"
+    },
+    {
+      "year": "2026",
+      "month": "3",
+      "campus": "Jasper",
+      "total": "550"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tmonth\tcampus\ttotal\n2026\t1\tCanton\t1629\n2026\t1\tJasper\t499\n2026\t2\tCanton\t1465\n2026\t2\tJasper\t432\n2026\t3\tCanton\t1924\n2026\t3\tJasper\t550\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

@@ -308,3 +308,20 @@ export const reportSchedules = mysqlTable("report_schedules", {
 
 export type ReportSchedule = typeof reportSchedules.$inferSelect;
 export type InsertReportSchedule = typeof reportSchedules.$inferInsert;
+
+// ============================================================
+// Weekly Report Config — auto-generation schedule
+// ============================================================
+export const weeklyReportConfig = mysqlTable("weekly_report_config", {
+  id: int("id").autoincrement().primaryKey(),
+  dayOfWeek: int("dayOfWeek").notNull().default(1), // 0=Sun, 1=Mon, ..., 6=Sat
+  hour: int("hour").notNull().default(8), // 0-23 in Eastern Time
+  minute: int("minute").notNull().default(0), // 0-59
+  enabled: boolean("enabled").default(false).notNull(),
+  lastGeneratedAt: timestamp("lastGeneratedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type WeeklyReportConfig = typeof weeklyReportConfig.$inferSelect;
+export type InsertWeeklyReportConfig = typeof weeklyReportConfig.$inferInsert;

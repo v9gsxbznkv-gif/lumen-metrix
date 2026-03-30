@@ -78,4 +78,13 @@
 - [x] Add recurring schedule capability (weekly, monthly, quarterly) with DB persistence
 - [x] Add email delivery for reports via AI executive summary + owner notification
 - [x] Add vitest tests for reports router (11 tests)
-- [ ] Publish updated site with Reports fixes
+- [x] Publish updated site with Reports fixes
+
+## Weekly Report Feature (Round 5)
+- [x] Add weekly_report_config table for auto-generation scheduling
+- [x] Build tRPC procedures for weekly report data with comparison options (same week last year, previous week, same period last year)
+- [x] Build WeeklyReportTab frontend with campus breakdown, metric cards, and comparison toggles
+- [x] Add auto-generation scheduling (user picks day/time, e.g. every Monday at 8am)
+- [x] Add Weekly Report to dashboard sidebar navigation
+- [x] Write vitest tests for weekly report procedures (9 tests)
+- [ ] Publish updated site with Weekly Report feature

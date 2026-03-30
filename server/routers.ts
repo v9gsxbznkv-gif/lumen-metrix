@@ -4,6 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { pcoRouter } from "./pco/router";
 import { reportsRouter } from "./reports/router";
+import { weeklyReportRouter } from "./weeklyReport/router";
 
 export const appRouter = router({
   system: systemRouter,
@@ -23,6 +24,9 @@ export const appRouter = router({
 
   // Reports — saved reports, scheduling, and delivery
   reports: reportsRouter,
+
+  // Weekly Report — weekly snapshot with comparisons and auto-generation
+  weeklyReport: weeklyReportRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -20,6 +20,7 @@ import {
   Church,
   ArrowLeftRight,
   Activity,
+  CalendarClock,
 } from "lucide-react";
 
 export type TabId =
@@ -34,6 +35,7 @@ export type TabId =
   | "compare"
   | "reports"
   | "health"
+  | "weeklyReport"
   | "ai"
   | "settings";
 
@@ -48,7 +50,8 @@ const NAV_ITEMS: { id: TabId; label: string; icon: React.ElementType; section?: 
   { id: "campuses", label: "Campuses", icon: Building2 },
   { id: "compare", label: "Compare", icon: ArrowLeftRight },
   { id: "health", label: "Health", icon: Activity },
-  { id: "reports", label: "Reports", icon: FileText, section: "Tools" },
+  { id: "weeklyReport", label: "Weekly Report", icon: CalendarClock, section: "Tools" },
+  { id: "reports", label: "Reports", icon: FileText },
   { id: "ai", label: "AI Analyst", icon: Sparkles },
   { id: "settings", label: "Settings", icon: Settings },
 ];

@@ -1,0 +1,106 @@
+{
+  "query": "SELECT year, month, campus, subgroup, SUM(total) as total, SUM(avgWeekly) as avgWeekly FROM attendance_monthly WHERE year = 2026 AND campus = 'Canton' AND subgroup IN ('Adults','Kids','Students','Young Adults') GROUP BY year, month, campus, subgroup ORDER BY month, subgroup;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, month, campus, subgroup, SUM(total) as total, SUM(avgWeekly) as avgWeekly FROM attendance_monthly WHERE year = 2026 AND campus = 'Canton' AND subgroup IN ('Adults','Kids','Students','Young Adults') GROUP BY year, month, campus, subgroup ORDER BY month, subgroup;",
+  "rows": [
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Adults",
+      "total": "8251",
+      "avgWeekly": "2063"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Kids",
+      "total": "1953",
+      "avgWeekly": "488"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Students",
+      "total": "1808",
+      "avgWeekly": "452"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Young Adults",
+      "total": "81",
+      "avgWeekly": "81"
+    },
+    {
+      "year": "2026",
+      "month": "2",
+      "campus": "Canton",
+      "subgroup": "Adults",
+      "total": "6298",
+      "avgWeekly": "1574"
+    },
+    {
+      "year": "2026",
+      "month": "2",
+      "campus": "Canton",
+      "subgroup": "Kids",
+      "total": "1651",
+      "avgWeekly": "413"
+    },
+    {
+      "year": "2026",
+      "month": "2",
+      "campus": "Canton",
+      "subgroup": "Students",
+      "total": "1162",
+      "avgWeekly": "387"
+    },
+    {
+      "year": "2026",
+      "month": "2",
+      "campus": "Canton",
+      "subgroup": "Young Adults",
+      "total": "67",
+      "avgWeekly": "67"
+    },
+    {
+      "year": "2026",
+      "month": "3",
+      "campus": "Canton",
+      "subgroup": "Adults",
+      "total": "8778",
+      "avgWeekly": "2194"
+    },
+    {
+      "year": "2026",
+      "month": "3",
+      "campus": "Canton",
+      "subgroup": "Kids",
+      "total": "2222",
+      "avgWeekly": "556"
+    },
+    {
+      "year": "2026",
+      "month": "3",
+      "campus": "Canton",
+      "subgroup": "Students",
+      "total": "1131",
+      "avgWeekly": "377"
+    },
+    {
+      "year": "2026",
+      "month": "3",
+      "campus": "Canton",
+      "subgroup": "Young Adults",
+      "total": "67",
+      "avgWeekly": "67"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tmonth\tcampus\tsubgroup\ttotal\tavgWeekly\n2026\t1\tCanton\tAdults\t8251\t2063\n2026\t1\tCanton\tKids\t1953\t488\n2026\t1\tCanton\tStudents\t1808\t452\n2026\t1\tCanton\tYoung Adults\t81\t81\n2026\t2\tCanton\tAdults\t6298\t1574\n2026\t2\tCanton\tKids\t1651\t413\n2026\t2\tCanton\tStudents\t1162\t387\n2026\t2\tCanton\tYoung Adults\t67\t67\n2026\t3\tCanton\tAdults\t8778\t2194\n2026\t3\tCanton\tKids\t2222\t556\n2026\t3\tCanton\tStudents\t1131\t377\n2026\t3\tCanton\tYoung Adults\t67\t67\n",
+  "stderr": "",
+  "execution_time_ms": 62
+}

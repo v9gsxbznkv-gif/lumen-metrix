@@ -18,6 +18,7 @@ import CampusesTab from "@/components/tabs/CampusesTab";
 import CompareTab from "@/components/tabs/CompareTab";
 import HealthTab from "@/components/tabs/HealthTab";
 import ReportsTab from "@/components/tabs/ReportsTab";
+import WeeklyReportTab from "@/components/tabs/WeeklyReportTab";
 import AIAnalystTab from "@/components/tabs/AIAnalystTab";
 import SettingsTab from "@/components/tabs/SettingsTab";
 import LumenLogo from "@/components/LumenLogo";
@@ -34,6 +35,7 @@ const TAB_META: Record<TabId, { title: string; subtitle: string }> = {
   campuses: { title: "Campuses", subtitle: "Side-by-side campus comparison and performance scorecards" },
   compare: { title: "Compare", subtitle: "Side-by-side event and date comparisons across years" },
   health: { title: "Health Metrics", subtitle: "Volunteer ratios, growth rates, and organizational health" },
+  weeklyReport: { title: "Weekly Report", subtitle: "Snapshot of the most recent week with campus breakdown and comparisons" },
   reports: { title: "Reports", subtitle: "Build, schedule, and export custom executive reports" },
   ai: { title: "AI Analyst", subtitle: "Ask questions about your data in natural language" },
   settings: { title: "Settings", subtitle: "Church profile, data sources, and dashboard configuration" },
@@ -97,6 +99,7 @@ export default function Home() {
           {activeTab === "campuses" && <CampusesTab />}
           {activeTab === "compare" && <CompareTab />}
           {activeTab === "health" && <HealthTab />}
+          {activeTab === "weeklyReport" && <WeeklyReportTab />}
           {activeTab === "reports" && <ReportsTab />}
           {activeTab === "ai" && <AIAnalystTab />}
           {activeTab === "settings" && <SettingsTab />}
