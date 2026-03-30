@@ -1,0 +1,31 @@
+{
+  "query": "SELECT source, campus, year, COUNT(*) as record_count, SUM(avgWeekly) as total_avg_weekly FROM serving WHERE year = 2026 GROUP BY source, campus, year ORDER BY campus, source;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT source, campus, year, COUNT(*) as record_count, SUM(avgWeekly) as total_avg_weekly FROM serving WHERE year = 2026 GROUP BY source, campus, year ORDER BY campus, source;",
+  "rows": [
+    {
+      "source": "spreadsheet",
+      "campus": "All Campuses",
+      "year": "2026",
+      "record_count": "1",
+      "total_avg_weekly": "1625"
+    },
+    {
+      "source": "spreadsheet",
+      "campus": "Canton",
+      "year": "2026",
+      "record_count": "1",
+      "total_avg_weekly": "418"
+    },
+    {
+      "source": "spreadsheet",
+      "campus": "Jasper",
+      "year": "2026",
+      "record_count": "1",
+      "total_avg_weekly": "123"
+    }
+  ],
+  "messages": [],
+  "stdout": "source\tcampus\tyear\trecord_count\ttotal_avg_weekly\nspreadsheet\tAll Campuses\t2026\t1\t1625\nspreadsheet\tCanton\t2026\t1\t418\nspreadsheet\tJasper\t2026\t1\t123\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}

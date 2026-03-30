@@ -26,7 +26,13 @@ export default function VolunteersTab() {
   const monthLabel = partial ? `Jan–${MONTH_NAMES[maxMonth - 1]}` : "Full Year";
 
   // Current year serving
-  const servNow = data.serving.filter((r) => r.year === latestYear && (campus === "All Campuses" || r.campus === campus));
+  // When "All Campuses" is selected, sum individual campus rows (Canton + Jasper).
+  // We never rely on a pre-aggregated "All Campuses" row to avoid double-counting.
+  const INDIVIDUAL_CAMPUSES = ["Canton", "Jasper"];
+  const servNow = data.serving.filter((r) =>
+    r.year === latestYear &&
+    (campus === "All Campuses" ? INDIVIDUAL_CAMPUSES.includes(r.campus) : r.campus === campus)
+  );
   const avgVolunteers = servNow.reduce((s, r) => s + r.avg_weekly, 0);
 
   // Attendance for ratio
@@ -36,7 +42,10 @@ export default function VolunteersTab() {
   const volunteerPct = avgAttendance > 0 ? (avgVolunteers / avgAttendance * 100) : 0;
 
   // YoY change for volunteers
-  const servPrior = data.serving.filter((r) => r.year === priorYear && (campus === "All Campuses" || r.campus === campus));
+  const servPrior = data.serving.filter((r) =>
+    r.year === priorYear &&
+    (campus === "All Campuses" ? INDIVIDUAL_CAMPUSES.includes(r.campus) : r.campus === campus)
+  );
   const avgVolPrior = servPrior.reduce((s, r) => s + r.avg_weekly, 0);
   const volChange = avgVolPrior > 0
     ? { value: ((avgVolunteers - avgVolPrior) / avgVolPrior) * 100, label: `${((avgVolunteers - avgVolPrior) / avgVolPrior * 100) >= 0 ? "+" : ""}${((avgVolunteers - avgVolPrior) / avgVolPrior * 100).toFixed(1)}%`, positive: avgVolunteers >= avgVolPrior }
@@ -45,8 +54,12 @@ export default function VolunteersTab() {
   // Multi-year trend
   const years = data.meta.years.filter((y) => y >= yearStart && y <= yearEnd);
   const trendData = years.map((y) => {
-    const vol = data.serving.filter((r) => r.year === y && (campus === "All Campuses" || r.campus === campus)).reduce((s, r) => s + r.avg_weekly, 0);
-    const att = data.attendance.filter((r) => r.year === y && r.subgroup === "Total" && (campus === "All Campuses" || r.campus === campus)).reduce((s, r) => s + r.avg_weekly, 0);
+    const vol = data.serving
+      .filter((r) => r.year === y && (campus === "All Campuses" ? INDIVIDUAL_CAMPUSES.includes(r.campus) : r.campus === campus))
+      .reduce((s, r) => s + r.avg_weekly, 0);
+    const att = data.attendance
+      .filter((r) => r.year === y && r.subgroup === "Total" && (campus === "All Campuses" || r.campus === campus))
+      .reduce((s, r) => s + r.avg_weekly, 0);
     return {
       year: y,
       Volunteers: vol,

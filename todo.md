@@ -61,3 +61,6 @@
 - [x] Add Auto-Sync Scheduler status section to Settings page
 - [x] Update Data Source section to reflect new source strategy
 - [ ] Publish updated site with auto-sync enabled
+
+## Bug Fixes (Round 2)
+- [x] Fix "All Campuses" volunteer avg weekly calculation — excluded pre-aggregated row from DB query, frontend now sums Canton + Jasper dynamically

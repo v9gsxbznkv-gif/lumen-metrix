@@ -7,7 +7,7 @@
  *   - 2026 and later: PCO data (live synced from Planning Center)
  */
 import { z } from "zod";
-import { and, desc, eq, gte, lt, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, lt, ne, or, sql } from "drizzle-orm";
 import { publicProcedure, router } from "../_core/trpc";
 import { ENV } from "../_core/env";
 import { getDb } from "../db";
@@ -212,8 +212,14 @@ export const pcoRouter = router({
       db.select().from(givingMonthly).where(sourceFilter(givingMonthly)),
       db.select().from(nextSteps).where(sourceFilter(nextSteps)),
       db.select().from(nextStepsMonthly).where(sourceFilter(nextStepsMonthly)),
-      db.select().from(serving).where(sourceFilter(serving)),
-      db.select().from(servingMonthly).where(sourceFilter(servingMonthly)),
+      // Serving: use spreadsheet data for all years until PCO volunteer sync is active.
+      // Exclude the pre-aggregated "All Campuses" row — the frontend sums campus rows dynamically.
+      db.select().from(serving).where(
+        and(eq(serving.source, "spreadsheet"), ne(serving.campus, "All Campuses"))
+      ),
+      db.select().from(servingMonthly).where(
+        and(eq(servingMonthly.source, "spreadsheet"), ne(servingMonthly.campus, "All Campuses"))
+      ),
     ]);
 
     // Extract unique years
