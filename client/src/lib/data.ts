@@ -317,6 +317,28 @@ export const MONTH_FULL = [
   "July", "August", "September", "October", "November", "December",
 ];
 
+// ============================================================
+// Canonical total attendance helper
+// Always reads the pre-computed 'Total' subgroup record (same
+// source the Overview page uses) to ensure consistency.
+// ============================================================
+export function getTotalAttendance(
+  attendance: { year: number; campus: string; subgroup: string; avg_weekly: number; total: number }[],
+  year: number,
+  campus: string
+): { avg_weekly: number; total: number } {
+  if (campus === "All Campuses") {
+    const rec = attendance.find(
+      (a) => a.year === year && a.campus === "All Campuses" && a.subgroup === "Total"
+    );
+    return rec ? { avg_weekly: rec.avg_weekly, total: rec.total } : { avg_weekly: 0, total: 0 };
+  }
+  const rec = attendance.find(
+    (a) => a.year === year && a.campus === campus && a.subgroup === "Total"
+  );
+  return rec ? { avg_weekly: rec.avg_weekly, total: rec.total } : { avg_weekly: 0, total: 0 };
+}
+
 export function formatCurrency(value: number): string {
   if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
   if (value >= 1_000) return `$${(value / 1_000).toFixed(0)}K`;

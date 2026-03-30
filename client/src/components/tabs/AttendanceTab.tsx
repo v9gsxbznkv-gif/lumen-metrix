@@ -11,7 +11,7 @@ import {
   getYoYChange,
   isPartialYear,
   getMaxMonth,
-  getAttendanceForMonths,
+  getTotalAttendance,
   MONTH_NAMES,
 } from "@/lib/data";
 import {
@@ -127,6 +127,35 @@ export default function AttendanceTab() {
   const maxMonth = useMemo(() => data ? getMaxMonth(data, latestYear) : 12, [data, latestYear]);
   const compMonths = useMemo(() => Array.from({ length: maxMonth }, (_, i) => i + 1), [maxMonth]);
 
+  // Canonical total attendance — same source as Overview page
+  const totalKpi = useMemo(() => {
+    if (!data) return { current: 0, prior: 0, change: undefined as ReturnType<typeof getYoYChange> | undefined };
+    const cur = getTotalAttendance(data.attendance, latestYear, filters.campus);
+    const prev = getTotalAttendance(data.attendance, latestYear - 1, filters.campus);
+    if (partial) {
+      const subgroups = ["Adults", "Kids", "Students", "Young Adults"];
+      const campusFilter = (m: { campus: string }) =>
+        filters.campus === "All Campuses" || m.campus === filters.campus;
+      const currTotal = data.attendance_monthly
+        .filter((m) => m.year === latestYear && compMonths.includes(m.month) && subgroups.includes(m.subgroup) && campusFilter(m))
+        .reduce((s, m) => s + m.total, 0);
+      const prevTotal = data.attendance_monthly
+        .filter((m) => m.year === latestYear - 1 && compMonths.includes(m.month) && subgroups.includes(m.subgroup) && campusFilter(m))
+        .reduce((s, m) => s + m.total, 0);
+      const weeks = compMonths.length * 4.33;
+      return {
+        current: Math.round(currTotal / weeks),
+        prior: Math.round(prevTotal / weeks),
+        change: getYoYChange(currTotal, prevTotal),
+      };
+    }
+    return {
+      current: cur.avg_weekly,
+      prior: prev.avg_weekly,
+      change: getYoYChange(cur.avg_weekly, prev.avg_weekly),
+    };
+  }, [data, filters, latestYear, partial, compMonths]);
+
   const yoyComparison = useMemo(() => {
     if (!data) return [];
     return ["Adults", "Kids", "Students"].map((sub) => {
@@ -187,7 +216,15 @@ export default function AttendanceTab() {
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {/* Total attendance — canonical figure matching Overview page */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <KpiCard
+          label="Total Avg Weekly"
+          value={formatNumber(totalKpi.current)}
+          change={totalKpi.change}
+          subtitle={partial ? `${latestYear} YTD vs same period ${latestYear - 1}` : `${latestYear} vs ${latestYear - 1} (${formatNumber(totalKpi.prior)})`}
+          borderColor="#E8913A"
+        />
         {yoyComparison.map((item) => (
           <KpiCard
             key={item.subgroup}
