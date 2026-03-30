@@ -1,0 +1,28 @@
+{
+  "query": "SELECT 'attendance' as tbl, year, source, COUNT(*) as cnt FROM attendance WHERE year = 2026 GROUP BY year, source\nUNION ALL\nSELECT 'giving' as tbl, year, source, COUNT(*) as cnt FROM giving WHERE year = 2026 GROUP BY year, source\nUNION ALL\nSELECT 'nextSteps' as tbl, year, source, COUNT(*) as cnt FROM next_steps WHERE year = 2026 GROUP BY year, source;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT 'attendance' as tbl, year, source, COUNT(*) as cnt FROM attendance WHERE year = 2026 GROUP BY year, source\nUNION ALL\nSELECT 'giving' as tbl, year, source, COUNT(*) as cnt FROM giving WHERE year = 2026 GROUP BY year, source\nUNION ALL\nSELECT 'nextSteps' as tbl, year, source, COUNT(*) as cnt FROM next_steps WHERE year = 2026 GROUP BY year, source;",
+  "rows": [
+    {
+      "tbl": "nextSteps",
+      "year": "2026",
+      "source": "spreadsheet",
+      "cnt": "12"
+    },
+    {
+      "tbl": "attendance",
+      "year": "2026",
+      "source": "spreadsheet",
+      "cnt": "12"
+    },
+    {
+      "tbl": "giving",
+      "year": "2026",
+      "source": "spreadsheet",
+      "cnt": "5"
+    }
+  ],
+  "messages": [],
+  "stdout": "tbl\tyear\tsource\tcnt\nnextSteps\t2026\tspreadsheet\t12\nattendance\t2026\tspreadsheet\t12\ngiving\t2026\tspreadsheet\t5\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

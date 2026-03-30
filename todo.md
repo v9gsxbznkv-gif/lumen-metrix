@@ -60,7 +60,8 @@
 - [x] Build nightly auto-sync scheduler (midnight ET) for all PCO modules
 - [x] Add Auto-Sync Scheduler status section to Settings page
 - [x] Update Data Source section to reflect new source strategy
-- [ ] Publish updated site with auto-sync enabled
+- [x] Publish updated site with auto-sync enabled
 
 ## Bug Fixes (Round 2)
 - [x] Fix "All Campuses" volunteer avg weekly calculation — excluded pre-aggregated row from DB query, frontend now sums Canton + Jasper dynamically
+- [x] Fix 2026 missing from year dropdown — sourceFilter was requiring source='pco' for 2026+ but all data is still source='spreadsheet'; relaxed filter to allow any source for all years, and year list now built from all tables not just attendance/giving

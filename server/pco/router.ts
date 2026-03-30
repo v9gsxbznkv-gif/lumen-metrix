@@ -53,13 +53,17 @@ const PCO_CUTOVER_YEAR = 2026;
 /**
  * Build a WHERE clause that selects:
  *   - spreadsheet rows for years < PCO_CUTOVER_YEAR
- *   - pco rows for years >= PCO_CUTOVER_YEAR
- * This ensures no duplicate data and a clean transition.
+ *   - ALL rows (spreadsheet or pco) for years >= PCO_CUTOVER_YEAR
+ *
+ * We intentionally allow spreadsheet data for 2026+ as a fallback because
+ * PCO sync may not have run for every module yet. Once PCO sync runs for a
+ * module, its rows will have source='pco' and the upsert logic in sync.ts
+ * will replace the spreadsheet rows, so there will never be duplicates.
  */
 function sourceFilter(table: { year: any; source: any }) {
   return or(
-    and(lt(table.year, PCO_CUTOVER_YEAR), eq(table.source, "spreadsheet")),
-    and(gte(table.year, PCO_CUTOVER_YEAR), eq(table.source, "pco"))
+    lt(table.year, PCO_CUTOVER_YEAR),          // historical: any source
+    gte(table.year, PCO_CUTOVER_YEAR)           // current: any source (pco preferred via upsert)
   );
 }
 
@@ -222,10 +226,14 @@ export const pcoRouter = router({
       ),
     ]);
 
-    // Extract unique years
+    // Extract unique years from ALL tables so that years with partial data
+    // (e.g. 2026 serving/nextSteps still on spreadsheet while PCO attendance
+    // hasn't synced yet) still appear in the dropdown.
     const yearsSet = new Set<number>();
     for (const r of attendanceRows) yearsSet.add(r.year);
     for (const r of givingRows) yearsSet.add(r.year);
+    for (const r of nextStepsRows) yearsSet.add(r.year);
+    for (const r of servingRows) yearsSet.add(r.year);
     const years = Array.from(yearsSet).sort();
     const campuses = ["Canton", "Jasper", "Online", "All Campuses"];
 
