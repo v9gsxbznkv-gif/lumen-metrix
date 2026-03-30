@@ -87,4 +87,4 @@
 - [x] Add auto-generation scheduling (user picks day/time, e.g. every Monday at 8am)
 - [x] Add Weekly Report to dashboard sidebar navigation
 - [x] Write vitest tests for weekly report procedures (9 tests)
-- [ ] Publish updated site with Weekly Report feature
+- [x] Publish updated site with Weekly Report feature
