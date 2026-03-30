@@ -1,0 +1,52 @@
+{
+  "query": "SELECT year, campus, source, avgWeekly, total FROM serving WHERE year >= 2025 ORDER BY year, campus;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, campus, source, avgWeekly, total FROM serving WHERE year >= 2025 ORDER BY year, campus;",
+  "rows": [
+    {
+      "year": "2025",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "avgWeekly": "5596",
+      "total": "27982"
+    },
+    {
+      "year": "2025",
+      "campus": "Canton",
+      "source": "spreadsheet",
+      "avgWeekly": "428",
+      "total": "21823"
+    },
+    {
+      "year": "2025",
+      "campus": "Jasper",
+      "source": "spreadsheet",
+      "avgWeekly": "121",
+      "total": "6159"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "avgWeekly": "1625",
+      "total": "6499"
+    },
+    {
+      "year": "2026",
+      "campus": "Canton",
+      "source": "spreadsheet",
+      "avgWeekly": "418",
+      "total": "5018"
+    },
+    {
+      "year": "2026",
+      "campus": "Jasper",
+      "source": "spreadsheet",
+      "avgWeekly": "123",
+      "total": "1481"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tcampus\tsource\tavgWeekly\ttotal\n2025\tAll Campuses\tspreadsheet\t5596\t27982\n2025\tCanton\tspreadsheet\t428\t21823\n2025\tJasper\tspreadsheet\t121\t6159\n2026\tAll Campuses\tspreadsheet\t1625\t6499\n2026\tCanton\tspreadsheet\t418\t5018\n2026\tJasper\tspreadsheet\t123\t1481\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

@@ -116,18 +116,20 @@ export default function HealthTab() {
   const volunteerTrend = useMemo(() => {
     if (!data) return [];
     const vr = data.computed.volunteer_ratio;
+    // Use undefined (not 0) for missing data so Recharts skips those points
+    // and connects the line through valid data only.
     return filteredYears.map((year) => {
-      const row: Record<string, number | string> = { year };
+      const row: Record<string, number | string | undefined> = { year };
       if (filters.campus === "All Campuses") {
         ["Canton", "Jasper"].forEach((c) => {
           const match = vr.find((v) => v.year === year && v.campus === c);
-          row[c] = match ? Math.round(match.pct * 1000) / 10 : 0;
+          row[c] = match && match.pct > 0 ? Math.round(match.pct * 1000) / 10 : undefined;
         });
       } else {
         const match = vr.find(
           (v) => v.year === year && v.campus === filters.campus
         );
-        row[filters.campus] = match ? Math.round(match.pct * 1000) / 10 : 0;
+        row[filters.campus] = match && match.pct > 0 ? Math.round(match.pct * 1000) / 10 : undefined;
       }
       return row;
     });
@@ -156,16 +158,37 @@ export default function HealthTab() {
   const growthTrend = useMemo(() => {
     if (!data) return [];
     return filteredYears.map((year, i) => {
+      const partial = isPartialYear(data, year);
+      const maxMonth = getMaxMonth(data, year);
+      const compMonths = Array.from({ length: maxMonth }, (_, k) => k + 1);
+
+      // Attendance: use avg_weekly (already YTD average for partial years).
+      // For prior year, use same-period avg_weekly from monthly data.
       const currAtt = getAttAvg(data.attendance, year, filters.campus);
-      const prevAtt =
-        i > 0
-          ? getAttAvg(data.attendance, filteredYears[i - 1], filters.campus)
-          : 0;
-      const currGiv = getGivTotal(data.giving, year, filters.campus);
-      const prevGiv =
-        i > 0
-          ? getGivTotal(data.giving, filteredYears[i - 1], filters.campus)
-          : 0;
+      let prevAtt: number;
+      if (i > 0) {
+        const prevYear = filteredYears[i - 1];
+        if (partial) {
+          const priorMonthly = getAttendanceForMonths(data, prevYear, filters.campus, compMonths);
+          prevAtt = priorMonthly.avgWeekly;
+        } else {
+          prevAtt = getAttAvg(data.attendance, prevYear, filters.campus);
+        }
+      } else {
+        prevAtt = 0;
+      }
+
+      // Giving: for partial years, compare same-period giving (same months).
+      let currGiv: number;
+      let prevGiv: number;
+      if (partial && i > 0) {
+        currGiv = getGivingForMonths(data, year, filters.campus, compMonths);
+        prevGiv = getGivingForMonths(data, filteredYears[i - 1], filters.campus, compMonths);
+      } else {
+        currGiv = getGivTotal(data.giving, year, filters.campus);
+        prevGiv = i > 0 ? getGivTotal(data.giving, filteredYears[i - 1], filters.campus) : 0;
+      }
+
       return {
         year,
         attGrowth:
@@ -375,6 +398,7 @@ export default function HealthTab() {
                     stroke={CAMPUS_COLORS.Canton}
                     strokeWidth={2}
                     dot={{ r: 3 }}
+                    connectNulls
                   />
                   <Line
                     type="monotone"
@@ -382,6 +406,7 @@ export default function HealthTab() {
                     stroke={CAMPUS_COLORS.Jasper}
                     strokeWidth={2}
                     dot={{ r: 3 }}
+                    connectNulls
                   />
                 </>
               ) : (
@@ -391,6 +416,7 @@ export default function HealthTab() {
                   stroke={CAMPUS_COLORS[filters.campus]}
                   strokeWidth={2}
                   dot={{ r: 3 }}
+                  connectNulls
                 />
               )}
             </LineChart>

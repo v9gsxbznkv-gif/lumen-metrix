@@ -132,4 +132,9 @@
 - [x] Add Groups to sidebar navigation (UsersRound icon, under Overview section)
 - [x] GroupsTab built mobile-responsive from the start (responsive grids, scrollable table)
 - [x] Write 9 vitest tests for groups.getData procedure (56 total tests passing)
-- [ ] Publish updated site with public visibility
+- [x] Publish updated site with public visibility
+
+## Health Page Charts Fix (Round 9)
+- [x] Fix Volunteer-to-Attendee Ratio chart: use undefined for missing data + connectNulls so line connects valid points
+- [x] Fix Year-over-Year Growth Rate chart: use same-period comparison for partial years (Q1 2026 vs Q1 2025)
+- [x] Publish updated site with public visibility
