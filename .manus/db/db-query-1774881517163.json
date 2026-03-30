@@ -1,0 +1,76 @@
+{
+  "query": "SELECT id, syncType, status, recordsProcessed, recordsCreated, recordsUpdated, errorMessage, startedAt, durationMs FROM sync_logs ORDER BY startedAt DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT id, syncType, status, recordsProcessed, recordsCreated, recordsUpdated, errorMessage, startedAt, durationMs FROM sync_logs ORDER BY startedAt DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "30001",
+      "syncType": "attendance",
+      "status": "completed",
+      "recordsProcessed": "110",
+      "recordsCreated": "86",
+      "recordsUpdated": "0",
+      "errorMessage": "NULL",
+      "startedAt": "2026-03-30 14:28:52",
+      "durationMs": "104660"
+    },
+    {
+      "id": "5",
+      "syncType": "attendance",
+      "status": "completed",
+      "recordsProcessed": "4408",
+      "recordsCreated": "2799",
+      "recordsUpdated": "0",
+      "errorMessage": "NULL",
+      "startedAt": "2026-03-30 13:15:28",
+      "durationMs": "758971"
+    },
+    {
+      "id": "4",
+      "syncType": "attendance",
+      "status": "failed",
+      "recordsProcessed": "0",
+      "recordsCreated": "0",
+      "recordsUpdated": "0",
+      "errorMessage": "Request failed with status code 404 (URL: /check-ins/v2/events/14550/event_times, Status: 404)",
+      "startedAt": "2026-03-30 13:00:41",
+      "durationMs": "907"
+    },
+    {
+      "id": "3",
+      "syncType": "attendance",
+      "status": "failed",
+      "recordsProcessed": "0",
+      "recordsCreated": "0",
+      "recordsUpdated": "0",
+      "errorMessage": "Request failed with status code 404",
+      "startedAt": "2026-03-30 12:46:04",
+      "durationMs": "933"
+    },
+    {
+      "id": "2",
+      "syncType": "attendance",
+      "status": "failed",
+      "recordsProcessed": "0",
+      "recordsCreated": "0",
+      "recordsUpdated": "0",
+      "errorMessage": "Request failed with status code 404",
+      "startedAt": "2026-03-30 12:36:59",
+      "durationMs": "892"
+    },
+    {
+      "id": "1",
+      "syncType": "attendance",
+      "status": "failed",
+      "recordsProcessed": "0",
+      "recordsCreated": "0",
+      "recordsUpdated": "0",
+      "errorMessage": "Request failed with status code 404",
+      "startedAt": "2026-03-30 12:36:17",
+      "durationMs": "894"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsyncType\tstatus\trecordsProcessed\trecordsCreated\trecordsUpdated\terrorMessage\tstartedAt\tdurationMs\n30001\tattendance\tcompleted\t110\t86\t0\tNULL\t2026-03-30 14:28:52\t104660\n5\tattendance\tcompleted\t4408\t2799\t0\tNULL\t2026-03-30 13:15:28\t758971\n4\tattendance\tfailed\t0\t0\t0\tRequest failed with status code 404 (URL: /check-ins/v2/events/14550/event_times, Status: 404)\t2026-03-30 13:00:41\t907\n3\tattendance\tfailed\t0\t0\t0\tRequest failed with status code 404\t2026-03-30 12:46:04\t933\n2\tattendance\tfailed\t0\t0\t0\tRequest failed with status code 404\t2026-03-30 12:36:59\t892\n1\tattendance\tfailed\t0\t0\t0\tRequest failed with status code 404\t2026-03-30 12:36:17\t894\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}

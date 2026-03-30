@@ -30,6 +30,14 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
+
+  // Start the nightly auto-sync scheduler (midnight Eastern)
+  try {
+    const { startAutoSyncScheduler } = await import("../pco/scheduler");
+    startAutoSyncScheduler();
+  } catch (err) {
+    console.warn("[Server] Could not start auto-sync scheduler:", err);
+  }
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));

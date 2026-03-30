@@ -1,9 +1,13 @@
 /**
  * PCO Integration tRPC Router
  * OAuth 2.0 authorization code flow + sync triggers + dashboard data queries.
+ * 
+ * Data source strategy:
+ *   - 2025 and earlier: spreadsheet data (manually curated historical records)
+ *   - 2026 and later: PCO data (live synced from Planning Center)
  */
 import { z } from "zod";
-import { desc, sql } from "drizzle-orm";
+import { and, desc, eq, gte, lt, or, sql } from "drizzle-orm";
 import { publicProcedure, router } from "../_core/trpc";
 import { ENV } from "../_core/env";
 import { getDb } from "../db";
@@ -38,6 +42,26 @@ import {
   syncAll,
   logSyncResult,
 } from "./sync";
+import { getSchedulerStatus } from "./scheduler";
+
+/**
+ * The cutover year: from this year onward, PCO is the source of truth.
+ * Before this year, spreadsheet data is used.
+ */
+const PCO_CUTOVER_YEAR = 2026;
+
+/**
+ * Build a WHERE clause that selects:
+ *   - spreadsheet rows for years < PCO_CUTOVER_YEAR
+ *   - pco rows for years >= PCO_CUTOVER_YEAR
+ * This ensures no duplicate data and a clean transition.
+ */
+function sourceFilter(table: { year: any; source: any }) {
+  return or(
+    and(lt(table.year, PCO_CUTOVER_YEAR), eq(table.source, "spreadsheet")),
+    and(gte(table.year, PCO_CUTOVER_YEAR), eq(table.source, "pco"))
+  );
+}
 
 export const pcoRouter = router({
   // ============================================================
@@ -46,7 +70,6 @@ export const pcoRouter = router({
 
   /**
    * Get the PCO authorization URL to redirect the user to.
-   * The frontend passes its origin so we can build the correct callback URL.
    */
   getAuthorizeUrl: publicProcedure
     .query(() => {
@@ -72,12 +95,6 @@ export const pcoRouter = router({
       return { success: false, error: "Not connected to Planning Center. Please authorize first." };
     }
     const result = await client.validateConnection();
-    // Update org name if we got one
-    if (result.valid && result.orgName) {
-      const { storeTokens: _st, ...rest } = await import("./client");
-      // We can't easily update just the org name without the full token,
-      // but the org name was stored during initial token exchange.
-    }
     return {
       success: result.valid,
       organizationName: result.orgName,
@@ -169,6 +186,12 @@ export const pcoRouter = router({
   // ============================================================
   // Dashboard Data Queries (serves data to frontend)
   // ============================================================
+  /**
+   * Returns dashboard data using source-aware filtering:
+   *   - Years < 2026: spreadsheet data (historical, manually curated)
+   *   - Years >= 2026: PCO data (live synced from Planning Center)
+   * This eliminates duplicates and ensures a clean data transition.
+   */
   getDashboardData: publicProcedure.query(async () => {
     const db = await getDb();
     if (!db) return null;
@@ -183,14 +206,14 @@ export const pcoRouter = router({
       servingRows,
       servingMonthlyRows,
     ] = await Promise.all([
-      db.select().from(attendance),
-      db.select().from(attendanceMonthly),
-      db.select().from(giving),
-      db.select().from(givingMonthly),
-      db.select().from(nextSteps),
-      db.select().from(nextStepsMonthly),
-      db.select().from(serving),
-      db.select().from(servingMonthly),
+      db.select().from(attendance).where(sourceFilter(attendance)),
+      db.select().from(attendanceMonthly).where(sourceFilter(attendanceMonthly)),
+      db.select().from(giving).where(sourceFilter(giving)),
+      db.select().from(givingMonthly).where(sourceFilter(givingMonthly)),
+      db.select().from(nextSteps).where(sourceFilter(nextSteps)),
+      db.select().from(nextStepsMonthly).where(sourceFilter(nextStepsMonthly)),
+      db.select().from(serving).where(sourceFilter(serving)),
+      db.select().from(servingMonthly).where(sourceFilter(servingMonthly)),
     ]);
 
     // Extract unique years
@@ -287,6 +310,10 @@ export const pcoRouter = router({
         .orderBy(desc(pcoEvents.startsAt))
         .limit(limit);
     }),
+
+  getSchedulerStatus: publicProcedure.query(() => {
+    return getSchedulerStatus();
+  }),
 
   getPeopleStats: publicProcedure.query(async () => {
     const db = await getDb();

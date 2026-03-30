@@ -319,21 +319,25 @@ async function loadFromCdn(): Promise<RawDashboard> {
 }
 
 /**
- * Load dashboard data — tries backend API first, falls back to CDN.
+ * Load dashboard data from the backend API.
+ * The API now handles source-aware filtering:
+ *   - 2025 and earlier: spreadsheet data (historical)
+ *   - 2026 and later: PCO data (live synced)
+ * CDN fallback is only used if the API is completely unavailable.
  */
 export async function loadDashboardData(): Promise<DashboardData> {
   if (cachedData) return cachedData;
 
-  // Try backend API first (database has the latest data including PCO syncs)
+  // Primary: backend API (database with source-aware filtering)
   const apiData = await loadFromApi();
   if (apiData) {
-    console.log("[Data] Loaded from backend API (database)");
+    console.log("[Data] Loaded from backend API (PCO for 2026+, spreadsheet for ≤2025)");
     cachedData = transformRawData(apiData);
     return cachedData;
   }
 
-  // Fall back to CDN JSON (historical data)
-  console.log("[Data] Loading from CDN (static JSON fallback)");
+  // Emergency fallback: CDN JSON (only if API is completely down)
+  console.warn("[Data] Backend API unavailable — using CDN fallback (may not include latest PCO data)");
   const cdnData = await loadFromCdn();
   cachedData = transformRawData(cdnData);
   return cachedData;

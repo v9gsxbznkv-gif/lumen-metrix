@@ -1,0 +1,250 @@
+{
+  "query": "SELECT year, month, campus, subgroup, total, source FROM attendance_monthly WHERE year = 2026 AND source = 'pco' ORDER BY month, campus LIMIT 30;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, month, campus, subgroup, total, source FROM attendance_monthly WHERE year = 2026 AND source = 'pco' ORDER BY month, campus LIMIT 30;",
+  "rows": [
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "All Campuses",
+      "subgroup": "Abide Men's Night",
+      "total": "719",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "total": "38",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "total": "35",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "All Campuses",
+      "subgroup": "YA Gathering",
+      "total": "4",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "total": "38",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "total": "38",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "All Campuses",
+      "subgroup": "YA Gathering",
+      "total": "4",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "All Campuses",
+      "subgroup": "Abide Men's Night",
+      "total": "719",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "total": "38",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "total": "42",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "total": "35",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "total": "42",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "RevStudents | Canton Campus",
+      "total": "576",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "total": "809",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "total": "135",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Childcare | Canton Campus",
+      "total": "10",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "total": "809",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "RevStudents | Canton Campus",
+      "total": "605",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "total": "121",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "RevStudents | Canton Campus",
+      "total": "470",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Childcare | Canton Campus",
+      "total": "5",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "RevStudents | Canton Campus",
+      "total": "527",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "total": "1028",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "total": "135",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "total": "1118",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Childcare | Canton Campus",
+      "total": "10",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Childcare | Canton Campus",
+      "total": "7",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "total": "121",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "total": "1028",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "RevStudents | Canton Campus",
+      "total": "527",
+      "source": "pco"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tmonth\tcampus\tsubgroup\ttotal\tsource\n2026\t1\tAll Campuses\tAbide Men's Night\t719\tpco\n2026\t1\tAll Campuses\tESL Class\t38\tpco\n2026\t1\tAll Campuses\tESL Class\t35\tpco\n2026\t1\tAll Campuses\tYA Gathering\t4\tpco\n2026\t1\tAll Campuses\tESL Class\t38\tpco\n2026\t1\tAll Campuses\tESL Class\t38\tpco\n2026\t1\tAll Campuses\tYA Gathering\t4\tpco\n2026\t1\tAll Campuses\tAbide Men's Night\t719\tpco\n2026\t1\tAll Campuses\tESL Class\t38\tpco\n2026\t1\tAll Campuses\tESL Class\t42\tpco\n2026\t1\tAll Campuses\tESL Class\t35\tpco\n2026\t1\tAll Campuses\tESL Class\t42\tpco\n2026\t1\tCanton\tRevStudents | Canton Campus\t576\tpco\n2026\t1\tCanton\tRevolution Canton Check-In\t809\tpco\n2026\t1\tCanton\tRevolution Canton Check-In\t135\tpco\n2026\t1\tCanton\tChildcare | Canton Campus\t10\tpco\n2026\t1\tCanton\tRevolution Canton Check-In\t809\tpco\n2026\t1\tCanton\tRevStudents | Canton Campus\t605\tpco\n2026\t1\tCanton\tRevolution Canton Check-In\t121\tpco\n2026\t1\tCanton\tRevStudents | Canton Campus\t470\tpco\n2026\t1\tCanton\tChildcare | Canton Campus\t5\tpco\n2026\t1\tCanton\tRevStudents | Canton Campus\t527\tpco\n2026\t1\tCanton\tRevolution Canton Check-In\t1028\tpco\n2026\t1\tCanton\tRevolution Canton Check-In\t135\tpco\n2026\t1\tCanton\tRevolution Canton Check-In\t1118\tpco\n2026\t1\tCanton\tChildcare | Canton Campus\t10\tpco\n2026\t1\tCanton\tChildcare | Canton Campus\t7\tpco\n2026\t1\tCanton\tRevolution Canton Check-In\t121\tpco\n2026\t1\tCanton\tRevolution Canton Check-In\t1028\tpco\n2026\t1\tCanton\tRevStudents | Canton Campus\t527\tpco\n",
+  "stderr": "",
+  "execution_time_ms": 46802
+}

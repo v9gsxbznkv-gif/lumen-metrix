@@ -1,0 +1,110 @@
+{
+  "query": "SELECT year, source, COUNT(*) as cnt FROM attendance_monthly GROUP BY year, source ORDER BY year DESC, source LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, source, COUNT(*) as cnt FROM attendance_monthly GROUP BY year, source ORDER BY year DESC, source LIMIT 20;",
+  "rows": [
+    {
+      "year": "2026",
+      "source": "pco",
+      "cnt": "174"
+    },
+    {
+      "year": "2026",
+      "source": "spreadsheet",
+      "cnt": "66"
+    },
+    {
+      "year": "2025",
+      "source": "pco",
+      "cnt": "347"
+    },
+    {
+      "year": "2025",
+      "source": "spreadsheet",
+      "cnt": "261"
+    },
+    {
+      "year": "2024",
+      "source": "pco",
+      "cnt": "343"
+    },
+    {
+      "year": "2024",
+      "source": "spreadsheet",
+      "cnt": "264"
+    },
+    {
+      "year": "2023",
+      "source": "pco",
+      "cnt": "333"
+    },
+    {
+      "year": "2023",
+      "source": "spreadsheet",
+      "cnt": "271"
+    },
+    {
+      "year": "2022",
+      "source": "pco",
+      "cnt": "348"
+    },
+    {
+      "year": "2022",
+      "source": "spreadsheet",
+      "cnt": "318"
+    },
+    {
+      "year": "2021",
+      "source": "pco",
+      "cnt": "231"
+    },
+    {
+      "year": "2021",
+      "source": "spreadsheet",
+      "cnt": "303"
+    },
+    {
+      "year": "2020",
+      "source": "pco",
+      "cnt": "162"
+    },
+    {
+      "year": "2020",
+      "source": "spreadsheet",
+      "cnt": "157"
+    },
+    {
+      "year": "2019",
+      "source": "pco",
+      "cnt": "272"
+    },
+    {
+      "year": "2019",
+      "source": "spreadsheet",
+      "cnt": "381"
+    },
+    {
+      "year": "2018",
+      "source": "pco",
+      "cnt": "212"
+    },
+    {
+      "year": "2018",
+      "source": "spreadsheet",
+      "cnt": "373"
+    },
+    {
+      "year": "2017",
+      "source": "pco",
+      "cnt": "160"
+    },
+    {
+      "year": "2017",
+      "source": "spreadsheet",
+      "cnt": "296"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tsource\tcnt\n2026\tpco\t174\n2026\tspreadsheet\t66\n2025\tpco\t347\n2025\tspreadsheet\t261\n2024\tpco\t343\n2024\tspreadsheet\t264\n2023\tpco\t333\n2023\tspreadsheet\t271\n2022\tpco\t348\n2022\tspreadsheet\t318\n2021\tpco\t231\n2021\tspreadsheet\t303\n2020\tpco\t162\n2020\tspreadsheet\t157\n2019\tpco\t272\n2019\tspreadsheet\t381\n2018\tpco\t212\n2018\tspreadsheet\t373\n2017\tpco\t160\n2017\tspreadsheet\t296\n",
+  "stderr": "",
+  "execution_time_ms": 61
+}

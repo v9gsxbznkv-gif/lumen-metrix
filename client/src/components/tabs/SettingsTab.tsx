@@ -204,7 +204,82 @@ function PcoConnectionSection() {
   );
 }
 
-// ─── Sync Controls Section ────────────────────────────────────────────────────
+// ─── Auto-Sync Scheduler Section ─────────────────────────────────────────────
+function AutoSyncSection() {
+  const { data: schedulerStatus } = trpc.pco.getSchedulerStatus.useQuery(undefined, {
+    refetchInterval: 60000, // refresh every minute
+  });
+  const { data: connectionStatus } = trpc.pco.getConnectionStatus.useQuery();
+
+  const isConnected = connectionStatus?.connected === true;
+
+  return (
+    <div className="bg-card rounded-lg border border-border/60 p-5">
+      <div className="flex items-center gap-2 mb-4">
+        <Clock className="w-4 h-4" style={{ color: "#E8913A" }} />
+        <h3 className="text-sm font-semibold">Auto-Sync Scheduler</h3>
+      </div>
+
+      {!isConnected ? (
+        <div className="flex items-center gap-2 p-3 rounded-md bg-muted/20 text-xs text-muted-foreground">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          Connect your Planning Center account to enable automatic nightly syncs.
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between py-2 border-b border-border/20">
+            <span className="text-xs text-muted-foreground">Status</span>
+            <span className="flex items-center gap-1.5 text-xs">
+              {schedulerStatus?.active ? (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-emerald-600 font-medium">Active</span>
+                </>
+              ) : (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                  <span className="text-amber-600 font-medium">Waiting for connection</span>
+                </>
+              )}
+            </span>
+          </div>
+          <div className="flex items-center justify-between py-2 border-b border-border/20">
+            <span className="text-xs text-muted-foreground">Schedule</span>
+            <span className="text-xs font-medium">Every night at midnight (ET)</span>
+          </div>
+          <div className="flex items-center justify-between py-2 border-b border-border/20">
+            <span className="text-xs text-muted-foreground">Next Sync</span>
+            <span className="text-xs font-mono">
+              {schedulerStatus?.nextSyncTime ? formatDate(schedulerStatus.nextSyncTime) : "—"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between py-2 border-b border-border/20">
+            <span className="text-xs text-muted-foreground">Last Auto-Sync</span>
+            <span className="text-xs font-mono">
+              {schedulerStatus?.isCurrentlySyncing
+                ? "Syncing now..."
+                : schedulerStatus?.lastSyncAt
+                  ? formatDate(schedulerStatus.lastSyncAt)
+                  : "Not yet (will run at midnight)"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between py-2">
+            <span className="text-xs text-muted-foreground">Modules</span>
+            <span className="text-xs">Attendance, Giving, Groups, Events, People</span>
+          </div>
+          <div className="flex items-start gap-2 p-3 rounded-md bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/40">
+            <Info className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
+            <p className="text-xs text-blue-700 dark:text-blue-400">
+              The auto-sync runs a full sync of all PCO modules every night at midnight. Data from 2026 onward is sourced exclusively from PCO. Historical data (2025 and earlier) is preserved from the original spreadsheets.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Data Source Section ──────────────────────────────────────────────────────
 function SyncControlsSection() {
   const [selectedSync, setSelectedSync] = useState<SyncType>("full");
   const [dateFrom, setDateFrom] = useState("");
@@ -459,6 +534,9 @@ export default function SettingsTab() {
       {/* Sync Controls */}
       <SyncControlsSection />
 
+      {/* Auto-Sync Scheduler */}
+      <AutoSyncSection />
+
       {/* Data Source */}
       <div className="bg-card rounded-lg border border-border/60 p-5">
         <div className="flex items-center gap-2 mb-4">
@@ -467,12 +545,12 @@ export default function SettingsTab() {
         </div>
         <div className="space-y-3">
           <div className="flex items-center justify-between py-2 border-b border-border/20">
-            <span className="text-xs text-muted-foreground">Historical Source</span>
-            <span className="text-xs font-medium">Google Sheets (12 workbooks)</span>
+            <span className="text-xs text-muted-foreground">2014–2025 Data</span>
+            <span className="text-xs font-medium">Google Sheets (historical, 12 workbooks)</span>
           </div>
           <div className="flex items-center justify-between py-2 border-b border-border/20">
-            <span className="text-xs text-muted-foreground">Live Source</span>
-            <span className="text-xs font-medium">Planning Center Online (OAuth 2.0)</span>
+            <span className="text-xs text-muted-foreground">2026+ Data</span>
+            <span className="text-xs font-medium">Planning Center Online (live sync via OAuth 2.0)</span>
           </div>
           <div className="flex items-center justify-between py-2 border-b border-border/20">
             <span className="text-xs text-muted-foreground">Attendance Records</span>
@@ -509,7 +587,8 @@ export default function SettingsTab() {
           <p>2020–2021 serving data may be incomplete due to COVID-19 volunteer tracking changes.</p>
           <p>2026 data is YTD (January–March) and uses partial-year-aware comparisons.</p>
           <p>Online campus attendance tracking began in 2020. Jasper campus launched in 2017.</p>
-          <p>PCO sync data supplements historical spreadsheet data — both sources are preserved in the database.</p>
+          <p>From 2026 onward, all data comes exclusively from Planning Center Online (PCO). Historical spreadsheet data (2014–2025) is preserved and used for prior years.</p>
+          <p>Auto-sync runs nightly at midnight (ET) to keep PCO data current.</p>
         </div>
       </div>
 

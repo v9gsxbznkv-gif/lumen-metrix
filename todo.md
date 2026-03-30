@@ -51,3 +51,13 @@
 - [x] Fix attendance sync 404 error: fixed fallback redirect URI in env.ts and republished
 - [x] Fix PCO attendance sync 404: changed from /events/{id}/event_times (doesn't exist) to /events/{id}/event_periods (correct PCO hierarchy)
 - [x] Add better error logging to sync functions to capture exact failing URL and response
+
+## Data Source Migration & Auto-Sync
+- [ ] Sync all remaining PCO modules (giving, groups, events, people)
+- [x] Switch dashboard to use PCO/DB data as primary source for 2026+ (source-aware filtering in getDashboardData)
+- [x] Keep historical spreadsheet data (2014-2025) as fallback for years <2026
+- [x] Remove spreadsheet dependency for current year data (2026+ uses PCO exclusively)
+- [x] Build nightly auto-sync scheduler (midnight ET) for all PCO modules
+- [x] Add Auto-Sync Scheduler status section to Settings page
+- [x] Update Data Source section to reflect new source strategy
+- [ ] Publish updated site with auto-sync enabled
