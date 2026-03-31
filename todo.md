@@ -245,3 +245,9 @@
 - [x] Add "Annual Report" to sidebar under TOOLS section
 - [x] Write vitest tests for annual report data aggregation (107 total passing)
 - [x] Checkpoint and deploy
+
+## Round 28 Bug Fix: FTG Data Missing
+
+- [x] Fix metric name mismatch: "First-Time Guests" → "FTG" in annual report queries
+- [x] Verify monthly attendance data is queried correctly (2,545 rows present in DB)
+- [x] All 107 tests passing after fix

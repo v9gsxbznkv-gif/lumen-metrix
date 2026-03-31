@@ -298,14 +298,14 @@ export const annualReportRouter = router({
         });
       }
 
-      const ftgCurrent = getMetricTotal(year, "First-Time Guests");
-      const ftgPrior = getMetricTotal(priorYear, "First-Time Guests");
+      const ftgCurrent = getMetricTotal(year, "FTG");
+      const ftgPrior = getMetricTotal(priorYear, "FTG");
       const salvCurrent = getMetricTotal(year, "Salvations");
       const salvPrior = getMetricTotal(priorYear, "Salvations");
       const baptCurrent = getMetricTotal(year, "Baptisms");
       const baptPrior = getMetricTotal(priorYear, "Baptisms");
 
-      const ftgMonthly = buildNextStepsMonthly(year, "First-Time Guests");
+      const ftgMonthly = buildNextStepsMonthly(year, "FTG");
       const salvMonthly = buildNextStepsMonthly(year, "Salvations");
       const baptMonthly = buildNextStepsMonthly(year, "Baptisms");
 

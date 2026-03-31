@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COUNT(*) as cnt FROM next_steps_monthly WHERE year IN (2024, 2025) AND metric = 'First-Time Guests'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT COUNT(*) as cnt FROM next_steps_monthly WHERE year IN (2024, 2025) AND metric = 'First-Time Guests'",
+  "rows": [
+    {
+      "cnt": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "cnt\n0\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

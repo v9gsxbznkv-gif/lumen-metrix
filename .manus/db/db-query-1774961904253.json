@@ -1,0 +1,22 @@
+{
+  "query": "SELECT DISTINCT metric FROM next_steps_monthly WHERE year IN (2024, 2025)",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT metric FROM next_steps_monthly WHERE year IN (2024, 2025)",
+  "rows": [
+    {
+      "metric": "Baptisms"
+    },
+    {
+      "metric": "FTG"
+    },
+    {
+      "metric": "Salvations"
+    },
+    {
+      "metric": "Stewardship"
+    }
+  ],
+  "messages": [],
+  "stdout": "metric\nBaptisms\nFTG\nSalvations\nStewardship\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}
