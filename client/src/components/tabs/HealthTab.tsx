@@ -116,20 +116,20 @@ export default function HealthTab() {
   const volunteerTrend = useMemo(() => {
     if (!data) return [];
     const vr = data.computed.volunteer_ratio;
-    // Use undefined (not 0) for missing data so Recharts skips those points
-    // and connects the line through valid data only.
+    // Build trend rows — use null (not undefined) so Recharts connectNulls works correctly.
+    // Recharts needs actual null gaps, not undefined, to skip points while still connecting.
     return filteredYears.map((year) => {
-      const row: Record<string, number | string | undefined> = { year };
+      const row: Record<string, number | string | null> = { year };
       if (filters.campus === "All Campuses") {
         ["Canton", "Jasper"].forEach((c) => {
           const match = vr.find((v) => v.year === year && v.campus === c);
-          row[c] = match && match.pct > 0 ? Math.round(match.pct * 1000) / 10 : undefined;
+          row[c] = match && match.pct > 0 ? Math.round(match.pct * 1000) / 10 : null;
         });
       } else {
         const match = vr.find(
           (v) => v.year === year && v.campus === filters.campus
         );
-        row[filters.campus] = match && match.pct > 0 ? Math.round(match.pct * 1000) / 10 : undefined;
+        row[filters.campus] = match && match.pct > 0 ? Math.round(match.pct * 1000) / 10 : null;
       }
       return row;
     });
@@ -405,45 +405,51 @@ export default function HealthTab() {
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(v: number) => `${v}%`}
+                domain={[0, 40]}
+                ticks={[0, 10, 20, 30, 40]}
               />
               <Tooltip
                 contentStyle={TT}
-                formatter={(v: number) => [`${v}%`, ""]}
+                formatter={(v: number) => [`${v.toFixed(1)}%`, ""]}
               />
               <Legend
                 wrapperStyle={{ fontSize: 12, fontFamily: "'Inter'" }}
                 iconType="circle"
                 iconSize={8}
               />
-              {filters.campus === "All Campuses" ? (
-                <>
-                  <Line
-                    type="monotone"
-                    dataKey="Canton"
-                    stroke={CAMPUS_COLORS.Canton}
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                    connectNulls
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="Jasper"
-                    stroke={CAMPUS_COLORS.Jasper}
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                    connectNulls
-                  />
-                </>
-              ) : (
-                <Line
-                  type="monotone"
-                  dataKey={filters.campus}
-                  stroke={CAMPUS_COLORS[filters.campus]}
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                  connectNulls
-                />
-              )}
+              <Line
+                type="monotone"
+                dataKey="Canton"
+                name="Canton"
+                stroke={CAMPUS_COLORS.Canton}
+                strokeWidth={2}
+                dot={{ r: 4, fill: CAMPUS_COLORS.Canton }}
+                activeDot={{ r: 6 }}
+                connectNulls
+                hide={filters.campus !== "All Campuses" && filters.campus !== "Canton"}
+              />
+              <Line
+                type="monotone"
+                dataKey="Jasper"
+                name="Jasper"
+                stroke={CAMPUS_COLORS.Jasper}
+                strokeWidth={2}
+                dot={{ r: 4, fill: CAMPUS_COLORS.Jasper }}
+                activeDot={{ r: 6 }}
+                connectNulls
+                hide={filters.campus !== "All Campuses" && filters.campus !== "Jasper"}
+              />
+              <Line
+                type="monotone"
+                dataKey="Online"
+                name="Online"
+                stroke={CAMPUS_COLORS.Online ?? "#9B59B6"}
+                strokeWidth={2}
+                dot={{ r: 4, fill: CAMPUS_COLORS.Online ?? "#9B59B6" }}
+                activeDot={{ r: 6 }}
+                connectNulls
+                hide={filters.campus !== "All Campuses" && filters.campus !== "Online"}
+              />
             </LineChart>
           </ResponsiveContainer>
         </div>

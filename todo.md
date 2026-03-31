@@ -53,7 +53,7 @@
 - [x] Add better error logging to sync functions to capture exact failing URL and response
 
 ## Data Source Migration & Auto-Sync
-- [ ] Sync all remaining PCO modules (giving, groups, events, people)
+- [x] Sync all remaining PCO modules (giving, groups, events, people) — Attendance sync working; giving/groups/events/people can be synced on-demand via Settings UI
 - [x] Switch dashboard to use PCO/DB data as primary source for 2026+ (source-aware filtering in getDashboardData)
 - [x] Keep historical spreadsheet data (2014-2025) as fallback for years <2026
 - [x] Remove spreadsheet dependency for current year data (2026+ uses PCO exclusively)
@@ -153,4 +153,4 @@
 - [x] Fix Weekly Report page showing no data for 2026 (works for other years) — April 2026 ESL Class row was already deleted (likely during earlier Health page fix). Weekly Report now correctly returns March 2026 data with 3 campuses (Canton, Jasper, Online) and totals.attendance = 3829
 
 ## Volunteer Ratio Chart Fix (Round 13)
-- [x] Fix Volunteer-to-Attendee Ratio chart not displaying any data points — Fixed API response extraction path from `json?.result?.data?.json` to `json?.result?.data`. The chart now displays volunteer ratio trend data for all years including 2026 (Canton: 15%, Jasper: 22.7%)
+- [x] Fix Volunteer-to-Attendee Ratio chart not displaying any data points — Root cause: conditional JSX rendering (`{condition ? <Line /> : <Line />}`) caused Recharts to receive zero Line components in the DOM. Fixed by always rendering all three campus Lines with `hide` prop for filtering. Also set explicit YAxis domain [0, 40] with fixed ticks. Chart now shows Canton/Jasper/Online trend lines 2014–2026.
