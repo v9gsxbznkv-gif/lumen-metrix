@@ -1,0 +1,175 @@
+{
+  "query": "SELECT DISTINCT subgroup, campus, source FROM attendance_monthly WHERE year=2026 ORDER BY source, campus, subgroup;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT subgroup, campus, source FROM attendance_monthly WHERE year=2026 ORDER BY source, campus, subgroup;",
+  "rows": [
+    {
+      "subgroup": "Abide Men's Night",
+      "campus": "All Campuses",
+      "source": "pco"
+    },
+    {
+      "subgroup": "Abide Women's Night",
+      "campus": "All Campuses",
+      "source": "pco"
+    },
+    {
+      "subgroup": "ESL Class",
+      "campus": "All Campuses",
+      "source": "pco"
+    },
+    {
+      "subgroup": "YA Gathering",
+      "campus": "All Campuses",
+      "source": "pco"
+    },
+    {
+      "subgroup": "Childcare | Canton Campus",
+      "campus": "Canton",
+      "source": "pco"
+    },
+    {
+      "subgroup": "Parent Night | Canton Campus",
+      "campus": "Canton",
+      "source": "pco"
+    },
+    {
+      "subgroup": "Revolution Canton Check-In",
+      "campus": "Canton",
+      "source": "pco"
+    },
+    {
+      "subgroup": "RevStudents | Canton Campus",
+      "campus": "Canton",
+      "source": "pco"
+    },
+    {
+      "subgroup": "Childcare | Jasper Campus",
+      "campus": "Jasper",
+      "source": "pco"
+    },
+    {
+      "subgroup": "Parent Night | Jasper Campus",
+      "campus": "Jasper",
+      "source": "pco"
+    },
+    {
+      "subgroup": "Revolution Jasper Check-In",
+      "campus": "Jasper",
+      "source": "pco"
+    },
+    {
+      "subgroup": "RevStudents | Jasper Campus",
+      "campus": "Jasper",
+      "source": "pco"
+    },
+    {
+      "subgroup": "Adults",
+      "campus": "Canton",
+      "source": "spreadsheet"
+    },
+    {
+      "subgroup": "Babies",
+      "campus": "Canton",
+      "source": "spreadsheet"
+    },
+    {
+      "subgroup": "Campground",
+      "campus": "Canton",
+      "source": "spreadsheet"
+    },
+    {
+      "subgroup": "Cove",
+      "campus": "Canton",
+      "source": "spreadsheet"
+    },
+    {
+      "subgroup": "Elem Reruns",
+      "campus": "Canton",
+      "source": "spreadsheet"
+    },
+    {
+      "subgroup": "Kids",
+      "campus": "Canton",
+      "source": "spreadsheet"
+    },
+    {
+      "subgroup": "Pre-K",
+      "campus": "Canton",
+      "source": "spreadsheet"
+    },
+    {
+      "subgroup": "Students",
+      "campus": "Canton",
+      "source": "spreadsheet"
+    },
+    {
+      "subgroup": "Toddlers",
+      "campus": "Canton",
+      "source": "spreadsheet"
+    },
+    {
+      "subgroup": "Treehouse",
+      "campus": "Canton",
+      "source": "spreadsheet"
+    },
+    {
+      "subgroup": "Young Adults",
+      "campus": "Canton",
+      "source": "spreadsheet"
+    },
+    {
+      "subgroup": "Adults",
+      "campus": "Jasper",
+      "source": "spreadsheet"
+    },
+    {
+      "subgroup": "Babies",
+      "campus": "Jasper",
+      "source": "spreadsheet"
+    },
+    {
+      "subgroup": "Cove",
+      "campus": "Jasper",
+      "source": "spreadsheet"
+    },
+    {
+      "subgroup": "Elem Reruns",
+      "campus": "Jasper",
+      "source": "spreadsheet"
+    },
+    {
+      "subgroup": "Kids",
+      "campus": "Jasper",
+      "source": "spreadsheet"
+    },
+    {
+      "subgroup": "Pre-K",
+      "campus": "Jasper",
+      "source": "spreadsheet"
+    },
+    {
+      "subgroup": "Students",
+      "campus": "Jasper",
+      "source": "spreadsheet"
+    },
+    {
+      "subgroup": "Toddlers",
+      "campus": "Jasper",
+      "source": "spreadsheet"
+    },
+    {
+      "subgroup": "Treehouse",
+      "campus": "Jasper",
+      "source": "spreadsheet"
+    },
+    {
+      "subgroup": "Adults",
+      "campus": "Online",
+      "source": "spreadsheet"
+    }
+  ],
+  "messages": [],
+  "stdout": "subgroup\tcampus\tsource\nAbide Men's Night\tAll Campuses\tpco\nAbide Women's Night\tAll Campuses\tpco\nESL Class\tAll Campuses\tpco\nYA Gathering\tAll Campuses\tpco\nChildcare | Canton Campus\tCanton\tpco\nParent Night | Canton Campus\tCanton\tpco\nRevolution Canton Check-In\tCanton\tpco\nRevStudents | Canton Campus\tCanton\tpco\nChildcare | Jasper Campus\tJasper\tpco\nParent Night | Jasper Campus\tJasper\tpco\nRevolution Jasper Check-In\tJasper\tpco\nRevStudents | Jasper Campus\tJasper\tpco\nAdults\tCanton\tspreadsheet\nBabies\tCanton\tspreadsheet\nCampground\tCanton\tspreadsheet\nCove\tCanton\tspreadsheet\nElem Reruns\tCanton\tspreadsheet\nKids\tCanton\tspreadsheet\nPre-K\tCanton\tspreadsheet\nStudents\tCanton\tspreadsheet\nToddlers\tCanton\tspreadsheet\nTreehouse\tCanton\tspreadsheet\nYoung Adults\tCanton\tspreadsheet\nAdults\tJasper\tspreadsheet\nBabies\tJasper\tspreadsheet\nCove\tJasper\tspreadsheet\nElem Reruns\tJasper\tspreadsheet\nKids\tJasper\tspreadsheet\nPre-K\tJasper\tspreadsheet\nStudents\tJasper\tspreadsheet\nToddlers\tJasper\tspreadsheet\nTreehouse\tJasper\tspreadsheet\nAdults\tOnline\tspreadsheet\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}

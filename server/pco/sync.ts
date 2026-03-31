@@ -192,11 +192,16 @@ export async function syncGiving(
 
     console.log("[PCO Sync] Starting giving sync...");
 
+    // Default to current year only — we only need PCO data from 2026 onward.
+    // Historical giving (pre-2026) is sourced from spreadsheet data.
+    const currentYear = new Date().getFullYear();
+    const defaultFrom = `${currentYear}-01-01`;
+
     const params: Record<string, any> = {
       include: "designations",
       per_page: 100,
     };
-    if (dateFrom) params["where[received_at][gte]"] = dateFrom;
+    params["where[received_at][gte]"] = dateFrom || defaultFrom;
     if (dateTo) params["where[received_at][lte]"] = dateTo;
     params["where[payment_status]"] = "succeeded";
 
@@ -422,11 +427,15 @@ export async function syncEvents(
 
     console.log("[PCO Sync] Starting events sync...");
 
+    // Default to current year only — prevents pulling entire calendar history.
+    const currentYear = new Date().getFullYear();
+    const defaultFrom = `${currentYear}-01-01`;
+
     const params: Record<string, any> = {
       include: "event",
       order: "starts_at",
     };
-    if (dateFrom) params["where[starts_at][gte]"] = dateFrom;
+    params["where[starts_at][gte]"] = dateFrom || defaultFrom;
     if (dateTo) params["where[starts_at][lte]"] = dateTo;
 
     const instancesResult = await client.paginateAll(

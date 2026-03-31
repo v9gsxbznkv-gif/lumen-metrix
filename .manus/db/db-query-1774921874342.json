@@ -1,0 +1,82 @@
+{
+  "query": "\n-- Verify what we're about to delete first\nSELECT year, month, campus, subgroup, source, COUNT(*) as cnt\nFROM giving_monthly\nWHERE year = 2026\nGROUP BY year, month, campus, subgroup, source\nORDER BY month, campus;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute \n-- Verify what we're about to delete first\nSELECT year, month, campus, subgroup, source, COUNT(*) as cnt\nFROM giving_monthly\nWHERE year = 2026\nGROUP BY year, month, campus, subgroup, source\nORDER BY month, campus;\n",
+  "rows": [
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Tithes and Offerings",
+      "source": "spreadsheet",
+      "cnt": "1"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Designated",
+      "source": "spreadsheet",
+      "cnt": "1"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Jasper",
+      "subgroup": "Tithes and Offerings",
+      "source": "spreadsheet",
+      "cnt": "1"
+    },
+    {
+      "year": "2026",
+      "month": "2",
+      "campus": "Canton",
+      "subgroup": "Tithes and Offerings",
+      "source": "spreadsheet",
+      "cnt": "1"
+    },
+    {
+      "year": "2026",
+      "month": "2",
+      "campus": "Canton",
+      "subgroup": "Designated",
+      "source": "spreadsheet",
+      "cnt": "1"
+    },
+    {
+      "year": "2026",
+      "month": "2",
+      "campus": "Jasper",
+      "subgroup": "Tithes and Offerings",
+      "source": "spreadsheet",
+      "cnt": "1"
+    },
+    {
+      "year": "2026",
+      "month": "3",
+      "campus": "Canton",
+      "subgroup": "Tithes and Offerings",
+      "source": "spreadsheet",
+      "cnt": "1"
+    },
+    {
+      "year": "2026",
+      "month": "3",
+      "campus": "Canton",
+      "subgroup": "Designated",
+      "source": "spreadsheet",
+      "cnt": "1"
+    },
+    {
+      "year": "2026",
+      "month": "3",
+      "campus": "Jasper",
+      "subgroup": "Tithes and Offerings",
+      "source": "spreadsheet",
+      "cnt": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tmonth\tcampus\tsubgroup\tsource\tcnt\n2026\t1\tCanton\tTithes and Offerings\tspreadsheet\t1\n2026\t1\tCanton\tDesignated\tspreadsheet\t1\n2026\t1\tJasper\tTithes and Offerings\tspreadsheet\t1\n2026\t2\tCanton\tTithes and Offerings\tspreadsheet\t1\n2026\t2\tCanton\tDesignated\tspreadsheet\t1\n2026\t2\tJasper\tTithes and Offerings\tspreadsheet\t1\n2026\t3\tCanton\tTithes and Offerings\tspreadsheet\t1\n2026\t3\tCanton\tDesignated\tspreadsheet\t1\n2026\t3\tJasper\tTithes and Offerings\tspreadsheet\t1\n",
+  "stderr": "",
+  "execution_time_ms": 77
+}

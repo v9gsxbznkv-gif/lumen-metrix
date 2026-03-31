@@ -1,0 +1,580 @@
+{
+  "query": "SELECT subgroup, campus, month, total FROM attendance_monthly WHERE year=2026 AND source='pco' AND month=3 ORDER BY campus, subgroup;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT subgroup, campus, month, total FROM attendance_monthly WHERE year=2026 AND source='pco' AND month=3 ORDER BY campus, subgroup;",
+  "rows": [
+    {
+      "subgroup": "ESL Class",
+      "campus": "All Campuses",
+      "month": "3",
+      "total": "38"
+    },
+    {
+      "subgroup": "ESL Class",
+      "campus": "All Campuses",
+      "month": "3",
+      "total": "25"
+    },
+    {
+      "subgroup": "ESL Class",
+      "campus": "All Campuses",
+      "month": "3",
+      "total": "20"
+    },
+    {
+      "subgroup": "ESL Class",
+      "campus": "All Campuses",
+      "month": "3",
+      "total": "25"
+    },
+    {
+      "subgroup": "ESL Class",
+      "campus": "All Campuses",
+      "month": "3",
+      "total": "38"
+    },
+    {
+      "subgroup": "ESL Class",
+      "campus": "All Campuses",
+      "month": "3",
+      "total": "25"
+    },
+    {
+      "subgroup": "ESL Class",
+      "campus": "All Campuses",
+      "month": "3",
+      "total": "28"
+    },
+    {
+      "subgroup": "ESL Class",
+      "campus": "All Campuses",
+      "month": "3",
+      "total": "20"
+    },
+    {
+      "subgroup": "ESL Class",
+      "campus": "All Campuses",
+      "month": "3",
+      "total": "38"
+    },
+    {
+      "subgroup": "ESL Class",
+      "campus": "All Campuses",
+      "month": "3",
+      "total": "28"
+    },
+    {
+      "subgroup": "ESL Class",
+      "campus": "All Campuses",
+      "month": "3",
+      "total": "20"
+    },
+    {
+      "subgroup": "ESL Class",
+      "campus": "All Campuses",
+      "month": "3",
+      "total": "28"
+    },
+    {
+      "subgroup": "YA Gathering",
+      "campus": "All Campuses",
+      "month": "3",
+      "total": "14"
+    },
+    {
+      "subgroup": "YA Gathering",
+      "campus": "All Campuses",
+      "month": "3",
+      "total": "14"
+    },
+    {
+      "subgroup": "YA Gathering",
+      "campus": "All Campuses",
+      "month": "3",
+      "total": "14"
+    },
+    {
+      "subgroup": "Childcare | Canton Campus",
+      "campus": "Canton",
+      "month": "3",
+      "total": "11"
+    },
+    {
+      "subgroup": "Childcare | Canton Campus",
+      "campus": "Canton",
+      "month": "3",
+      "total": "6"
+    },
+    {
+      "subgroup": "Childcare | Canton Campus",
+      "campus": "Canton",
+      "month": "3",
+      "total": "11"
+    },
+    {
+      "subgroup": "Childcare | Canton Campus",
+      "campus": "Canton",
+      "month": "3",
+      "total": "6"
+    },
+    {
+      "subgroup": "Childcare | Canton Campus",
+      "campus": "Canton",
+      "month": "3",
+      "total": "6"
+    },
+    {
+      "subgroup": "Childcare | Canton Campus",
+      "campus": "Canton",
+      "month": "3",
+      "total": "5"
+    },
+    {
+      "subgroup": "Childcare | Canton Campus",
+      "campus": "Canton",
+      "month": "3",
+      "total": "6"
+    },
+    {
+      "subgroup": "Childcare | Canton Campus",
+      "campus": "Canton",
+      "month": "3",
+      "total": "5"
+    },
+    {
+      "subgroup": "Childcare | Canton Campus",
+      "campus": "Canton",
+      "month": "3",
+      "total": "6"
+    },
+    {
+      "subgroup": "Childcare | Canton Campus",
+      "campus": "Canton",
+      "month": "3",
+      "total": "6"
+    },
+    {
+      "subgroup": "Childcare | Canton Campus",
+      "campus": "Canton",
+      "month": "3",
+      "total": "11"
+    },
+    {
+      "subgroup": "Childcare | Canton Campus",
+      "campus": "Canton",
+      "month": "3",
+      "total": "5"
+    },
+    {
+      "subgroup": "Parent Night | Canton Campus",
+      "campus": "Canton",
+      "month": "3",
+      "total": "22"
+    },
+    {
+      "subgroup": "Parent Night | Canton Campus",
+      "campus": "Canton",
+      "month": "3",
+      "total": "22"
+    },
+    {
+      "subgroup": "Parent Night | Canton Campus",
+      "campus": "Canton",
+      "month": "3",
+      "total": "22"
+    },
+    {
+      "subgroup": "Revolution Canton Check-In",
+      "campus": "Canton",
+      "month": "3",
+      "total": "894"
+    },
+    {
+      "subgroup": "Revolution Canton Check-In",
+      "campus": "Canton",
+      "month": "3",
+      "total": "891"
+    },
+    {
+      "subgroup": "Revolution Canton Check-In",
+      "campus": "Canton",
+      "month": "3",
+      "total": "940"
+    },
+    {
+      "subgroup": "Revolution Canton Check-In",
+      "campus": "Canton",
+      "month": "3",
+      "total": "925"
+    },
+    {
+      "subgroup": "Revolution Canton Check-In",
+      "campus": "Canton",
+      "month": "3",
+      "total": "947"
+    },
+    {
+      "subgroup": "Revolution Canton Check-In",
+      "campus": "Canton",
+      "month": "3",
+      "total": "894"
+    },
+    {
+      "subgroup": "Revolution Canton Check-In",
+      "campus": "Canton",
+      "month": "3",
+      "total": "940"
+    },
+    {
+      "subgroup": "Revolution Canton Check-In",
+      "campus": "Canton",
+      "month": "3",
+      "total": "947"
+    },
+    {
+      "subgroup": "Revolution Canton Check-In",
+      "campus": "Canton",
+      "month": "3",
+      "total": "925"
+    },
+    {
+      "subgroup": "Revolution Canton Check-In",
+      "campus": "Canton",
+      "month": "3",
+      "total": "947"
+    },
+    {
+      "subgroup": "Revolution Canton Check-In",
+      "campus": "Canton",
+      "month": "3",
+      "total": "925"
+    },
+    {
+      "subgroup": "Revolution Canton Check-In",
+      "campus": "Canton",
+      "month": "3",
+      "total": "940"
+    },
+    {
+      "subgroup": "RevStudents | Canton Campus",
+      "campus": "Canton",
+      "month": "3",
+      "total": "417"
+    },
+    {
+      "subgroup": "RevStudents | Canton Campus",
+      "campus": "Canton",
+      "month": "3",
+      "total": "447"
+    },
+    {
+      "subgroup": "RevStudents | Canton Campus",
+      "campus": "Canton",
+      "month": "3",
+      "total": "460"
+    },
+    {
+      "subgroup": "RevStudents | Canton Campus",
+      "campus": "Canton",
+      "month": "3",
+      "total": "489"
+    },
+    {
+      "subgroup": "RevStudents | Canton Campus",
+      "campus": "Canton",
+      "month": "3",
+      "total": "417"
+    },
+    {
+      "subgroup": "RevStudents | Canton Campus",
+      "campus": "Canton",
+      "month": "3",
+      "total": "460"
+    },
+    {
+      "subgroup": "RevStudents | Canton Campus",
+      "campus": "Canton",
+      "month": "3",
+      "total": "489"
+    },
+    {
+      "subgroup": "RevStudents | Canton Campus",
+      "campus": "Canton",
+      "month": "3",
+      "total": "447"
+    },
+    {
+      "subgroup": "RevStudents | Canton Campus",
+      "campus": "Canton",
+      "month": "3",
+      "total": "460"
+    },
+    {
+      "subgroup": "RevStudents | Canton Campus",
+      "campus": "Canton",
+      "month": "3",
+      "total": "489"
+    },
+    {
+      "subgroup": "RevStudents | Canton Campus",
+      "campus": "Canton",
+      "month": "3",
+      "total": "447"
+    },
+    {
+      "subgroup": "Childcare | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "11"
+    },
+    {
+      "subgroup": "Childcare | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "11"
+    },
+    {
+      "subgroup": "Childcare | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "20"
+    },
+    {
+      "subgroup": "Childcare | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "12"
+    },
+    {
+      "subgroup": "Childcare | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "11"
+    },
+    {
+      "subgroup": "Childcare | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "11"
+    },
+    {
+      "subgroup": "Childcare | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "12"
+    },
+    {
+      "subgroup": "Childcare | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "12"
+    },
+    {
+      "subgroup": "Childcare | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "20"
+    },
+    {
+      "subgroup": "Childcare | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "20"
+    },
+    {
+      "subgroup": "Childcare | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "11"
+    },
+    {
+      "subgroup": "Childcare | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "11"
+    },
+    {
+      "subgroup": "Parent Night | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "9"
+    },
+    {
+      "subgroup": "Parent Night | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "9"
+    },
+    {
+      "subgroup": "Parent Night | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "9"
+    },
+    {
+      "subgroup": "Revolution Jasper Check-In",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "226"
+    },
+    {
+      "subgroup": "Revolution Jasper Check-In",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "227"
+    },
+    {
+      "subgroup": "Revolution Jasper Check-In",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "227"
+    },
+    {
+      "subgroup": "Revolution Jasper Check-In",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "209"
+    },
+    {
+      "subgroup": "Revolution Jasper Check-In",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "245"
+    },
+    {
+      "subgroup": "Revolution Jasper Check-In",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "239"
+    },
+    {
+      "subgroup": "Revolution Jasper Check-In",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "245"
+    },
+    {
+      "subgroup": "Revolution Jasper Check-In",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "226"
+    },
+    {
+      "subgroup": "Revolution Jasper Check-In",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "209"
+    },
+    {
+      "subgroup": "Revolution Jasper Check-In",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "245"
+    },
+    {
+      "subgroup": "Revolution Jasper Check-In",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "226"
+    },
+    {
+      "subgroup": "Revolution Jasper Check-In",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "239"
+    },
+    {
+      "subgroup": "Revolution Jasper Check-In",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "209"
+    },
+    {
+      "subgroup": "Revolution Jasper Check-In",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "226"
+    },
+    {
+      "subgroup": "Revolution Jasper Check-In",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "239"
+    },
+    {
+      "subgroup": "RevStudents | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "114"
+    },
+    {
+      "subgroup": "RevStudents | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "105"
+    },
+    {
+      "subgroup": "RevStudents | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "115"
+    },
+    {
+      "subgroup": "RevStudents | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "114"
+    },
+    {
+      "subgroup": "RevStudents | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "126"
+    },
+    {
+      "subgroup": "RevStudents | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "115"
+    },
+    {
+      "subgroup": "RevStudents | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "105"
+    },
+    {
+      "subgroup": "RevStudents | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "126"
+    },
+    {
+      "subgroup": "RevStudents | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "126"
+    },
+    {
+      "subgroup": "RevStudents | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "105"
+    },
+    {
+      "subgroup": "RevStudents | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "115"
+    },
+    {
+      "subgroup": "RevStudents | Jasper Campus",
+      "campus": "Jasper",
+      "month": "3",
+      "total": "114"
+    }
+  ],
+  "messages": [],
+  "stdout": "subgroup\tcampus\tmonth\ttotal\nESL Class\tAll Campuses\t3\t38\nESL Class\tAll Campuses\t3\t25\nESL Class\tAll Campuses\t3\t20\nESL Class\tAll Campuses\t3\t25\nESL Class\tAll Campuses\t3\t38\nESL Class\tAll Campuses\t3\t25\nESL Class\tAll Campuses\t3\t28\nESL Class\tAll Campuses\t3\t20\nESL Class\tAll Campuses\t3\t38\nESL Class\tAll Campuses\t3\t28\nESL Class\tAll Campuses\t3\t20\nESL Class\tAll Campuses\t3\t28\nYA Gathering\tAll Campuses\t3\t14\nYA Gathering\tAll Campuses\t3\t14\nYA Gathering\tAll Campuses\t3\t14\nChildcare | Canton Campus\tCanton\t3\t11\nChildcare | Canton Campus\tCanton\t3\t6\nChildcare | Canton Campus\tCanton\t3\t11\nChildcare | Canton Campus\tCanton\t3\t6\nChildcare | Canton Campus\tCanton\t3\t6\nChildcare | Canton Campus\tCanton\t3\t5\nChildcare | Canton Campus\tCanton\t3\t6\nChildcare | Canton Campus\tCanton\t3\t5\nChildcare | Canton Campus\tCanton\t3\t6\nChildcare | Canton Campus\tCanton\t3\t6\nChildcare | Canton Campus\tCanton\t3\t11\nChildcare | Canton Campus\tCanton\t3\t5\nParent Night | Canton Campus\tCanton\t3\t22\nParent Night | Canton Campus\tCanton\t3\t22\nParent Night | Canton Campus\tCanton\t3\t22\nRevolution Canton Check-In\tCanton\t3\t894\nRevolution Canton Check-In\tCanton\t3\t891\nRevolution Canton Check-In\tCanton\t3\t940\nRevolution Canton Check-In\tCanton\t3\t925\nRevolution Canton Check-In\tCanton\t3\t947\nRevolution Canton Check-In\tCanton\t3\t894\nRevolution Canton Check-In\tCanton\t3\t940\nRevolution Canton Check-In\tCanton\t3\t947\nRevolution Canton Check-In\tCanton\t3\t925\nRevolution Canton Check-In\tCanton\t3\t947\nRevolution Canton Check-In\tCanton\t3\t925\nRevolution Canton Check-In\tCanton\t3\t940\nRevStudents | Canton Campus\tCanton\t3\t417\nRevStudents | Canton Campus\tCanton\t3\t447\nRevStudents | Canton Campus\tCanton\t3\t460\nRevStudents | Canton Campus\tCanton\t3\t489\nRevStudents | Canton Campus\tCanton\t3\t417\nRevStudents | Canton Campus\tCanton\t3\t460\nRevStudents | Canton Campus\tCanton\t3\t489\nRevStudents | Canton Campus\tCanton\t3\t447\nRevStudents | Canton Campus\tCanton\t3\t460\nRevStudents | Canton Campus\tCanton\t3\t489\nRevStudents | Canton Campus\tCanton\t3\t447\nChildcare | Jasper Campus\tJasper\t3\t11\nChildcare | Jasper Campus\tJasper\t3\t11\nChildcare | Jasper Campus\tJasper\t3\t20\nChildcare | Jasper Campus\tJasper\t3\t12\nChildcare | Jasper Campus\tJasper\t3\t11\nChildcare | Jasper Campus\tJasper\t3\t11\nChildcare | Jasper Campus\tJasper\t3\t12\nChildcare | Jasper Campus\tJasper\t3\t12\nChildcare | Jasper Campus\tJasper\t3\t20\nChildcare | Jasper Campus\tJasper\t3\t20\nChildcare | Jasper Campus\tJasper\t3\t11\nChildcare | Jasper Campus\tJasper\t3\t11\nParent Night | Jasper Campus\tJasper\t3\t9\nParent Night | Jasper Campus\tJasper\t3\t9\nParent Night | Jasper Campus\tJasper\t3\t9\nRevolution Jasper Check-In\tJasper\t3\t226\nRevolution Jasper Check-In\tJasper\t3\t227\nRevolution Jasper Check-In\tJasper\t3\t227\nRevolution Jasper Check-In\tJasper\t3\t209\nRevolution Jasper Check-In\tJasper\t3\t245\nRevolution Jasper Check-In\tJasper\t3\t239\nRevolution Jasper Check-In\tJasper\t3\t245\nRevolution Jasper Check-In\tJasper\t3\t226\nRevolution Jasper Check-In\tJasper\t3\t209\nRevolution Jasper Check-In\tJasper\t3\t245\nRevolution Jasper Check-In\tJasper\t3\t226\nRevolution Jasper Check-In\tJasper\t3\t239\nRevolution Jasper Check-In\tJasper\t3\t209\nRevolution Jasper Check-In\tJasper\t3\t226\nRevolution Jasper Check-In\tJasper\t3\t239\nRevStudents | Jasper Campus\tJasper\t3\t114\nRevStudents | Jasper Campus\tJasper\t3\t105\nRevStudents | Jasper Campus\tJasper\t3\t115\nRevStudents | Jasper Campus\tJasper\t3\t114\nRevStudents | Jasper Campus\tJasper\t3\t126\nRevStudents | Jasper Campus\tJasper\t3\t115\nRevStudents | Jasper Campus\tJasper\t3\t105\nRevStudents | Jasper Campus\tJasper\t3\t126\nRevStudents | Jasper Campus\tJasper\t3\t126\nRevStudents | Jasper Campus\tJasper\t3\t105\nRevStudents | Jasper Campus\tJasper\t3\t115\nRevStudents | Jasper Campus\tJasper\t3\t114\n",
+  "stderr": "",
+  "execution_time_ms": 62
+}

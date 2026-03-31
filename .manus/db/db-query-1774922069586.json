@@ -1,0 +1,170 @@
+{
+  "query": "\nSELECT year, month, campus, subgroup, source, COUNT(*) as cnt \nFROM attendance_monthly \nWHERE year=2026 \nGROUP BY year, month, campus, subgroup, source \nORDER BY month, campus \nLIMIT 20;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute \nSELECT year, month, campus, subgroup, source, COUNT(*) as cnt \nFROM attendance_monthly \nWHERE year=2026 \nGROUP BY year, month, campus, subgroup, source \nORDER BY month, campus \nLIMIT 20;\n",
+  "rows": [
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "source": "pco",
+      "cnt": "12"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "All Campuses",
+      "subgroup": "Abide Men's Night",
+      "source": "pco",
+      "cnt": "3"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "All Campuses",
+      "subgroup": "YA Gathering",
+      "source": "pco",
+      "cnt": "3"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Kids",
+      "source": "spreadsheet",
+      "cnt": "1"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Students",
+      "source": "spreadsheet",
+      "cnt": "1"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Toddlers",
+      "source": "spreadsheet",
+      "cnt": "1"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "source": "pco",
+      "cnt": "15"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Babies",
+      "source": "spreadsheet",
+      "cnt": "1"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "RevStudents | Canton Campus",
+      "source": "pco",
+      "cnt": "12"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Campground",
+      "source": "spreadsheet",
+      "cnt": "1"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Treehouse",
+      "source": "spreadsheet",
+      "cnt": "1"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Adults",
+      "source": "spreadsheet",
+      "cnt": "1"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Young Adults",
+      "source": "spreadsheet",
+      "cnt": "1"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Pre-K",
+      "source": "spreadsheet",
+      "cnt": "1"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Elem Reruns",
+      "source": "spreadsheet",
+      "cnt": "1"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Childcare | Canton Campus",
+      "source": "pco",
+      "cnt": "12"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Cove",
+      "source": "spreadsheet",
+      "cnt": "1"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Jasper",
+      "subgroup": "Childcare | Jasper Campus",
+      "source": "pco",
+      "cnt": "12"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Jasper",
+      "subgroup": "Students",
+      "source": "spreadsheet",
+      "cnt": "1"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Jasper",
+      "subgroup": "RevStudents | Jasper Campus",
+      "source": "pco",
+      "cnt": "12"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tmonth\tcampus\tsubgroup\tsource\tcnt\n2026\t1\tAll Campuses\tESL Class\tpco\t12\n2026\t1\tAll Campuses\tAbide Men's Night\tpco\t3\n2026\t1\tAll Campuses\tYA Gathering\tpco\t3\n2026\t1\tCanton\tKids\tspreadsheet\t1\n2026\t1\tCanton\tStudents\tspreadsheet\t1\n2026\t1\tCanton\tToddlers\tspreadsheet\t1\n2026\t1\tCanton\tRevolution Canton Check-In\tpco\t15\n2026\t1\tCanton\tBabies\tspreadsheet\t1\n2026\t1\tCanton\tRevStudents | Canton Campus\tpco\t12\n2026\t1\tCanton\tCampground\tspreadsheet\t1\n2026\t1\tCanton\tTreehouse\tspreadsheet\t1\n2026\t1\tCanton\tAdults\tspreadsheet\t1\n2026\t1\tCanton\tYoung Adults\tspreadsheet\t1\n2026\t1\tCanton\tPre-K\tspreadsheet\t1\n2026\t1\tCanton\tElem Reruns\tspreadsheet\t1\n2026\t1\tCanton\tChildcare | Canton Campus\tpco\t12\n2026\t1\tCanton\tCove\tspreadsheet\t1\n2026\t1\tJasper\tChildcare | Jasper Campus\tpco\t12\n2026\t1\tJasper\tStudents\tspreadsheet\t1\n2026\t1\tJasper\tRevStudents | Jasper Campus\tpco\t12\n",
+  "stderr": "",
+  "execution_time_ms": 63
+}

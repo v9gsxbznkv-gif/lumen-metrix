@@ -1,0 +1,58 @@
+{
+  "query": "SELECT year, COUNT(*) as cnt FROM giving_monthly GROUP BY year ORDER BY year DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, COUNT(*) as cnt FROM giving_monthly GROUP BY year ORDER BY year DESC;",
+  "rows": [
+    {
+      "year": "2025",
+      "cnt": "36"
+    },
+    {
+      "year": "2024",
+      "cnt": "36"
+    },
+    {
+      "year": "2023",
+      "cnt": "36"
+    },
+    {
+      "year": "2022",
+      "cnt": "36"
+    },
+    {
+      "year": "2021",
+      "cnt": "36"
+    },
+    {
+      "year": "2020",
+      "cnt": "36"
+    },
+    {
+      "year": "2019",
+      "cnt": "48"
+    },
+    {
+      "year": "2018",
+      "cnt": "39"
+    },
+    {
+      "year": "2017",
+      "cnt": "24"
+    },
+    {
+      "year": "2016",
+      "cnt": "24"
+    },
+    {
+      "year": "2014",
+      "cnt": "24"
+    },
+    {
+      "year": "2013",
+      "cnt": "12"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tcnt\n2025\t36\n2024\t36\n2023\t36\n2022\t36\n2021\t36\n2020\t36\n2019\t48\n2018\t39\n2017\t24\n2016\t24\n2014\t24\n2013\t12\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

@@ -129,13 +129,42 @@ async function getMonthlySnapshot(
 
   const campuses: CampusWeeklyMetrics[] = [];
 
+  // PCO event name → canonical attendance category mapping
+  // Main service check-ins count as Adults; student events as Students; childcare as Kids
+  const PCO_ADULTS_SUBGROUPS = [
+    "Revolution Canton Check-In",
+    "Revolution Jasper Check-In",
+    "Revolution Online Check-In",
+  ];
+  const PCO_STUDENTS_SUBGROUPS = [
+    "RevStudents | Canton Campus",
+    "RevStudents | Jasper Campus",
+    "RevStudents | Online Campus",
+  ];
+  const PCO_KIDS_SUBGROUPS = [
+    "Childcare | Canton Campus",
+    "Childcare | Jasper Campus",
+    "Childcare | Online Campus",
+  ];
+  // Canonical spreadsheet subgroup names
+  const SPREADSHEET_ADULTS = ["Adults", "Young Adults"];
+  const SPREADSHEET_STUDENTS = ["Students"];
+  const SPREADSHEET_KIDS = ["Kids"];
+
   for (const campus of Array.from(campusNames)) {
-    // Attendance: sum Adults + Kids + Students + Young Adults subgroups, divide by weeks
+    // Attendance: sum Adults + Kids + Students subgroups (spreadsheet names OR PCO event names)
     const attTotal = attRows
       .filter(
         (r: any) =>
           r.campus === campus &&
-          ["Adults", "Kids", "Students", "Young Adults"].includes(r.subgroup)
+          (
+            SPREADSHEET_ADULTS.includes(r.subgroup) ||
+            SPREADSHEET_STUDENTS.includes(r.subgroup) ||
+            SPREADSHEET_KIDS.includes(r.subgroup) ||
+            PCO_ADULTS_SUBGROUPS.includes(r.subgroup) ||
+            PCO_STUDENTS_SUBGROUPS.includes(r.subgroup) ||
+            PCO_KIDS_SUBGROUPS.includes(r.subgroup)
+          )
       )
       .reduce((sum: number, r: any) => sum + r.total, 0);
 

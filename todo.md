@@ -160,3 +160,12 @@
 
 ## Email HTML Rendering Fix (Round 15)
 - [x] Fix Weekly Report email: HTML below the header was rendering as raw source. Converted body to Markdown format (pipe tables, bold, headers, horizontal rules) since the Manus notification service renders Markdown. Kept inline SVG header block which the service renders correctly. All 58 tests passing.
+
+## PCO Full Sync Verification (Round 16)
+- [x] Check PCO connection status and token validity — token valid, expires 2026-03-31
+- [x] Verify which modules have synced — only Attendance had run before; Giving/Groups/Events/People had never run
+- [x] Trigger full sync of all 5 PCO modules — Attendance 110 records, Giving 7166, Groups 99, Events 2852, People 10000
+- [x] Fix Giving 2026 rows: deleted spreadsheet rows for 2026 (2025 and earlier fully intact)
+- [x] Verify giving_monthly has PCO rows for 2026 months 1-3 — Jan: $832,688 | Feb: $784,603 | Mar: $905,251
+- [x] Fix syncGiving and syncEvents to default to current year only (prevent full history pull on future syncs)
+- [x] Fix Weekly Report getMonthlySnapshot to map PCO event names (Revolution *Check-In, RevStudents|*, Childcare|*) to canonical attendance categories — all 58 tests passing

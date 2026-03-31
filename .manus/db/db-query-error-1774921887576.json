@@ -1,0 +1,8 @@
+{
+  "query": "\nSELECT year, COUNT(*) as rows FROM giving_monthly GROUP BY year ORDER BY year DESC LIMIT 10;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute \nSELECT year, COUNT(*) as rows FROM giving_monthly GROUP BY year ORDER BY year DESC LIMIT 10;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1064 (42000) at line 2: You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 1 column 29 near \"rows FROM giving_monthly GROUP BY year ORDER BY year DESC LIMIT 10\""
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "query": "SELECT subgroup, campus, SUM(total) as total_sum FROM attendance_monthly WHERE year=2026 AND source='pco' AND month=3 AND campus != 'All Campuses' GROUP BY subgroup, campus ORDER BY campus, subgroup;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT subgroup, campus, SUM(total) as total_sum FROM attendance_monthly WHERE year=2026 AND source='pco' AND month=3 AND campus != 'All Campuses' GROUP BY subgroup, campus ORDER BY campus, subgroup;",
+  "rows": [
+    {
+      "subgroup": "Childcare | Canton Campus",
+      "campus": "Canton",
+      "total_sum": "84"
+    },
+    {
+      "subgroup": "Parent Night | Canton Campus",
+      "campus": "Canton",
+      "total_sum": "66"
+    },
+    {
+      "subgroup": "Revolution Canton Check-In",
+      "campus": "Canton",
+      "total_sum": "11115"
+    },
+    {
+      "subgroup": "RevStudents | Canton Campus",
+      "campus": "Canton",
+      "total_sum": "5022"
+    },
+    {
+      "subgroup": "Childcare | Jasper Campus",
+      "campus": "Jasper",
+      "total_sum": "162"
+    },
+    {
+      "subgroup": "Parent Night | Jasper Campus",
+      "campus": "Jasper",
+      "total_sum": "27"
+    },
+    {
+      "subgroup": "Revolution Jasper Check-In",
+      "campus": "Jasper",
+      "total_sum": "3437"
+    },
+    {
+      "subgroup": "RevStudents | Jasper Campus",
+      "campus": "Jasper",
+      "total_sum": "1380"
+    }
+  ],
+  "messages": [],
+  "stdout": "subgroup\tcampus\ttotal_sum\nChildcare | Canton Campus\tCanton\t84\nParent Night | Canton Campus\tCanton\t66\nRevolution Canton Check-In\tCanton\t11115\nRevStudents | Canton Campus\tCanton\t5022\nChildcare | Jasper Campus\tJasper\t162\nParent Night | Jasper Campus\tJasper\t27\nRevolution Jasper Check-In\tJasper\t3437\nRevStudents | Jasper Campus\tJasper\t1380\n",
+  "stderr": "",
+  "execution_time_ms": 81
+}
