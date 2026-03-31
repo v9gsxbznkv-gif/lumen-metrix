@@ -1,0 +1,30 @@
+{
+  "query": "SELECT DISTINCT campus, subgroup FROM giving_monthly LIMIT 20",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT campus, subgroup FROM giving_monthly LIMIT 20",
+  "rows": [
+    {
+      "campus": "Jasper",
+      "subgroup": "Tithes and Offerings"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Tithes and Offerings"
+    },
+    {
+      "campus": "All Campuses",
+      "subgroup": "Tithes and Offerings"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Designated"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Designated"
+    }
+  ],
+  "messages": [],
+  "stdout": "campus\tsubgroup\nJasper\tTithes and Offerings\nCanton\tTithes and Offerings\nAll Campuses\tTithes and Offerings\nCanton\tDesignated\nJasper\tDesignated\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

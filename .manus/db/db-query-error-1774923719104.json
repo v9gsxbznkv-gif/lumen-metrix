@@ -1,0 +1,8 @@
+{
+  "query": "\nSELECT year, month, campus, total, avgWeekly \nFROM giving_monthly \nWHERE month = 4 AND campus = 'All Campuses'\nORDER BY year DESC LIMIT 8;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute \nSELECT year, month, campus, total, avgWeekly \nFROM giving_monthly \nWHERE month = 4 AND campus = 'All Campuses'\nORDER BY year DESC LIMIT 8;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 2: Unknown column 'avgweekly' in 'field list'"
+  ]
+}

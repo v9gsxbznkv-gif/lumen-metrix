@@ -1,0 +1,90 @@
+{
+  "query": "\nSELECT year, month, campus, subgroup, total, avgWeekly \nFROM attendance_monthly \nWHERE month = 4 AND subgroup = 'Adults' AND campus = 'Canton'\nORDER BY year DESC LIMIT 10;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute \nSELECT year, month, campus, subgroup, total, avgWeekly \nFROM attendance_monthly \nWHERE month = 4 AND subgroup = 'Adults' AND campus = 'Canton'\nORDER BY year DESC LIMIT 10;\n",
+  "rows": [
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Adults",
+      "total": "9306",
+      "avgWeekly": "2326"
+    },
+    {
+      "year": "2024",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Adults",
+      "total": "6991",
+      "avgWeekly": "1748"
+    },
+    {
+      "year": "2023",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Adults",
+      "total": "9987",
+      "avgWeekly": "1997"
+    },
+    {
+      "year": "2022",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Adults",
+      "total": "7175",
+      "avgWeekly": "1794"
+    },
+    {
+      "year": "2021",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Adults",
+      "total": "4626",
+      "avgWeekly": "1156"
+    },
+    {
+      "year": "2019",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Adults",
+      "total": "8738",
+      "avgWeekly": "2184"
+    },
+    {
+      "year": "2018",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Adults",
+      "total": "8681",
+      "avgWeekly": "1736"
+    },
+    {
+      "year": "2017",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Adults",
+      "total": "8886",
+      "avgWeekly": "1777"
+    },
+    {
+      "year": "2016",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Adults",
+      "total": "5976",
+      "avgWeekly": "1494"
+    },
+    {
+      "year": "2014",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Adults",
+      "total": "6891",
+      "avgWeekly": "1723"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tmonth\tcampus\tsubgroup\ttotal\tavgWeekly\n2025\t4\tCanton\tAdults\t9306\t2326\n2024\t4\tCanton\tAdults\t6991\t1748\n2023\t4\tCanton\tAdults\t9987\t1997\n2022\t4\tCanton\tAdults\t7175\t1794\n2021\t4\tCanton\tAdults\t4626\t1156\n2019\t4\tCanton\tAdults\t8738\t2184\n2018\t4\tCanton\tAdults\t8681\t1736\n2017\t4\tCanton\tAdults\t8886\t1777\n2016\t4\tCanton\tAdults\t5976\t1494\n2014\t4\tCanton\tAdults\t6891\t1723\n",
+  "stderr": "",
+  "execution_time_ms": 65
+}

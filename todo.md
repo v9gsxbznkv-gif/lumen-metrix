@@ -174,3 +174,10 @@
 - [x] Hide future 2026 events that haven't happened yet — getEventMetrics now returns null if eventDate > TODAY; entire event-year row is skipped
 - [x] Fix Christmas Eve vs Christmas Sunday data duplication — both fall in December so they shared identical monthly data. Merged into single "Christmas Season" entry using christmas_eve date
 - [x] Fix Events chart — chart now filters out years with zero attendance before plotting; Giving axis uses $K formatting; only past events with real data shown
+
+## Events Page Per-Event Fix (Round 18)
+- [x] Investigate whether weekly-level attendance/giving data exists in DB tables — attendance_monthly has avgWeekly column (= one Sunday); giving_monthly only has monthly total
+- [x] Implement per-event metric calculation: attendance uses avg_weekly directly; giving/FTG/salvations divide monthly total by number of Sundays in that month
+- [x] Apply fix to all events: Easter (April), Mother's Day (May), Back to School (August), Christmas Season (December ÷2 for Eve + Sunday)
+- [x] Update UI disclaimer text to reflect the estimation methodology
+- [x] Run all 71 tests — all passing; Easter 2025 estimate: 4,351 attendance, ~$177K giving (in expected range)

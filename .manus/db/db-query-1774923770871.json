@@ -1,0 +1,17 @@
+{
+  "query": "SELECT year, month, campus, subgroup, total FROM giving_monthly WHERE month = 4 AND campus = 'All Campuses' AND subgroup = 'Tithes and Offerings' ORDER BY year DESC LIMIT 8",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, month, campus, subgroup, total FROM giving_monthly WHERE month = 4 AND campus = 'All Campuses' AND subgroup = 'Tithes and Offerings' ORDER BY year DESC LIMIT 8",
+  "rows": [
+    {
+      "year": "2013",
+      "month": "4",
+      "campus": "All Campuses",
+      "subgroup": "Tithes and Offerings",
+      "total": "116427.52"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tmonth\tcampus\tsubgroup\ttotal\n2013\t4\tAll Campuses\tTithes and Offerings\t116427.52\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

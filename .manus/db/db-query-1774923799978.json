@@ -1,0 +1,682 @@
+{
+  "query": "SELECT year, month, campus, subgroup, total, avgWeekly FROM attendance_monthly WHERE month = 4 AND year = 2025 ORDER BY campus, subgroup",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, month, campus, subgroup, total, avgWeekly FROM attendance_monthly WHERE month = 4 AND year = 2025 ORDER BY campus, subgroup",
+  "rows": [
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "total": "23",
+      "avgWeekly": "23"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "total": "21",
+      "avgWeekly": "21"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "total": "21",
+      "avgWeekly": "21"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "total": "22",
+      "avgWeekly": "22"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "total": "23",
+      "avgWeekly": "23"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "total": "22",
+      "avgWeekly": "22"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "All Campuses",
+      "subgroup": "Test Gathering",
+      "total": "1",
+      "avgWeekly": "1"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "All Campuses",
+      "subgroup": "Test Gathering",
+      "total": "14",
+      "avgWeekly": "14"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "All Campuses",
+      "subgroup": "Test Gathering",
+      "total": "8",
+      "avgWeekly": "8"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "All Campuses",
+      "subgroup": "Test Gathering",
+      "total": "14",
+      "avgWeekly": "14"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "All Campuses",
+      "subgroup": "Test Gathering",
+      "total": "1",
+      "avgWeekly": "1"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "All Campuses",
+      "subgroup": "Test Gathering",
+      "total": "8",
+      "avgWeekly": "8"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "All Campuses",
+      "subgroup": "YA Gathering",
+      "total": "21",
+      "avgWeekly": "21"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "All Campuses",
+      "subgroup": "YA Gathering",
+      "total": "21",
+      "avgWeekly": "21"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Adults",
+      "total": "9306",
+      "avgWeekly": "2326"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Babies",
+      "total": "118",
+      "avgWeekly": "30"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Campground",
+      "total": "183",
+      "avgWeekly": "46"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Childcare | Canton Campus",
+      "total": "2",
+      "avgWeekly": "2"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Childcare | Canton Campus",
+      "total": "7",
+      "avgWeekly": "7"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Childcare | Canton Campus",
+      "total": "4",
+      "avgWeekly": "4"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Childcare | Canton Campus",
+      "total": "4",
+      "avgWeekly": "4"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Childcare | Canton Campus",
+      "total": "6",
+      "avgWeekly": "6"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Childcare | Canton Campus",
+      "total": "7",
+      "avgWeekly": "7"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Childcare | Canton Campus",
+      "total": "6",
+      "avgWeekly": "6"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Childcare | Canton Campus",
+      "total": "2",
+      "avgWeekly": "2"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Cove",
+      "total": "449",
+      "avgWeekly": "112"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Elem Reruns",
+      "total": "60",
+      "avgWeekly": "15"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Kids",
+      "total": "2107",
+      "avgWeekly": "527"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Pre-K",
+      "total": "396",
+      "avgWeekly": "99"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "total": "732",
+      "avgWeekly": "732"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "total": "882",
+      "avgWeekly": "882"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "total": "882",
+      "avgWeekly": "882"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "total": "1363",
+      "avgWeekly": "1363"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "total": "863",
+      "avgWeekly": "863"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "total": "732",
+      "avgWeekly": "732"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "total": "863",
+      "avgWeekly": "863"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "total": "1363",
+      "avgWeekly": "1363"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "RevStudents | Canton Campus",
+      "total": "368",
+      "avgWeekly": "368"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "RevStudents | Canton Campus",
+      "total": "376",
+      "avgWeekly": "376"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "RevStudents | Canton Campus",
+      "total": "394",
+      "avgWeekly": "394"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "RevStudents | Canton Campus",
+      "total": "376",
+      "avgWeekly": "376"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "RevStudents | Canton Campus",
+      "total": "368",
+      "avgWeekly": "368"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "RevStudents | Canton Campus",
+      "total": "394",
+      "avgWeekly": "394"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "RevStudents | Canton Campus",
+      "total": "414",
+      "avgWeekly": "414"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "RevStudents | Canton Campus",
+      "total": "414",
+      "avgWeekly": "414"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Students",
+      "total": "1239",
+      "avgWeekly": "310"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Toddlers",
+      "total": "409",
+      "avgWeekly": "102"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Treehouse",
+      "total": "492",
+      "avgWeekly": "123"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Young Adults",
+      "total": "74",
+      "avgWeekly": "74"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Adults",
+      "total": "1814",
+      "avgWeekly": "454"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Babies",
+      "total": "16",
+      "avgWeekly": "4"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Childcare | Jasper Campus",
+      "total": "14",
+      "avgWeekly": "14"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Childcare | Jasper Campus",
+      "total": "14",
+      "avgWeekly": "14"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Childcare | Jasper Campus",
+      "total": "11",
+      "avgWeekly": "11"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Childcare | Jasper Campus",
+      "total": "11",
+      "avgWeekly": "11"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Childcare | Jasper Campus",
+      "total": "14",
+      "avgWeekly": "14"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Childcare | Jasper Campus",
+      "total": "15",
+      "avgWeekly": "15"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Childcare | Jasper Campus",
+      "total": "14",
+      "avgWeekly": "14"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Childcare | Jasper Campus",
+      "total": "15",
+      "avgWeekly": "15"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Cove",
+      "total": "90",
+      "avgWeekly": "22"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Elem Reruns",
+      "total": "21",
+      "avgWeekly": "5"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Kids",
+      "total": "399",
+      "avgWeekly": "100"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Pre-K",
+      "total": "94",
+      "avgWeekly": "24"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "total": "192",
+      "avgWeekly": "192"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "total": "199",
+      "avgWeekly": "199"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "total": "281",
+      "avgWeekly": "281"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "total": "183",
+      "avgWeekly": "183"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "total": "183",
+      "avgWeekly": "183"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "total": "281",
+      "avgWeekly": "281"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "total": "199",
+      "avgWeekly": "199"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "total": "192",
+      "avgWeekly": "192"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "RevStudents | Jasper Campus",
+      "total": "107",
+      "avgWeekly": "107"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "RevStudents | Jasper Campus",
+      "total": "105",
+      "avgWeekly": "105"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "RevStudents | Jasper Campus",
+      "total": "107",
+      "avgWeekly": "107"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "RevStudents | Jasper Campus",
+      "total": "92",
+      "avgWeekly": "92"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "RevStudents | Jasper Campus",
+      "total": "97",
+      "avgWeekly": "97"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "RevStudents | Jasper Campus",
+      "total": "105",
+      "avgWeekly": "105"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "RevStudents | Jasper Campus",
+      "total": "97",
+      "avgWeekly": "97"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "RevStudents | Jasper Campus",
+      "total": "92",
+      "avgWeekly": "92"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Students",
+      "total": "262",
+      "avgWeekly": "66"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Toddlers",
+      "total": "28",
+      "avgWeekly": "7"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Toddlers",
+      "total": "38",
+      "avgWeekly": "10"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Treehouse",
+      "total": "112",
+      "avgWeekly": "28"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Online",
+      "subgroup": "Adults",
+      "total": "1978",
+      "avgWeekly": "494"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tmonth\tcampus\tsubgroup\ttotal\tavgWeekly\n2025\t4\tAll Campuses\tESL Class\t23\t23\n2025\t4\tAll Campuses\tESL Class\t21\t21\n2025\t4\tAll Campuses\tESL Class\t21\t21\n2025\t4\tAll Campuses\tESL Class\t22\t22\n2025\t4\tAll Campuses\tESL Class\t23\t23\n2025\t4\tAll Campuses\tESL Class\t22\t22\n2025\t4\tAll Campuses\tTest Gathering\t1\t1\n2025\t4\tAll Campuses\tTest Gathering\t14\t14\n2025\t4\tAll Campuses\tTest Gathering\t8\t8\n2025\t4\tAll Campuses\tTest Gathering\t14\t14\n2025\t4\tAll Campuses\tTest Gathering\t1\t1\n2025\t4\tAll Campuses\tTest Gathering\t8\t8\n2025\t4\tAll Campuses\tYA Gathering\t21\t21\n2025\t4\tAll Campuses\tYA Gathering\t21\t21\n2025\t4\tCanton\tAdults\t9306\t2326\n2025\t4\tCanton\tBabies\t118\t30\n2025\t4\tCanton\tCampground\t183\t46\n2025\t4\tCanton\tChildcare | Canton Campus\t2\t2\n2025\t4\tCanton\tChildcare | Canton Campus\t7\t7\n2025\t4\tCanton\tChildcare | Canton Campus\t4\t4\n2025\t4\tCanton\tChildcare | Canton Campus\t4\t4\n2025\t4\tCanton\tChildcare | Canton Campus\t6\t6\n2025\t4\tCanton\tChildcare | Canton Campus\t7\t7\n2025\t4\tCanton\tChildcare | Canton Campus\t6\t6\n2025\t4\tCanton\tChildcare | Canton Campus\t2\t2\n2025\t4\tCanton\tCove\t449\t112\n2025\t4\tCanton\tElem Reruns\t60\t15\n2025\t4\tCanton\tKids\t2107\t527\n2025\t4\tCanton\tPre-K\t396\t99\n2025\t4\tCanton\tRevolution Canton Check-In\t732\t732\n2025\t4\tCanton\tRevolution Canton Check-In\t882\t882\n2025\t4\tCanton\tRevolution Canton Check-In\t882\t882\n2025\t4\tCanton\tRevolution Canton Check-In\t1363\t1363\n2025\t4\tCanton\tRevolution Canton Check-In\t863\t863\n2025\t4\tCanton\tRevolution Canton Check-In\t732\t732\n2025\t4\tCanton\tRevolution Canton Check-In\t863\t863\n2025\t4\tCanton\tRevolution Canton Check-In\t1363\t1363\n2025\t4\tCanton\tRevStudents | Canton Campus\t368\t368\n2025\t4\tCanton\tRevStudents | Canton Campus\t376\t376\n2025\t4\tCanton\tRevStudents | Canton Campus\t394\t394\n2025\t4\tCanton\tRevStudents | Canton Campus\t376\t376\n2025\t4\tCanton\tRevStudents | Canton Campus\t368\t368\n2025\t4\tCanton\tRevStudents | Canton Campus\t394\t394\n2025\t4\tCanton\tRevStudents | Canton Campus\t414\t414\n2025\t4\tCanton\tRevStudents | Canton Campus\t414\t414\n2025\t4\tCanton\tStudents\t1239\t310\n2025\t4\tCanton\tToddlers\t409\t102\n2025\t4\tCanton\tTreehouse\t492\t123\n2025\t4\tCanton\tYoung Adults\t74\t74\n2025\t4\tJasper\tAdults\t1814\t454\n2025\t4\tJasper\tBabies\t16\t4\n2025\t4\tJasper\tChildcare | Jasper Campus\t14\t14\n2025\t4\tJasper\tChildcare | Jasper Campus\t14\t14\n2025\t4\tJasper\tChildcare | Jasper Campus\t11\t11\n2025\t4\tJasper\tChildcare | Jasper Campus\t11\t11\n2025\t4\tJasper\tChildcare | Jasper Campus\t14\t14\n2025\t4\tJasper\tChildcare | Jasper Campus\t15\t15\n2025\t4\tJasper\tChildcare | Jasper Campus\t14\t14\n2025\t4\tJasper\tChildcare | Jasper Campus\t15\t15\n2025\t4\tJasper\tCove\t90\t22\n2025\t4\tJasper\tElem Reruns\t21\t5\n2025\t4\tJasper\tKids\t399\t100\n2025\t4\tJasper\tPre-K\t94\t24\n2025\t4\tJasper\tRevolution Jasper Check-In\t192\t192\n2025\t4\tJasper\tRevolution Jasper Check-In\t199\t199\n2025\t4\tJasper\tRevolution Jasper Check-In\t281\t281\n2025\t4\tJasper\tRevolution Jasper Check-In\t183\t183\n2025\t4\tJasper\tRevolution Jasper Check-In\t183\t183\n2025\t4\tJasper\tRevolution Jasper Check-In\t281\t281\n2025\t4\tJasper\tRevolution Jasper Check-In\t199\t199\n2025\t4\tJasper\tRevolution Jasper Check-In\t192\t192\n2025\t4\tJasper\tRevStudents | Jasper Campus\t107\t107\n2025\t4\tJasper\tRevStudents | Jasper Campus\t105\t105\n2025\t4\tJasper\tRevStudents | Jasper Campus\t107\t107\n2025\t4\tJasper\tRevStudents | Jasper Campus\t92\t92\n2025\t4\tJasper\tRevStudents | Jasper Campus\t97\t97\n2025\t4\tJasper\tRevStudents | Jasper Campus\t105\t105\n2025\t4\tJasper\tRevStudents | Jasper Campus\t97\t97\n2025\t4\tJasper\tRevStudents | Jasper Campus\t92\t92\n2025\t4\tJasper\tStudents\t262\t66\n2025\t4\tJasper\tToddlers\t28\t7\n2025\t4\tJasper\tToddlers\t38\t10\n2025\t4\tJasper\tTreehouse\t112\t28\n2025\t4\tOnline\tAdults\t1978\t494\n",
+  "stderr": "",
+  "execution_time_ms": 60
+}

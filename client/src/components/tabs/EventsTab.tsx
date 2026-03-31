@@ -1,16 +1,14 @@
 /*
  * Lumen Metrix — Events Page
  * Key church events with attendance/giving performance, YoY comparisons
- * Uses the church calendar to identify event dates
  *
- * Fixes applied:
- * 1. Future events (date > today) are hidden — no zero rows for upcoming events
- * 2. Christmas Eve and Christmas Sunday both fall in December so they share
- *    monthly data. They are now shown as a single "Christmas Season" entry
- *    to avoid displaying identical numbers twice.
- * 3. Chart only plots years with non-zero attendance data.
- * 4. PCO subgroup names (Revolution *Check-In, RevStudents|*) are included
- *    in the attendance calculation alongside spreadsheet names.
+ * Data methodology:
+ * - Attendance: uses avgWeekly from attendance_monthly (already = one Sunday's worth)
+ * - Giving: divides monthly total by number of Sundays in that month
+ * - FTG/Salvations: divides monthly total by number of Sundays in that month
+ * - Christmas Season: divides December giving/FTG by 2 (Christmas Eve + Christmas Sunday)
+ *   rather than by all December Sundays, since Christmas is a 2-service weekend
+ * - Future events (date > today) are hidden
  */
 import { useData } from "@/contexts/DataContext";
 import {
@@ -25,19 +23,22 @@ import { CalendarDays, TrendingUp, TrendingDown } from "lucide-react";
 // Today's date for filtering out future events
 const TODAY = new Date();
 
-// PCO subgroup names that count as attendance (same mapping as weeklyReport router)
-const PCO_ATTENDANCE_SUBGROUPS = new Set([
-  "Revolution Canton Check-In",
-  "Revolution Jasper Check-In",
-  "Revolution Online Check-In",
-  "RevStudents | Canton Campus",
-  "RevStudents | Jasper Campus",
-  "RevStudents | Online Campus",
-  "Childcare | Canton Campus",
-  "Childcare | Jasper Campus",
-  "Childcare | Online Campus",
-]);
+// Spreadsheet subgroup names that represent main service attendance
 const SPREADSHEET_ATTENDANCE_SUBGROUPS = new Set(["Adults", "Kids", "Students", "Young Adults"]);
+
+/**
+ * Count the number of Sundays in a given year/month.
+ */
+function countSundaysInMonth(year: number, month: number): number {
+  // month is 1-indexed
+  const date = new Date(year, month - 1, 1);
+  let count = 0;
+  while (date.getMonth() === month - 1) {
+    if (date.getDay() === 0) count++;
+    date.setDate(date.getDate() + 1);
+  }
+  return count;
+}
 
 export default function EventsTab() {
   const { data, filters } = useData();
@@ -46,8 +47,14 @@ export default function EventsTab() {
   const { campus, yearStart, yearEnd } = filters;
   const years = data.meta.years.filter((y) => y >= yearStart && y <= yearEnd);
 
-  // Get metrics for an event in a given year — returns null if event is in the future
-  const getEventMetrics = (event: ChurchEvent, year: number) => {
+  /**
+   * Get per-event metrics for a specific event in a given year.
+   * Returns null if the event is in the future or no data exists.
+   *
+   * isChristmas: when true, divides giving/FTG by 2 (Eve + Sunday) instead of
+   * the full Sunday count for December, since Christmas is a 2-service weekend.
+   */
+  const getEventMetrics = (event: ChurchEvent, year: number, isChristmas = false) => {
     const eventDate = event.getDate(year);
     if (!eventDate) return null;
 
@@ -56,47 +63,62 @@ export default function EventsTab() {
 
     const month = eventDate.getMonth() + 1;
 
-    // Attendance: include both spreadsheet subgroup names and PCO event names
+    // Number of Sundays in this month — used to convert monthly totals to per-Sunday estimates
+    const sundaysInMonth = countSundaysInMonth(year, month);
+    // For Christmas Season we divide by 2 services (Christmas Eve + Christmas Sunday)
+    // rather than all December Sundays, since the special services dominate December giving
+    const givingDivisor = isChristmas ? 2 : sundaysInMonth;
+    const stepsDivisor = isChristmas ? 2 : sundaysInMonth;
+
+    // Attendance: use avgWeekly (already = one Sunday's worth) from spreadsheet subgroups
     const att = data.attendance_monthly
       .filter(
         (r) =>
           r.year === year &&
           r.month === month &&
           (campus === "All Campuses" || r.campus === campus) &&
-          (SPREADSHEET_ATTENDANCE_SUBGROUPS.has(r.subgroup) || PCO_ATTENDANCE_SUBGROUPS.has(r.subgroup))
+          SPREADSHEET_ATTENDANCE_SUBGROUPS.has(r.subgroup)
       )
-      .reduce((s, r) => s + r.total, 0);
+      .reduce((s, r) => s + r.avg_weekly, 0);
 
-    const giving = data.giving_monthly
+    // Giving: monthly total ÷ Sundays in month (or ÷ 2 for Christmas)
+    const givingMonthly = data.giving_monthly
       .filter((r) => r.year === year && r.month === month && (campus === "All Campuses" || r.campus === campus))
       .reduce((s, r) => s + r.total, 0);
-    const ftg = data.next_steps_monthly
+    const giving = givingDivisor > 0 ? Math.round(givingMonthly / givingDivisor) : 0;
+
+    // FTG: monthly total ÷ Sundays
+    const ftgMonthly = data.next_steps_monthly
       .filter((r) => r.year === year && r.month === month && r.metric === "FTG" && (campus === "All Campuses" || r.campus === campus))
       .reduce((s, r) => s + r.count, 0);
-    const salv = data.next_steps_monthly
+    const ftg = stepsDivisor > 0 ? Math.round(ftgMonthly / stepsDivisor) : 0;
+
+    // Salvations: monthly total ÷ Sundays
+    const salvMonthly = data.next_steps_monthly
       .filter((r) => r.year === year && r.month === month && r.metric === "Salvations" && (campus === "All Campuses" || r.campus === campus))
       .reduce((s, r) => s + r.count, 0);
+    const salvations = stepsDivisor > 0 ? Math.round(salvMonthly / stepsDivisor) : 0;
 
-    return { attendance: att, giving, ftg, salvations: salv, month };
+    return { attendance: att, giving, ftg, salvations, month };
   };
 
   // Event list — Christmas Eve and Christmas Sunday both fall in December so they share
   // monthly data. We show only "Christmas Season" (using Christmas Eve's date) to avoid
-  // displaying identical numbers twice.
-  const EVENT_DISPLAY_LIST: Array<{ name: string; eventId: string }> = [
+  // displaying identical numbers twice. isChristmas flag triggers ÷2 divisor.
+  const EVENT_DISPLAY_LIST: Array<{ name: string; eventId: string; isChristmas?: boolean }> = [
     { name: "Easter Sunday", eventId: "easter" },
-    { name: "Christmas Season", eventId: "christmas_eve" }, // Dec month data, replaces both Christmas entries
+    { name: "Christmas Season", eventId: "christmas_eve", isChristmas: true },
     { name: "Mother's Day", eventId: "mothers_day" },
     { name: "Back to School", eventId: "back_to_school" },
   ];
 
-  const eventData = EVENT_DISPLAY_LIST.map(({ name, eventId }) => {
+  const eventData = EVENT_DISPLAY_LIST.map(({ name, eventId, isChristmas }) => {
     const event = CHURCH_EVENTS.find((e) => e.id === eventId);
     if (!event) return null;
 
     const yearMetrics = years
       .map((y) => {
-        const metrics = getEventMetrics(event, y);
+        const metrics = getEventMetrics(event, y, isChristmas);
         if (!metrics) return null;
         return { year: y, ...metrics };
       })
@@ -183,7 +205,7 @@ export default function EventsTab() {
       {/* Easter Multi-Year Chart */}
       {easterChartData.length > 0 && (
         <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
-          <h3 className="text-sm font-semibold mb-3 sm:mb-4 px-4 pt-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Easter Sunday — Multi-Year Comparison</h3>
+          <h3 className="text-sm font-semibold mb-3 sm:mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Easter Sunday — Multi-Year Comparison</h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={easterChartData} margin={{ left: 8, right: 8, top: 4, bottom: 4 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
@@ -210,8 +232,7 @@ export default function EventsTab() {
       <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
         <h3 className="text-sm font-semibold mb-3 sm:mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Event Performance History</h3>
         <p className="text-[10px] text-muted-foreground mb-3">
-          Metrics reflect the full calendar month in which each event falls. Christmas Season combines December data (Christmas Eve + Christmas Sunday share the same month).
-          Future events are hidden until data is available.
+          Attendance shows one Sunday's average from the event month. Giving and next steps are estimated by dividing the monthly total by the number of Sundays in that month (Christmas Season uses ÷2 for the two Christmas services). Future events are hidden until data is available.
         </p>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">

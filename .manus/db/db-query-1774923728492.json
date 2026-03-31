@@ -1,0 +1,9 @@
+{
+  "query": "\nSELECT year, month, campus, subgroup, total \nFROM giving_monthly \nWHERE month = 4 AND campus = 'All Campuses' AND subgroup = 'Total'\nORDER BY year DESC LIMIT 8;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute \nSELECT year, month, campus, subgroup, total \nFROM giving_monthly \nWHERE month = 4 AND campus = 'All Campuses' AND subgroup = 'Total'\nORDER BY year DESC LIMIT 8;\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 55
+}

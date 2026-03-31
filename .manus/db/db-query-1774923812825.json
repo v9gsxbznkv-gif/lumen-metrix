@@ -1,0 +1,74 @@
+{
+  "query": "SELECT year, month, campus, subgroup, total, avgWeekly FROM attendance_monthly WHERE month = 4 AND year = 2025 AND subgroup IN ('Adults','Kids','Students','Young Adults') ORDER BY campus, subgroup",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, month, campus, subgroup, total, avgWeekly FROM attendance_monthly WHERE month = 4 AND year = 2025 AND subgroup IN ('Adults','Kids','Students','Young Adults') ORDER BY campus, subgroup",
+  "rows": [
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Adults",
+      "total": "9306",
+      "avgWeekly": "2326"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Kids",
+      "total": "2107",
+      "avgWeekly": "527"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Students",
+      "total": "1239",
+      "avgWeekly": "310"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Young Adults",
+      "total": "74",
+      "avgWeekly": "74"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Adults",
+      "total": "1814",
+      "avgWeekly": "454"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Kids",
+      "total": "399",
+      "avgWeekly": "100"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Students",
+      "total": "262",
+      "avgWeekly": "66"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Online",
+      "subgroup": "Adults",
+      "total": "1978",
+      "avgWeekly": "494"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tmonth\tcampus\tsubgroup\ttotal\tavgWeekly\n2025\t4\tCanton\tAdults\t9306\t2326\n2025\t4\tCanton\tKids\t2107\t527\n2025\t4\tCanton\tStudents\t1239\t310\n2025\t4\tCanton\tYoung Adults\t74\t74\n2025\t4\tJasper\tAdults\t1814\t454\n2025\t4\tJasper\tKids\t399\t100\n2025\t4\tJasper\tStudents\t262\t66\n2025\t4\tOnline\tAdults\t1978\t494\n",
+  "stderr": "",
+  "execution_time_ms": 66
+}

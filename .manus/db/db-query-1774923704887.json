@@ -1,0 +1,73 @@
+{
+  "query": "\nSHOW TABLES;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute \nSHOW TABLES;\n",
+  "rows": [
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm": "attendance"
+    },
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm": "attendance_monthly"
+    },
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm": "giving"
+    },
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm": "giving_monthly"
+    },
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm": "groups_annual"
+    },
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm": "groups_monthly"
+    },
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm": "next_steps"
+    },
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm": "next_steps_monthly"
+    },
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm": "pco_events"
+    },
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm": "pco_groups"
+    },
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm": "pco_people"
+    },
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm": "pco_settings"
+    },
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm": "pco_tokens"
+    },
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm": "report_schedules"
+    },
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm": "saved_reports"
+    },
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm": "serving"
+    },
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm": "serving_monthly"
+    },
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm": "sync_logs"
+    },
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm": "users"
+    },
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm": "weekly_report_config"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_EmzMXpmCwkQz2biKeRL4cm\n__drizzle_migrations\nattendance\nattendance_monthly\ngiving\ngiving_monthly\ngroups_annual\ngroups_monthly\nnext_steps\nnext_steps_monthly\npco_events\npco_groups\npco_people\npco_settings\npco_tokens\nreport_schedules\nsaved_reports\nserving\nserving_monthly\nsync_logs\nusers\nweekly_report_config\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

@@ -1,0 +1,73 @@
+{
+  "query": "SELECT year, month, campus, subgroup, total FROM giving_monthly WHERE month = 4 AND year >= 2023 ORDER BY year DESC, campus",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, month, campus, subgroup, total FROM giving_monthly WHERE month = 4 AND year >= 2023 ORDER BY year DESC, campus",
+  "rows": [
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Tithes and Offerings",
+      "total": "588362.82"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Designated",
+      "total": "2463.47"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Tithes and Offerings",
+      "total": "116445.24"
+    },
+    {
+      "year": "2024",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Tithes and Offerings",
+      "total": "528889.98"
+    },
+    {
+      "year": "2024",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Designated",
+      "total": "2313.50"
+    },
+    {
+      "year": "2024",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Tithes and Offerings",
+      "total": "84205.99"
+    },
+    {
+      "year": "2023",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Tithes and Offerings",
+      "total": "588549.73"
+    },
+    {
+      "year": "2023",
+      "month": "4",
+      "campus": "Canton",
+      "subgroup": "Designated",
+      "total": "3567.13"
+    },
+    {
+      "year": "2023",
+      "month": "4",
+      "campus": "Jasper",
+      "subgroup": "Tithes and Offerings",
+      "total": "103039.97"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tmonth\tcampus\tsubgroup\ttotal\n2025\t4\tCanton\tTithes and Offerings\t588362.82\n2025\t4\tCanton\tDesignated\t2463.47\n2025\t4\tJasper\tTithes and Offerings\t116445.24\n2024\t4\tCanton\tTithes and Offerings\t528889.98\n2024\t4\tCanton\tDesignated\t2313.50\n2024\t4\tJasper\tTithes and Offerings\t84205.99\n2023\t4\tCanton\tTithes and Offerings\t588549.73\n2023\t4\tCanton\tDesignated\t3567.13\n2023\t4\tJasper\tTithes and Offerings\t103039.97\n",
+  "stderr": "",
+  "execution_time_ms": 60
+}
