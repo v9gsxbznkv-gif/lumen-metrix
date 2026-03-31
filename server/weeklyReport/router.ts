@@ -444,13 +444,103 @@ export const weeklyReportRouter = router({
         aiSummary = "";
       }
 
+      // Build branded HTML email
+      const logoSvg = `<svg width="32" height="32" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle;">
+        <rect x="4" y="24" width="5" height="14" rx="1.5" fill="#E8913A" transform="rotate(-10 4 24)" opacity="0.7"/>
+        <rect x="10" y="14" width="5.5" height="22" rx="1.5" fill="#E8913A" transform="rotate(-2 10 14)" opacity="0.85"/>
+        <rect x="18" y="6" width="6" height="30" rx="1.5" fill="#E8913A"/>
+        <rect x="26" y="12" width="5.5" height="24" rx="1.5" fill="#C47A2E" transform="rotate(4 26 12)" opacity="0.75"/>
+        <circle cx="21" cy="4" r="2" fill="#F5C882" opacity="0.6"/>
+      </svg>`;
+
+      const campusRows = current.campuses.map(c => `
+        <tr style="border-bottom:1px solid #F3F0EB;">
+          <td style="padding:10px 12px;font-weight:600;color:#1C1917;font-size:13px;">${c.campus}</td>
+          <td style="padding:10px 12px;text-align:right;color:#374151;font-size:13px;">${c.attendance.toLocaleString()}</td>
+          <td style="padding:10px 12px;text-align:right;color:#374151;font-size:13px;">$${c.giving.toLocaleString()}</td>
+          <td style="padding:10px 12px;text-align:right;color:#374151;font-size:13px;">${c.volunteers}</td>
+          <td style="padding:10px 12px;text-align:right;color:#374151;font-size:13px;">${c.ftg}</td>
+          <td style="padding:10px 12px;text-align:right;color:#374151;font-size:13px;">${c.salvations}</td>
+          <td style="padding:10px 12px;text-align:right;color:#374151;font-size:13px;">${c.baptisms}</td>
+        </tr>`).join('');
+
+      const aiHtml = aiSummary
+        ? aiSummary.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        : '';
+
+      const htmlContent = `
+<div style="font-family:'DM Sans',Arial,sans-serif;max-width:620px;margin:0 auto;background:#FAFAF8;border-radius:12px;overflow:hidden;border:1px solid #E8E5DE;">
+
+  <!-- Header -->
+  <div style="background:#1C1917;padding:24px 28px;display:flex;align-items:center;gap:12px;">
+    <div style="display:inline-flex;align-items:center;gap:10px;">
+      ${logoSvg}
+      <span style="font-family:'DM Sans',Arial,sans-serif;font-weight:700;font-size:18px;letter-spacing:0.06em;color:#FFFFFF;">LUMEN</span><span style="font-family:'DM Sans',Arial,sans-serif;font-weight:400;font-size:18px;letter-spacing:0.06em;color:rgba(255,255,255,0.55);"> METRIX</span>
+    </div>
+  </div>
+
+  <!-- Report Title Bar -->
+  <div style="background:#E8913A;padding:12px 28px;">
+    <p style="margin:0;font-size:13px;font-weight:600;color:#FFFFFF;letter-spacing:0.04em;text-transform:uppercase;">Weekly Report &mdash; ${current.label}</p>
+  </div>
+
+  <!-- Totals Summary -->
+  <div style="padding:24px 28px 0;">
+    <p style="margin:0 0 14px;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#9CA3AF;">All Campuses</p>
+    <table style="width:100%;border-collapse:collapse;background:#FFFFFF;border-radius:8px;border:1px solid #E8E5DE;overflow:hidden;">
+      <tr style="background:#F9F7F4;">
+        <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:#6B7280;letter-spacing:0.05em;text-transform:uppercase;">Attendance</th>
+        <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:#6B7280;letter-spacing:0.05em;text-transform:uppercase;">Giving</th>
+        <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:#6B7280;letter-spacing:0.05em;text-transform:uppercase;">Volunteers</th>
+        <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:#6B7280;letter-spacing:0.05em;text-transform:uppercase;">FTG</th>
+        <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:#6B7280;letter-spacing:0.05em;text-transform:uppercase;">Salvations</th>
+        <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:#6B7280;letter-spacing:0.05em;text-transform:uppercase;">Baptisms</th>
+      </tr>
+      <tr>
+        <td style="padding:14px 12px;font-size:20px;font-weight:700;color:#1C1917;">${current.totals.attendance.toLocaleString()}</td>
+        <td style="padding:14px 12px;font-size:20px;font-weight:700;color:#1C1917;">$${current.totals.giving.toLocaleString()}</td>
+        <td style="padding:14px 12px;font-size:20px;font-weight:700;color:#1C1917;">${current.totals.volunteers.toLocaleString()}</td>
+        <td style="padding:14px 12px;font-size:20px;font-weight:700;color:#1C1917;">${current.totals.ftg}</td>
+        <td style="padding:14px 12px;font-size:20px;font-weight:700;color:#1C1917;">${current.totals.salvations}</td>
+        <td style="padding:14px 12px;font-size:20px;font-weight:700;color:#1C1917;">${current.totals.baptisms}</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Campus Breakdown -->
+  <div style="padding:20px 28px 0;">
+    <p style="margin:0 0 14px;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#9CA3AF;">Campus Breakdown</p>
+    <table style="width:100%;border-collapse:collapse;background:#FFFFFF;border-radius:8px;border:1px solid #E8E5DE;overflow:hidden;font-size:13px;">
+      <tr style="background:#F9F7F4;">
+        <th style="padding:9px 12px;text-align:left;font-size:11px;font-weight:600;color:#6B7280;letter-spacing:0.05em;text-transform:uppercase;">Campus</th>
+        <th style="padding:9px 12px;text-align:right;font-size:11px;font-weight:600;color:#6B7280;letter-spacing:0.05em;text-transform:uppercase;">Attend.</th>
+        <th style="padding:9px 12px;text-align:right;font-size:11px;font-weight:600;color:#6B7280;letter-spacing:0.05em;text-transform:uppercase;">Giving</th>
+        <th style="padding:9px 12px;text-align:right;font-size:11px;font-weight:600;color:#6B7280;letter-spacing:0.05em;text-transform:uppercase;">Vols.</th>
+        <th style="padding:9px 12px;text-align:right;font-size:11px;font-weight:600;color:#6B7280;letter-spacing:0.05em;text-transform:uppercase;">FTG</th>
+        <th style="padding:9px 12px;text-align:right;font-size:11px;font-weight:600;color:#6B7280;letter-spacing:0.05em;text-transform:uppercase;">Salv.</th>
+        <th style="padding:9px 12px;text-align:right;font-size:11px;font-weight:600;color:#6B7280;letter-spacing:0.05em;text-transform:uppercase;">Bapt.</th>
+      </tr>
+      ${campusRows}
+    </table>
+  </div>
+
+  ${aiHtml ? `
+  <!-- AI Executive Summary -->
+  <div style="padding:20px 28px 0;">
+    <p style="margin:0 0 12px;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#9CA3AF;">Executive Summary</p>
+    <div style="background:#FFFFFF;border-radius:8px;border:1px solid #E8E5DE;padding:16px 18px;font-size:14px;line-height:1.7;color:#374151;">${aiHtml}</div>
+  </div>` : ''}
+
+  <!-- Footer -->
+  <div style="padding:20px 28px 24px;margin-top:8px;border-top:1px solid #E8E5DE;">
+    <p style="margin:0;font-size:11px;color:#9CA3AF;text-align:center;">Generated by <strong style="color:#6B7280;">LUMEN METRIX</strong> &mdash; Revolution Church Executive Dashboard</p>
+  </div>
+
+</div>`;
+
       // Send notification
       const title = `📊 Weekly Report: ${current.label}`;
-      const content = aiSummary
-        ? `${aiSummary}\n\n---\nDetailed Numbers:\n${summary}`
-        : summary;
-
-      const sent = await notifyOwner({ title, content });
+      const sent = await notifyOwner({ title, content: htmlContent });
 
       // Update lastGeneratedAt
       const existing = await db.select().from(weeklyReportConfig).limit(1);

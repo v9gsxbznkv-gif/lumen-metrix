@@ -154,3 +154,6 @@
 
 ## Volunteer Ratio Chart Fix (Round 13)
 - [x] Fix Volunteer-to-Attendee Ratio chart not displaying any data points — Root cause: conditional JSX rendering (`{condition ? <Line /> : <Line />}`) caused Recharts to receive zero Line components in the DOM. Fixed by always rendering all three campus Lines with `hide` prop for filtering. Also set explicit YAxis domain [0, 40] with fixed ticks. Chart now shows Canton/Jasper/Online trend lines 2014–2026.
+
+## Email Branding Fix (Round 14)
+- [x] Update Weekly Report email template to show Lumen Metrix logo and name instead of "Manus" — Replaced plain-text notifyOwner content with a full branded HTML email: dark header with SVG logo + LUMEN METRIX wordmark, amber title bar, totals table, campus breakdown table, AI summary section, and footer. All 58 tests passing.
