@@ -185,8 +185,9 @@ export const annualReportRouter = router({
       function buildAttendanceMonthly(yr: number): MonthlyRow[] {
         return Array.from({ length: 12 }, (_, i) => {
           const m = i + 1;
+          // Sum all subgroups for this month (no "Total" row exists)
           const rows = attMonthlyRows.filter(
-            (r) => r.year === yr && r.month === m && r.subgroup === "Total"
+            (r) => r.year === yr && r.month === m
           );
           const canton = sumField(rows.filter((r) => r.campus === "Canton"), (r) => r.avgWeekly ?? 0);
           const jasper = sumField(rows.filter((r) => r.campus === "Jasper"), (r) => r.avgWeekly ?? 0);
@@ -196,8 +197,9 @@ export const annualReportRouter = router({
       }
 
       function buildAttendanceSummary(yr: number): AnnualSummary {
+        // Sum all rows for this year (no "Total" row exists)
         const totalRows = attRows.filter(
-          (r) => r.year === yr && r.subgroup === "Total" && r.campus !== "All Campuses"
+          (r) => r.year === yr && r.campus !== "All Campuses"
         );
         const canton = sumField(totalRows.filter((r) => r.campus === "Canton"), (r) => r.avgWeekly ?? 0);
         const jasper = sumField(totalRows.filter((r) => r.campus === "Jasper"), (r) => r.avgWeekly ?? 0);

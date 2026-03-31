@@ -1,0 +1,50 @@
+{
+  "query": "SELECT DISTINCT month, subgroup FROM attendance_monthly WHERE year = 2024 ORDER BY month LIMIT 10",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT month, subgroup FROM attendance_monthly WHERE year = 2024 ORDER BY month LIMIT 10",
+  "rows": [
+    {
+      "month": "1",
+      "subgroup": "RevStudents | Jasper Campus"
+    },
+    {
+      "month": "1",
+      "subgroup": "Kids"
+    },
+    {
+      "month": "1",
+      "subgroup": "ESL Class"
+    },
+    {
+      "month": "1",
+      "subgroup": "Babies"
+    },
+    {
+      "month": "1",
+      "subgroup": "Students"
+    },
+    {
+      "month": "1",
+      "subgroup": "RevStudents | Canton Campus"
+    },
+    {
+      "month": "1",
+      "subgroup": "Adults"
+    },
+    {
+      "month": "1",
+      "subgroup": "Cove"
+    },
+    {
+      "month": "1",
+      "subgroup": "Revolution Jasper Check-In"
+    },
+    {
+      "month": "1",
+      "subgroup": "Treehouse"
+    }
+  ],
+  "messages": [],
+  "stdout": "month\tsubgroup\n1\tRevStudents | Jasper Campus\n1\tKids\n1\tESL Class\n1\tBabies\n1\tStudents\n1\tRevStudents | Canton Campus\n1\tAdults\n1\tCove\n1\tRevolution Jasper Check-In\n1\tTreehouse\n",
+  "stderr": "",
+  "execution_time_ms": 66
+}

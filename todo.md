@@ -257,3 +257,10 @@
 - [x] Verified: annual report uses spreadsheet data for FTG/salvations/baptisms for 2025 and earlier (33 rows in next_steps table)
 - [x] Verified: annual report uses PCO data for FTG/salvations/baptisms for 2026 and later (metric name fix: "FTG" instead of "First-Time Guests")
 - [x] Deploy with public visibility
+
+## Round 28 Attendance Chart Fix
+
+- [x] Fixed attendance aggregation: removed filter for non-existent "Total" subgroup, now sums all subgroups by campus
+- [x] buildAttendanceMonthly: now sums all rows per month instead of filtering for "Total"
+- [x] buildAttendanceSummary: now sums all rows per year instead of filtering for "Total"
+- [x] All 107 tests passing
