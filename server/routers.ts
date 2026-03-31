@@ -7,6 +7,7 @@ import { pcoRouter } from "./pco/router";
 import { reportsRouter } from "./reports/router";
 import { weeklyReportRouter } from "./weeklyReport/router";
 import { groupsRouter } from "./groups/router";
+import { annualReportRouter } from "./annualReport/router";
 import { z } from "zod";
 
 // Cookie name for the simple dashboard password session
@@ -69,6 +70,9 @@ export const appRouter = router({
 
   // Groups — active groups, members, leaders, attendance, participation rate
   groups: groupsRouter,
+
+  // Annual Report — comprehensive annual data aggregation with YoY comparison
+  annualReport: annualReportRouter,
 });
 
 export type AppRouter = typeof appRouter;

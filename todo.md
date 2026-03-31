@@ -234,3 +234,14 @@
 - [x] Show data source badge per row: ◆ Override / ● PCO Weekly / ○ Estimate
 - [x] Write vitest tests for override priority logic and input validation (102 total passing)
 - [x] Checkpoint and deploy
+
+## Round 28: Annual Report Feature
+
+- [x] Add tRPC procedure annualReport.getData — aggregates attendance, giving, volunteers, FTG, salvations, baptisms, groups, events, health metrics for any completed year with YoY comparison
+- [x] Build AnnualReportTab frontend with all data sections: attendance, giving, volunteers, FTG, salvations/baptisms, groups, events, health summary
+- [x] Add year selector dropdown for any completed year (2014–2025)
+- [x] Add CSV export button that downloads all data in structured spreadsheet format
+- [x] Add print-friendly layout with @media print styles
+- [x] Add "Annual Report" to sidebar under TOOLS section
+- [x] Write vitest tests for annual report data aggregation (107 total passing)
+- [x] Checkpoint and deploy

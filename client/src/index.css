@@ -224,3 +224,69 @@
     }
   }
 }
+
+/* ── Print-friendly styles for Annual Report ─────────────────── */
+@media print {
+  /* Hide sidebar, header, and interactive controls */
+  nav,
+  .sidebar,
+  [data-sidebar],
+  header {
+    display: none !important;
+  }
+
+  /* Full width for report content */
+  main,
+  .annual-report-container {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* White background for print */
+  body,
+  .bg-background,
+  .bg-card {
+    background: white !important;
+    color: #1a1a1a !important;
+  }
+
+  /* Ensure text is dark */
+  .text-card-foreground,
+  .text-foreground,
+  .stat-value {
+    color: #1a1a1a !important;
+  }
+
+  .text-muted-foreground {
+    color: #666 !important;
+  }
+
+  /* Borders for print */
+  .border-border\/60,
+  .border-border\/30 {
+    border-color: #ddd !important;
+  }
+
+  /* Avoid breaking inside cards and tables */
+  .print\:break-inside-avoid {
+    break-inside: avoid;
+  }
+
+  /* Reduce chart heights */
+  .recharts-responsive-container {
+    max-height: 200px !important;
+  }
+
+  /* Page margins */
+  @page {
+    margin: 0.5in;
+    size: letter;
+  }
+
+  /* Show print header */
+  .print\:block {
+    display: block !important;
+  }
+}

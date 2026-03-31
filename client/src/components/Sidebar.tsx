@@ -42,6 +42,7 @@ export type TabId =
   | "reports"
   | "health"
   | "weeklyReport"
+  | "annualReport"
   | "ai"
   | "settings";
 
@@ -58,6 +59,7 @@ const NAV_ITEMS: { id: TabId; label: string; icon: React.ElementType; section?: 
   { id: "compare", label: "Compare", icon: ArrowLeftRight },
   { id: "health", label: "Health", icon: Activity },
   { id: "weeklyReport", label: "Weekly Report", icon: CalendarClock, section: "Tools" },
+  { id: "annualReport", label: "Annual Report", icon: FileText },
   { id: "reports", label: "Reports", icon: FileText },
   { id: "ai", label: "AI Analyst", icon: Sparkles },
   { id: "settings", label: "Settings", icon: Settings },
