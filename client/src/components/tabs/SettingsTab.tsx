@@ -209,10 +209,38 @@ function PcoConnectionSection() {
 
 // ─── Auto-Sync Scheduler Section ─────────────────────────────────────────────
 function AutoSyncSection() {
-  const { data: schedulerStatus } = trpc.pco.getSchedulerStatus.useQuery(undefined, {
+  const { data: schedulerStatus, refetch: refetchScheduler } = trpc.pco.getSchedulerStatus.useQuery(undefined, {
     refetchInterval: 60000, // refresh every minute
   });
   const { data: connectionStatus } = trpc.pco.getConnectionStatus.useQuery();
+  const [selectedSyncDay, setSelectedSyncDay] = useState<number | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const updateSyncDayMutation = trpc.pco.updateSyncDay.useMutation({
+    onSuccess: () => {
+      toast.success("Sync day updated successfully");
+      setIsUpdating(false);
+      refetchScheduler();
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to update sync day: ${error.message}`);
+      setIsUpdating(false);
+    },
+  });
+
+  // Initialize selected sync day from scheduler status
+  useEffect(() => {
+    if (schedulerStatus?.syncDay !== undefined && selectedSyncDay === null) {
+      setSelectedSyncDay(schedulerStatus.syncDay);
+    }
+  }, [schedulerStatus?.syncDay, selectedSyncDay]);
+
+  const handleSyncDayChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newDay = parseInt(e.target.value, 10);
+    setSelectedSyncDay(newDay);
+    setIsUpdating(true);
+    updateSyncDayMutation.mutate({ day: newDay });
+  };
 
   const isConnected = connectionStatus?.connected === true;
 
@@ -270,6 +298,29 @@ function AutoSyncSection() {
             <span className="text-xs text-muted-foreground">Modules</span>
             <span className="text-xs">Attendance, Giving, Groups, Events, People</span>
           </div>
+          <div className="flex items-center justify-between py-2 border-b border-border/20">
+            <span className="text-xs text-muted-foreground">Sync Day</span>
+            <select
+              value={selectedSyncDay ?? schedulerStatus?.syncDay ?? 2}
+              onChange={handleSyncDayChange}
+              disabled={isUpdating}
+              className="text-xs px-2 py-1 rounded border border-border/40 bg-muted/30 focus:outline-none focus:ring-1 focus:ring-amber-500/50 disabled:opacity-50"
+            >
+              <option value="0">Sunday</option>
+              <option value="1">Monday</option>
+              <option value="2">Tuesday</option>
+              <option value="3">Wednesday</option>
+              <option value="4">Thursday</option>
+              <option value="5">Friday</option>
+              <option value="6">Saturday</option>
+            </select>
+          </div>
+          {schedulerStatus?.syncDayName && (
+            <div className="flex items-center justify-between py-2">
+              <span className="text-xs text-muted-foreground">Next Sync Day</span>
+              <span className="text-xs font-medium">{schedulerStatus.syncDayName} at midnight (ET)</span>
+            </div>
+          )}
           <div className="flex items-start gap-2 p-3 rounded-md bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/40">
             <Info className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
             <p className="text-xs text-blue-700 dark:text-blue-400">

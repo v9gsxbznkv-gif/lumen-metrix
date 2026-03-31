@@ -50,7 +50,7 @@ import {
   syncWeeklyGiving,
   syncAllWeekly,
 } from "./weeklySync";
-import { getSchedulerStatus } from "./scheduler";
+import { getSchedulerStatus, updateSyncDay } from "./scheduler";
 import {
   generateJobId,
   createJob,
@@ -460,6 +460,13 @@ export const pcoRouter = router({
   getSchedulerStatus: publicProcedure.query(() => {
     return getSchedulerStatus();
   }),
+
+  updateSyncDay: publicProcedure
+    .input(z.object({ day: z.number().int().min(0).max(6) }))
+    .mutation(async ({ input }) => {
+      await updateSyncDay(input.day);
+      return { success: true, syncDay: input.day };
+    }),
 
   getPeopleStats: publicProcedure.query(async () => {
     const db = await getDb();
