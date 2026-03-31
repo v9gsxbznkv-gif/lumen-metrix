@@ -68,10 +68,9 @@ async function runNightlySync(): Promise<void> {
     try {
       console.log(`[Scheduler] Starting weekly data sync for ${currentYear}...`);
       const weeklyResults = await syncAllWeekly(client, dateFrom, dateTo);
-      for (const result of weeklyResults) {
-        await logSyncResult(result);
-      }
-      const weeklyRecords = weeklyResults.reduce((sum, r) => sum + r.recordsProcessed, 0);
+      await logSyncResult(weeklyResults.attendance);
+      await logSyncResult(weeklyResults.giving);
+      const weeklyRecords = weeklyResults.attendance.recordsProcessed + weeklyResults.giving.recordsProcessed;
       console.log(`[Scheduler] Weekly sync completed: ${weeklyRecords} records`);
     } catch (weeklyErr: any) {
       console.warn(`[Scheduler] Weekly sync failed (non-fatal): ${weeklyErr.message}`);

@@ -212,3 +212,12 @@
 - [x] SettingsTab: polls getSyncJobStatus every 2s, shows live progress bar, useEffect handles completed/failed toasts
 - [x] 91 tests passing, zero TypeScript errors
 - [x] Checkpoint saved (e093ed20) and deployed
+
+## Weekly Sync Stall Fix (Round 26)
+- [x] Limit default weekly sync date range to 2023-present (DEFAULT_DATE_FROM = '2023-01-01') — reduces API calls from 10+ years to 3 years
+- [x] Add per-event progress updates: progress callback writes to DB at each event (22%→55% during attendance fetch, 56%→60% during DB writes, 62%→96% during giving)
+- [x] Add 429 retry with exponential backoff to PcoClient.rateLimitedGet: reads Retry-After header, falls back to 2s/4s/8s/.../60s, up to 8 retries
+- [x] Fix scheduler.ts to use new syncAllWeekly object return type (attendance + giving keys)
+- [x] Fix router.ts to pass onProgress callback to syncWeeklyAttendance/syncWeeklyGiving
+- [x] 91 tests passing, zero TypeScript errors
+- [x] Checkpoint and deploy

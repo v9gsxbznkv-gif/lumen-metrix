@@ -245,7 +245,8 @@ export class PcoClient {
   }
 
   /**
-   * Rate-limited GET request with auto-retry on 401 (token refresh).
+   * Rate-limited GET request with auto-retry on 401 (token refresh) and
+   * exponential backoff on 429 (rate limit). Respects the Retry-After header.
    */
   private async rateLimitedGet<T = any>(url: string, params?: Record<string, any>): Promise<PcoApiResponse<T>> {
     const now = Date.now();
@@ -255,24 +256,46 @@ export class PcoClient {
     }
     this.lastRequestTime = Date.now();
 
-    try {
-      console.log(`[PCO API] GET ${url}`, params ? JSON.stringify(params) : '');
-      const response = await this.client.get(url, { params });
-      return response.data;
-    } catch (error: any) {
-      console.error(`[PCO API] Error on GET ${url}:`, error.response?.status, error.message);
-      // If 401, try refreshing the token once
-      if (error.response?.status === 401) {
-        console.log("[PCO] Got 401, attempting token refresh...");
-        const newToken = await getValidAccessToken();
-        if (newToken && newToken !== this.accessToken) {
-          this.accessToken = newToken;
-          this.client.defaults.headers.Authorization = `Bearer ${newToken}`;
-          const response = await this.client.get(url, { params });
-          return response.data;
+    const MAX_RETRIES = 8;
+    let attempt = 0;
+
+    while (true) {
+      try {
+        const response = await this.client.get(url, { params });
+        return response.data;
+      } catch (error: any) {
+        const status = error.response?.status;
+
+        // 429 — rate limited: back off and retry
+        if (status === 429 && attempt < MAX_RETRIES) {
+          attempt++;
+          const retryAfterHeader = error.response?.headers?.['retry-after'];
+          const retryAfterSec = retryAfterHeader ? parseInt(retryAfterHeader, 10) : 0;
+          // Use Retry-After if provided, otherwise exponential: 2s, 4s, 8s, ... capped at 60s
+          const backoffMs = retryAfterSec > 0
+            ? retryAfterSec * 1000
+            : Math.min(2 ** attempt * 1000, 60000);
+          console.warn(`[PCO API] 429 rate limit on ${url} (attempt ${attempt}/${MAX_RETRIES}). Waiting ${backoffMs}ms...`);
+          await new Promise((resolve) => setTimeout(resolve, backoffMs));
+          this.lastRequestTime = Date.now();
+          continue;
         }
+
+        // 401 — try refreshing the token once
+        if (status === 401 && attempt === 0) {
+          attempt++;
+          console.log("[PCO] Got 401, attempting token refresh...");
+          const newToken = await getValidAccessToken();
+          if (newToken && newToken !== this.accessToken) {
+            this.accessToken = newToken;
+            this.client.defaults.headers.Authorization = `Bearer ${newToken}`;
+            continue;
+          }
+        }
+
+        console.error(`[PCO API] Error on GET ${url}:`, status, error.message);
+        throw error;
       }
-      throw error;
     }
   }
 

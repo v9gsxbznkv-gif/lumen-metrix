@@ -72,22 +72,22 @@ async function runSyncInBackground(
   try {
     await updateJob(jobId, { progress: 15, message: "Connected to PCO, starting sync..." });
 
+    // Helper: write progress to DB (fire-and-forget inside background job)
+    const progress = async (pct: number, message: string, processed?: number) => {
+      await updateJob(jobId, { progress: pct, message, ...(processed !== undefined ? { recordsProcessed: processed } : {}) });
+    };
+
     let results;
     if (syncType === "full") {
-      await updateJob(jobId, { progress: 20, message: "Syncing monthly data..." });
+      await progress(20, "Syncing monthly data...");
       const monthlyResults = await syncAll(client, dateFrom, dateTo);
-      await updateJob(jobId, { progress: 60, message: "Syncing weekly data..." });
-      const weeklyResults = await syncAllWeekly(client, dateFrom, dateTo);
-      results = [...monthlyResults, ...weeklyResults];
+      await progress(60, "Syncing weekly data...");
+      const weeklyResults = await syncAllWeekly(client, dateFrom, dateTo, progress);
+      results = [...monthlyResults, weeklyResults.attendance, weeklyResults.giving];
     } else if (syncType === "weekly_all") {
-      await updateJob(jobId, { progress: 20, message: "Syncing weekly attendance..." });
-      const attResult = await syncWeeklyAttendance(client, dateFrom, dateTo);
-      await updateJob(jobId, {
-        progress: 60,
-        message: "Syncing weekly giving...",
-        recordsProcessed: attResult.recordsProcessed,
-      });
-      const givResult = await syncWeeklyGiving(client, dateFrom, dateTo);
+      const attResult = await syncWeeklyAttendance(client, dateFrom, dateTo, progress);
+      await progress(60, "Syncing weekly giving...", attResult.recordsProcessed);
+      const givResult = await syncWeeklyGiving(client, dateFrom, dateTo, progress);
       results = [attResult, givResult];
     } else {
       await updateJob(jobId, { progress: 20, message: `Syncing ${syncType}...` });

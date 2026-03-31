@@ -11,8 +11,10 @@
  * PCO Giving:
  *   Donations → each has received_at, amount_cents, payment_status
  *   We group by the Sunday of the week (Mon-Sun week, with Sunday as the anchor).
+ *
+ * Default date range: Jan 1 2023 → today (avoids pulling 10+ years of history on first run).
  */
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { PcoClient } from "./client";
 import { attendanceWeekly, givingWeekly } from "../../drizzle/schema";
 import { getDb } from "../db";
@@ -22,22 +24,14 @@ import type { SyncResult } from "./sync";
 // Date helpers
 // ============================================================
 
-/**
- * Get the Sunday of the week for a given date.
- * If the date IS a Sunday, returns that date.
- * Otherwise returns the most recent Sunday before it.
- */
 function getSunday(date: Date): Date {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
-  const day = d.getDay(); // 0=Sun, 1=Mon, ...
+  const day = d.getDay();
   d.setDate(d.getDate() - day);
   return d;
 }
 
-/**
- * Format a date as 'YYYY-MM-DD'.
- */
 function formatDate(date: Date): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -45,22 +39,14 @@ function formatDate(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
-/**
- * Get ISO week number for a date.
- */
 function getISOWeekNumber(date: Date): number {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
-  // Set to nearest Thursday: current date + 4 - current day number
-  // Make Sunday=7 for this calculation
   d.setDate(d.getDate() + 4 - (d.getDay() || 7));
   const yearStart = new Date(d.getFullYear(), 0, 1);
   return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
 }
 
-/**
- * Map a PCO event name to a campus.
- */
 function mapEventToCampus(eventName: string): string {
   const name = eventName.toLowerCase();
   if (name.includes("canton")) return "Canton";
@@ -70,41 +56,44 @@ function mapEventToCampus(eventName: string): string {
   return "Other";
 }
 
+/** Default: start of 2023 */
+const DEFAULT_DATE_FROM = "2023-01-01";
+
 // ============================================================
 // Weekly Attendance Sync
 // ============================================================
 
-/**
- * Sync weekly attendance from PCO Check-Ins API.
- *
- * For each PCO event (e.g., "Revolution Canton Check-In"), fetches all
- * event_periods (weekly sessions) and aggregates headcounts by Sunday date.
- *
- * Each event_period has: starts_at, regular_count, guest_count, volunteer_count.
- * Multiple event_periods can share the same Sunday (e.g., 9am + 11am services),
- * so we SUM them per Sunday/event.
- */
 export async function syncWeeklyAttendance(
   client: PcoClient,
   dateFrom?: string,
-  dateTo?: string
+  dateTo?: string,
+  onProgress?: (pct: number, message: string, processed: number) => Promise<void>
 ): Promise<SyncResult> {
   const start = Date.now();
   let recordsProcessed = 0;
   let recordsCreated = 0;
   let recordsUpdated = 0;
 
+  // Default to 2023-present if no range given
+  const effectiveDateFrom = dateFrom || DEFAULT_DATE_FROM;
+  const effectiveDateTo = dateTo || formatDate(new Date());
+
   try {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
-    console.log("[PCO Weekly Sync] Starting weekly attendance sync...");
+    console.log(`[PCO Weekly Sync] Starting weekly attendance sync (${effectiveDateFrom} → ${effectiveDateTo})...`);
 
     // Step 1: Get all check-in events
     const eventsResult = await client.paginateAll("/check-ins/v2/events");
-    console.log(`[PCO Weekly Sync] Got ${eventsResult.data.length} check-in events`);
+    const events = eventsResult.data;
+    console.log(`[PCO Weekly Sync] Got ${events.length} check-in events`);
 
-    // Accumulate: key = "YYYY-MM-DD|campus|subgroup" → counts
+    if (onProgress) {
+      await onProgress(22, `Found ${events.length} check-in events. Fetching weekly periods...`, 0);
+    }
+
+    // Accumulate: key = "YYYY-MM-DD|campus|eventName" → counts
     const weeklyMap = new Map<string, {
       year: number;
       weekNumber: number;
@@ -117,23 +106,41 @@ export async function syncWeeklyAttendance(
       volunteerCount: number;
     }>();
 
-    for (const event of eventsResult.data) {
+    for (let i = 0; i < events.length; i++) {
+      const event = events[i] as any;
       const eventId = event.id;
-      const eventName = (event as any).attributes?.name || `Event-${eventId}`;
-      console.log(`[PCO Weekly Sync] Processing event: ${eventName} (ID: ${eventId})`);
+      const eventName = event.attributes?.name || `Event-${eventId}`;
 
-      // Fetch event_periods with date filters
+      // Report per-event progress: 22% → 55% across all events
+      const eventPct = 22 + Math.round((i / events.length) * 33);
+      if (onProgress) {
+        await onProgress(
+          eventPct,
+          `Fetching periods for "${eventName}" (${i + 1}/${events.length})...`,
+          recordsProcessed
+        );
+      }
+
+      console.log(`[PCO Weekly Sync] Processing event ${i + 1}/${events.length}: ${eventName}`);
+
       const periodParams: Record<string, any> = {
         per_page: 100,
         order: "-starts_at",
+        "where[starts_at][gte]": effectiveDateFrom,
+        "where[starts_at][lte]": effectiveDateTo,
       };
-      if (dateFrom) periodParams["where[starts_at][gte]"] = dateFrom;
-      if (dateTo) periodParams["where[starts_at][lte]"] = dateTo;
 
-      const periodsResult = await client.paginateAll(
-        `/check-ins/v2/events/${eventId}/event_periods`,
-        periodParams
-      );
+      let periodsResult;
+      try {
+        periodsResult = await client.paginateAll(
+          `/check-ins/v2/events/${eventId}/event_periods`,
+          periodParams
+        );
+      } catch (err: any) {
+        console.warn(`[PCO Weekly Sync] Skipping event ${eventName}: ${err.message}`);
+        continue;
+      }
+
       console.log(`[PCO Weekly Sync]   Got ${periodsResult.data.length} event periods for ${eventName}`);
 
       for (const period of periodsResult.data) {
@@ -182,11 +189,23 @@ export async function syncWeeklyAttendance(
 
     console.log(`[PCO Weekly Sync] Aggregated ${weeklyMap.size} weekly attendance rows`);
 
+    if (onProgress) {
+      await onProgress(56, `Saving ${weeklyMap.size} weekly attendance rows to database...`, recordsProcessed);
+    }
+
     // Step 2: Upsert into attendance_weekly
-    for (const row of Array.from(weeklyMap.values())) {
+    const rows = Array.from(weeklyMap.values());
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+
+      // Report DB write progress: 56% → 60%
+      if (onProgress && i % 50 === 0) {
+        const dbPct = 56 + Math.round((i / rows.length) * 4);
+        await onProgress(dbPct, `Saving attendance rows (${i}/${rows.length})...`, recordsProcessed);
+      }
+
       try {
-        // Check for existing row
-        const existing = await db
+        const existingRows = await db
           .select()
           .from(attendanceWeekly)
           .where(
@@ -198,7 +217,7 @@ export async function syncWeeklyAttendance(
           )
           .limit(1);
 
-        if (existing.length > 0) {
+        if (existingRows.length > 0) {
           await db
             .update(attendanceWeekly)
             .set({
@@ -209,7 +228,7 @@ export async function syncWeeklyAttendance(
               year: row.year,
               weekNumber: row.weekNumber,
             })
-            .where(eq(attendanceWeekly.id, existing[0].id));
+            .where(eq(attendanceWeekly.id, existingRows[0].id));
           recordsUpdated++;
         } else {
           await db.insert(attendanceWeekly).values({
@@ -259,41 +278,47 @@ export async function syncWeeklyAttendance(
 // Weekly Giving Sync
 // ============================================================
 
-/**
- * Sync weekly giving from PCO Giving API.
- *
- * Fetches individual donations and aggregates by the Sunday of the week.
- * Each donation has: received_at, amount_cents, payment_status.
- * We group by Sunday (Mon-Sun week) and campus.
- */
 export async function syncWeeklyGiving(
   client: PcoClient,
   dateFrom?: string,
-  dateTo?: string
+  dateTo?: string,
+  onProgress?: (pct: number, message: string, processed: number) => Promise<void>
 ): Promise<SyncResult> {
   const start = Date.now();
   let recordsProcessed = 0;
   let recordsCreated = 0;
   let recordsUpdated = 0;
 
+  const effectiveDateFrom = dateFrom || DEFAULT_DATE_FROM;
+  const effectiveDateTo = dateTo || formatDate(new Date());
+
   try {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
-    console.log("[PCO Weekly Sync] Starting weekly giving sync...");
+    console.log(`[PCO Weekly Giving] Starting weekly giving sync (${effectiveDateFrom} → ${effectiveDateTo})...`);
 
-    const params: Record<string, any> = {
-      include: "designations",
+    if (onProgress) {
+      await onProgress(62, "Fetching donation records from PCO...", 0);
+    }
+
+    // Fetch all donations in date range
+    const donationParams: Record<string, any> = {
       per_page: 100,
+      order: "-received_at",
+      "where[received_at][gte]": effectiveDateFrom,
+      "where[received_at][lte]": effectiveDateTo,
     };
-    if (dateFrom) params["where[received_at][gte]"] = dateFrom;
-    if (dateTo) params["where[received_at][lte]"] = dateTo;
-    params["where[payment_status]"] = "succeeded";
 
-    const donationsResult = await client.paginateAll("/giving/v2/donations", params);
-    console.log(`[PCO Weekly Sync] Got ${donationsResult.data.length} donations`);
+    const donationsResult = await client.paginateAll("/giving/v2/donations", donationParams);
+    const donations = donationsResult.data;
+    console.log(`[PCO Weekly Giving] Got ${donations.length} donations`);
 
-    // Accumulate: key = "YYYY-MM-DD|campus" → totals
+    if (onProgress) {
+      await onProgress(70, `Processing ${donations.length} donations...`, 0);
+    }
+
+    // Aggregate by week/campus
     const weeklyMap = new Map<string, {
       year: number;
       weekNumber: number;
@@ -305,15 +330,19 @@ export async function syncWeeklyGiving(
       donationCount: number;
     }>();
 
-    for (const donation of donationsResult.data) {
+    for (const donation of donations) {
       recordsProcessed++;
       const attrs = (donation as any).attributes;
-      if (!attrs || attrs.refunded) continue;
+      const receivedAt = attrs?.received_at;
+      if (!receivedAt) continue;
+
+      // Only count completed donations
+      const status = attrs.payment_status;
+      if (status && status !== "succeeded" && status !== "received") continue;
 
       const amountCents = attrs.amount_cents || 0;
-      const amount = amountCents / 100;
-      const receivedAt = attrs.received_at;
-      if (!receivedAt || amount <= 0) continue;
+      const amountDollars = amountCents / 100;
+      if (amountDollars <= 0) continue;
 
       const date = new Date(receivedAt);
       const sunday = getSunday(date);
@@ -321,16 +350,15 @@ export async function syncWeeklyGiving(
       const year = sunday.getFullYear();
       const weekNumber = getISOWeekNumber(sunday);
 
-      // PCO giving doesn't have campus info on donations directly
-      // We default to "All Campuses" — campus-level breakdown would require
-      // matching donors to campuses via the People API
+      // PCO doesn't easily expose campus per donation without includes;
+      // use "All Campuses" as the aggregate campus
       const campus = "All Campuses";
       const key = `${weekStartDate}|${campus}`;
 
       const existing = weeklyMap.get(key);
       if (existing) {
-        existing.total += amount;
-        existing.general += amount; // Simplified: treat all as general
+        existing.total += amountDollars;
+        existing.general += amountDollars; // treat all as general unless we have fund data
         existing.donationCount++;
       } else {
         weeklyMap.set(key, {
@@ -338,20 +366,32 @@ export async function syncWeeklyGiving(
           weekNumber,
           weekStartDate,
           campus,
-          total: amount,
-          general: amount,
+          total: amountDollars,
+          general: amountDollars,
           designated: 0,
           donationCount: 1,
         });
       }
     }
 
-    console.log(`[PCO Weekly Sync] Aggregated ${weeklyMap.size} weekly giving rows`);
+    console.log(`[PCO Weekly Giving] Aggregated ${weeklyMap.size} weekly giving rows`);
+
+    if (onProgress) {
+      await onProgress(88, `Saving ${weeklyMap.size} weekly giving rows to database...`, recordsProcessed);
+    }
 
     // Upsert into giving_weekly
-    for (const row of Array.from(weeklyMap.values())) {
+    const rows = Array.from(weeklyMap.values());
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+
+      if (onProgress && i % 20 === 0) {
+        const dbPct = 88 + Math.round((i / rows.length) * 8);
+        await onProgress(dbPct, `Saving giving rows (${i}/${rows.length})...`, recordsProcessed);
+      }
+
       try {
-        const existing = await db
+        const existingRows = await db
           .select()
           .from(givingWeekly)
           .where(
@@ -362,18 +402,18 @@ export async function syncWeeklyGiving(
           )
           .limit(1);
 
-        if (existing.length > 0) {
+        if (existingRows.length > 0) {
           await db
             .update(givingWeekly)
             .set({
-              total: String(row.total),
-              general: String(row.general),
-              designated: String(row.designated),
+              total: String(row.total.toFixed(2)),
+              general: String(row.general.toFixed(2)),
+              designated: String(row.designated.toFixed(2)),
               donationCount: row.donationCount,
               year: row.year,
               weekNumber: row.weekNumber,
             })
-            .where(eq(givingWeekly.id, existing[0].id));
+            .where(eq(givingWeekly.id, existingRows[0].id));
           recordsUpdated++;
         } else {
           await db.insert(givingWeekly).values({
@@ -381,20 +421,20 @@ export async function syncWeeklyGiving(
             weekNumber: row.weekNumber,
             weekStartDate: row.weekStartDate,
             campus: row.campus,
-            total: String(row.total),
-            general: String(row.general),
-            designated: String(row.designated),
+            total: String(row.total.toFixed(2)),
+            general: String(row.general.toFixed(2)),
+            designated: String(row.designated.toFixed(2)),
             donationCount: row.donationCount,
             source: "pco",
           });
           recordsCreated++;
         }
       } catch (err: any) {
-        console.warn(`[PCO Weekly Sync] Error upserting giving row:`, err.message);
+        console.warn(`[PCO Weekly Giving] Error upserting giving row:`, err.message);
       }
     }
 
-    console.log(`[PCO Weekly Sync] Weekly giving sync complete: ${recordsProcessed} donations → ${recordsCreated} created, ${recordsUpdated} updated`);
+    console.log(`[PCO Weekly Giving] Weekly giving sync complete: ${recordsProcessed} donations → ${recordsCreated} created, ${recordsUpdated} updated`);
 
     return {
       syncType: "weekly_giving",
@@ -405,7 +445,7 @@ export async function syncWeeklyGiving(
       durationMs: Date.now() - start,
     };
   } catch (error: any) {
-    console.error("[PCO Weekly Sync] Weekly giving sync failed:", error.message);
+    console.error("[PCO Weekly Giving] Weekly giving sync failed:", error.message);
     return {
       syncType: "weekly_giving",
       status: "failed",
@@ -418,16 +458,17 @@ export async function syncWeeklyGiving(
   }
 }
 
-/**
- * Run both weekly syncs.
- */
+// ============================================================
+// Combined Weekly Sync
+// ============================================================
+
 export async function syncAllWeekly(
   client: PcoClient,
   dateFrom?: string,
-  dateTo?: string
-): Promise<SyncResult[]> {
-  const results: SyncResult[] = [];
-  results.push(await syncWeeklyAttendance(client, dateFrom, dateTo));
-  results.push(await syncWeeklyGiving(client, dateFrom, dateTo));
-  return results;
+  dateTo?: string,
+  onProgress?: (pct: number, message: string, processed: number) => Promise<void>
+): Promise<{ attendance: SyncResult; giving: SyncResult }> {
+  const attendance = await syncWeeklyAttendance(client, dateFrom, dateTo, onProgress);
+  const giving = await syncWeeklyGiving(client, dateFrom, dateTo, onProgress);
+  return { attendance, giving };
 }
