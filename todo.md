@@ -329,3 +329,13 @@
 - [x] Fix AttendanceTab context access (useData returns DataContextType, not DashboardData)
 - [x] All 107 tests passing
 - [x] Checkpoint and deploy
+
+## Round 34 Fix: Kids/Students/Young Adults Breakdown Data Mismatch (Complete)
+
+- [x] Fix subgroup name mismatches: use actual DB names (Campground, Treehouse, Cove, Elem Reruns)
+- [x] Fix Young Adults to look for both "Young Adults" (annual) and "YA Gathering" (monthly)
+- [x] Update Kids breakdown to use attendance_monthly for room-level subgroups (not annual table)
+- [x] Verify Students section shows RevStudents | Canton Campus and RevStudents | Jasper Campus correctly
+- [x] Cleared TypeScript build cache - zero TS errors confirmed
+- [x] All 107 tests passing
+- [x] Deploy fix

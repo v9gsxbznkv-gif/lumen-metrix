@@ -11,7 +11,6 @@ import {
   getYoYChange,
   isPartialYear,
   getMaxMonth,
-  getTotalAttendance,
   getAttendanceForMonths,
   MONTH_NAMES,
 } from "@/lib/data";
@@ -43,6 +42,7 @@ const TT = {
   fontFamily: "'Inter'",
 };
 
+// Lookup avg_weekly from annual attendance table
 function getSubgroupAvg(
   attendance: { year: number; campus: string; subgroup: string; avg_weekly: number }[],
   year: number,
@@ -50,7 +50,6 @@ function getSubgroupAvg(
   subgroup: string
 ): number {
   if (campus === "All Campuses") {
-    // Sum across all campuses (Canton + Jasper + Online)
     return attendance
       .filter((a) => a.year === year && a.subgroup === subgroup && a.campus !== "All Campuses")
       .reduce((s, m) => s + m.avg_weekly, 0);
@@ -60,6 +59,26 @@ function getSubgroupAvg(
       (a) => a.year === year && a.campus === campus && a.subgroup === subgroup
     )?.avg_weekly ?? 0
   );
+}
+
+// Lookup avg_weekly from monthly table for a given year (average across all months)
+function getMonthlySubgroupAvg(
+  monthly: { year: number; month: number; campus: string; subgroup: string; avg_weekly: number }[],
+  year: number,
+  campus: string,
+  subgroup: string
+): number {
+  const rows = monthly.filter(
+    (m) =>
+      m.year === year &&
+      m.subgroup === subgroup &&
+      (campus === "All Campuses" ? m.campus !== "All Campuses" : m.campus === campus)
+  );
+  if (rows.length === 0) return 0;
+  // Sum avg_weekly across months (each month already represents avg for that month)
+  // then divide by number of months to get annual average
+  const total = rows.reduce((s, m) => s + m.avg_weekly, 0);
+  return total / rows.length;
 }
 
 export default function AttendanceTab() {
@@ -122,14 +141,10 @@ export default function AttendanceTab() {
   const maxMonth = useMemo(() => data ? getMaxMonth(data, latestYear) : 12, [data, latestYear]);
   const compMonths = useMemo(() => Array.from({ length: maxMonth }, (_, i) => i + 1), [maxMonth]);
 
-  // Canonical total attendance — uses getAttendanceForMonths which routes to
-  // the pre-computed Total record for full years, and monthly sums for partial years.
-  // This is the SAME function the Overview page uses, guaranteeing identical numbers.
   const totalKpi = useMemo(() => {
     if (!data) return { current: 0, prior: 0, change: undefined as ReturnType<typeof getYoYChange> | undefined };
     const allMonths = Array.from({ length: 12 }, (_, i) => i + 1);
     if (partial) {
-      // Partial year: compare same months only
       const cur = getAttendanceForMonths(data, latestYear, filters.campus, compMonths);
       const prev = getAttendanceForMonths(data, latestYear - 1, filters.campus, compMonths);
       return {
@@ -138,7 +153,6 @@ export default function AttendanceTab() {
         change: getYoYChange(cur.avgWeekly, prev.avgWeekly),
       };
     }
-    // Full year: getAttendanceForMonths uses pre-computed Total (same as Overview)
     const cur = getAttendanceForMonths(data, latestYear, filters.campus, allMonths);
     const prev = getAttendanceForMonths(data, latestYear - 1, filters.campus, allMonths);
     return {
@@ -151,13 +165,7 @@ export default function AttendanceTab() {
   const yoyComparison = useMemo(() => {
     if (!data) return [];
     return ["Adults", "Kids", "Students"].map((sub) => {
-      const current = getSubgroupAvg(
-        data.attendance,
-        latestYear,
-        filters.campus,
-        sub
-      );
-      // For partial years, compare same months only
+      const current = getSubgroupAvg(data.attendance, latestYear, filters.campus, sub);
       if (partial) {
         const currMonthly = data.attendance_monthly
           .filter((m) => m.year === latestYear && compMonths.includes(m.month) && m.subgroup === sub)
@@ -174,12 +182,7 @@ export default function AttendanceTab() {
           change: getYoYChange(currMonthly, prevMonthly),
         };
       }
-      const prior = getSubgroupAvg(
-        data.attendance,
-        latestYear - 1,
-        filters.campus,
-        sub
-      );
+      const prior = getSubgroupAvg(data.attendance, latestYear - 1, filters.campus, sub);
       return {
         subgroup: sub,
         current: Math.round(current),
@@ -189,57 +192,98 @@ export default function AttendanceTab() {
     });
   }, [data, filters, latestYear, partial, compMonths]);
 
-  // Kids environments breakdown from attendance records with kids-specific subgroups
-  // Organized by campus and age group for 2026+ data
+  // Kids room-level breakdown from attendance_monthly
+  // Uses exact DB subgroup names: Campground, Treehouse, Cove, Elem Reruns, Babies, Toddlers, Pre-K
   const kidsBreakdown = useMemo(() => {
     if (!data) return [];
-    
-    // All kids subgroups organized by campus and age group
-    const kidsSubgroups = [
-      // Canton Thursday RevKids
-      { name: "Canton Nursery", subgroup: "Nursery" },
-      { name: "Canton Toddlers", subgroup: "Toddlers" },
-      { name: "Canton Pre-K", subgroup: "Pre-K" },
-      { name: "Canton Elementary", subgroup: "Elementary" },
-      
-      // Sunday RevKids Preschool
-      { name: "Sunday Babies", subgroup: "Babies" },
-      { name: "Sunday Young Toddlers", subgroup: "Young Toddlers" },
-      { name: "Sunday Older Toddlers", subgroup: "Older Toddlers" },
-      { name: "Sunday Preschool Pre-K", subgroup: "Pre-K" },
-      
-      // Sunday RevKids Elementary
-      { name: "The Campground", subgroup: "The Campground" },
-      { name: "The Treehouse", subgroup: "The Treehouse" },
-      { name: "The Cove", subgroup: "The Cove" },
-      { name: "ReRuns", subgroup: "ReRuns" },
-      
-      // Jasper Preschool
-      { name: "Jasper Nursery", subgroup: "Jasper Nursery" },
-      { name: "Jasper Pre-K", subgroup: "Jasper Pre-K" },
-      
-      // Jasper Elementary
-      { name: "Jasper Treehouse", subgroup: "Jasper Treehouse" },
-      { name: "Jasper Cove", subgroup: "Jasper Cove" },
-      { name: "Jasper ReRuns", subgroup: "Jasper ReRuns" },
+
+    // Sections with exact DB subgroup names
+    const sections = [
+      {
+        title: "Canton Thursday RevKids",
+        items: [
+          { label: "Nursery", subgroup: "Nursery" },
+          { label: "Toddlers", subgroup: "Toddlers" },
+          { label: "Pre-K", subgroup: "Pre-K" },
+          { label: "Elementary", subgroup: "Elementary" },
+        ],
+      },
+      {
+        title: "Sunday RevKids Preschool",
+        items: [
+          { label: "Babies", subgroup: "Babies" },
+          { label: "Young Toddlers", subgroup: "Young Toddlers" },
+          { label: "Older Toddlers", subgroup: "Older Toddlers" },
+          { label: "Pre-K", subgroup: "Pre-K" },
+        ],
+      },
+      {
+        title: "Sunday RevKids Elementary",
+        items: [
+          { label: "The Campground", subgroup: "Campground" },
+          { label: "The Treehouse", subgroup: "Treehouse" },
+          { label: "The Cove", subgroup: "Cove" },
+          { label: "ReRuns", subgroup: "Elem Reruns" },
+        ],
+      },
+      {
+        title: "Jasper Preschool",
+        items: [
+          { label: "Nursery", subgroup: "Nursery" },
+          { label: "Pre-K", subgroup: "Pre-K" },
+        ],
+      },
+      {
+        title: "Jasper Elementary",
+        items: [
+          { label: "Treehouse", subgroup: "Treehouse" },
+          { label: "Cove", subgroup: "Cove" },
+          { label: "ReRuns", subgroup: "Elem Reruns" },
+        ],
+      },
     ];
-    
-    return kidsSubgroups.map((item) => {
-      const avg = getSubgroupAvg(
-        data.attendance,
-        latestYear,
-        filters.campus,
-        item.subgroup
-      );
-      return { environment: item.name, subgroup: item.subgroup, avg: Math.round(avg) };
-    });
+
+    return sections.map((section) => ({
+      title: section.title,
+      items: section.items.map((item) => ({
+        label: item.label,
+        avg: Math.round(getMonthlySubgroupAvg(data.attendance_monthly, latestYear, filters.campus, item.subgroup)),
+      })),
+    }));
+  }, [data, filters, latestYear]);
+
+  // Students breakdown — uses annual table (RevStudents | Campus)
+  const studentsBreakdown = useMemo(() => {
+    if (!data) return [];
+    return [
+      { label: "Canton Campus", subgroup: "RevStudents | Canton Campus" },
+      { label: "Jasper Campus", subgroup: "RevStudents | Jasper Campus" },
+    ].map((item) => ({
+      label: item.label,
+      avg: Math.round(getSubgroupAvg(data.attendance, latestYear, filters.campus, item.subgroup)),
+    })).filter((item) => item.avg > 0);
+  }, [data, filters, latestYear]);
+
+  // Young Adults — annual table uses "Young Adults"; monthly uses "YA Gathering"
+  const youngAdultsAvg = useMemo(() => {
+    if (!data) return 0;
+    // Try annual first
+    const annual = getSubgroupAvg(data.attendance, latestYear, filters.campus, "Young Adults");
+    if (annual > 0) return Math.round(annual);
+    // Fall back to monthly average
+    return Math.round(getMonthlySubgroupAvg(data.attendance_monthly, latestYear, filters.campus, "YA Gathering"));
   }, [data, filters, latestYear]);
 
   if (!data) return null;
 
+  // Compute max value across all kids items for proportional bars
+  const allKidsAvgs = kidsBreakdown.flatMap((s) => s.items.map((i) => i.avg));
+  const maxKidsAvg = Math.max(...allKidsAvgs, 1);
+  const maxStudentsAvg = Math.max(...studentsBreakdown.map((s) => s.avg), 1);
+
   return (
     <div className="space-y-5">
-      {/* Total attendance — canonical figure matching Overview page */}
+      {/* Total attendance KPI cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <KpiCard
           label="Total Avg Weekly"
@@ -260,6 +304,7 @@ export default function AttendanceTab() {
         ))}
       </div>
 
+      {/* Multi-year demographic trend chart */}
       <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         <h3 className="section-title mb-3 sm:mb-4">
           Attendance by Demographic — Multi-Year Trend
@@ -268,45 +313,17 @@ export default function AttendanceTab() {
           <AreaChart data={demographicTrend}>
             <defs>
               {["Adults", "Kids", "Students"].map((key) => (
-                <linearGradient
-                  key={key}
-                  id={`att-grad-${key}`}
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
-                  <stop
-                    offset="5%"
-                    stopColor={SUBGROUP_COLORS[key]}
-                    stopOpacity={0.2}
-                  />
-                  <stop
-                    offset="95%"
-                    stopColor={SUBGROUP_COLORS[key]}
-                    stopOpacity={0}
-                  />
+                <linearGradient key={key} id={`att-grad-${key}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={SUBGROUP_COLORS[key]} stopOpacity={0.2} />
+                  <stop offset="95%" stopColor={SUBGROUP_COLORS[key]} stopOpacity={0} />
                 </linearGradient>
               ))}
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#E8E5DE" />
-            <XAxis
-              dataKey="year"
-              tick={{ fontSize: 11, fontFamily: "'Inter'" }}
-              tickLine={false}
-              axisLine={false}
-            />
-            <YAxis
-              tick={{ fontSize: 11, fontFamily: "'DM Mono'" }}
-              tickLine={false}
-              axisLine={false}
-            />
+            <XAxis dataKey="year" tick={{ fontSize: 11, fontFamily: "'Inter'" }} tickLine={false} axisLine={false} />
+            <YAxis tick={{ fontSize: 11, fontFamily: "'DM Mono'" }} tickLine={false} axisLine={false} />
             <Tooltip contentStyle={TT} />
-            <Legend
-              wrapperStyle={{ fontSize: 12, fontFamily: "'Inter'" }}
-              iconType="circle"
-              iconSize={8}
-            />
+            <Legend wrapperStyle={{ fontSize: 12, fontFamily: "'Inter'" }} iconType="circle" iconSize={8} />
             {["Adults", "Kids", "Students"].map((key) => (
               <Area
                 key={key}
@@ -322,6 +339,7 @@ export default function AttendanceTab() {
         </ResponsiveContainer>
       </div>
 
+      {/* Monthly pattern chart */}
       <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         <h3 className="section-title mb-3 sm:mb-4">
           Monthly Pattern — {latestYear}
@@ -329,74 +347,44 @@ export default function AttendanceTab() {
         <ResponsiveContainer width="100%" height={220}>
           <LineChart data={monthlyPattern}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E8E5DE" />
-            <XAxis
-              dataKey="month"
-              tick={{ fontSize: 11, fontFamily: "'Inter'" }}
-              tickLine={false}
-              axisLine={false}
-            />
-            <YAxis
-              tick={{ fontSize: 11, fontFamily: "'DM Mono'" }}
-              tickLine={false}
-              axisLine={false}
-            />
+            <XAxis dataKey="month" tick={{ fontSize: 11, fontFamily: "'Inter'" }} tickLine={false} axisLine={false} />
+            <YAxis tick={{ fontSize: 11, fontFamily: "'DM Mono'" }} tickLine={false} axisLine={false} />
             <Tooltip contentStyle={TT} />
-            <Legend
-              wrapperStyle={{ fontSize: 12, fontFamily: "'Inter'" }}
-              iconType="circle"
-              iconSize={8}
-            />
+            <Legend wrapperStyle={{ fontSize: 12, fontFamily: "'Inter'" }} iconType="circle" iconSize={8} />
             {["Adults", "Kids", "Students"].map((key) => (
-              <Line
-                key={key}
-                type="monotone"
-                dataKey={key}
-                stroke={SUBGROUP_COLORS[key]}
-                strokeWidth={2}
-                dot={{ r: 3 }}
-              />
+              <Line key={key} type="monotone" dataKey={key} stroke={SUBGROUP_COLORS[key]} strokeWidth={2} dot={{ r: 3 }} />
             ))}
           </LineChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Kids Breakdown Section */}
+      {/* Kids Room-Level Breakdown */}
       <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         <h3 className="section-title mb-3 sm:mb-4">
           Kids Breakdown — {latestYear} Avg
         </h3>
-        <div className="space-y-3.5">
-          {kidsBreakdown.length > 0 && kidsBreakdown.some((k) => k.avg > 0) ? (
-            <div className="space-y-4">
-              {/* Group by section */}
-              {[
-                { title: "Canton Thursday RevKids", items: kidsBreakdown.filter(k => ["Canton Nursery", "Canton Toddlers", "Canton Pre-K", "Canton Elementary"].includes(k.environment)) },
-                { title: "Sunday RevKids Preschool", items: kidsBreakdown.filter(k => ["Sunday Babies", "Sunday Young Toddlers", "Sunday Older Toddlers", "Sunday Preschool Pre-K"].includes(k.environment)) },
-                { title: "Sunday RevKids Elementary", items: kidsBreakdown.filter(k => ["The Campground", "The Treehouse", "The Cove", "ReRuns"].includes(k.environment)) },
-                { title: "Jasper Preschool", items: kidsBreakdown.filter(k => ["Jasper Nursery", "Jasper Pre-K"].includes(k.environment)) },
-                { title: "Jasper Elementary", items: kidsBreakdown.filter(k => ["Jasper Treehouse", "Jasper Cove", "Jasper ReRuns"].includes(k.environment)) },
-              ].map((section) => section.items.length > 0 && (
+        <div className="space-y-4">
+          {kidsBreakdown.some((s) => s.items.some((i) => i.avg > 0)) ? (
+            kidsBreakdown.map((section) => {
+              const visibleItems = section.items.filter((i) => i.avg > 0);
+              if (visibleItems.length === 0) return null;
+              return (
                 <div key={section.title}>
-                  <h4 className="text-xs font-semibold text-foreground/70 mb-2.5 uppercase tracking-wide">{section.title}</h4>
+                  <h4 className="text-xs font-semibold text-foreground/70 mb-2.5 uppercase tracking-wide">
+                    {section.title}
+                  </h4>
                   <div className="space-y-2.5">
-                    {section.items.map((env) => (
-                      <div key={env.environment}>
+                    {visibleItems.map((item) => (
+                      <div key={item.label}>
                         <div className="flex justify-between text-xs mb-1">
-                          <span className="font-medium text-foreground/80">
-                            {env.environment}
-                          </span>
-                          <span className="stat-value text-sm">{env.avg}</span>
+                          <span className="font-medium text-foreground/80">{item.label}</span>
+                          <span className="stat-value text-sm">{item.avg}</span>
                         </div>
                         <div className="h-2 bg-muted rounded-full overflow-hidden">
                           <div
                             className="h-full rounded-full transition-all duration-500"
                             style={{
-                              width: `${Math.min(
-                                100,
-                                (env.avg /
-                                  Math.max(...kidsBreakdown.map((k) => k.avg), 1)) *
-                                  100
-                              )}%`,
+                              width: `${Math.min(100, (item.avg / maxKidsAvg) * 100)}%`,
                               backgroundColor: "#E8913A",
                             }}
                           />
@@ -405,79 +393,72 @@ export default function AttendanceTab() {
                     ))}
                   </div>
                 </div>
-              ))}
-            </div>
+              );
+            })
           ) : (
             <p className="text-xs text-muted-foreground italic">
-              Detailed kids data not available for this selection.
+              Detailed kids room data not available for this selection. Run a PCO sync to populate room-level data.
             </p>
           )}
         </div>
       </div>
 
-      {/* Students Breakdown Section */}
+      {/* Students Breakdown */}
       <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         <h3 className="section-title mb-3 sm:mb-4">
           Students — {latestYear} Avg
         </h3>
         <div className="space-y-2.5">
-          {["RevStudents | Canton Campus", "RevStudents | Jasper Campus"].map((subgroup) => {
-            const avg = getSubgroupAvg(data.attendance, latestYear, filters.campus, subgroup);
-            const cantonAvg = getSubgroupAvg(data.attendance, latestYear, filters.campus, "RevStudents | Canton Campus");
-            const jasperAvg = getSubgroupAvg(data.attendance, latestYear, filters.campus, "RevStudents | Jasper Campus");
-            const maxStudents = Math.max(cantonAvg, jasperAvg, 1);
-            
-            return avg > 0 ? (
-              <div key={subgroup}>
+          {studentsBreakdown.length > 0 ? (
+            studentsBreakdown.map((item) => (
+              <div key={item.label}>
                 <div className="flex justify-between text-xs mb-1">
-                  <span className="font-medium text-foreground/80">
-                    {subgroup.replace(" | ", " — ")}
-                  </span>
-                  <span className="stat-value text-sm">{Math.round(avg)}</span>
+                  <span className="font-medium text-foreground/80">{item.label}</span>
+                  <span className="stat-value text-sm">{item.avg}</span>
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-500"
                     style={{
-                      width: `${Math.min(100, (avg / maxStudents) * 100)}%`,
+                      width: `${Math.min(100, (item.avg / maxStudentsAvg) * 100)}%`,
                       backgroundColor: "#4A7FB5",
                     }}
                   />
                 </div>
               </div>
-            ) : null;
-          })}
+            ))
+          ) : (
+            <p className="text-xs text-muted-foreground italic">
+              No Students data available for this selection.
+            </p>
+          )}
         </div>
       </div>
 
-      {/* Young Adults Section */}
+      {/* Young Adults */}
       <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         <h3 className="section-title mb-3 sm:mb-4">
           Young Adults — {latestYear} Avg
         </h3>
         <div className="space-y-2.5">
-          {(() => {
-            const avg = getSubgroupAvg(data.attendance, latestYear, filters.campus, "YA Gathering");
-            return avg > 0 ? (
-              <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="font-medium text-foreground/80">YA Gathering</span>
-                  <span className="stat-value text-sm">{Math.round(avg)}</span>
-                </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: "100%",
-                      backgroundColor: "#8B6DAF",
-                    }}
-                  />
-                </div>
+          {youngAdultsAvg > 0 ? (
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="font-medium text-foreground/80">YA Gathering</span>
+                <span className="stat-value text-sm">{youngAdultsAvg}</span>
               </div>
-            ) : (
-              <p className="text-xs text-muted-foreground italic">No Young Adults data available.</p>
-            );
-          })()}
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ width: "100%", backgroundColor: "#8B6DAF" }}
+                />
+              </div>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground italic">
+              No Young Adults data available for this selection.
+            </p>
+          )}
         </div>
       </div>
     </div>
