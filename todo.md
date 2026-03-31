@@ -157,3 +157,6 @@
 
 ## Email Branding Fix (Round 14)
 - [x] Update Weekly Report email template to show Lumen Metrix logo and name instead of "Manus" — Replaced plain-text notifyOwner content with a full branded HTML email: dark header with SVG logo + LUMEN METRIX wordmark, amber title bar, totals table, campus breakdown table, AI summary section, and footer. All 58 tests passing.
+
+## Email HTML Rendering Fix (Round 15)
+- [x] Fix Weekly Report email: HTML below the header was rendering as raw source. Converted body to Markdown format (pipe tables, bold, headers, horizontal rules) since the Manus notification service renders Markdown. Kept inline SVG header block which the service renders correctly. All 58 tests passing.
