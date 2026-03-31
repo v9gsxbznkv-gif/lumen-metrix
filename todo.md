@@ -289,3 +289,12 @@
 - [x] Online data confirmed present in attendance table (490 avg weekly for 2025)
 - [x] All 107 tests passing
 - [x] Deploy fix
+
+## Round 32: Align Avg Weekly Attendance Calculation
+
+- [x] Dashboard reads from attendance table subgroup=Total campus=All Campuses (pre-computed PCO value: 3,951)
+- [x] Annual Report was summing Canton+Jasper+Online individually (2,901+569+490=3,960 — 9 off due to rounding)
+- [x] Fixed Annual Report to use the All Campuses row for avgWeekly (same as Dashboard) — both now show 3,951
+- [x] Per-campus breakdown cards still show individual campus values correctly
+- [x] All 107 tests passing
+- [x] Deploy fix
