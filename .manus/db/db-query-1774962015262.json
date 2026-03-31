@@ -1,0 +1,175 @@
+{
+  "query": "SELECT year, metric, SUM(total) as total FROM next_steps WHERE year <= 2025 AND metric IN ('FTG', 'Salvations', 'Baptisms') GROUP BY year, metric ORDER BY year, metric",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, metric, SUM(total) as total FROM next_steps WHERE year <= 2025 AND metric IN ('FTG', 'Salvations', 'Baptisms') GROUP BY year, metric ORDER BY year, metric",
+  "rows": [
+    {
+      "year": "2014",
+      "metric": "Baptisms",
+      "total": "450"
+    },
+    {
+      "year": "2014",
+      "metric": "FTG",
+      "total": "5192"
+    },
+    {
+      "year": "2014",
+      "metric": "Salvations",
+      "total": "646"
+    },
+    {
+      "year": "2016",
+      "metric": "Baptisms",
+      "total": "666"
+    },
+    {
+      "year": "2016",
+      "metric": "FTG",
+      "total": "5228"
+    },
+    {
+      "year": "2016",
+      "metric": "Salvations",
+      "total": "666"
+    },
+    {
+      "year": "2017",
+      "metric": "Baptisms",
+      "total": "284"
+    },
+    {
+      "year": "2017",
+      "metric": "FTG",
+      "total": "5272"
+    },
+    {
+      "year": "2017",
+      "metric": "Salvations",
+      "total": "950"
+    },
+    {
+      "year": "2018",
+      "metric": "Baptisms",
+      "total": "396"
+    },
+    {
+      "year": "2018",
+      "metric": "FTG",
+      "total": "5830"
+    },
+    {
+      "year": "2018",
+      "metric": "Salvations",
+      "total": "748"
+    },
+    {
+      "year": "2019",
+      "metric": "Baptisms",
+      "total": "456"
+    },
+    {
+      "year": "2019",
+      "metric": "FTG",
+      "total": "5616"
+    },
+    {
+      "year": "2019",
+      "metric": "Salvations",
+      "total": "826"
+    },
+    {
+      "year": "2020",
+      "metric": "Baptisms",
+      "total": "34"
+    },
+    {
+      "year": "2020",
+      "metric": "FTG",
+      "total": "1104"
+    },
+    {
+      "year": "2020",
+      "metric": "Salvations",
+      "total": "14"
+    },
+    {
+      "year": "2021",
+      "metric": "Baptisms",
+      "total": "12"
+    },
+    {
+      "year": "2021",
+      "metric": "FTG",
+      "total": "2872"
+    },
+    {
+      "year": "2021",
+      "metric": "Salvations",
+      "total": "22"
+    },
+    {
+      "year": "2022",
+      "metric": "Baptisms",
+      "total": "232"
+    },
+    {
+      "year": "2022",
+      "metric": "FTG",
+      "total": "5130"
+    },
+    {
+      "year": "2022",
+      "metric": "Salvations",
+      "total": "542"
+    },
+    {
+      "year": "2023",
+      "metric": "Baptisms",
+      "total": "244"
+    },
+    {
+      "year": "2023",
+      "metric": "FTG",
+      "total": "5742"
+    },
+    {
+      "year": "2023",
+      "metric": "Salvations",
+      "total": "652"
+    },
+    {
+      "year": "2024",
+      "metric": "Baptisms",
+      "total": "456"
+    },
+    {
+      "year": "2024",
+      "metric": "FTG",
+      "total": "6264"
+    },
+    {
+      "year": "2024",
+      "metric": "Salvations",
+      "total": "694"
+    },
+    {
+      "year": "2025",
+      "metric": "Baptisms",
+      "total": "618"
+    },
+    {
+      "year": "2025",
+      "metric": "FTG",
+      "total": "6904"
+    },
+    {
+      "year": "2025",
+      "metric": "Salvations",
+      "total": "554"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tmetric\ttotal\n2014\tBaptisms\t450\n2014\tFTG\t5192\n2014\tSalvations\t646\n2016\tBaptisms\t666\n2016\tFTG\t5228\n2016\tSalvations\t666\n2017\tBaptisms\t284\n2017\tFTG\t5272\n2017\tSalvations\t950\n2018\tBaptisms\t396\n2018\tFTG\t5830\n2018\tSalvations\t748\n2019\tBaptisms\t456\n2019\tFTG\t5616\n2019\tSalvations\t826\n2020\tBaptisms\t34\n2020\tFTG\t1104\n2020\tSalvations\t14\n2021\tBaptisms\t12\n2021\tFTG\t2872\n2021\tSalvations\t22\n2022\tBaptisms\t232\n2022\tFTG\t5130\n2022\tSalvations\t542\n2023\tBaptisms\t244\n2023\tFTG\t5742\n2023\tSalvations\t652\n2024\tBaptisms\t456\n2024\tFTG\t6264\n2024\tSalvations\t694\n2025\tBaptisms\t618\n2025\tFTG\t6904\n2025\tSalvations\t554\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

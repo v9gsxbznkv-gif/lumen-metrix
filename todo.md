@@ -251,3 +251,9 @@
 - [x] Fix metric name mismatch: "First-Time Guests" → "FTG" in annual report queries
 - [x] Verify monthly attendance data is queried correctly (2,545 rows present in DB)
 - [x] All 107 tests passing after fix
+
+## Round 28 Data Source Strategy
+
+- [x] Verified: annual report uses spreadsheet data for FTG/salvations/baptisms for 2025 and earlier (33 rows in next_steps table)
+- [x] Verified: annual report uses PCO data for FTG/salvations/baptisms for 2026 and later (metric name fix: "FTG" instead of "First-Time Guests")
+- [x] Deploy with public visibility
