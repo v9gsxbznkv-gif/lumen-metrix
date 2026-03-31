@@ -479,6 +479,69 @@ export default function AnnualReportTab() {
         </div>
 
         {/* ══════════════════════════════════════════════════════════
+            1.5. DEMOGRAPHICS (Kids, Students, Young Adults)
+           ══════════════════════════════════════════════════════════ */}
+        {[data.demographics.kids, data.demographics.students, data.demographics.youngAdults].map((demo) => (
+          <div key={demo.name}>
+            <SectionHeader icon={Users} title={demo.name} />
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+              <div className="bg-card rounded-lg p-3 border border-border/60">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Avg Weekly</p>
+                <p className="text-xl font-bold text-card-foreground">{fmtNum(demo.current.avgWeekly)}</p>
+                <YoYBadge pct={demo.yoy.avgWeekly.changePct} />
+              </div>
+              <div className="bg-card rounded-lg p-3 border border-border/60">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Canton</p>
+                <p className="text-xl font-bold" style={{ color: CANTON_COLOR }}>{fmtNum(demo.current.canton)}</p>
+              </div>
+              <div className="bg-card rounded-lg p-3 border border-border/60">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Jasper</p>
+                <p className="text-xl font-bold" style={{ color: JASPER_COLOR }}>{fmtNum(demo.current.jasper)}</p>
+              </div>
+              <div className="bg-card rounded-lg p-3 border border-border/60">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Total Annual</p>
+                <p className="text-xl font-bold text-card-foreground">{fmtNum(demo.current.total)}</p>
+              </div>
+            </div>
+
+            {/* Demographic Monthly Table */}
+            <div className="bg-card rounded-lg border border-border/60 overflow-x-auto mb-6 print:break-inside-avoid">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-border/60" style={{ background: "rgba(232,145,58,0.04)" }}>
+                    <th className="text-left px-3 py-2 font-medium text-muted-foreground">Month</th>
+                    <th className="text-right px-3 py-2 font-medium" style={{ color: CANTON_COLOR }}>Canton</th>
+                    <th className="text-right px-3 py-2 font-medium" style={{ color: JASPER_COLOR }}>Jasper</th>
+                    <th className="text-right px-3 py-2 font-medium text-card-foreground">Total</th>
+                    <th className="text-right px-3 py-2 font-medium text-muted-foreground">{selectedYear - 1}</th>
+                    <th className="text-right px-3 py-2 font-medium text-muted-foreground">YoY</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {demo.monthly.map((m, i) => {
+                    const prior = demo.monthlyPrior[i];
+                    const pct = prior && prior.total > 0 ? ((m.total - prior.total) / prior.total) * 100 : null;
+                    return (
+                      <tr key={i} className="border-b border-border/30 hover:bg-muted/30">
+                        <td className="px-3 py-1.5 font-medium text-card-foreground">{MONTH_FULL[i]}</td>
+                        <td className="text-right px-3 py-1.5">{fmtNum(m.canton)}</td>
+                        <td className="text-right px-3 py-1.5">{fmtNum(m.jasper)}</td>
+                        <td className="text-right px-3 py-1.5 font-semibold">{fmtNum(m.total)}</td>
+                        <td className="text-right px-3 py-1.5 text-muted-foreground">{fmtNum(prior?.total)}</td>
+                        <td className="text-right px-3 py-1.5">
+                          {pct !== null ? <YoYBadge pct={pct} /> : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ))}
+
+        {/* ══════════════════════════════════════════════════════════
             2. GIVING
            ══════════════════════════════════════════════════════════ */}
         <SectionHeader icon={DollarSign} title="Giving" />

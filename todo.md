@@ -264,3 +264,20 @@
 - [x] buildAttendanceMonthly: now sums all rows per month instead of filtering for "Total"
 - [x] buildAttendanceSummary: now sums all rows per year instead of filtering for "Total"
 - [x] All 107 tests passing
+
+## Round 29: Demographic Breakdowns in Annual Report
+
+- [x] Update annual report router to extract Kids, Students, Young Adults subgroups with monthly/annual aggregation
+- [x] Add DemographicBreakdown type to annual report response
+- [x] Update AnnualReportTab to display Kids, Students, Young Adults sections with charts and tables
+- [x] Add monthly breakdown tables for each demographic
+- [x] All 107 tests passing
+- [x] Deploy
+
+## Round 30: Fix Inflated Weekly Attendance in Annual Report
+
+- [x] Fixed annual report aggregation: now filters for main check-in subgroups only ("Revolution Canton Check-In", "Revolution Jasper Check-In", "Online") instead of summing all demographic subgroups
+- [x] Updated buildAttendanceMonthly and buildAttendanceSummary to use only main check-in rows
+- [x] Verified: attendance numbers now match expected totals (not inflated)
+- [x] All 107 tests passing
+- [x] Ready to deploy

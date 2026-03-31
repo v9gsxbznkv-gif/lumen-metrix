@@ -1,0 +1,8 @@
+{
+  "query": "SELECT year, month, campus, SUM(headcount) as total_headcount, COUNT(*) as row_count FROM attendance_weekly WHERE year = 2025 GROUP BY year, month, campus ORDER BY month, campus LIMIT 20",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, month, campus, SUM(headcount) as total_headcount, COUNT(*) as row_count FROM attendance_weekly WHERE year = 2025 GROUP BY year, month, campus ORDER BY month, campus LIMIT 20",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'month' in 'group statement'"
+  ]
+}

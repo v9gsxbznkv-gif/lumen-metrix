@@ -1,0 +1,60 @@
+{
+  "query": "SELECT weekNumber, COUNT(*) as row_count, SUM(CAST(headcount AS UNSIGNED)) as total_headcount FROM attendance_weekly WHERE year = 2025 GROUP BY weekNumber ORDER BY weekNumber LIMIT 10",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekNumber, COUNT(*) as row_count, SUM(CAST(headcount AS UNSIGNED)) as total_headcount FROM attendance_weekly WHERE year = 2025 GROUP BY weekNumber ORDER BY weekNumber LIMIT 10",
+  "rows": [
+    {
+      "weekNumber": "1",
+      "row_count": "7",
+      "total_headcount": "885"
+    },
+    {
+      "weekNumber": "2",
+      "row_count": "6",
+      "total_headcount": "1448"
+    },
+    {
+      "weekNumber": "3",
+      "row_count": "7",
+      "total_headcount": "1625"
+    },
+    {
+      "weekNumber": "4",
+      "row_count": "9",
+      "total_headcount": "3381"
+    },
+    {
+      "weekNumber": "5",
+      "row_count": "10",
+      "total_headcount": "1727"
+    },
+    {
+      "weekNumber": "6",
+      "row_count": "7",
+      "total_headcount": "1496"
+    },
+    {
+      "weekNumber": "7",
+      "row_count": "2",
+      "total_headcount": "984"
+    },
+    {
+      "weekNumber": "8",
+      "row_count": "7",
+      "total_headcount": "1608"
+    },
+    {
+      "weekNumber": "9",
+      "row_count": "8",
+      "total_headcount": "1674"
+    },
+    {
+      "weekNumber": "10",
+      "row_count": "7",
+      "total_headcount": "1383"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\trow_count\ttotal_headcount\n1\t7\t885\n2\t6\t1448\n3\t7\t1625\n4\t9\t3381\n5\t10\t1727\n6\t7\t1496\n7\t2\t984\n8\t7\t1608\n9\t8\t1674\n10\t7\t1383\n",
+  "stderr": "",
+  "execution_time_ms": 70
+}

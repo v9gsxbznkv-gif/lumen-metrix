@@ -1,0 +1,34 @@
+{
+  "query": "SELECT DISTINCT subgroup FROM attendance_monthly WHERE year = 2024 AND (subgroup LIKE '%Kids%' OR subgroup LIKE '%Student%' OR subgroup LIKE '%Young%' OR subgroup LIKE '%Adult%') ORDER BY subgroup",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT subgroup FROM attendance_monthly WHERE year = 2024 AND (subgroup LIKE '%Kids%' OR subgroup LIKE '%Student%' OR subgroup LIKE '%Young%' OR subgroup LIKE '%Adult%') ORDER BY subgroup",
+  "rows": [
+    {
+      "subgroup": "Adults"
+    },
+    {
+      "subgroup": "Kids"
+    },
+    {
+      "subgroup": "RevStudents | Canton Campus"
+    },
+    {
+      "subgroup": "RevStudents | Jasper Campus"
+    },
+    {
+      "subgroup": "RevStudents Mission Camp: Revolution Canton"
+    },
+    {
+      "subgroup": "RevStudents Mission Camp: Revolution Jasper"
+    },
+    {
+      "subgroup": "Students"
+    },
+    {
+      "subgroup": "Young Adults"
+    }
+  ],
+  "messages": [],
+  "stdout": "subgroup\nAdults\nKids\nRevStudents | Canton Campus\nRevStudents | Jasper Campus\nRevStudents Mission Camp: Revolution Canton\nRevStudents Mission Camp: Revolution Jasper\nStudents\nYoung Adults\n",
+  "stderr": "",
+  "execution_time_ms": 67
+}

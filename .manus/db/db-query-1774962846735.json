@@ -1,0 +1,88 @@
+{
+  "query": "SELECT DISTINCT subgroup FROM attendance_monthly WHERE year = 2025 ORDER BY subgroup",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT subgroup FROM attendance_monthly WHERE year = 2025 ORDER BY subgroup",
+  "rows": [
+    {
+      "subgroup": "Abide Men's Night"
+    },
+    {
+      "subgroup": "Abide Women's Night"
+    },
+    {
+      "subgroup": "Adults"
+    },
+    {
+      "subgroup": "Babies"
+    },
+    {
+      "subgroup": "Campground"
+    },
+    {
+      "subgroup": "Childcare | Canton Campus"
+    },
+    {
+      "subgroup": "Childcare | Jasper Campus"
+    },
+    {
+      "subgroup": "Cove"
+    },
+    {
+      "subgroup": "Elem Reruns"
+    },
+    {
+      "subgroup": "ESL Class"
+    },
+    {
+      "subgroup": "Kids"
+    },
+    {
+      "subgroup": "Parent Night | Canton Campus"
+    },
+    {
+      "subgroup": "Parent Night | Jasper Campus"
+    },
+    {
+      "subgroup": "Pre-K"
+    },
+    {
+      "subgroup": "Revolution Canton Check-In"
+    },
+    {
+      "subgroup": "Revolution Jasper Check-In"
+    },
+    {
+      "subgroup": "RevStudents | Canton Campus"
+    },
+    {
+      "subgroup": "RevStudents | Jasper Campus"
+    },
+    {
+      "subgroup": "RevStudents Mission Camp: Revolution Canton"
+    },
+    {
+      "subgroup": "RevStudents Mission Camp: Revolution Jasper"
+    },
+    {
+      "subgroup": "Students"
+    },
+    {
+      "subgroup": "Test Gathering"
+    },
+    {
+      "subgroup": "Toddlers"
+    },
+    {
+      "subgroup": "Treehouse"
+    },
+    {
+      "subgroup": "YA Gathering"
+    },
+    {
+      "subgroup": "Young Adults"
+    }
+  ],
+  "messages": [],
+  "stdout": "subgroup\nAbide Men's Night\nAbide Women's Night\nAdults\nBabies\nCampground\nChildcare | Canton Campus\nChildcare | Jasper Campus\nCove\nElem Reruns\nESL Class\nKids\nParent Night | Canton Campus\nParent Night | Jasper Campus\nPre-K\nRevolution Canton Check-In\nRevolution Jasper Check-In\nRevStudents | Canton Campus\nRevStudents | Jasper Campus\nRevStudents Mission Camp: Revolution Canton\nRevStudents Mission Camp: Revolution Jasper\nStudents\nTest Gathering\nToddlers\nTreehouse\nYA Gathering\nYoung Adults\n",
+  "stderr": "",
+  "execution_time_ms": 63
+}

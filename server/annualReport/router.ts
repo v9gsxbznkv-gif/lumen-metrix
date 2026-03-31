@@ -67,6 +67,18 @@ interface EventPerformance {
   source: "override" | "weekly" | "estimate";
 }
 
+interface DemographicBreakdown {
+  name: string; // "Kids", "Students", "Young Adults"
+  current: AnnualSummary;
+  prior: AnnualSummary;
+  monthly: MonthlyRow[];
+  monthlyPrior: MonthlyRow[];
+  yoy: {
+    avgWeekly: YoYComparison;
+    total: YoYComparison;
+  };
+}
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 const MONTH_NAMES = [
@@ -185,9 +197,12 @@ export const annualReportRouter = router({
       function buildAttendanceMonthly(yr: number): MonthlyRow[] {
         return Array.from({ length: 12 }, (_, i) => {
           const m = i + 1;
-          // Sum all subgroups for this month (no "Total" row exists)
+          // Use only the main check-in subgroups (not individual demographics)
           const rows = attMonthlyRows.filter(
-            (r) => r.year === yr && r.month === m
+            (r) => r.year === yr && r.month === m && 
+                   (r.subgroup === "Revolution Canton Check-In" || 
+                    r.subgroup === "Revolution Jasper Check-In" ||
+                    r.subgroup === "Online")
           );
           const canton = sumField(rows.filter((r) => r.campus === "Canton"), (r) => r.avgWeekly ?? 0);
           const jasper = sumField(rows.filter((r) => r.campus === "Jasper"), (r) => r.avgWeekly ?? 0);
@@ -197,9 +212,12 @@ export const annualReportRouter = router({
       }
 
       function buildAttendanceSummary(yr: number): AnnualSummary {
-        // Sum all rows for this year (no "Total" row exists)
+        // Use only the main check-in subgroups (not individual demographics)
         const totalRows = attRows.filter(
-          (r) => r.year === yr && r.campus !== "All Campuses"
+          (r) => r.year === yr && r.campus !== "All Campuses" &&
+                 (r.subgroup === "Revolution Canton Check-In" || 
+                  r.subgroup === "Revolution Jasper Check-In" ||
+                  r.subgroup === "Online")
         );
         const canton = sumField(totalRows.filter((r) => r.campus === "Canton"), (r) => r.avgWeekly ?? 0);
         const jasper = sumField(totalRows.filter((r) => r.campus === "Jasper"), (r) => r.avgWeekly ?? 0);
@@ -214,7 +232,60 @@ export const annualReportRouter = router({
       const attMonthly = buildAttendanceMonthly(year);
       const attMonthlyPrior = buildAttendanceMonthly(priorYear);
 
-      // ── 2. GIVING ─────────────────────────────────────────────
+      // ── DEMOGRAPHICS (Kids, Students, Young Adults) ──────────
+
+      function buildDemographicMonthly(yr: number, subgroupName: string): MonthlyRow[] {
+        return Array.from({ length: 12 }, (_, i) => {
+          const m = i + 1;
+          const rows = attMonthlyRows.filter(
+            (r) => r.year === yr && r.month === m && r.subgroup === subgroupName
+          );
+          const canton = sumField(rows.filter((r) => r.campus === "Canton"), (r) => r.avgWeekly ?? 0);
+          const jasper = sumField(rows.filter((r) => r.campus === "Jasper"), (r) => r.avgWeekly ?? 0);
+          const online = sumField(rows.filter((r) => r.campus === "Online"), (r) => r.avgWeekly ?? 0);
+          return { month: m, canton, jasper, online, total: canton + jasper + online };
+        });
+      }
+
+      function buildDemographicSummary(yr: number, subgroupName: string): AnnualSummary {
+        const rows = attRows.filter(
+          (r) => r.year === yr && r.subgroup === subgroupName && r.campus !== "All Campuses"
+        );
+        const canton = sumField(rows.filter((r) => r.campus === "Canton"), (r) => r.avgWeekly ?? 0);
+        const jasper = sumField(rows.filter((r) => r.campus === "Jasper"), (r) => r.avgWeekly ?? 0);
+        const online = sumField(rows.filter((r) => r.campus === "Online"), (r) => r.avgWeekly ?? 0);
+        const avgWeekly = canton + jasper + online;
+        const totalAtt = sumField(rows, (r) => r.total ?? 0);
+        return { total: totalAtt, avgWeekly, canton, jasper, online };
+      }
+
+      function buildDemographic(yr: number, subgroupName: string): DemographicBreakdown {
+        const current = buildDemographicSummary(yr, subgroupName);
+        const prior = buildDemographicSummary(yr - 1, subgroupName);
+        const monthly = buildDemographicMonthly(yr, subgroupName);
+        const monthlyPrior = buildDemographicMonthly(yr - 1, subgroupName);
+        return {
+          name: subgroupName,
+          current,
+          prior,
+          monthly,
+          monthlyPrior,
+          yoy: {
+            avgWeekly: { current: current.avgWeekly, prior: prior.avgWeekly, change: current.avgWeekly - prior.avgWeekly, changePct: pctChange(current.avgWeekly, prior.avgWeekly) } as YoYComparison,
+            total: { current: current.total, prior: prior.total, change: current.total - prior.total, changePct: pctChange(current.total, prior.total) } as YoYComparison,
+          },
+        };
+      }
+
+      const demographics = {
+        kids: buildDemographic(year, "Kids"),
+        students: buildDemographic(year, "Students"),
+        youngAdults: buildDemographic(year, "Young Adults"),
+      };
+
+      // ── 2. DEMOGRAPHICS (Kids, Students, Young Adults) ────────
+
+      // ── 3. GIVING ─────────────────────────────────────────────
 
       function buildGivingMonthly(yr: number): MonthlyRow[] {
         return Array.from({ length: 12 }, (_, i) => {
@@ -472,6 +543,7 @@ export const annualReportRouter = router({
           monthly: givMonthly,
           monthlyPrior: givMonthlyPrior,
         },
+        demographics,
         volunteers: {
           current: volCurrent,
           prior: volPrior,

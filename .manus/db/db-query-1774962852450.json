@@ -1,0 +1,22 @@
+{
+  "query": "SELECT campus, subgroup, COUNT(*) as row_count, SUM(CAST(avgWeekly AS UNSIGNED)) as total_avg FROM attendance_monthly WHERE year = 2025 AND (subgroup LIKE '%Check-In%' OR subgroup = 'Total') GROUP BY campus, subgroup",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT campus, subgroup, COUNT(*) as row_count, SUM(CAST(avgWeekly AS UNSIGNED)) as total_avg FROM attendance_monthly WHERE year = 2025 AND (subgroup LIKE '%Check-In%' OR subgroup = 'Total') GROUP BY campus, subgroup",
+  "rows": [
+    {
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "row_count": "156",
+      "total_avg": "130413"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "row_count": "153",
+      "total_avg": "30027"
+    }
+  ],
+  "messages": [],
+  "stdout": "campus\tsubgroup\trow_count\ttotal_avg\nCanton\tRevolution Canton Check-In\t156\t130413\nJasper\tRevolution Jasper Check-In\t153\t30027\n",
+  "stderr": "",
+  "execution_time_ms": 69
+}
