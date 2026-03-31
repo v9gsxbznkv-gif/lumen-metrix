@@ -169,3 +169,8 @@
 - [x] Verify giving_monthly has PCO rows for 2026 months 1-3 — Jan: $832,688 | Feb: $784,603 | Mar: $905,251
 - [x] Fix syncGiving and syncEvents to default to current year only (prevent full history pull on future syncs)
 - [x] Fix Weekly Report getMonthlySnapshot to map PCO event names (Revolution *Check-In, RevStudents|*, Childcare|*) to canonical attendance categories — all 58 tests passing
+
+## Events Page Fix (Round 17)
+- [x] Hide future 2026 events that haven't happened yet — getEventMetrics now returns null if eventDate > TODAY; entire event-year row is skipped
+- [x] Fix Christmas Eve vs Christmas Sunday data duplication — both fall in December so they shared identical monthly data. Merged into single "Christmas Season" entry using christmas_eve date
+- [x] Fix Events chart — chart now filters out years with zero attendance before plotting; Giving axis uses $K formatting; only past events with real data shown
