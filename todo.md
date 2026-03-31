@@ -201,4 +201,12 @@
 - [x] Update Events page: uses actual event-week data from attendance_weekly/giving_weekly when available, falls back to monthly avg_weekly/division
 - [x] Update Weekly Reports: uses actual weekly snapshots when available, falls back to monthly estimates; labels data source in report
 - [x] Write 33 event tests + 9 weekly report tests (91 total passing)
-- [ ] Checkpoint and deploy
+- [x] Checkpoint and deploy
+
+## Weekly Sync Rate Limiting Fix (Round 21)
+- [x] Add 250ms delay between PCO API requests (increased from 210ms)
+- [x] Add 429 retry with exponential backoff: reads Retry-After header, falls back to 2s/4s/8s/.../60s backoff, up to 8 retries
+- [x] Add resume-from-checkpoint: giving sync resumes from latest synced weekStartDate; attendance sync tracks synced event-week keys
+- [x] Add 100ms inter-event pause in attendance sync to reduce burst pressure
+- [x] 91 tests passing
+- [x] Apply same rate limiting to PCO client (monthly sync uses same PcoClient, so 429 backoff applies automatically)
