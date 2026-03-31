@@ -5,8 +5,15 @@
  * then aggregates them into per-week rows in attendance_weekly and giving_weekly.
  *
  * PCO Check-Ins hierarchy:
- *   Event → EventPeriod (weekly session) → has regular_count, guest_count, volunteer_count
- *   Each EventPeriod has a starts_at timestamp that tells us the exact Sunday.
+ *   Event → EventPeriod (weekly session) → LocationEventPeriod (per room)
+ *
+ *   For KIDS events (Childcare | Canton, Childcare | Jasper):
+ *     We drill into each EventPeriod's location_event_periods to get per-room counts.
+ *     Each LocationEventPeriod has regular_count, guest_count, volunteer_count and
+ *     a linked Location with a name (e.g. "Babies", "Toddlers", "The Campground").
+ *
+ *   For non-kids events (RevStudents, YA Gathering, Revolution Check-In):
+ *     We use the EventPeriod-level totals as before.
  *
  * PCO Giving:
  *   Donations → each has received_at, amount_cents, payment_status
@@ -56,6 +63,30 @@ function mapEventToCampus(eventName: string): string {
   return "Other";
 }
 
+/**
+ * Returns true if this event is a kids/childcare event that should be
+ * broken down by room/location rather than stored as a single top-level row.
+ */
+function isKidsEvent(eventName: string): boolean {
+  const lower = eventName.toLowerCase();
+  return lower.includes("childcare") || lower.includes("revkids") || lower.includes("rev kids");
+}
+
+/**
+ * Normalize historical subgroup names to match the canonical names used in the
+ * breakdown table. This ensures old spreadsheet-imported data aligns with PCO data.
+ *
+ * Historical → Canonical mappings:
+ *   "Elem Reruns" → "ReRuns"
+ *   "Campground"  → "The Campground"
+ */
+export function normalizeSubgroupName(name: string): string {
+  const n = name.trim();
+  if (n === "Elem Reruns") return "ReRuns";
+  if (n === "Campground") return "The Campground";
+  return n;
+}
+
 /** Default: start of 2023 */
 const DEFAULT_DATE_FROM = "2023-01-01";
 
@@ -93,7 +124,7 @@ export async function syncWeeklyAttendance(
       await onProgress(22, `Found ${events.length} check-in events. Fetching weekly periods...`, 0);
     }
 
-    // Accumulate: key = "YYYY-MM-DD|campus|eventName" → counts
+    // Accumulate: key = "YYYY-MM-DD|campus|subgroupName" → counts
     const weeklyMap = new Map<string, {
       year: number;
       weekNumber: number;
@@ -143,6 +174,9 @@ export async function syncWeeklyAttendance(
 
       console.log(`[PCO Weekly Sync]   Got ${periodsResult.data.length} event periods for ${eventName}`);
 
+      const campus = mapEventToCampus(eventName);
+      const isKids = isKidsEvent(eventName);
+
       for (const period of periodsResult.data) {
         recordsProcessed++;
         const attrs = (period as any).attributes;
@@ -155,34 +189,135 @@ export async function syncWeeklyAttendance(
         const year = sunday.getFullYear();
         const weekNumber = getISOWeekNumber(sunday);
 
-        const regularCount = attrs.regular_count || 0;
-        const guestCount = attrs.guest_count || 0;
-        const volunteerCount = attrs.volunteer_count || 0;
-        const totalCount = regularCount + guestCount + volunteerCount;
+        if (isKids) {
+          // -------------------------------------------------------
+          // KIDS EVENT: drill into location_event_periods for per-room counts
+          // -------------------------------------------------------
+          const periodId = (period as any).id;
+          let locationPeriods;
+          try {
+            locationPeriods = await client.paginateAll(
+              `/check-ins/v2/events/${eventId}/event_periods/${periodId}/location_event_periods`,
+              { include: "location", per_page: 100 }
+            );
+          } catch (err: any) {
+            console.warn(`[PCO Weekly Sync] Skipping location periods for ${eventName} period ${periodId}: ${err.message}`);
+            continue;
+          }
 
-        if (totalCount === 0) continue;
+          // Build a map of location_id → location name from included
+          const locationNames = new Map<string, string>();
+          for (const inc of locationPeriods.included || []) {
+            if ((inc as any).type === "Location") {
+              const locId = (inc as any).id;
+              const locName = (inc as any).attributes?.name;
+              if (locId && locName) {
+                locationNames.set(locId, locName);
+              }
+            }
+          }
 
-        const campus = mapEventToCampus(eventName);
-        const key = `${weekStartDate}|${campus}|${eventName}`;
+          for (const locPeriod of locationPeriods.data) {
+            const lpAttrs = (locPeriod as any).attributes;
+            const regularCount = lpAttrs?.regular_count || 0;
+            const guestCount = lpAttrs?.guest_count || 0;
+            const volunteerCount = lpAttrs?.volunteer_count || 0;
+            const totalCount = regularCount + guestCount + volunteerCount;
 
-        const existing = weeklyMap.get(key);
-        if (existing) {
-          existing.headcount += totalCount;
-          existing.regularCount += regularCount;
-          existing.guestCount += guestCount;
-          existing.volunteerCount += volunteerCount;
+            if (totalCount === 0) continue;
+
+            // Get location name from relationship
+            const locationId = (locPeriod as any).relationships?.location?.data?.id;
+            const rawLocationName = locationId ? locationNames.get(locationId) : null;
+            if (!rawLocationName) continue;
+
+            // Skip folder-type locations (they are containers, not rooms)
+            // We detect folders by checking if the name matches a known folder pattern
+            // or if the location has kind="Folder" (we can't easily check that here,
+            // so we rely on the fact that folder locations typically have 0 counts)
+            const locationName = normalizeSubgroupName(rawLocationName);
+
+            const key = `${weekStartDate}|${campus}|${locationName}`;
+            const existing = weeklyMap.get(key);
+            if (existing) {
+              existing.headcount += totalCount;
+              existing.regularCount += regularCount;
+              existing.guestCount += guestCount;
+              existing.volunteerCount += volunteerCount;
+            } else {
+              weeklyMap.set(key, {
+                year,
+                weekNumber,
+                weekStartDate,
+                campus,
+                subgroup: locationName,
+                headcount: totalCount,
+                regularCount,
+                guestCount,
+                volunteerCount,
+              });
+            }
+          }
+
+          // Also store the top-level Childcare event total (for Kids aggregate)
+          const totalRegular = attrs.regular_count || 0;
+          const totalGuest = attrs.guest_count || 0;
+          const totalVolunteer = attrs.volunteer_count || 0;
+          const totalCount = totalRegular + totalGuest + totalVolunteer;
+          if (totalCount > 0) {
+            const key = `${weekStartDate}|${campus}|${eventName}`;
+            const existing = weeklyMap.get(key);
+            if (existing) {
+              existing.headcount += totalCount;
+              existing.regularCount += totalRegular;
+              existing.guestCount += totalGuest;
+              existing.volunteerCount += totalVolunteer;
+            } else {
+              weeklyMap.set(key, {
+                year,
+                weekNumber,
+                weekStartDate,
+                campus,
+                subgroup: eventName,
+                headcount: totalCount,
+                regularCount: totalRegular,
+                guestCount: totalGuest,
+                volunteerCount: totalVolunteer,
+              });
+            }
+          }
+
         } else {
-          weeklyMap.set(key, {
-            year,
-            weekNumber,
-            weekStartDate,
-            campus,
-            subgroup: eventName,
-            headcount: totalCount,
-            regularCount,
-            guestCount,
-            volunteerCount,
-          });
+          // -------------------------------------------------------
+          // NON-KIDS EVENT: use event period totals as before
+          // -------------------------------------------------------
+          const regularCount = attrs.regular_count || 0;
+          const guestCount = attrs.guest_count || 0;
+          const volunteerCount = attrs.volunteer_count || 0;
+          const totalCount = regularCount + guestCount + volunteerCount;
+
+          if (totalCount === 0) continue;
+
+          const key = `${weekStartDate}|${campus}|${eventName}`;
+          const existing = weeklyMap.get(key);
+          if (existing) {
+            existing.headcount += totalCount;
+            existing.regularCount += regularCount;
+            existing.guestCount += guestCount;
+            existing.volunteerCount += volunteerCount;
+          } else {
+            weeklyMap.set(key, {
+              year,
+              weekNumber,
+              weekStartDate,
+              campus,
+              subgroup: eventName,
+              headcount: totalCount,
+              regularCount,
+              guestCount,
+              volunteerCount,
+            });
+          }
         }
       }
     }
@@ -307,15 +442,13 @@ export async function syncWeeklyGiving(
       await onProgress(62, "Fetching donation records from PCO...", 0);
     }
 
-    // Fetch all donations in date range
-    const donationParams: Record<string, any> = {
-      per_page: 100,
-      order: "-received_at",
+    // Fetch donations with date filter
+    const donationsResult = await client.paginateAll("/giving/v2/donations", {
       "where[received_at][gte]": effectiveDateFrom,
       "where[received_at][lte]": effectiveDateTo,
-    };
+      per_page: 100,
+    });
 
-    const donationsResult = await client.paginateAll("/giving/v2/donations", donationParams);
     const donations = donationsResult.data;
     console.log(`[PCO Weekly Giving] Got ${donations.length} donations`);
 
@@ -323,12 +456,11 @@ export async function syncWeeklyGiving(
       await onProgress(70, `Processing ${donations.length} donations...`, 0);
     }
 
-    // Aggregate by week/campus
+    // Aggregate by week
     const weeklyMap = new Map<string, {
       year: number;
       weekNumber: number;
       weekStartDate: string;
-      campus: string;
       total: number;
       general: number;
       designated: number;
@@ -339,38 +471,31 @@ export async function syncWeeklyGiving(
       recordsProcessed++;
       const attrs = (donation as any).attributes;
       const receivedAt = attrs?.received_at;
-      if (!receivedAt) continue;
+      const paymentStatus = attrs?.payment_status;
+      const amountCents = attrs?.amount_cents || 0;
 
-      // Only count completed donations
-      const status = attrs.payment_status;
-      if (status && status !== "succeeded" && status !== "received") continue;
-
-      const amountCents = attrs.amount_cents || 0;
-      const amountDollars = amountCents / 100;
-      if (amountDollars <= 0) continue;
+      // Only count completed/succeeded payments
+      if (!receivedAt || !["succeeded", "confirmed", "deposited"].includes(paymentStatus)) continue;
+      if (amountCents <= 0) continue;
 
       const date = new Date(receivedAt);
       const sunday = getSunday(date);
       const weekStartDate = formatDate(sunday);
       const year = sunday.getFullYear();
       const weekNumber = getISOWeekNumber(sunday);
+      const amountDollars = amountCents / 100;
 
-      // PCO doesn't easily expose campus per donation without includes;
-      // use "All Campuses" as the aggregate campus
-      const campus = "All Campuses";
-      const key = `${weekStartDate}|${campus}`;
-
+      const key = weekStartDate;
       const existing = weeklyMap.get(key);
       if (existing) {
         existing.total += amountDollars;
-        existing.general += amountDollars; // treat all as general unless we have fund data
+        existing.general += amountDollars; // Simplified: all treated as general
         existing.donationCount++;
       } else {
         weeklyMap.set(key, {
           year,
           weekNumber,
           weekStartDate,
-          campus,
           total: amountDollars,
           general: amountDollars,
           designated: 0,
@@ -391,7 +516,7 @@ export async function syncWeeklyGiving(
       const row = rows[i];
 
       if (onProgress && i % 20 === 0) {
-        const dbPct = 88 + Math.round((i / rows.length) * 8);
+        const dbPct = 88 + Math.round((i / rows.length) * 6);
         await onProgress(dbPct, `Saving giving rows (${i}/${rows.length})...`, recordsProcessed);
       }
 
@@ -402,15 +527,14 @@ export async function syncWeeklyGiving(
           .where(
             and(
               eq(givingWeekly.weekStartDate, row.weekStartDate),
-              eq(givingWeekly.campus, row.campus)
+              eq(givingWeekly.campus, "All Campuses")
             )
           )
           .limit(1);
 
         if (existingRows.length > 0) {
-          // Skip manually locked records — they've been corrected by the user
           if (existingRows[0].manualLock) {
-            console.log(`[PCO Weekly Giving] Skipping locked giving row: ${row.weekStartDate} ${row.campus}`);
+            console.log(`[PCO Weekly Giving] Skipping locked giving row: ${row.weekStartDate}`);
             continue;
           }
           await db
@@ -430,7 +554,7 @@ export async function syncWeeklyGiving(
             year: row.year,
             weekNumber: row.weekNumber,
             weekStartDate: row.weekStartDate,
-            campus: row.campus,
+            campus: "All Campuses",
             total: String(row.total.toFixed(2)),
             general: String(row.general.toFixed(2)),
             designated: String(row.designated.toFixed(2)),
@@ -469,7 +593,7 @@ export async function syncWeeklyGiving(
 }
 
 // ============================================================
-// Combined Weekly Sync
+// Combined Weekly Sync (attendance + giving)
 // ============================================================
 
 export async function syncAllWeekly(

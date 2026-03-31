@@ -63,16 +63,17 @@ function getSubgroupAvg(
 }
 
 export default function AttendanceTab() {
-  const data = useData();
-  const filters = data?.filters || { campus: "All Campuses" };
-  const latestYear = data?.latestYear ?? new Date().getFullYear();
+  const ctx = useData();
+  const data = ctx?.data;
+  const filters = ctx?.filters || { campus: "All Campuses" };
+  const latestYear = data?.meta?.years?.[data.meta.years.length - 1] ?? new Date().getFullYear();
 
   const demographicTrend = useMemo(() => {
     if (!data) return [];
     const years = data.attendance
       .filter((a) => a.subgroup === "Total" && a.campus === "All Campuses")
       .map((a) => a.year);
-    const uniqueYears = [...new Set(years)].sort((a, b) => a - b);
+    const uniqueYears = Array.from(new Set(years)).sort((a, b) => a - b);
 
     return uniqueYears.map((year) => {
       const row: Record<string, number> = { year };
@@ -87,7 +88,7 @@ export default function AttendanceTab() {
     if (!data) return [];
     const months = Array.from({ length: 12 }, (_, i) => i + 1);
     return months.map((month) => {
-      const row: Record<string, number> = { month: MONTH_NAMES[month - 1] };
+      const row: Record<string, any> = { month: MONTH_NAMES[month - 1] };
       ["Adults", "Kids", "Students"].forEach((sub) => {
         if (filters.campus === "All Campuses") {
           row[sub] = Math.round(
@@ -314,14 +315,17 @@ export default function AttendanceTab() {
                 stroke={SUBGROUP_COLORS[key]}
                 strokeWidth={2}
                 fill={`url(#att-grad-${key})`}
+                dot={{ r: 3 }}
               />
             ))}
           </AreaChart>
         </ResponsiveContainer>
       </div>
 
-      <div className="lg:col-span-2 bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-        <h3 className="section-title mb-3 sm:mb-4">Monthly Pattern — {latestYear}</h3>
+      <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <h3 className="section-title mb-3 sm:mb-4">
+          Monthly Pattern — {latestYear}
+        </h3>
         <ResponsiveContainer width="100%" height={220}>
           <LineChart data={monthlyPattern}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E8E5DE" />
@@ -356,9 +360,10 @@ export default function AttendanceTab() {
         </ResponsiveContainer>
       </div>
 
+      {/* Kids Breakdown Section */}
       <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         <h3 className="section-title mb-3 sm:mb-4">
-          Kids & Students Breakdown — {latestYear} Avg
+          Kids Breakdown — {latestYear} Avg
         </h3>
         <div className="space-y-3.5">
           {kidsBreakdown.length > 0 && kidsBreakdown.some((k) => k.avg > 0) ? (
@@ -407,6 +412,72 @@ export default function AttendanceTab() {
               Detailed kids data not available for this selection.
             </p>
           )}
+        </div>
+      </div>
+
+      {/* Students Breakdown Section */}
+      <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <h3 className="section-title mb-3 sm:mb-4">
+          Students — {latestYear} Avg
+        </h3>
+        <div className="space-y-2.5">
+          {["RevStudents | Canton Campus", "RevStudents | Jasper Campus"].map((subgroup) => {
+            const avg = getSubgroupAvg(data.attendance, latestYear, filters.campus, subgroup);
+            const cantonAvg = getSubgroupAvg(data.attendance, latestYear, filters.campus, "RevStudents | Canton Campus");
+            const jasperAvg = getSubgroupAvg(data.attendance, latestYear, filters.campus, "RevStudents | Jasper Campus");
+            const maxStudents = Math.max(cantonAvg, jasperAvg, 1);
+            
+            return avg > 0 ? (
+              <div key={subgroup}>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="font-medium text-foreground/80">
+                    {subgroup.replace(" | ", " — ")}
+                  </span>
+                  <span className="stat-value text-sm">{Math.round(avg)}</span>
+                </div>
+                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${Math.min(100, (avg / maxStudents) * 100)}%`,
+                      backgroundColor: "#4A7FB5",
+                    }}
+                  />
+                </div>
+              </div>
+            ) : null;
+          })}
+        </div>
+      </div>
+
+      {/* Young Adults Section */}
+      <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <h3 className="section-title mb-3 sm:mb-4">
+          Young Adults — {latestYear} Avg
+        </h3>
+        <div className="space-y-2.5">
+          {(() => {
+            const avg = getSubgroupAvg(data.attendance, latestYear, filters.campus, "YA Gathering");
+            return avg > 0 ? (
+              <div>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="font-medium text-foreground/80">YA Gathering</span>
+                  <span className="stat-value text-sm">{Math.round(avg)}</span>
+                </div>
+                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: "100%",
+                      backgroundColor: "#8B6DAF",
+                    }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground italic">No Young Adults data available.</p>
+            );
+          })()}
         </div>
       </div>
     </div>

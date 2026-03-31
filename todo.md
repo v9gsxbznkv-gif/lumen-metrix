@@ -316,11 +316,16 @@
 - [x] Update scheduler to use the configurable sync day instead of hardcoded Tuesday
 - [x] Add pco.updateSyncDay tRPC mutation for frontend to change sync day
 - [x] Make sync day selector interactive in SettingsTab with state management and toast notifications
+- [x] Update weeklySync.ts to pull room-level attendance via PCO LocationEventPeriod API
+- [x] Add normalizeSubgroupName function to fix historical name mismatches (Elem Reruns → ReRuns, Campground → The Campground)
 - [x] Build Kids & Students Breakdown table on Attendance page with all subgroups organized by campus and age group
   - Canton Thursday RevKids: Nursery, Toddlers, Pre-K, Elementary
   - Sunday RevKids Preschool: Babies, Young Toddlers, Older Toddlers, Pre-K
   - Sunday RevKids Elementary: The Campground, The Treehouse, The Cove, ReRuns
   - Jasper Preschool: Nursery, Pre-K
   - Jasper Elementary: Treehouse, Cove, ReRuns
+- [x] Add Students section (RevStudents | Canton Campus, RevStudents | Jasper Campus)
+- [x] Add Young Adults section (YA Gathering)
+- [x] Fix AttendanceTab context access (useData returns DataContextType, not DashboardData)
 - [x] All 107 tests passing
 - [x] Checkpoint and deploy
