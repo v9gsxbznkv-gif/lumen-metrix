@@ -63,38 +63,31 @@ function getSubgroupAvg(
 }
 
 export default function AttendanceTab() {
-  const { data, filters } = useData();
-
-  const filteredYears = useMemo(() => {
-    if (!data) return [];
-    return data.meta.years.filter(
-      (y) => y >= filters.yearStart && y <= filters.yearEnd
-    );
-  }, [data, filters]);
-
-  const latestYear = useMemo(
-    () => filteredYears[filteredYears.length - 1] ?? 2026,
-    [filteredYears]
-  );
+  const data = useData();
+  const filters = data?.filters || { campus: "All Campuses" };
+  const latestYear = data?.latestYear ?? new Date().getFullYear();
 
   const demographicTrend = useMemo(() => {
     if (!data) return [];
-    return filteredYears.map((year) => {
-      const row: Record<string, number | string> = { year };
+    const years = data.attendance
+      .filter((a) => a.subgroup === "Total" && a.campus === "All Campuses")
+      .map((a) => a.year);
+    const uniqueYears = [...new Set(years)].sort((a, b) => a - b);
+
+    return uniqueYears.map((year) => {
+      const row: Record<string, number> = { year };
       ["Adults", "Kids", "Students"].forEach((sub) => {
-        row[sub] = Math.round(
-          getSubgroupAvg(data.attendance, year, filters.campus, sub)
-        );
+        row[sub] = Math.round(getSubgroupAvg(data.attendance, year, "All Campuses", sub));
       });
       return row;
     });
-  }, [data, filters, filteredYears]);
+  }, [data]);
 
   const monthlyPattern = useMemo(() => {
     if (!data) return [];
-    return Array.from({ length: 12 }, (_, i) => {
-      const month = i + 1;
-      const row: Record<string, number | string> = { month: MONTH_NAMES[i] };
+    const months = Array.from({ length: 12 }, (_, i) => i + 1);
+    return months.map((month) => {
+      const row: Record<string, number> = { month: MONTH_NAMES[month - 1] };
       ["Adults", "Kids", "Students"].forEach((sub) => {
         if (filters.campus === "All Campuses") {
           row[sub] = Math.round(
@@ -196,17 +189,48 @@ export default function AttendanceTab() {
   }, [data, filters, latestYear, partial, compMonths]);
 
   // Kids environments breakdown from attendance records with kids-specific subgroups
+  // Organized by campus and age group for 2026+ data
   const kidsBreakdown = useMemo(() => {
     if (!data) return [];
-    const envs = ["Babies", "Toddlers", "Pre-K", "Treehouse", "Cove"];
-    return envs.map((env) => {
+    
+    // All kids subgroups organized by campus and age group
+    const kidsSubgroups = [
+      // Canton Thursday RevKids
+      { name: "Canton Nursery", subgroup: "Nursery" },
+      { name: "Canton Toddlers", subgroup: "Toddlers" },
+      { name: "Canton Pre-K", subgroup: "Pre-K" },
+      { name: "Canton Elementary", subgroup: "Elementary" },
+      
+      // Sunday RevKids Preschool
+      { name: "Sunday Babies", subgroup: "Babies" },
+      { name: "Sunday Young Toddlers", subgroup: "Young Toddlers" },
+      { name: "Sunday Older Toddlers", subgroup: "Older Toddlers" },
+      { name: "Sunday Preschool Pre-K", subgroup: "Pre-K" },
+      
+      // Sunday RevKids Elementary
+      { name: "The Campground", subgroup: "The Campground" },
+      { name: "The Treehouse", subgroup: "The Treehouse" },
+      { name: "The Cove", subgroup: "The Cove" },
+      { name: "ReRuns", subgroup: "ReRuns" },
+      
+      // Jasper Preschool
+      { name: "Jasper Nursery", subgroup: "Jasper Nursery" },
+      { name: "Jasper Pre-K", subgroup: "Jasper Pre-K" },
+      
+      // Jasper Elementary
+      { name: "Jasper Treehouse", subgroup: "Jasper Treehouse" },
+      { name: "Jasper Cove", subgroup: "Jasper Cove" },
+      { name: "Jasper ReRuns", subgroup: "Jasper ReRuns" },
+    ];
+    
+    return kidsSubgroups.map((item) => {
       const avg = getSubgroupAvg(
         data.attendance,
         latestYear,
         filters.campus,
-        env
+        item.subgroup
       );
-      return { environment: env, avg: Math.round(avg) };
+      return { environment: item.name, subgroup: item.subgroup, avg: Math.round(avg) };
     });
   }, [data, filters, latestYear]);
 
@@ -275,7 +299,6 @@ export default function AttendanceTab() {
               tick={{ fontSize: 11, fontFamily: "'DM Mono'" }}
               tickLine={false}
               axisLine={false}
-              tickFormatter={formatNumber}
             />
             <Tooltip contentStyle={TT} />
             <Legend
@@ -289,86 +312,101 @@ export default function AttendanceTab() {
                 type="monotone"
                 dataKey={key}
                 stroke={SUBGROUP_COLORS[key]}
-                fill={`url(#att-grad-${key})`}
                 strokeWidth={2}
+                fill={`url(#att-grad-${key})`}
               />
             ))}
           </AreaChart>
         </ResponsiveContainer>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
-        <div className="lg:col-span-2 bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <h3 className="section-title mb-3 sm:mb-4">Monthly Pattern — {latestYear}</h3>
-          <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={monthlyPattern}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E8E5DE" />
-              <XAxis
-                dataKey="month"
-                tick={{ fontSize: 11, fontFamily: "'Inter'" }}
-                tickLine={false}
-                axisLine={false}
+      <div className="lg:col-span-2 bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <h3 className="section-title mb-3 sm:mb-4">Monthly Pattern — {latestYear}</h3>
+        <ResponsiveContainer width="100%" height={220}>
+          <LineChart data={monthlyPattern}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#E8E5DE" />
+            <XAxis
+              dataKey="month"
+              tick={{ fontSize: 11, fontFamily: "'Inter'" }}
+              tickLine={false}
+              axisLine={false}
+            />
+            <YAxis
+              tick={{ fontSize: 11, fontFamily: "'DM Mono'" }}
+              tickLine={false}
+              axisLine={false}
+            />
+            <Tooltip contentStyle={TT} />
+            <Legend
+              wrapperStyle={{ fontSize: 12, fontFamily: "'Inter'" }}
+              iconType="circle"
+              iconSize={8}
+            />
+            {["Adults", "Kids", "Students"].map((key) => (
+              <Line
+                key={key}
+                type="monotone"
+                dataKey={key}
+                stroke={SUBGROUP_COLORS[key]}
+                strokeWidth={2}
+                dot={{ r: 3 }}
               />
-              <YAxis
-                tick={{ fontSize: 11, fontFamily: "'DM Mono'" }}
-                tickLine={false}
-                axisLine={false}
-              />
-              <Tooltip contentStyle={TT} />
-              <Legend
-                wrapperStyle={{ fontSize: 12, fontFamily: "'Inter'" }}
-                iconType="circle"
-                iconSize={8}
-              />
-              {["Adults", "Kids", "Students"].map((key) => (
-                <Line
-                  key={key}
-                  type="monotone"
-                  dataKey={key}
-                  stroke={SUBGROUP_COLORS[key]}
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-              ))}
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <h3 className="section-title mb-3 sm:mb-4">
-            Kids Environments — {latestYear} Avg
-          </h3>
-          <div className="space-y-3.5">
-            {kidsBreakdown.map((env) => (
-              <div key={env.environment}>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="font-medium text-foreground/80">
-                    {env.environment}
-                  </span>
-                  <span className="stat-value text-sm">{env.avg}</span>
-                </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: `${Math.min(
-                        100,
-                        (env.avg /
-                          Math.max(...kidsBreakdown.map((k) => k.avg), 1)) *
-                          100
-                      )}%`,
-                      backgroundColor: "#E8913A",
-                    }}
-                  />
-                </div>
-              </div>
             ))}
-            {kidsBreakdown.every((k) => k.avg === 0) && (
-              <p className="text-xs text-muted-foreground italic">
-                Detailed kids data not available for this selection.
-              </p>
-            )}
-          </div>
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <h3 className="section-title mb-3 sm:mb-4">
+          Kids & Students Breakdown — {latestYear} Avg
+        </h3>
+        <div className="space-y-3.5">
+          {kidsBreakdown.length > 0 && kidsBreakdown.some((k) => k.avg > 0) ? (
+            <div className="space-y-4">
+              {/* Group by section */}
+              {[
+                { title: "Canton Thursday RevKids", items: kidsBreakdown.filter(k => ["Canton Nursery", "Canton Toddlers", "Canton Pre-K", "Canton Elementary"].includes(k.environment)) },
+                { title: "Sunday RevKids Preschool", items: kidsBreakdown.filter(k => ["Sunday Babies", "Sunday Young Toddlers", "Sunday Older Toddlers", "Sunday Preschool Pre-K"].includes(k.environment)) },
+                { title: "Sunday RevKids Elementary", items: kidsBreakdown.filter(k => ["The Campground", "The Treehouse", "The Cove", "ReRuns"].includes(k.environment)) },
+                { title: "Jasper Preschool", items: kidsBreakdown.filter(k => ["Jasper Nursery", "Jasper Pre-K"].includes(k.environment)) },
+                { title: "Jasper Elementary", items: kidsBreakdown.filter(k => ["Jasper Treehouse", "Jasper Cove", "Jasper ReRuns"].includes(k.environment)) },
+              ].map((section) => section.items.length > 0 && (
+                <div key={section.title}>
+                  <h4 className="text-xs font-semibold text-foreground/70 mb-2.5 uppercase tracking-wide">{section.title}</h4>
+                  <div className="space-y-2.5">
+                    {section.items.map((env) => (
+                      <div key={env.environment}>
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="font-medium text-foreground/80">
+                            {env.environment}
+                          </span>
+                          <span className="stat-value text-sm">{env.avg}</span>
+                        </div>
+                        <div className="h-2 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{
+                              width: `${Math.min(
+                                100,
+                                (env.avg /
+                                  Math.max(...kidsBreakdown.map((k) => k.avg), 1)) *
+                                  100
+                              )}%`,
+                              backgroundColor: "#E8913A",
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground italic">
+              Detailed kids data not available for this selection.
+            </p>
+          )}
         </div>
       </div>
     </div>
