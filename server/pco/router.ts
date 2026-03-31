@@ -90,11 +90,11 @@ async function runSyncJob(
   dateFrom: string | undefined,
   dateTo: string | undefined
 ): Promise<void> {
-  updateJob(jobId, { status: "running", message: "Connecting to Planning Center…", progress: 5 });
+  await updateJob(jobId, { status: "running", message: "Connecting to Planning Center…", progress: 5 });
 
   const client = await createAuthenticatedPcoClient();
   if (!client) {
-    updateJob(jobId, {
+    await updateJob(jobId, {
       status: "failed",
       error: "PCO token expired or missing. Please reconnect in Settings → Planning Center.",
       message: "Authentication failed — please reconnect to Planning Center.",
@@ -103,21 +103,21 @@ async function runSyncJob(
     return;
   }
 
-  updateJob(jobId, { message: `Starting ${syncType} sync…`, progress: 10 });
+  await updateJob(jobId, { message: `Starting ${syncType} sync…`, progress: 10 });
 
   let results: Awaited<ReturnType<typeof syncAll>>;
   try {
     if (syncType === "full") {
-      updateJob(jobId, { message: "Syncing monthly data…", progress: 15 });
+      await updateJob(jobId, { message: "Syncing monthly data…", progress: 15 });
       const monthlyResults = await syncAll(client, dateFrom, dateTo);
-      updateJob(jobId, { message: "Syncing weekly data…", progress: 55 });
+      await updateJob(jobId, { message: "Syncing weekly data…", progress: 55 });
       const weeklyResults = await syncAllWeekly(client, dateFrom, dateTo);
       results = [...monthlyResults, ...weeklyResults];
     } else if (syncType === "weekly_all") {
-      updateJob(jobId, { message: "Syncing weekly attendance and giving…", progress: 15 });
+      await updateJob(jobId, { message: "Syncing weekly attendance and giving…", progress: 15 });
       results = await syncAllWeekly(client, dateFrom, dateTo);
     } else {
-      updateJob(jobId, { message: `Syncing ${syncType}…`, progress: 15 });
+      await updateJob(jobId, { message: `Syncing ${syncType}…`, progress: 15 });
       let result;
       switch (syncType) {
         case "attendance":
@@ -147,7 +147,7 @@ async function runSyncJob(
       results = [result!];
     }
   } catch (err: any) {
-    updateJob(jobId, {
+    await updateJob(jobId, {
       status: "failed",
       error: err.message ?? "Sync error",
       message: `Sync failed: ${err.message ?? "Unknown error"}`,
@@ -164,7 +164,7 @@ async function runSyncJob(
   const totalRecords = results.reduce((s, r) => s + r.recordsProcessed, 0);
   const failed = results.filter((r) => r.status === "failed");
 
-  updateJob(jobId, {
+  await updateJob(jobId, {
     status: failed.length > 0 ? "failed" : "completed",
     progress: 100,
     message:
@@ -262,14 +262,14 @@ export const pcoRouter = router({
       }
 
       // Create the job record and return its ID immediately
-      const job = createJob(input.syncType);
+      const job = await createJob(input.syncType);
       console.log(`[PCO Sync] Created job ${job.jobId} for ${input.syncType}`);
 
       // Run the sync in the background — do NOT await
       runSyncJob(job.jobId, input.syncType, input.dateFrom, input.dateTo).catch(
-        (err) => {
+        async (err) => {
           console.error(`[PCO Sync] Unhandled error in job ${job.jobId}:`, err);
-          updateJob(job.jobId, {
+          await updateJob(job.jobId, {
             status: "failed",
             error: err.message ?? "Unknown error",
             message: "Sync failed unexpectedly.",
@@ -286,15 +286,15 @@ export const pcoRouter = router({
    */
   getSyncJobStatus: publicProcedure
     .input(z.object({ jobId: z.string() }))
-    .query(({ input }) => {
-      return getJob(input.jobId);
+    .query(async ({ input }) => {
+      return await getJob(input.jobId);
     }),
 
   /**
    * Get the most recent sync jobs (for the Settings page history panel).
    */
-  getRecentSyncJobs: publicProcedure.query(() => {
-    return getRecentJobs();
+  getRecentSyncJobs: publicProcedure.query(async () => {
+    return await getRecentJobs();
   }),
 
   getSyncLogs: publicProcedure
