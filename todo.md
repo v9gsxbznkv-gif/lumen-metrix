@@ -222,3 +222,13 @@
 - [x] Add jobManager unit tests (4 tests)
 - [x] 97 tests passing
 - [x] Checkpoint and deploy
+
+## Weekly Sync Progress Panel Fix (Round 23)
+- [x] Check server logs: production server IS working; job starts and polling endpoint returns live status
+- [x] Root cause: progress panel gated on `activeJobId && jobStatus` — jobStatus is undefined until first poll (2s), so panel never appeared
+- [x] Secondary cause: refetchInterval callback received superjson-wrapped data, not unwrapped jobStatus; callback always returned 2000 but panel was hidden
+- [x] Fix 1: Show progress panel immediately when activeJobId is set, before first poll returns (null-safe rendering with "Connecting to PCO…" placeholder)
+- [x] Fix 2: Replace refetchInterval callback with static 2000ms value; enabled flag handles on/off
+- [x] Fix 3: Remove unused utils/refetchJobStatus variables
+- [x] 97 tests passing
+- [x] Checkpoint and deploy

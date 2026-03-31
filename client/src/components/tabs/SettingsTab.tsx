@@ -289,33 +289,32 @@ function SyncControlsSection() {
   const [dateTo, setDateTo] = useState("");
   const [showLogs, setShowLogs] = useState(false);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
+  const [notifiedJobId, setNotifiedJobId] = useState<string | null>(null);
 
   const { data: connectionStatus } = trpc.pco.getConnectionStatus.useQuery();
   const { data: logs, refetch: refetchLogs } = trpc.pco.getSyncLogs.useQuery({ limit: 10 });
 
-  // Poll the active job status every 2 seconds while a job is running
+  // Fetch job status — enabled only when we have an active job
+  // refetchInterval is a static 2000ms; React Query stops polling automatically
+  // when the component unmounts or enabled becomes false.
   const { data: jobStatus } = trpc.pco.getSyncJobStatus.useQuery(
-    { jobId: activeJobId! },
+    { jobId: activeJobId ?? "" },
     {
       enabled: !!activeJobId,
-      refetchInterval: (query) => {
-        const data = query.state.data;
-        if (!data) return 2000;
-        // Stop polling once the job is done
-        if (data.status === "completed" || data.status === "failed") return false;
-        return 2000;
-      },
+      refetchInterval: 2000,
+      refetchIntervalInBackground: true,
+      staleTime: 0,
     }
   );
 
-  // When a job finishes, show a toast and refresh logs
-  const [notifiedJobId, setNotifiedJobId] = useState<string | null>(null);
+  // Stop polling and show toast when job completes or fails
   useEffect(() => {
     if (!jobStatus) return;
     if (jobStatus.status !== "completed" && jobStatus.status !== "failed") return;
     // Only fire once per job completion
     if (notifiedJobId === jobStatus.jobId) return;
     setNotifiedJobId(jobStatus.jobId);
+    // Stop polling by clearing the active job id after a short delay so the panel stays visible
     if (jobStatus.status === "completed") {
       toast.success(`Sync completed — ${jobStatus.recordsProcessed.toLocaleString()} records processed`);
     } else {
@@ -444,11 +443,13 @@ function SyncControlsSection() {
             )}
           </button>
 
-          {/* Live job progress panel */}
-          {activeJobId && jobStatus && (
+          {/* Live job progress panel — show immediately when job starts, even before first poll */}
+          {activeJobId && (
             <div
               className={`rounded-md border p-3 text-xs space-y-2 ${
-                jobStatus.status === "completed"
+                !jobStatus
+                  ? "bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800/40"
+                  : jobStatus.status === "completed"
                   ? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/40"
                   : jobStatus.status === "failed"
                   ? "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800/40"
@@ -458,35 +459,39 @@ function SyncControlsSection() {
               {/* Status header */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  {jobStatus.status === "completed" ? (
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  ) : jobStatus.status === "failed" ? (
-                    <XCircle className="w-3.5 h-3.5 text-red-600" />
-                  ) : (
+                  {!jobStatus || jobStatus.status === "pending" || jobStatus.status === "running" ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
+                  ) : jobStatus.status === "completed" ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  ) : (
+                    <XCircle className="w-3.5 h-3.5 text-red-600" />
                   )}
-                  <span className="font-medium capitalize">{jobStatus.syncType}</span>
+                  <span className="font-medium capitalize">
+                    {jobStatus ? jobStatus.syncType : selectedSync}
+                  </span>
                 </div>
                 <span className="text-muted-foreground">
-                  {jobStatus.recordsProcessed.toLocaleString()} records
+                  {jobStatus ? `${jobStatus.recordsProcessed.toLocaleString()} records` : "Starting…"}
                 </span>
               </div>
 
-              {/* Progress bar */}
-              {(jobStatus.status === "running" || jobStatus.status === "pending") && (
+              {/* Progress bar — always show while running or loading */}
+              {(!jobStatus || jobStatus.status === "running" || jobStatus.status === "pending") && (
                 <div className="w-full bg-blue-200 dark:bg-blue-900/40 rounded-full h-1.5">
                   <div
                     className="bg-blue-500 h-1.5 rounded-full transition-all duration-500"
-                    style={{ width: `${jobStatus.progress}%` }}
+                    style={{ width: jobStatus ? `${jobStatus.progress}%` : "5%" }}
                   />
                 </div>
               )}
 
               {/* Status message */}
-              <p className="text-muted-foreground">{jobStatus.message}</p>
+              <p className="text-muted-foreground">
+                {jobStatus ? jobStatus.message : "Connecting to PCO…"}
+              </p>
 
               {/* Per-module results when done */}
-              {jobStatus.status !== "pending" && jobStatus.status !== "running" && jobStatus.results.length > 0 && (
+              {jobStatus && jobStatus.status !== "pending" && jobStatus.status !== "running" && jobStatus.results.length > 0 && (
                 <div className="space-y-1 pt-1 border-t border-current/10">
                   {jobStatus.results.map((r, i) => (
                     <div key={i} className="flex items-center justify-between">
@@ -508,7 +513,7 @@ function SyncControlsSection() {
               )}
 
               {/* Auth error: show reconnect prompt */}
-              {jobStatus.status === "failed" && jobStatus.error?.toLowerCase().includes("token") && (
+              {jobStatus?.status === "failed" && jobStatus.error?.toLowerCase().includes("token") && (
                 <div className="flex items-center gap-2 pt-1 border-t border-red-200 dark:border-red-800/40">
                   <AlertCircle className="w-3.5 h-3.5 text-red-600 shrink-0" />
                   <span className="text-red-700 dark:text-red-400">
