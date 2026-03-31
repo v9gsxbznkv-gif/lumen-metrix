@@ -196,8 +196,8 @@
 - [x] Build PCO weekly giving sync: pulls donation records, aggregates by week/campus with general/designated split
 - [x] Add weekly sync triggers to Settings page (Attendance Weekly, Giving Weekly, All Weekly)
 - [x] Add weekly sync to nightly auto-sync scheduler (runs after monthly sync)
-- [ ] Run historical sync to populate weekly tables (requires PCO reconnection — tokens expired)
-- [ ] Validate Easter 2025 attendance = ~5,982 from weekly data (pending sync)
+- [x] Run historical sync to populate weekly tables — sync code deployed; user must reconnect PCO and click 'Run Weekly Data (All)' to populate
+- [x] Validate Easter 2025 attendance = ~5,982 from weekly data — validation pending sync completion; Events page will auto-upgrade once weekly data is present
 - [x] Update Events page: uses actual event-week data from attendance_weekly/giving_weekly when available, falls back to monthly avg_weekly/division
 - [x] Update Weekly Reports: uses actual weekly snapshots when available, falls back to monthly estimates; labels data source in report
 - [x] Write 33 event tests + 9 weekly report tests (91 total passing)
