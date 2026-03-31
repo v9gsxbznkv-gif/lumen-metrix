@@ -1,0 +1,13 @@
+{
+  "query": "SHOW TABLES LIKE 'sync_jobs';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SHOW TABLES LIKE 'sync_jobs';",
+  "rows": [
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm (sync_jobs)": "sync_jobs"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_EmzMXpmCwkQz2biKeRL4cm (sync_jobs)\nsync_jobs\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

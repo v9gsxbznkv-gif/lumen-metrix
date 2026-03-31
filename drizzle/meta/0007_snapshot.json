@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "05d4961e-308d-43aa-b371-fbf7a82c3b9b",
+  "id": "3bbe3cf4-46a6-41c3-bd74-016c284cae03",
   "prevId": "778db68a-fa18-467e-a0ba-c6ccb3153d59",
   "tables": {
     "attendance": {
@@ -1638,11 +1638,11 @@
         },
         "status": {
           "name": "status",
-          "type": "enum('pending','running','completed','failed')",
+          "type": "varchar(32)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'pending'"
+          "default": "'running'"
         },
         "progress": {
           "name": "progress",
@@ -1654,10 +1654,11 @@
         },
         "message": {
           "name": "message",
-          "type": "text",
+          "type": "varchar(512)",
           "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
         },
         "recordsProcessed": {
           "name": "recordsProcessed",
@@ -1667,16 +1668,16 @@
           "autoincrement": false,
           "default": 0
         },
-        "error": {
-          "name": "error",
+        "results": {
+          "name": "results",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "results": {
-          "name": "results",
-          "type": "json",
+        "error": {
+          "name": "error",
+          "type": "varchar(1024)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -1695,15 +1696,6 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "onUpdate": true,
-          "default": "(now())"
         }
       },
       "indexes": {},

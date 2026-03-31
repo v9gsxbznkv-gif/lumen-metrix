@@ -51,6 +51,7 @@ import {
 } from "./weeklySync";
 import { getSchedulerStatus } from "./scheduler";
 import {
+  generateJobId,
   createJob,
   updateJob,
   getJob,
@@ -58,66 +59,38 @@ import {
 } from "./jobManager";
 
 /**
- * The cutover year: from this year onward, PCO is the source of truth.
- * Before this year, spreadsheet data is used.
+ * Run a sync in the background without blocking the HTTP response.
+ * Progress is written to the sync_jobs DB table so the UI can poll it.
  */
-const PCO_CUTOVER_YEAR = 2026;
-
-/**
- * Build a WHERE clause that selects:
- *   - spreadsheet rows for years < PCO_CUTOVER_YEAR
- *   - ALL rows (spreadsheet or pco) for years >= PCO_CUTOVER_YEAR
- *
- * We intentionally allow spreadsheet data for 2026+ as a fallback because
- * PCO sync may not have run for every module yet. Once PCO sync runs for a
- * module, its rows will have source='pco' and the upsert logic in sync.ts
- * will replace the spreadsheet rows, so there will never be duplicates.
- */
-function sourceFilter(table: { year: any; source: any }) {
-  return or(
-    lt(table.year, PCO_CUTOVER_YEAR),          // historical: any source
-    gte(table.year, PCO_CUTOVER_YEAR)           // current: any source (pco preferred via upsert)
-  );
-}
-
-/**
- * Execute a sync job in the background. Updates the job record with progress
- * and results. Called without await so the HTTP request returns immediately.
- */
-async function runSyncJob(
+async function runSyncInBackground(
   jobId: string,
   syncType: string,
-  dateFrom: string | undefined,
-  dateTo: string | undefined
+  client: any,
+  dateFrom?: string,
+  dateTo?: string
 ): Promise<void> {
-  await updateJob(jobId, { status: "running", message: "Connecting to Planning Center…", progress: 5 });
-
-  const client = await createAuthenticatedPcoClient();
-  if (!client) {
-    await updateJob(jobId, {
-      status: "failed",
-      error: "PCO token expired or missing. Please reconnect in Settings → Planning Center.",
-      message: "Authentication failed — please reconnect to Planning Center.",
-      completedAt: new Date(),
-    });
-    return;
-  }
-
-  await updateJob(jobId, { message: `Starting ${syncType} sync…`, progress: 10 });
-
-  let results: Awaited<ReturnType<typeof syncAll>>;
   try {
+    await updateJob(jobId, { progress: 15, message: "Connected to PCO, starting sync..." });
+
+    let results;
     if (syncType === "full") {
-      await updateJob(jobId, { message: "Syncing monthly data…", progress: 15 });
+      await updateJob(jobId, { progress: 20, message: "Syncing monthly data..." });
       const monthlyResults = await syncAll(client, dateFrom, dateTo);
-      await updateJob(jobId, { message: "Syncing weekly data…", progress: 55 });
+      await updateJob(jobId, { progress: 60, message: "Syncing weekly data..." });
       const weeklyResults = await syncAllWeekly(client, dateFrom, dateTo);
       results = [...monthlyResults, ...weeklyResults];
     } else if (syncType === "weekly_all") {
-      await updateJob(jobId, { message: "Syncing weekly attendance and giving…", progress: 15 });
-      results = await syncAllWeekly(client, dateFrom, dateTo);
+      await updateJob(jobId, { progress: 20, message: "Syncing weekly attendance..." });
+      const attResult = await syncWeeklyAttendance(client, dateFrom, dateTo);
+      await updateJob(jobId, {
+        progress: 60,
+        message: "Syncing weekly giving...",
+        recordsProcessed: attResult.recordsProcessed,
+      });
+      const givResult = await syncWeeklyGiving(client, dateFrom, dateTo);
+      results = [attResult, givResult];
     } else {
-      await updateJob(jobId, { message: `Syncing ${syncType}…`, progress: 15 });
+      await updateJob(jobId, { progress: 20, message: `Syncing ${syncType}...` });
       let result;
       switch (syncType) {
         case "attendance":
@@ -146,43 +119,55 @@ async function runSyncJob(
       }
       results = [result!];
     }
-  } catch (err: any) {
+
+    // Log all results to sync_logs
+    let totalRecords = 0;
+    for (const result of results) {
+      await logSyncResult(result);
+      totalRecords += result.recordsProcessed || 0;
+    }
+
     await updateJob(jobId, {
-      status: "failed",
-      error: err.message ?? "Sync error",
-      message: `Sync failed: ${err.message ?? "Unknown error"}`,
+      status: "completed",
+      progress: 100,
+      message: `Sync complete — ${totalRecords} records processed`,
+      recordsProcessed: totalRecords,
+      results,
       completedAt: new Date(),
     });
-    return;
+  } catch (err: any) {
+    console.error(`[PCO Sync] Background job ${jobId} failed:`, err);
+    await updateJob(jobId, {
+      status: "failed",
+      progress: 0,
+      message: "Sync failed",
+      error: err?.message ?? String(err),
+      completedAt: new Date(),
+    });
   }
+}
 
-  // Persist results to sync log table
-  for (const result of results) {
-    await logSyncResult(result);
-  }
+/**
+ * The cutover year: from this year onward, PCO is the source of truth.
+ * Before this year, spreadsheet data is used.
+ */
+const PCO_CUTOVER_YEAR = 2026;
 
-  const totalRecords = results.reduce((s, r) => s + r.recordsProcessed, 0);
-  const failed = results.filter((r) => r.status === "failed");
-
-  await updateJob(jobId, {
-    status: failed.length > 0 ? "failed" : "completed",
-    progress: 100,
-    message:
-      failed.length > 0
-        ? `Completed with ${failed.length} error(s): ${failed.map((f) => f.errorMessage).join("; ")}`
-        : `Completed — ${totalRecords.toLocaleString()} records synced`,
-    recordsProcessed: totalRecords,
-    completedAt: new Date(),
-    results: results.map((r) => ({
-      syncType: r.syncType,
-      status: r.status,
-      recordsProcessed: r.recordsProcessed,
-      errorMessage: r.errorMessage ?? null,
-      durationMs: r.durationMs ?? null,
-    })),
-  });
-
-  console.log(`[PCO Sync] Job ${jobId} (${syncType}) completed: ${totalRecords} records`);
+/**
+ * Build a WHERE clause that selects:
+ *   - spreadsheet rows for years < PCO_CUTOVER_YEAR
+ *   - ALL rows (spreadsheet or pco) for years >= PCO_CUTOVER_YEAR
+ *
+ * We intentionally allow spreadsheet data for 2026+ as a fallback because
+ * PCO sync may not have run for every module yet. Once PCO sync runs for a
+ * module, its rows will have source='pco' and the upsert logic in sync.ts
+ * will replace the spreadsheet rows, so there will never be duplicates.
+ */
+function sourceFilter(table: { year: any; source: any }) {
+  return or(
+    lt(table.year, PCO_CUTOVER_YEAR),          // historical: any source
+    gte(table.year, PCO_CUTOVER_YEAR)           // current: any source (pco preferred via upsert)
+  );
 }
 
 export const pcoRouter = router({
@@ -235,12 +220,6 @@ export const pcoRouter = router({
   // ============================================================
   // Sync Operations
   // ============================================================
-
-  /**
-   * Start a sync job in the background. Returns a jobId immediately so the
-   * HTTP request doesn't time out on long-running weekly syncs (10-20 min).
-   * Poll getSyncJobStatus with the returned jobId to track progress.
-   */
   triggerSync: publicProcedure
     .input(
       z.object({
@@ -252,50 +231,36 @@ export const pcoRouter = router({
     .mutation(async ({ input }) => {
       console.log(`[PCO Sync] Triggering background sync: ${input.syncType}`);
 
-      // Validate token BEFORE spawning the background job so we can return a
-      // clear error immediately rather than having the job fail silently.
-      const tokenInfo = await getTokenInfo();
-      if (!tokenInfo?.connected) {
-        throw new Error(
-          "Not connected to Planning Center. Please go to Settings and click \"Connect to Planning Center\" to authorize your account."
-        );
+      // Validate PCO connection BEFORE spawning the job so we can return a fast error
+      const client = await createAuthenticatedPcoClient();
+      if (!client) {
+        throw new Error("Not connected to Planning Center. Go to Settings and reconnect your account.");
       }
 
-      // Create the job record and return its ID immediately
-      const job = await createJob(input.syncType);
-      console.log(`[PCO Sync] Created job ${job.jobId} for ${input.syncType}`);
+      // Create the job record in DB immediately so polling can start
+      const jobId = generateJobId();
+      await createJob(jobId, input.syncType);
+      console.log(`[PCO Sync] Job ${jobId} created, running in background...`);
 
-      // Run the sync in the background — do NOT await
-      runSyncJob(job.jobId, input.syncType, input.dateFrom, input.dateTo).catch(
-        async (err) => {
-          console.error(`[PCO Sync] Unhandled error in job ${job.jobId}:`, err);
-          await updateJob(job.jobId, {
-            status: "failed",
-            error: err.message ?? "Unknown error",
-            message: "Sync failed unexpectedly.",
-            completedAt: new Date(),
-          });
-        }
-      );
+      // Fire-and-forget: run the actual sync without awaiting
+      // The job writes progress to the DB; the UI polls getSyncJobStatus
+      runSyncInBackground(jobId, input.syncType, client, input.dateFrom, input.dateTo)
+        .catch((err) => console.error(`[PCO Sync] Unhandled error in job ${jobId}:`, err));
 
-      return { jobId: job.jobId };
+      return { jobId };
     }),
 
-  /**
-   * Poll this to get live progress of a running or completed sync job.
-   */
   getSyncJobStatus: publicProcedure
     .input(z.object({ jobId: z.string() }))
     .query(async ({ input }) => {
       return await getJob(input.jobId);
     }),
 
-  /**
-   * Get the most recent sync jobs (for the Settings page history panel).
-   */
-  getRecentSyncJobs: publicProcedure.query(async () => {
-    return await getRecentJobs();
-  }),
+  getRecentSyncJobs: publicProcedure
+    .input(z.object({ limit: z.number().min(1).max(50).default(10) }).optional())
+    .query(async ({ input }) => {
+      return await getRecentJobs(input?.limit ?? 10);
+    }),
 
   getSyncLogs: publicProcedure
     .input(

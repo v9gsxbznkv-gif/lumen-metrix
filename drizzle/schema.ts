@@ -403,25 +403,21 @@ export const givingWeekly = mysqlTable("giving_weekly", {
 
 export type GivingWeeklyRow = typeof givingWeekly.$inferSelect;
 export type InsertGivingWeekly = typeof givingWeekly.$inferInsert;
-
 // ============================================================
-// Sync Jobs — DB-backed job store for long-running PCO syncs
-// Survives Cloud Run container restarts unlike in-memory Maps
+// Sync Jobs — persistent background job tracking (survives Cloud Run restarts)
 // ============================================================
 export const syncJobs = mysqlTable("sync_jobs", {
   id: int("id").autoincrement().primaryKey(),
   jobId: varchar("jobId", { length: 128 }).notNull().unique(),
   syncType: varchar("syncType", { length: 64 }).notNull(),
-  status: mysqlEnum("status", ["pending", "running", "completed", "failed"]).default("pending").notNull(),
-  progress: int("progress").default(0).notNull(),           // 0-100
-  message: text("message"),
+  status: varchar("status", { length: 32 }).default("running").notNull(), // running | completed | failed
+  progress: int("progress").default(0).notNull(),          // 0-100
+  message: varchar("message", { length: 512 }).default("").notNull(),
   recordsProcessed: int("recordsProcessed").default(0).notNull(),
-  error: text("error"),
-  results: json("results"),                                  // Array of per-module results
+  results: text("results"),                                 // JSON array of SyncResult
+  error: varchar("error", { length: 1024 }),
   startedAt: timestamp("startedAt").defaultNow().notNull(),
   completedAt: timestamp("completedAt"),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
-
 export type SyncJobRow = typeof syncJobs.$inferSelect;
 export type InsertSyncJob = typeof syncJobs.$inferInsert;

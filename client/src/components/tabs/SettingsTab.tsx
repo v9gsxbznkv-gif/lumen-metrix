@@ -289,63 +289,52 @@ function SyncControlsSection() {
   const [dateTo, setDateTo] = useState("");
   const [showLogs, setShowLogs] = useState(false);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
-  const [notifiedJobId, setNotifiedJobId] = useState<string | null>(null);
 
   const { data: connectionStatus } = trpc.pco.getConnectionStatus.useQuery();
   const { data: logs, refetch: refetchLogs } = trpc.pco.getSyncLogs.useQuery({ limit: 10 });
 
-  // Fetch job status — enabled only when we have an active job
-  // refetchInterval is a static 2000ms; React Query stops polling automatically
-  // when the component unmounts or enabled becomes false.
+  // Poll job status every 2 seconds while a job is running
   const { data: jobStatus } = trpc.pco.getSyncJobStatus.useQuery(
     { jobId: activeJobId ?? "" },
-    {
-      enabled: !!activeJobId,
-      refetchInterval: 2000,
-      refetchIntervalInBackground: true,
-      staleTime: 0,
-    }
+    { enabled: activeJobId != null, refetchInterval: 2000 }
   );
 
-  // Stop polling and show toast when job completes or fails
+  // When job finishes, show toast and clear the active job
   useEffect(() => {
     if (!jobStatus) return;
-    if (jobStatus.status !== "completed" && jobStatus.status !== "failed") return;
-    // Only fire once per job completion
-    if (notifiedJobId === jobStatus.jobId) return;
-    setNotifiedJobId(jobStatus.jobId);
-    // Stop polling by clearing the active job id after a short delay so the panel stays visible
     if (jobStatus.status === "completed") {
-      toast.success(`Sync completed — ${jobStatus.recordsProcessed.toLocaleString()} records processed`);
-    } else {
-      toast.error(`Sync failed: ${jobStatus.error ?? jobStatus.message}`, { duration: 8000 });
+      toast.success(`Sync complete — ${jobStatus.recordsProcessed.toLocaleString()} records processed`);
+      setActiveJobId(null);
+      refetchLogs();
+    } else if (jobStatus.status === "failed") {
+      const errMsg = jobStatus.error ?? "Unknown error";
+      if (errMsg.toLowerCase().includes("not connected") || errMsg.toLowerCase().includes("planning center")) {
+        toast.error("PCO token expired — please reconnect Planning Center in the section above.", { duration: 8000 });
+      } else {
+        toast.error(`Sync failed: ${errMsg}`);
+      }
+      setActiveJobId(null);
+      refetchLogs();
     }
-    refetchLogs();
-  }, [jobStatus?.status, jobStatus?.jobId]);
+  }, [jobStatus?.status]);
 
-  const startSyncMutation = trpc.pco.triggerSync.useMutation({
+  const syncMutation = trpc.pco.triggerSync.useMutation({
     onSuccess: (result) => {
+      // result.jobId — store it so polling starts
       setActiveJobId(result.jobId);
-      setNotifiedJobId(null); // reset so completion toast fires for the new job
-      toast.info("Sync started in background — progress shown below");
     },
     onError: (err) => {
-      // Show a persistent, descriptive error — not just a toast that disappears
-      const isAuthError =
-        err.message.toLowerCase().includes("not connected") ||
-        err.message.toLowerCase().includes("token") ||
-        err.message.toLowerCase().includes("connect");
-      toast.error(
-        isAuthError
-          ? "PCO connection expired. Go to the Planning Center section above and click \"Connect to Planning Center\" to re-authorize."
-          : `Sync failed: ${err.message}`,
-        { duration: 8000 }
-      );
+      const msg = err.message ?? "";
+      if (msg.toLowerCase().includes("not connected") || msg.toLowerCase().includes("planning center")) {
+        toast.error("PCO not connected — please reconnect Planning Center in the section above.", { duration: 8000 });
+      } else {
+        toast.error(`Sync failed: ${msg}`);
+      }
     },
   });
 
-  const isJobRunning = jobStatus && (jobStatus.status === "pending" || jobStatus.status === "running");
   const isConnected = connectionStatus?.connected === true;
+  const isRunning = syncMutation.isPending || (activeJobId != null && jobStatus?.status === "running");
 
   return (
     <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
@@ -371,7 +360,7 @@ function SyncControlsSection() {
                 <button
                   key={opt.value}
                   onClick={() => setSelectedSync(opt.value)}
-                  disabled={!!isJobRunning}
+                  disabled={isRunning}
                   className={`text-left px-3 py-2 rounded-md border text-xs transition-colors disabled:opacity-50 ${
                     selectedSync === opt.value
                       ? "border-amber-500/60 bg-amber-50 dark:bg-amber-950/20"
@@ -396,7 +385,8 @@ function SyncControlsSection() {
                   type="date"
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
-                  className="w-full bg-muted/30 rounded-md px-3 py-2 text-sm border border-border/40 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+                  disabled={isRunning}
+                  className="w-full bg-muted/30 rounded-md px-3 py-2 text-sm border border-border/40 focus:outline-none focus:ring-1 focus:ring-amber-500/50 disabled:opacity-50"
                 />
               </div>
               <div>
@@ -407,7 +397,8 @@ function SyncControlsSection() {
                   type="date"
                   value={dateTo}
                   onChange={(e) => setDateTo(e.target.value)}
-                  className="w-full bg-muted/30 rounded-md px-3 py-2 text-sm border border-border/40 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+                  disabled={isRunning}
+                  className="w-full bg-muted/30 rounded-md px-3 py-2 text-sm border border-border/40 focus:outline-none focus:ring-1 focus:ring-amber-500/50 disabled:opacity-50"
                 />
               </div>
             </div>
@@ -415,22 +406,22 @@ function SyncControlsSection() {
 
           <button
             onClick={() =>
-              startSyncMutation.mutate({
+              syncMutation.mutate({
                 syncType: selectedSync,
                 dateFrom: dateFrom || undefined,
                 dateTo: dateTo || undefined,
               })
             }
-            disabled={!!isJobRunning || startSyncMutation.isPending}
+            disabled={isRunning}
             className="flex items-center gap-2 text-sm px-4 py-2 rounded-md text-white transition-colors disabled:opacity-60"
             style={{ backgroundColor: "#E8913A" }}
           >
-            {startSyncMutation.isPending ? (
+            {syncMutation.isPending ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Starting…
+                Connecting to PCO…
               </>
-            ) : isJobRunning ? (
+            ) : isRunning ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
                 Syncing…
@@ -443,82 +434,30 @@ function SyncControlsSection() {
             )}
           </button>
 
-          {/* Live job progress panel — show immediately when job starts, even before first poll */}
-          {activeJobId && (
-            <div
-              className={`rounded-md border p-3 text-xs space-y-2 ${
-                !jobStatus
-                  ? "bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800/40"
-                  : jobStatus.status === "completed"
-                  ? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/40"
-                  : jobStatus.status === "failed"
-                  ? "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800/40"
-                  : "bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800/40"
-              }`}
-            >
-              {/* Status header */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {!jobStatus || jobStatus.status === "pending" || jobStatus.status === "running" ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
-                  ) : jobStatus.status === "completed" ? (
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  ) : (
-                    <XCircle className="w-3.5 h-3.5 text-red-600" />
-                  )}
-                  <span className="font-medium capitalize">
-                    {jobStatus ? jobStatus.syncType : selectedSync}
-                  </span>
-                </div>
+          {/* Live progress panel — shown while job is running or just completed */}
+          {activeJobId != null && (
+            <div className="rounded-md border border-border/40 bg-muted/10 p-3 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-medium text-muted-foreground">
+                  {jobStatus ? jobStatus.message : "Connecting to PCO…"}
+                </span>
                 <span className="text-muted-foreground">
-                  {jobStatus ? `${jobStatus.recordsProcessed.toLocaleString()} records` : "Starting…"}
+                  {jobStatus ? `${jobStatus.progress}%` : "0%"}
                 </span>
               </div>
-
-              {/* Progress bar — always show while running or loading */}
-              {(!jobStatus || jobStatus.status === "running" || jobStatus.status === "pending") && (
-                <div className="w-full bg-blue-200 dark:bg-blue-900/40 rounded-full h-1.5">
-                  <div
-                    className="bg-blue-500 h-1.5 rounded-full transition-all duration-500"
-                    style={{ width: jobStatus ? `${jobStatus.progress}%` : "5%" }}
-                  />
-                </div>
-              )}
-
-              {/* Status message */}
-              <p className="text-muted-foreground">
-                {jobStatus ? jobStatus.message : "Connecting to PCO…"}
-              </p>
-
-              {/* Per-module results when done */}
-              {jobStatus && jobStatus.status !== "pending" && jobStatus.status !== "running" && jobStatus.results.length > 0 && (
-                <div className="space-y-1 pt-1 border-t border-current/10">
-                  {jobStatus.results.map((r, i) => (
-                    <div key={i} className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        {r.status === "completed" ? (
-                          <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                        ) : (
-                          <XCircle className="w-3 h-3 text-red-500" />
-                        )}
-                        <span className="capitalize">{r.syncType}</span>
-                        {r.errorMessage && <span className="text-muted-foreground">— {r.errorMessage}</span>}
-                      </div>
-                      <span className="text-muted-foreground">
-                        {r.recordsProcessed.toLocaleString()} · {formatDuration(r.durationMs)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Auth error: show reconnect prompt */}
-              {jobStatus?.status === "failed" && jobStatus.error?.toLowerCase().includes("token") && (
-                <div className="flex items-center gap-2 pt-1 border-t border-red-200 dark:border-red-800/40">
-                  <AlertCircle className="w-3.5 h-3.5 text-red-600 shrink-0" />
-                  <span className="text-red-700 dark:text-red-400">
-                    PCO session expired — scroll up and click <strong>"Connect to Planning Center"</strong> to re-authorize.
-                  </span>
+              {/* Progress bar */}
+              <div className="w-full h-1.5 bg-muted/30 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${jobStatus?.progress ?? 5}%`,
+                    backgroundColor: "#E8913A",
+                  }}
+                />
+              </div>
+              {jobStatus && jobStatus.recordsProcessed > 0 && (
+                <div className="text-[10px] text-muted-foreground">
+                  {jobStatus.recordsProcessed.toLocaleString()} records processed
                 </div>
               )}
             </div>
