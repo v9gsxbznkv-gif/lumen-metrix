@@ -15,8 +15,10 @@ import {
   syncLogs,
   attendance,
   attendanceMonthly,
+  attendanceWeekly,
   giving,
   givingMonthly,
+  givingWeekly,
   nextSteps,
   nextStepsMonthly,
   serving,
@@ -42,6 +44,11 @@ import {
   syncAll,
   logSyncResult,
 } from "./sync";
+import {
+  syncWeeklyAttendance,
+  syncWeeklyGiving,
+  syncAllWeekly,
+} from "./weeklySync";
 import { getSchedulerStatus } from "./scheduler";
 
 /**
@@ -120,7 +127,7 @@ export const pcoRouter = router({
   triggerSync: publicProcedure
     .input(
       z.object({
-        syncType: z.enum(["attendance", "giving", "groups", "events", "people", "full"]),
+        syncType: z.enum(["attendance", "giving", "groups", "events", "people", "weekly_attendance", "weekly_giving", "weekly_all", "full"]),
         dateFrom: z.string().optional(),
         dateTo: z.string().optional(),
       })
@@ -135,7 +142,12 @@ export const pcoRouter = router({
 
       let results;
       if (input.syncType === "full") {
-        results = await syncAll(client, input.dateFrom, input.dateTo);
+        // Full sync includes both monthly and weekly
+        const monthlyResults = await syncAll(client, input.dateFrom, input.dateTo);
+        const weeklyResults = await syncAllWeekly(client, input.dateFrom, input.dateTo);
+        results = [...monthlyResults, ...weeklyResults];
+      } else if (input.syncType === "weekly_all") {
+        results = await syncAllWeekly(client, input.dateFrom, input.dateTo);
       } else {
         let result;
         switch (input.syncType) {
@@ -153,6 +165,12 @@ export const pcoRouter = router({
             break;
           case "people":
             result = await syncPeople(client);
+            break;
+          case "weekly_attendance":
+            result = await syncWeeklyAttendance(client, input.dateFrom, input.dateTo);
+            break;
+          case "weekly_giving":
+            result = await syncWeeklyGiving(client, input.dateFrom, input.dateTo);
             break;
           default:
             throw new Error(`Unknown sync type: ${input.syncType}`);
@@ -203,8 +221,10 @@ export const pcoRouter = router({
     const [
       attendanceRows,
       attendanceMonthlyRows,
+      attendanceWeeklyRows,
       givingRows,
       givingMonthlyRows,
+      givingWeeklyRows,
       nextStepsRows,
       nextStepsMonthlyRows,
       servingRows,
@@ -212,8 +232,10 @@ export const pcoRouter = router({
     ] = await Promise.all([
       db.select().from(attendance).where(sourceFilter(attendance)),
       db.select().from(attendanceMonthly).where(sourceFilter(attendanceMonthly)),
+      db.select().from(attendanceWeekly),
       db.select().from(giving).where(sourceFilter(giving)),
       db.select().from(givingMonthly).where(sourceFilter(givingMonthly)),
+      db.select().from(givingWeekly),
       db.select().from(nextSteps).where(sourceFilter(nextSteps)),
       db.select().from(nextStepsMonthly).where(sourceFilter(nextStepsMonthly)),
       // Serving: use spreadsheet data for all years until PCO volunteer sync is active.
@@ -291,6 +313,27 @@ export const pcoRouter = router({
         month: r.month,
         campus: r.campus,
         total: r.total,
+      })),
+      attendance_weekly: attendanceWeeklyRows.map((r) => ({
+        year: r.year,
+        weekNumber: r.weekNumber,
+        weekStartDate: r.weekStartDate,
+        campus: r.campus,
+        subgroup: r.subgroup,
+        headcount: r.headcount,
+        regularCount: r.regularCount,
+        guestCount: r.guestCount,
+        volunteerCount: r.volunteerCount,
+      })),
+      giving_weekly: givingWeeklyRows.map((r) => ({
+        year: r.year,
+        weekNumber: r.weekNumber,
+        weekStartDate: r.weekStartDate,
+        campus: r.campus,
+        total: Number(r.total),
+        general: Number(r.general),
+        designated: Number(r.designated),
+        donationCount: r.donationCount,
       })),
       years,
       campuses,

@@ -69,6 +69,29 @@ interface RawServingMonthly {
   total: number;
 }
 
+interface RawAttendanceWeekly {
+  year: number;
+  weekNumber: number;
+  weekStartDate: string; // 'YYYY-MM-DD'
+  campus: string;
+  subgroup: string;
+  headcount: number;
+  regularCount: number;
+  guestCount: number;
+  volunteerCount: number;
+}
+
+interface RawGivingWeekly {
+  year: number;
+  weekNumber: number;
+  weekStartDate: string;
+  campus: string;
+  total: number;
+  general: number;
+  designated: number;
+  donationCount: number;
+}
+
 interface RawDashboard {
   attendance: RawAttendance[];
   giving: RawGiving[];
@@ -80,6 +103,8 @@ interface RawDashboard {
   giving_monthly: RawGivingMonthly[];
   next_steps_monthly: RawNextStepsMonthly[];
   serving_monthly: RawServingMonthly[];
+  attendance_weekly?: RawAttendanceWeekly[];
+  giving_weekly?: RawGivingWeekly[];
 }
 
 // ============================================================
@@ -165,11 +190,36 @@ export interface VolunteerRatio {
   pct: number;
 }
 
+export interface AttendanceWeekly {
+  year: number;
+  weekNumber: number;
+  weekStartDate: string;
+  campus: string;
+  subgroup: string;
+  headcount: number;
+  regularCount: number;
+  guestCount: number;
+  volunteerCount: number;
+}
+
+export interface GivingWeekly {
+  year: number;
+  weekNumber: number;
+  weekStartDate: string;
+  campus: string;
+  total: number;
+  general: number;
+  designated: number;
+  donationCount: number;
+}
+
 export interface DashboardData {
   attendance: AttendanceRecord[];
   attendance_monthly: AttendanceMonthly[];
+  attendance_weekly: AttendanceWeekly[];
   giving: GivingAnnual[];
   giving_monthly: GivingMonthly[];
+  giving_weekly: GivingWeekly[];
   next_steps: NextStepsAnnual[];
   next_steps_monthly: NextStepsMonthly[];
   serving: ServingAnnual[];
@@ -327,8 +377,10 @@ function transformRawData(raw: RawDashboard): DashboardData {
   return {
     attendance: raw.attendance,
     attendance_monthly: raw.attendance_monthly,
+    attendance_weekly: raw.attendance_weekly || [],
     giving: raw.giving,
     giving_monthly: raw.giving_monthly,
+    giving_weekly: raw.giving_weekly || [],
     next_steps: raw.next_steps,
     next_steps_monthly: raw.next_steps_monthly,
     serving: raw.serving,

@@ -1,0 +1,190 @@
+{
+  "query": "SELECT campus, subgroup, SUM(avgWeekly) as sum_avg_weekly, COUNT(*) as row_count FROM attendance_monthly WHERE year = 2025 AND month = 4 GROUP BY campus, subgroup ORDER BY campus, sum_avg_weekly DESC",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT campus, subgroup, SUM(avgWeekly) as sum_avg_weekly, COUNT(*) as row_count FROM attendance_monthly WHERE year = 2025 AND month = 4 GROUP BY campus, subgroup ORDER BY campus, sum_avg_weekly DESC",
+  "rows": [
+    {
+      "campus": "All Campuses",
+      "subgroup": "ESL Class",
+      "sum_avg_weekly": "132",
+      "row_count": "6"
+    },
+    {
+      "campus": "All Campuses",
+      "subgroup": "Test Gathering",
+      "sum_avg_weekly": "46",
+      "row_count": "6"
+    },
+    {
+      "campus": "All Campuses",
+      "subgroup": "YA Gathering",
+      "sum_avg_weekly": "42",
+      "row_count": "2"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "sum_avg_weekly": "7680",
+      "row_count": "8"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "RevStudents | Canton Campus",
+      "sum_avg_weekly": "3104",
+      "row_count": "8"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Adults",
+      "sum_avg_weekly": "2326",
+      "row_count": "1"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Kids",
+      "sum_avg_weekly": "527",
+      "row_count": "1"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Students",
+      "sum_avg_weekly": "310",
+      "row_count": "1"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Treehouse",
+      "sum_avg_weekly": "123",
+      "row_count": "1"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Cove",
+      "sum_avg_weekly": "112",
+      "row_count": "1"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Toddlers",
+      "sum_avg_weekly": "102",
+      "row_count": "1"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Pre-K",
+      "sum_avg_weekly": "99",
+      "row_count": "1"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Young Adults",
+      "sum_avg_weekly": "74",
+      "row_count": "1"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Campground",
+      "sum_avg_weekly": "46",
+      "row_count": "1"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Childcare | Canton Campus",
+      "sum_avg_weekly": "38",
+      "row_count": "8"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Babies",
+      "sum_avg_weekly": "30",
+      "row_count": "1"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Elem Reruns",
+      "sum_avg_weekly": "15",
+      "row_count": "1"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "sum_avg_weekly": "1710",
+      "row_count": "8"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "RevStudents | Jasper Campus",
+      "sum_avg_weekly": "802",
+      "row_count": "8"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Adults",
+      "sum_avg_weekly": "454",
+      "row_count": "1"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Childcare | Jasper Campus",
+      "sum_avg_weekly": "108",
+      "row_count": "8"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Kids",
+      "sum_avg_weekly": "100",
+      "row_count": "1"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Students",
+      "sum_avg_weekly": "66",
+      "row_count": "1"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Treehouse",
+      "sum_avg_weekly": "28",
+      "row_count": "1"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Pre-K",
+      "sum_avg_weekly": "24",
+      "row_count": "1"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Cove",
+      "sum_avg_weekly": "22",
+      "row_count": "1"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Toddlers",
+      "sum_avg_weekly": "17",
+      "row_count": "2"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Elem Reruns",
+      "sum_avg_weekly": "5",
+      "row_count": "1"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Babies",
+      "sum_avg_weekly": "4",
+      "row_count": "1"
+    },
+    {
+      "campus": "Online",
+      "subgroup": "Adults",
+      "sum_avg_weekly": "494",
+      "row_count": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "campus\tsubgroup\tsum_avg_weekly\trow_count\nAll Campuses\tESL Class\t132\t6\nAll Campuses\tTest Gathering\t46\t6\nAll Campuses\tYA Gathering\t42\t2\nCanton\tRevolution Canton Check-In\t7680\t8\nCanton\tRevStudents | Canton Campus\t3104\t8\nCanton\tAdults\t2326\t1\nCanton\tKids\t527\t1\nCanton\tStudents\t310\t1\nCanton\tTreehouse\t123\t1\nCanton\tCove\t112\t1\nCanton\tToddlers\t102\t1\nCanton\tPre-K\t99\t1\nCanton\tYoung Adults\t74\t1\nCanton\tCampground\t46\t1\nCanton\tChildcare | Canton Campus\t38\t8\nCanton\tBabies\t30\t1\nCanton\tElem Reruns\t15\t1\nJasper\tRevolution Jasper Check-In\t1710\t8\nJasper\tRevStudents | Jasper Campus\t802\t8\nJasper\tAdults\t454\t1\nJasper\tChildcare | Jasper Campus\t108\t8\nJasper\tKids\t100\t1\nJasper\tStudents\t66\t1\nJasper\tTreehouse\t28\t1\nJasper\tPre-K\t24\t1\nJasper\tCove\t22\t1\nJasper\tToddlers\t17\t2\nJasper\tElem Reruns\t5\t1\nJasper\tBabies\t4\t1\nOnline\tAdults\t494\t1\n",
+  "stderr": "",
+  "execution_time_ms": 61
+}

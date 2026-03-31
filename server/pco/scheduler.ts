@@ -5,6 +5,7 @@
  */
 import { createAuthenticatedPcoClient } from "./client";
 import { syncAll, logSyncResult } from "./sync";
+import { syncAllWeekly } from "./weeklySync";
 
 let schedulerInterval: ReturnType<typeof setInterval> | null = null;
 let isRunning = false;
@@ -58,9 +59,22 @@ async function runNightlySync(): Promise<void> {
 
     const results = await syncAll(client, dateFrom, dateTo);
 
-    // Log all results
+    // Log monthly sync results
     for (const result of results) {
       await logSyncResult(result);
+    }
+
+    // Also run weekly sync (per-Sunday granularity)
+    try {
+      console.log(`[Scheduler] Starting weekly data sync for ${currentYear}...`);
+      const weeklyResults = await syncAllWeekly(client, dateFrom, dateTo);
+      for (const result of weeklyResults) {
+        await logSyncResult(result);
+      }
+      const weeklyRecords = weeklyResults.reduce((sum, r) => sum + r.recordsProcessed, 0);
+      console.log(`[Scheduler] Weekly sync completed: ${weeklyRecords} records`);
+    } catch (weeklyErr: any) {
+      console.warn(`[Scheduler] Weekly sync failed (non-fatal): ${weeklyErr.message}`);
     }
 
     const totalRecords = results.reduce((sum, r) => sum + r.recordsProcessed, 0);

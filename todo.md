@@ -181,3 +181,24 @@
 - [x] Apply fix to all events: Easter (April), Mother's Day (May), Back to School (August), Christmas Season (December ÷2 for Eve + Sunday)
 - [x] Update UI disclaimer text to reflect the estimation methodology
 - [x] Run all 71 tests — all passing; Easter 2025 estimate: 4,351 attendance, ~$177K giving (in expected range)
+
+## Events Page Attendance Undercount Fix (Round 19)
+- [x] Query all April 2025 subgroups and avg_weekly values — found avg_weekly is a monthly average, not Easter-specific. Actual Easter = 5,982 but avg_weekly = 4,351 (averaged over 4 Sundays)
+- [x] Root cause: monthly avg_weekly cannot isolate a single Sunday's attendance. Need per-Sunday data from PCO check-ins.
+- [x] Solution: build weekly-level data tables and PCO sync (see Round 20)
+
+## Weekly-Level Data Feature (Round 20)
+- [x] Review existing PCO sync code and schema architecture
+- [x] Create attendance_weekly table (year, weekNumber, weekStartDate, campus, subgroup, headcount, regularCount, guestCount, volunteerCount)
+- [x] Create giving_weekly table (year, weekNumber, weekStartDate, campus, total, general, designated, donationCount)
+- [x] Push schema migration (pnpm db:push)
+- [x] Build PCO weekly attendance sync: pulls check-in headcounts, aggregates by Sunday/campus/event-type
+- [x] Build PCO weekly giving sync: pulls donation records, aggregates by week/campus with general/designated split
+- [x] Add weekly sync triggers to Settings page (Attendance Weekly, Giving Weekly, All Weekly)
+- [x] Add weekly sync to nightly auto-sync scheduler (runs after monthly sync)
+- [ ] Run historical sync to populate weekly tables (requires PCO reconnection — tokens expired)
+- [ ] Validate Easter 2025 attendance = ~5,982 from weekly data (pending sync)
+- [x] Update Events page: uses actual event-week data from attendance_weekly/giving_weekly when available, falls back to monthly avg_weekly/division
+- [x] Update Weekly Reports: uses actual weekly snapshots when available, falls back to monthly estimates; labels data source in report
+- [x] Write 33 event tests + 9 weekly report tests (91 total passing)
+- [ ] Checkpoint and deploy

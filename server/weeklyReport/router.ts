@@ -2,21 +2,26 @@
  * Weekly Report Router — tRPC procedures for weekly snapshot data,
  * comparison options, and auto-generation scheduling.
  *
- * Data approach: Since the DB stores monthly aggregates, we derive
- * weekly averages by dividing monthly totals by the number of weeks
- * in each month. The "most recent week" is the latest month with data.
+ * Data approach (priority order):
+ * 1. Weekly tables (attendance_weekly, giving_weekly) — actual per-Sunday data from PCO
+ * 2. Monthly fallback — divide monthly totals by weeks in month when weekly data is absent
+ *
+ * The "most recent week" is determined from the weekly tables first, then falls back
+ * to the latest month with data.
  */
 import { z } from "zod";
 import { publicProcedure, protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import {
   attendanceMonthly,
+  attendanceWeekly,
   givingMonthly,
+  givingWeekly,
   nextStepsMonthly,
   servingMonthly,
   weeklyReportConfig,
 } from "../../drizzle/schema";
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, ne, desc } from "drizzle-orm";
 import { notifyOwner } from "../_core/notification";
 import { invokeLLM } from "../_core/llm";
 
@@ -35,15 +40,16 @@ interface CampusWeeklyMetrics {
 interface WeeklyPeriod {
   year: number;
   month: number;
-  label: string; // e.g. "Mar 2026 (Week 13)"
+  label: string;
   weekNumber: number;
   campuses: CampusWeeklyMetrics[];
   totals: CampusWeeklyMetrics;
+  source: "weekly" | "monthly";
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-/** Approximate weeks in a month (using 4.33 average) */
+/** Approximate weeks in a month (using actual days / 7) */
 function weeksInMonth(year: number, month: number): number {
   const daysInMonth = new Date(year, month, 0).getDate();
   return daysInMonth / 7;
@@ -51,18 +57,178 @@ function weeksInMonth(year: number, month: number): number {
 
 /** Get ISO week number for the last day of a given month */
 function getWeekNumber(year: number, month: number): number {
-  const lastDay = new Date(year, month, 0); // last day of month
+  const lastDay = new Date(year, month, 0);
   const startOfYear = new Date(year, 0, 1);
   const diff = lastDay.getTime() - startOfYear.getTime();
   return Math.ceil((diff / 86400000 + startOfYear.getDay() + 1) / 7);
 }
 
 /** Build a label like "Mar 2026 (Week 13)" */
-function periodLabel(year: number, month: number): string {
+function periodLabel(year: number, month: number, weekNum?: number): string {
   const monthName = new Date(year, month - 1, 1).toLocaleString("en-US", { month: "short" });
-  const weekNum = getWeekNumber(year, month);
-  return `${monthName} ${year} (Week ${weekNum})`;
+  const wk = weekNum ?? getWeekNumber(year, month);
+  return `${monthName} ${year} (Week ${wk})`;
 }
+
+/** Build a label for a specific week date like "Apr 20, 2025 (Week 16)" */
+function weekLabel(weekStartDate: string, weekNumber: number): string {
+  const d = new Date(weekStartDate + "T00:00:00");
+  const monthName = d.toLocaleString("en-US", { month: "short" });
+  return `${monthName} ${d.getDate()}, ${d.getFullYear()} (Week ${weekNumber})`;
+}
+
+// PCO event name → canonical attendance category mapping
+const PCO_ADULTS_SUBGROUPS = [
+  "Revolution Canton Check-In",
+  "Revolution Jasper Check-In",
+  "Revolution Online Check-In",
+];
+const PCO_STUDENTS_SUBGROUPS = [
+  "RevStudents | Canton Campus",
+  "RevStudents | Jasper Campus",
+  "RevStudents | Online Campus",
+];
+const PCO_KIDS_SUBGROUPS = [
+  "Childcare | Canton Campus",
+  "Childcare | Jasper Campus",
+  "Childcare | Online Campus",
+];
+const SPREADSHEET_ADULTS = ["Adults", "Young Adults"];
+const SPREADSHEET_STUDENTS = ["Students"];
+const SPREADSHEET_KIDS = ["Kids"];
+
+function isAttendanceSubgroup(subgroup: string): boolean {
+  return (
+    SPREADSHEET_ADULTS.includes(subgroup) ||
+    SPREADSHEET_STUDENTS.includes(subgroup) ||
+    SPREADSHEET_KIDS.includes(subgroup) ||
+    PCO_ADULTS_SUBGROUPS.includes(subgroup) ||
+    PCO_STUDENTS_SUBGROUPS.includes(subgroup) ||
+    PCO_KIDS_SUBGROUPS.includes(subgroup)
+  );
+}
+
+// ─── Weekly Data Snapshot ───────────────────────────────────────────────────
+
+/**
+ * Build a WeeklyPeriod from actual weekly data for a specific weekStartDate.
+ */
+async function getWeeklySnapshot(
+  db: any,
+  weekStartDate: string,
+  weekNumber: number,
+  year: number
+): Promise<WeeklyPeriod | null> {
+  const [attRows, givRows] = await Promise.all([
+    db
+      .select()
+      .from(attendanceWeekly)
+      .where(eq(attendanceWeekly.weekStartDate, weekStartDate)),
+    db
+      .select()
+      .from(givingWeekly)
+      .where(eq(givingWeekly.weekStartDate, weekStartDate)),
+  ]);
+
+  if (attRows.length === 0 && givRows.length === 0) return null;
+
+  // Determine month from the weekStartDate
+  const d = new Date(weekStartDate + "T00:00:00");
+  const month = d.getMonth() + 1;
+
+  // Get next steps for this month (no weekly granularity for FTG/Salvations/Baptisms)
+  const sundaysInMonth = Math.round(weeksInMonth(year, month));
+  const nsRows = await db
+    .select()
+    .from(nextStepsMonthly)
+    .where(
+      and(
+        eq(nextStepsMonthly.year, year),
+        eq(nextStepsMonthly.month, month),
+        ne(nextStepsMonthly.campus, "All Campuses")
+      )
+    );
+
+  // Get serving for this month (no weekly granularity)
+  const srvRows = await db
+    .select()
+    .from(servingMonthly)
+    .where(
+      and(
+        eq(servingMonthly.year, year),
+        eq(servingMonthly.month, month),
+        ne(servingMonthly.campus, "All Campuses")
+      )
+    );
+
+  const campusNames = new Set<string>();
+  for (const r of attRows) campusNames.add(r.campus);
+  for (const r of givRows) campusNames.add(r.campus);
+  for (const r of nsRows) campusNames.add(r.campus);
+  for (const r of srvRows) campusNames.add(r.campus);
+
+  const campuses: CampusWeeklyMetrics[] = [];
+
+  for (const campus of Array.from(campusNames)) {
+    // Attendance: sum all subgroup headcounts for this campus this week
+    const attTotal = attRows
+      .filter((r: any) => r.campus === campus)
+      .reduce((sum: number, r: any) => sum + r.headcount, 0);
+
+    // Giving: sum all giving for this campus this week
+    const givTotal = givRows
+      .filter((r: any) => r.campus === campus)
+      .reduce((sum: number, r: any) => sum + Number(r.total), 0);
+
+    // Next steps: divide monthly by sundays in month
+    const ftgTotal = nsRows
+      .filter((r: any) => r.campus === campus && r.metric === "FTG")
+      .reduce((sum: number, r: any) => sum + r.count, 0);
+    const salvationsTotal = nsRows
+      .filter((r: any) => r.campus === campus && r.metric === "Salvations")
+      .reduce((sum: number, r: any) => sum + r.count, 0);
+    const baptismsTotal = nsRows
+      .filter((r: any) => r.campus === campus && r.metric === "Baptisms")
+      .reduce((sum: number, r: any) => sum + r.count, 0);
+
+    // Serving: divide monthly by sundays in month
+    const srvTotal = srvRows
+      .filter((r: any) => r.campus === campus)
+      .reduce((sum: number, r: any) => sum + r.total, 0);
+
+    campuses.push({
+      campus,
+      attendance: attTotal,
+      giving: Math.round(givTotal),
+      volunteers: sundaysInMonth > 0 ? Math.round(srvTotal / sundaysInMonth) : 0,
+      ftg: sundaysInMonth > 0 ? Math.round(ftgTotal / sundaysInMonth) : 0,
+      salvations: sundaysInMonth > 0 ? Math.round(salvationsTotal / sundaysInMonth) : 0,
+      baptisms: sundaysInMonth > 0 ? Math.round(baptismsTotal / sundaysInMonth) : 0,
+    });
+  }
+
+  const totals: CampusWeeklyMetrics = {
+    campus: "All Campuses",
+    attendance: campuses.reduce((s, c) => s + c.attendance, 0),
+    giving: campuses.reduce((s, c) => s + c.giving, 0),
+    volunteers: campuses.reduce((s, c) => s + c.volunteers, 0),
+    ftg: campuses.reduce((s, c) => s + c.ftg, 0),
+    salvations: campuses.reduce((s, c) => s + c.salvations, 0),
+    baptisms: campuses.reduce((s, c) => s + c.baptisms, 0),
+  };
+
+  return {
+    year,
+    month,
+    label: weekLabel(weekStartDate, weekNumber),
+    weekNumber,
+    campuses,
+    totals,
+    source: "weekly",
+  };
+}
+
+// ─── Monthly Fallback Snapshot ──────────────────────────────────────────────
 
 /** Query all monthly data for a given year/month and build campus metrics */
 async function getMonthlySnapshot(
@@ -113,7 +279,6 @@ async function getMonthlySnapshot(
       ),
   ]);
 
-  // If no data at all, return null
   if (attRows.length === 0 && givRows.length === 0 && nsRows.length === 0 && srvRows.length === 0) {
     return null;
   }
@@ -121,7 +286,6 @@ async function getMonthlySnapshot(
   const weeks = weeksInMonth(year, month);
   const campusNames = new Set<string>();
 
-  // Collect campus names
   for (const r of attRows) campusNames.add(r.campus);
   for (const r of givRows) campusNames.add(r.campus);
   for (const r of nsRows) campusNames.add(r.campus);
@@ -129,51 +293,18 @@ async function getMonthlySnapshot(
 
   const campuses: CampusWeeklyMetrics[] = [];
 
-  // PCO event name → canonical attendance category mapping
-  // Main service check-ins count as Adults; student events as Students; childcare as Kids
-  const PCO_ADULTS_SUBGROUPS = [
-    "Revolution Canton Check-In",
-    "Revolution Jasper Check-In",
-    "Revolution Online Check-In",
-  ];
-  const PCO_STUDENTS_SUBGROUPS = [
-    "RevStudents | Canton Campus",
-    "RevStudents | Jasper Campus",
-    "RevStudents | Online Campus",
-  ];
-  const PCO_KIDS_SUBGROUPS = [
-    "Childcare | Canton Campus",
-    "Childcare | Jasper Campus",
-    "Childcare | Online Campus",
-  ];
-  // Canonical spreadsheet subgroup names
-  const SPREADSHEET_ADULTS = ["Adults", "Young Adults"];
-  const SPREADSHEET_STUDENTS = ["Students"];
-  const SPREADSHEET_KIDS = ["Kids"];
-
   for (const campus of Array.from(campusNames)) {
-    // Attendance: sum Adults + Kids + Students subgroups (spreadsheet names OR PCO event names)
     const attTotal = attRows
       .filter(
         (r: any) =>
-          r.campus === campus &&
-          (
-            SPREADSHEET_ADULTS.includes(r.subgroup) ||
-            SPREADSHEET_STUDENTS.includes(r.subgroup) ||
-            SPREADSHEET_KIDS.includes(r.subgroup) ||
-            PCO_ADULTS_SUBGROUPS.includes(r.subgroup) ||
-            PCO_STUDENTS_SUBGROUPS.includes(r.subgroup) ||
-            PCO_KIDS_SUBGROUPS.includes(r.subgroup)
-          )
+          r.campus === campus && isAttendanceSubgroup(r.subgroup)
       )
       .reduce((sum: number, r: any) => sum + r.total, 0);
 
-    // Giving: sum all subgroups for campus, divide by weeks
     const givTotal = givRows
       .filter((r: any) => r.campus === campus)
       .reduce((sum: number, r: any) => sum + Number(r.total), 0);
 
-    // Next steps metrics
     const ftgTotal = nsRows
       .filter((r: any) => r.campus === campus && r.metric === "FTG")
       .reduce((sum: number, r: any) => sum + r.count, 0);
@@ -184,7 +315,6 @@ async function getMonthlySnapshot(
       .filter((r: any) => r.campus === campus && r.metric === "Baptisms")
       .reduce((sum: number, r: any) => sum + r.count, 0);
 
-    // Serving
     const srvTotal = srvRows
       .filter((r: any) => r.campus === campus)
       .reduce((sum: number, r: any) => sum + r.total, 0);
@@ -200,7 +330,6 @@ async function getMonthlySnapshot(
     });
   }
 
-  // Compute totals
   const totals: CampusWeeklyMetrics = {
     campus: "All Campuses",
     attendance: campuses.reduce((s, c) => s + c.attendance, 0),
@@ -218,6 +347,7 @@ async function getMonthlySnapshot(
     weekNumber: getWeekNumber(year, month),
     campuses,
     totals,
+    source: "monthly",
   };
 }
 
@@ -227,7 +357,6 @@ async function getYTDSnapshot(
   year: number,
   throughMonth: number
 ): Promise<WeeklyPeriod | null> {
-  // Collect all months
   const monthSnapshots: WeeklyPeriod[] = [];
   for (let m = 1; m <= throughMonth; m++) {
     const snap = await getMonthlySnapshot(db, year, m);
@@ -236,7 +365,6 @@ async function getYTDSnapshot(
 
   if (monthSnapshots.length === 0) return null;
 
-  // Aggregate: average across months
   const campusNames = new Set<string>();
   for (const snap of monthSnapshots) {
     for (const c of snap.campuses) campusNames.add(c.campus);
@@ -278,7 +406,68 @@ async function getYTDSnapshot(
     weekNumber: lastMonth.weekNumber,
     campuses,
     totals,
+    source: "monthly",
   };
+}
+
+// ─── Smart Snapshot: tries weekly first, falls back to monthly ──────────────
+
+/**
+ * Get the most recent weekly snapshot for a given year.
+ * Falls back to monthly if no weekly data exists.
+ */
+async function getLatestSnapshot(
+  db: any,
+  year: number
+): Promise<{ snapshot: WeeklyPeriod | null; latestMonth: number; latestWeekDate: string | null }> {
+  // Try weekly data first
+  const latestWeekRow = await db
+    .select()
+    .from(attendanceWeekly)
+    .where(eq(attendanceWeekly.year, year))
+    .orderBy(desc(attendanceWeekly.weekNumber))
+    .limit(1);
+
+  if (latestWeekRow.length > 0) {
+    const row = latestWeekRow[0];
+    const snapshot = await getWeeklySnapshot(db, row.weekStartDate, row.weekNumber, year);
+    const d = new Date(row.weekStartDate + "T00:00:00");
+    return {
+      snapshot,
+      latestMonth: d.getMonth() + 1,
+      latestWeekDate: row.weekStartDate,
+    };
+  }
+
+  // Fall back to monthly
+  const allAtt = await db
+    .select()
+    .from(attendanceMonthly)
+    .where(eq(attendanceMonthly.year, year));
+  const maxMonth = allAtt.length > 0 ? Math.max(...allAtt.map((r: any) => r.month)) : 3;
+  const snapshot = await getMonthlySnapshot(db, year, maxMonth);
+  return { snapshot, latestMonth: maxMonth, latestWeekDate: null };
+}
+
+/**
+ * Get a snapshot for a specific week offset from a reference weekStartDate.
+ * offset=-1 means previous week, offset=0 means same week.
+ */
+function offsetWeekDate(weekStartDate: string, offsetWeeks: number): string {
+  const d = new Date(weekStartDate + "T00:00:00");
+  d.setDate(d.getDate() + offsetWeeks * 7);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function getISOWeekNumber(dateStr: string): number {
+  const d = new Date(dateStr + "T00:00:00");
+  const dayNum = d.getDay() || 7;
+  d.setDate(d.getDate() + 4 - dayNum);
+  const yearStart = new Date(d.getFullYear(), 0, 1);
+  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
 }
 
 // ─── Router ─────────────────────────────────────────────────────────────────
@@ -286,7 +475,7 @@ async function getYTDSnapshot(
 export const weeklyReportRouter = router({
   /**
    * Get weekly report data with comparison periods.
-   * Returns the current period plus requested comparison periods.
+   * Prefers actual weekly data from PCO; falls back to monthly estimates.
    */
   getData: publicProcedure
     .input(
@@ -301,34 +490,47 @@ export const weeklyReportRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
-      // Find the latest month with data for the requested year
-      const allAtt = await db
-        .select()
-        .from(attendanceMonthly)
-        .where(eq(attendanceMonthly.year, input.year));
-      const maxMonth = allAtt.length > 0 ? Math.max(...allAtt.map((r: any) => r.month)) : 3;
-
-      // Current period: latest month's weekly average
-      const current = await getMonthlySnapshot(db, input.year, maxMonth);
+      const { snapshot: current, latestMonth, latestWeekDate } = await getLatestSnapshot(db, input.year);
 
       // Build comparison periods
       const comparisons: Record<string, WeeklyPeriod | null> = {};
 
       for (const comp of input.comparisons) {
         if (comp === "sameWeekLastYear") {
-          // Same month, previous year
-          comparisons.sameWeekLastYear = await getMonthlySnapshot(db, input.year - 1, maxMonth);
+          if (latestWeekDate) {
+            // Same week date, previous year
+            const lastYearDate = offsetWeekDate(latestWeekDate, 0).replace(
+              /^\d{4}/,
+              String(input.year - 1)
+            );
+            const wk = getISOWeekNumber(lastYearDate);
+            comparisons.sameWeekLastYear = await getWeeklySnapshot(db, lastYearDate, wk, input.year - 1)
+              ?? await getMonthlySnapshot(db, input.year - 1, latestMonth);
+          } else {
+            comparisons.sameWeekLastYear = await getMonthlySnapshot(db, input.year - 1, latestMonth);
+          }
         } else if (comp === "previousWeek") {
-          // Previous month (or December of prior year if month=1)
-          const prevMonth = maxMonth > 1 ? maxMonth - 1 : 12;
-          const prevYear = maxMonth > 1 ? input.year : input.year - 1;
-          comparisons.previousWeek = await getMonthlySnapshot(db, prevYear, prevMonth);
+          if (latestWeekDate) {
+            // Previous week from weekly data
+            const prevDate = offsetWeekDate(latestWeekDate, -1);
+            const prevYear = new Date(prevDate + "T00:00:00").getFullYear();
+            const prevWk = getISOWeekNumber(prevDate);
+            comparisons.previousWeek = await getWeeklySnapshot(db, prevDate, prevWk, prevYear);
+            // Fall back to monthly if no weekly data for previous week
+            if (!comparisons.previousWeek) {
+              const prevMonth = latestMonth > 1 ? latestMonth - 1 : 12;
+              const prevYr = latestMonth > 1 ? input.year : input.year - 1;
+              comparisons.previousWeek = await getMonthlySnapshot(db, prevYr, prevMonth);
+            }
+          } else {
+            const prevMonth = latestMonth > 1 ? latestMonth - 1 : 12;
+            const prevYear = latestMonth > 1 ? input.year : input.year - 1;
+            comparisons.previousWeek = await getMonthlySnapshot(db, prevYear, prevMonth);
+          }
         } else if (comp === "samePeriodLastYear") {
-          // YTD comparison: same months last year vs this year
-          const currentYTD = await getYTDSnapshot(db, input.year, maxMonth);
-          const lastYearYTD = await getYTDSnapshot(db, input.year - 1, maxMonth);
+          const currentYTD = await getYTDSnapshot(db, input.year, latestMonth);
+          const lastYearYTD = await getYTDSnapshot(db, input.year - 1, latestMonth);
           comparisons.samePeriodLastYear = lastYearYTD;
-          // Also return current YTD for display
           comparisons.currentYTD = currentYTD;
         }
       }
@@ -338,8 +540,9 @@ export const weeklyReportRouter = router({
         comparisons,
         meta: {
           year: input.year,
-          latestMonth: maxMonth,
+          latestMonth,
           latestWeek: current?.weekNumber ?? 0,
+          source: current?.source ?? "monthly",
         },
       };
     }),
@@ -411,7 +614,8 @@ export const weeklyReportRouter = router({
     }),
 
   /**
-   * Manually trigger report generation and send via notification
+   * Manually trigger report generation and send via notification.
+   * Uses weekly data when available.
    */
   generateAndSend: protectedProcedure
     .input(
@@ -424,18 +628,12 @@ export const weeklyReportRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
-      // Get the latest month
-      const allAtt = await db
-        .select()
-        .from(attendanceMonthly)
-        .where(eq(attendanceMonthly.year, input.year));
-      const maxMonth = allAtt.length > 0 ? Math.max(...allAtt.map((r: any) => r.month)) : 3;
-
-      const current = await getMonthlySnapshot(db, input.year, maxMonth);
+      const { snapshot: current } = await getLatestSnapshot(db, input.year);
       if (!current) throw new Error("No data available for the selected year");
 
       // Build a text summary
-      let summary = `Weekly Report — ${current.label}\n\n`;
+      let summary = `Weekly Report — ${current.label}\n`;
+      summary += `Data source: ${current.source === "weekly" ? "PCO weekly data" : "Monthly estimate"}\n\n`;
       summary += `ALL CAMPUSES:\n`;
       summary += `  Attendance: ${current.totals.attendance}\n`;
       summary += `  Giving: $${current.totals.giving.toLocaleString()}\n`;
@@ -473,17 +671,21 @@ export const weeklyReportRouter = router({
         aiSummary = "";
       }
 
-      // Build Markdown email (the Manus notification service renders Markdown, not raw HTML)
-      // The header block uses an inline SVG image tag which the service renders correctly.
+      // Build Markdown email
+      const sourceNote = current.source === "weekly"
+        ? "📊 *Data from PCO weekly check-ins and donations*"
+        : "📊 *Data estimated from monthly averages (run Weekly Sync for exact numbers)*";
+
       const campusMdRows = current.campuses
         .map(c => `| **${c.campus}** | ${c.attendance.toLocaleString()} | $${c.giving.toLocaleString()} | ${c.volunteers} | ${c.ftg} | ${c.salvations} | ${c.baptisms} |`)
         .join('\n');
 
       const mdContent = [
-        // Branded header — inline SVG renders in the notification service
         `<div style="background:#1C1917;padding:18px 24px;border-radius:8px 8px 0 0;display:inline-flex;align-items:center;gap:10px;"><svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="24" width="5" height="14" rx="1.5" fill="#E8913A" transform="rotate(-10 4 24)" opacity="0.7"/><rect x="10" y="14" width="5.5" height="22" rx="1.5" fill="#E8913A" transform="rotate(-2 10 14)" opacity="0.85"/><rect x="18" y="6" width="6" height="30" rx="1.5" fill="#E8913A"/><rect x="26" y="12" width="5.5" height="24" rx="1.5" fill="#C47A2E" transform="rotate(4 26 12)" opacity="0.75"/><circle cx="21" cy="4" r="2" fill="#F5C882" opacity="0.6"/></svg><span style="font-family:Arial,sans-serif;font-weight:700;font-size:17px;letter-spacing:0.06em;color:#FFFFFF;">LUMEN</span><span style="font-family:Arial,sans-serif;font-weight:400;font-size:17px;letter-spacing:0.06em;color:rgba(255,255,255,0.55);"> METRIX</span></div>`,
         ``,
         `## 📊 Weekly Report — ${current.label}`,
+        ``,
+        sourceNote,
         ``,
         `---`,
         ``,

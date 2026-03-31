@@ -1,0 +1,75 @@
+{
+  "query": "SELECT campus, subgroup, SUM(avgWeekly) as sum_avg_weekly FROM attendance_monthly WHERE year = 2025 AND month = 4 AND campus IN ('Jasper','Online') GROUP BY campus, subgroup ORDER BY campus, sum_avg_weekly DESC",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT campus, subgroup, SUM(avgWeekly) as sum_avg_weekly FROM attendance_monthly WHERE year = 2025 AND month = 4 AND campus IN ('Jasper','Online') GROUP BY campus, subgroup ORDER BY campus, sum_avg_weekly DESC",
+  "rows": [
+    {
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "sum_avg_weekly": "1710"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "RevStudents | Jasper Campus",
+      "sum_avg_weekly": "802"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Adults",
+      "sum_avg_weekly": "454"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Childcare | Jasper Campus",
+      "sum_avg_weekly": "108"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Kids",
+      "sum_avg_weekly": "100"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Students",
+      "sum_avg_weekly": "66"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Treehouse",
+      "sum_avg_weekly": "28"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Pre-K",
+      "sum_avg_weekly": "24"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Cove",
+      "sum_avg_weekly": "22"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Toddlers",
+      "sum_avg_weekly": "17"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Elem Reruns",
+      "sum_avg_weekly": "5"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Babies",
+      "sum_avg_weekly": "4"
+    },
+    {
+      "campus": "Online",
+      "subgroup": "Adults",
+      "sum_avg_weekly": "494"
+    }
+  ],
+  "messages": [],
+  "stdout": "campus\tsubgroup\tsum_avg_weekly\nJasper\tRevolution Jasper Check-In\t1710\nJasper\tRevStudents | Jasper Campus\t802\nJasper\tAdults\t454\nJasper\tChildcare | Jasper Campus\t108\nJasper\tKids\t100\nJasper\tStudents\t66\nJasper\tTreehouse\t28\nJasper\tPre-K\t24\nJasper\tCove\t22\nJasper\tToddlers\t17\nJasper\tElem Reruns\t5\nJasper\tBabies\t4\nOnline\tAdults\t494\n",
+  "stderr": "",
+  "execution_time_ms": 60
+}

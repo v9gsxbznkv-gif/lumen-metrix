@@ -360,3 +360,46 @@ export const weeklyReportConfig = mysqlTable("weekly_report_config", {
 
 export type WeeklyReportConfig = typeof weeklyReportConfig.$inferSelect;
 export type InsertWeeklyReportConfig = typeof weeklyReportConfig.$inferInsert;
+
+// ============================================================
+// Attendance Weekly — per-Sunday headcounts from PCO check-ins
+// ============================================================
+export const attendanceWeekly = mysqlTable("attendance_weekly", {
+  id: int("id").autoincrement().primaryKey(),
+  year: int("year").notNull(),
+  weekNumber: int("weekNumber").notNull(),        // ISO week number (1-53)
+  weekStartDate: varchar("weekStartDate", { length: 10 }).notNull(), // 'YYYY-MM-DD' of the Sunday
+  campus: varchar("campus", { length: 64 }).notNull(),
+  subgroup: varchar("subgroup", { length: 128 }).notNull(), // PCO event name (e.g. 'Revolution Canton Check-In')
+  headcount: int("headcount").default(0).notNull(),
+  regularCount: int("regularCount").default(0).notNull(),
+  guestCount: int("guestCount").default(0).notNull(),
+  volunteerCount: int("volunteerCount").default(0).notNull(),
+  source: varchar("source", { length: 32 }).default("pco").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AttendanceWeeklyRow = typeof attendanceWeekly.$inferSelect;
+export type InsertAttendanceWeekly = typeof attendanceWeekly.$inferInsert;
+
+// ============================================================
+// Giving Weekly — per-week donation totals from PCO giving
+// ============================================================
+export const givingWeekly = mysqlTable("giving_weekly", {
+  id: int("id").autoincrement().primaryKey(),
+  year: int("year").notNull(),
+  weekNumber: int("weekNumber").notNull(),        // ISO week number (1-53)
+  weekStartDate: varchar("weekStartDate", { length: 10 }).notNull(), // 'YYYY-MM-DD' of the Sunday
+  campus: varchar("campus", { length: 64 }).notNull(),
+  total: decimal("total", { precision: 12, scale: 2 }).default("0").notNull(),
+  general: decimal("general", { precision: 12, scale: 2 }).default("0").notNull(),
+  designated: decimal("designated", { precision: 12, scale: 2 }).default("0").notNull(),
+  donationCount: int("donationCount").default(0).notNull(),
+  source: varchar("source", { length: 32 }).default("pco").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type GivingWeeklyRow = typeof givingWeekly.$inferSelect;
+export type InsertGivingWeekly = typeof givingWeekly.$inferInsert;

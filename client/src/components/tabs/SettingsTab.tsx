@@ -27,12 +27,15 @@ import {
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type SyncType = "attendance" | "giving" | "groups" | "events" | "people" | "full";
+type SyncType = "attendance" | "giving" | "groups" | "events" | "people" | "weekly_attendance" | "weekly_giving" | "weekly_all" | "full";
 
 const SYNC_OPTIONS: { value: SyncType; label: string; description: string }[] = [
-  { value: "full", label: "Full Sync", description: "Sync all modules from PCO" },
-  { value: "attendance", label: "Attendance", description: "Check-ins & headcounts" },
-  { value: "giving", label: "Giving", description: "Donations & fund totals" },
+  { value: "full", label: "Full Sync", description: "Sync all modules from PCO (monthly + weekly)" },
+  { value: "attendance", label: "Attendance (Monthly)", description: "Monthly check-ins & headcounts" },
+  { value: "giving", label: "Giving (Monthly)", description: "Monthly donations & fund totals" },
+  { value: "weekly_all", label: "Weekly Data (All)", description: "Per-Sunday attendance + giving from PCO" },
+  { value: "weekly_attendance", label: "Weekly Attendance", description: "Per-Sunday check-in headcounts" },
+  { value: "weekly_giving", label: "Weekly Giving", description: "Per-Sunday donation totals" },
   { value: "groups", label: "Groups", description: "Small groups & memberships" },
   { value: "events", label: "Events", description: "Calendar event instances" },
   { value: "people", label: "People", description: "Person records & profiles" },

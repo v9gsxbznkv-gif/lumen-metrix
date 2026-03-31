@@ -1,0 +1,164 @@
+{
+  "query": "SELECT campus, subgroup, avgWeekly, total, source FROM attendance_monthly WHERE year = 2025 AND month = 4 AND subgroup IN ('Adults','Kids','Students','Young Adults','Campground','Treehouse','Cove','Toddlers','Pre-K','Babies','Elem Reruns') ORDER BY campus, subgroup",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT campus, subgroup, avgWeekly, total, source FROM attendance_monthly WHERE year = 2025 AND month = 4 AND subgroup IN ('Adults','Kids','Students','Young Adults','Campground','Treehouse','Cove','Toddlers','Pre-K','Babies','Elem Reruns') ORDER BY campus, subgroup",
+  "rows": [
+    {
+      "campus": "Canton",
+      "subgroup": "Adults",
+      "avgWeekly": "2326",
+      "total": "9306",
+      "source": "spreadsheet"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Babies",
+      "avgWeekly": "30",
+      "total": "118",
+      "source": "spreadsheet"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Campground",
+      "avgWeekly": "46",
+      "total": "183",
+      "source": "spreadsheet"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Cove",
+      "avgWeekly": "112",
+      "total": "449",
+      "source": "spreadsheet"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Elem Reruns",
+      "avgWeekly": "15",
+      "total": "60",
+      "source": "spreadsheet"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Kids",
+      "avgWeekly": "527",
+      "total": "2107",
+      "source": "spreadsheet"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Pre-K",
+      "avgWeekly": "99",
+      "total": "396",
+      "source": "spreadsheet"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Students",
+      "avgWeekly": "310",
+      "total": "1239",
+      "source": "spreadsheet"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Toddlers",
+      "avgWeekly": "102",
+      "total": "409",
+      "source": "spreadsheet"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Treehouse",
+      "avgWeekly": "123",
+      "total": "492",
+      "source": "spreadsheet"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Young Adults",
+      "avgWeekly": "74",
+      "total": "74",
+      "source": "spreadsheet"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Adults",
+      "avgWeekly": "454",
+      "total": "1814",
+      "source": "spreadsheet"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Babies",
+      "avgWeekly": "4",
+      "total": "16",
+      "source": "spreadsheet"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Cove",
+      "avgWeekly": "22",
+      "total": "90",
+      "source": "spreadsheet"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Elem Reruns",
+      "avgWeekly": "5",
+      "total": "21",
+      "source": "spreadsheet"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Kids",
+      "avgWeekly": "100",
+      "total": "399",
+      "source": "spreadsheet"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Pre-K",
+      "avgWeekly": "24",
+      "total": "94",
+      "source": "spreadsheet"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Students",
+      "avgWeekly": "66",
+      "total": "262",
+      "source": "spreadsheet"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Toddlers",
+      "avgWeekly": "10",
+      "total": "38",
+      "source": "spreadsheet"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Toddlers",
+      "avgWeekly": "7",
+      "total": "28",
+      "source": "spreadsheet"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Treehouse",
+      "avgWeekly": "28",
+      "total": "112",
+      "source": "spreadsheet"
+    },
+    {
+      "campus": "Online",
+      "subgroup": "Adults",
+      "avgWeekly": "494",
+      "total": "1978",
+      "source": "spreadsheet"
+    }
+  ],
+  "messages": [],
+  "stdout": "campus\tsubgroup\tavgWeekly\ttotal\tsource\nCanton\tAdults\t2326\t9306\tspreadsheet\nCanton\tBabies\t30\t118\tspreadsheet\nCanton\tCampground\t46\t183\tspreadsheet\nCanton\tCove\t112\t449\tspreadsheet\nCanton\tElem Reruns\t15\t60\tspreadsheet\nCanton\tKids\t527\t2107\tspreadsheet\nCanton\tPre-K\t99\t396\tspreadsheet\nCanton\tStudents\t310\t1239\tspreadsheet\nCanton\tToddlers\t102\t409\tspreadsheet\nCanton\tTreehouse\t123\t492\tspreadsheet\nCanton\tYoung Adults\t74\t74\tspreadsheet\nJasper\tAdults\t454\t1814\tspreadsheet\nJasper\tBabies\t4\t16\tspreadsheet\nJasper\tCove\t22\t90\tspreadsheet\nJasper\tElem Reruns\t5\t21\tspreadsheet\nJasper\tKids\t100\t399\tspreadsheet\nJasper\tPre-K\t24\t94\tspreadsheet\nJasper\tStudents\t66\t262\tspreadsheet\nJasper\tToddlers\t10\t38\tspreadsheet\nJasper\tToddlers\t7\t28\tspreadsheet\nJasper\tTreehouse\t28\t112\tspreadsheet\nOnline\tAdults\t494\t1978\tspreadsheet\n",
+  "stderr": "",
+  "execution_time_ms": 173
+}
