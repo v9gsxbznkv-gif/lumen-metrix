@@ -288,25 +288,64 @@ function SyncControlsSection() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [showLogs, setShowLogs] = useState(false);
+  const [activeJobId, setActiveJobId] = useState<string | null>(null);
 
   const { data: connectionStatus } = trpc.pco.getConnectionStatus.useQuery();
   const { data: logs, refetch: refetchLogs } = trpc.pco.getSyncLogs.useQuery({ limit: 10 });
 
-  const syncMutation = trpc.pco.triggerSync.useMutation({
+  // Poll the active job status every 2 seconds while a job is running
+  const { data: jobStatus } = trpc.pco.getSyncJobStatus.useQuery(
+    { jobId: activeJobId! },
+    {
+      enabled: !!activeJobId,
+      refetchInterval: (query) => {
+        const data = query.state.data;
+        if (!data) return 2000;
+        // Stop polling once the job is done
+        if (data.status === "completed" || data.status === "failed") return false;
+        return 2000;
+      },
+    }
+  );
+
+  // When a job finishes, show a toast and refresh logs
+  const [notifiedJobId, setNotifiedJobId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!jobStatus) return;
+    if (jobStatus.status !== "completed" && jobStatus.status !== "failed") return;
+    // Only fire once per job completion
+    if (notifiedJobId === jobStatus.jobId) return;
+    setNotifiedJobId(jobStatus.jobId);
+    if (jobStatus.status === "completed") {
+      toast.success(`Sync completed — ${jobStatus.recordsProcessed.toLocaleString()} records processed`);
+    } else {
+      toast.error(`Sync failed: ${jobStatus.error ?? jobStatus.message}`, { duration: 8000 });
+    }
+    refetchLogs();
+  }, [jobStatus?.status, jobStatus?.jobId]);
+
+  const startSyncMutation = trpc.pco.triggerSync.useMutation({
     onSuccess: (result) => {
-      const allOk = result.results.every((r) => r.status === "completed");
-      const failed = result.results.filter((r) => r.status === "failed");
-      if (allOk) {
-        const total = result.results.reduce((s, r) => s + r.recordsProcessed, 0);
-        toast.success(`Sync completed — ${total.toLocaleString()} records processed`);
-      } else {
-        toast.error(`Sync completed with ${failed.length} error(s): ${failed.map((f) => f.errorMessage).join("; ")}`);
-      }
-      refetchLogs();
+      setActiveJobId(result.jobId);
+      setNotifiedJobId(null); // reset so completion toast fires for the new job
+      toast.info("Sync started in background — progress shown below");
     },
-    onError: (err) => toast.error(`Sync failed: ${err.message}`),
+    onError: (err) => {
+      // Show a persistent, descriptive error — not just a toast that disappears
+      const isAuthError =
+        err.message.toLowerCase().includes("not connected") ||
+        err.message.toLowerCase().includes("token") ||
+        err.message.toLowerCase().includes("connect");
+      toast.error(
+        isAuthError
+          ? "PCO connection expired. Go to the Planning Center section above and click \"Connect to Planning Center\" to re-authorize."
+          : `Sync failed: ${err.message}`,
+        { duration: 8000 }
+      );
+    },
   });
 
+  const isJobRunning = jobStatus && (jobStatus.status === "pending" || jobStatus.status === "running");
   const isConnected = connectionStatus?.connected === true;
 
   return (
@@ -333,7 +372,8 @@ function SyncControlsSection() {
                 <button
                   key={opt.value}
                   onClick={() => setSelectedSync(opt.value)}
-                  className={`text-left px-3 py-2 rounded-md border text-xs transition-colors ${
+                  disabled={!!isJobRunning}
+                  className={`text-left px-3 py-2 rounded-md border text-xs transition-colors disabled:opacity-50 ${
                     selectedSync === opt.value
                       ? "border-amber-500/60 bg-amber-50 dark:bg-amber-950/20"
                       : "border-border/40 hover:bg-muted/20"
@@ -376,20 +416,25 @@ function SyncControlsSection() {
 
           <button
             onClick={() =>
-              syncMutation.mutate({
+              startSyncMutation.mutate({
                 syncType: selectedSync,
                 dateFrom: dateFrom || undefined,
                 dateTo: dateTo || undefined,
               })
             }
-            disabled={syncMutation.isPending}
+            disabled={!!isJobRunning || startSyncMutation.isPending}
             className="flex items-center gap-2 text-sm px-4 py-2 rounded-md text-white transition-colors disabled:opacity-60"
             style={{ backgroundColor: "#E8913A" }}
           >
-            {syncMutation.isPending ? (
+            {startSyncMutation.isPending ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Syncing from PCO…
+                Starting…
+              </>
+            ) : isJobRunning ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Syncing…
               </>
             ) : (
               <>
@@ -399,32 +444,78 @@ function SyncControlsSection() {
             )}
           </button>
 
-          {/* Sync result inline */}
-          {syncMutation.isSuccess && (
-            <div className="space-y-2">
-              {syncMutation.data.results.map((r, i) => (
-                <div
-                  key={i}
-                  className={`flex items-center justify-between px-3 py-2 rounded-md text-xs ${
-                    r.status === "completed"
-                      ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400"
-                      : "bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400"
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    {r.status === "completed" ? (
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                    ) : (
-                      <XCircle className="w-3.5 h-3.5" />
-                    )}
-                    <span className="font-medium capitalize">{r.syncType}</span>
-                    {r.errorMessage && <span className="text-muted-foreground">— {r.errorMessage}</span>}
-                  </div>
-                  <span>
-                    {r.recordsProcessed.toLocaleString()} processed · {formatDuration(r.durationMs)}
+          {/* Live job progress panel */}
+          {activeJobId && jobStatus && (
+            <div
+              className={`rounded-md border p-3 text-xs space-y-2 ${
+                jobStatus.status === "completed"
+                  ? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/40"
+                  : jobStatus.status === "failed"
+                  ? "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800/40"
+                  : "bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800/40"
+              }`}
+            >
+              {/* Status header */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {jobStatus.status === "completed" ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  ) : jobStatus.status === "failed" ? (
+                    <XCircle className="w-3.5 h-3.5 text-red-600" />
+                  ) : (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
+                  )}
+                  <span className="font-medium capitalize">{jobStatus.syncType}</span>
+                </div>
+                <span className="text-muted-foreground">
+                  {jobStatus.recordsProcessed.toLocaleString()} records
+                </span>
+              </div>
+
+              {/* Progress bar */}
+              {(jobStatus.status === "running" || jobStatus.status === "pending") && (
+                <div className="w-full bg-blue-200 dark:bg-blue-900/40 rounded-full h-1.5">
+                  <div
+                    className="bg-blue-500 h-1.5 rounded-full transition-all duration-500"
+                    style={{ width: `${jobStatus.progress}%` }}
+                  />
+                </div>
+              )}
+
+              {/* Status message */}
+              <p className="text-muted-foreground">{jobStatus.message}</p>
+
+              {/* Per-module results when done */}
+              {jobStatus.status !== "pending" && jobStatus.status !== "running" && jobStatus.results.length > 0 && (
+                <div className="space-y-1 pt-1 border-t border-current/10">
+                  {jobStatus.results.map((r, i) => (
+                    <div key={i} className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        {r.status === "completed" ? (
+                          <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                        ) : (
+                          <XCircle className="w-3 h-3 text-red-500" />
+                        )}
+                        <span className="capitalize">{r.syncType}</span>
+                        {r.errorMessage && <span className="text-muted-foreground">— {r.errorMessage}</span>}
+                      </div>
+                      <span className="text-muted-foreground">
+                        {r.recordsProcessed.toLocaleString()} · {formatDuration(r.durationMs)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Auth error: show reconnect prompt */}
+              {jobStatus.status === "failed" && jobStatus.error?.toLowerCase().includes("token") && (
+                <div className="flex items-center gap-2 pt-1 border-t border-red-200 dark:border-red-800/40">
+                  <AlertCircle className="w-3.5 h-3.5 text-red-600 shrink-0" />
+                  <span className="text-red-700 dark:text-red-400">
+                    PCO session expired — scroll up and click <strong>"Connect to Planning Center"</strong> to re-authorize.
                   </span>
                 </div>
-              ))}
+              )}
             </div>
           )}
         </div>

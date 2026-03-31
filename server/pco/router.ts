@@ -50,6 +50,12 @@ import {
   syncAllWeekly,
 } from "./weeklySync";
 import { getSchedulerStatus } from "./scheduler";
+import {
+  createJob,
+  updateJob,
+  getJob,
+  getRecentJobs,
+} from "./jobManager";
 
 /**
  * The cutover year: from this year onward, PCO is the source of truth.
@@ -72,6 +78,111 @@ function sourceFilter(table: { year: any; source: any }) {
     lt(table.year, PCO_CUTOVER_YEAR),          // historical: any source
     gte(table.year, PCO_CUTOVER_YEAR)           // current: any source (pco preferred via upsert)
   );
+}
+
+/**
+ * Execute a sync job in the background. Updates the job record with progress
+ * and results. Called without await so the HTTP request returns immediately.
+ */
+async function runSyncJob(
+  jobId: string,
+  syncType: string,
+  dateFrom: string | undefined,
+  dateTo: string | undefined
+): Promise<void> {
+  updateJob(jobId, { status: "running", message: "Connecting to Planning Center…", progress: 5 });
+
+  const client = await createAuthenticatedPcoClient();
+  if (!client) {
+    updateJob(jobId, {
+      status: "failed",
+      error: "PCO token expired or missing. Please reconnect in Settings → Planning Center.",
+      message: "Authentication failed — please reconnect to Planning Center.",
+      completedAt: new Date(),
+    });
+    return;
+  }
+
+  updateJob(jobId, { message: `Starting ${syncType} sync…`, progress: 10 });
+
+  let results: Awaited<ReturnType<typeof syncAll>>;
+  try {
+    if (syncType === "full") {
+      updateJob(jobId, { message: "Syncing monthly data…", progress: 15 });
+      const monthlyResults = await syncAll(client, dateFrom, dateTo);
+      updateJob(jobId, { message: "Syncing weekly data…", progress: 55 });
+      const weeklyResults = await syncAllWeekly(client, dateFrom, dateTo);
+      results = [...monthlyResults, ...weeklyResults];
+    } else if (syncType === "weekly_all") {
+      updateJob(jobId, { message: "Syncing weekly attendance and giving…", progress: 15 });
+      results = await syncAllWeekly(client, dateFrom, dateTo);
+    } else {
+      updateJob(jobId, { message: `Syncing ${syncType}…`, progress: 15 });
+      let result;
+      switch (syncType) {
+        case "attendance":
+          result = await syncAttendance(client, dateFrom, dateTo);
+          break;
+        case "giving":
+          result = await syncGiving(client, dateFrom, dateTo);
+          break;
+        case "groups":
+          result = await syncGroups(client);
+          break;
+        case "events":
+          result = await syncEvents(client, dateFrom, dateTo);
+          break;
+        case "people":
+          result = await syncPeople(client);
+          break;
+        case "weekly_attendance":
+          result = await syncWeeklyAttendance(client, dateFrom, dateTo);
+          break;
+        case "weekly_giving":
+          result = await syncWeeklyGiving(client, dateFrom, dateTo);
+          break;
+        default:
+          throw new Error(`Unknown sync type: ${syncType}`);
+      }
+      results = [result!];
+    }
+  } catch (err: any) {
+    updateJob(jobId, {
+      status: "failed",
+      error: err.message ?? "Sync error",
+      message: `Sync failed: ${err.message ?? "Unknown error"}`,
+      completedAt: new Date(),
+    });
+    return;
+  }
+
+  // Persist results to sync log table
+  for (const result of results) {
+    await logSyncResult(result);
+  }
+
+  const totalRecords = results.reduce((s, r) => s + r.recordsProcessed, 0);
+  const failed = results.filter((r) => r.status === "failed");
+
+  updateJob(jobId, {
+    status: failed.length > 0 ? "failed" : "completed",
+    progress: 100,
+    message:
+      failed.length > 0
+        ? `Completed with ${failed.length} error(s): ${failed.map((f) => f.errorMessage).join("; ")}`
+        : `Completed — ${totalRecords.toLocaleString()} records synced`,
+    recordsProcessed: totalRecords,
+    completedAt: new Date(),
+    results: results.map((r) => ({
+      syncType: r.syncType,
+      status: r.status,
+      recordsProcessed: r.recordsProcessed,
+      errorMessage: r.errorMessage ?? null,
+      durationMs: r.durationMs ?? null,
+    })),
+  });
+
+  console.log(`[PCO Sync] Job ${jobId} (${syncType}) completed: ${totalRecords} records`);
 }
 
 export const pcoRouter = router({
@@ -124,6 +235,12 @@ export const pcoRouter = router({
   // ============================================================
   // Sync Operations
   // ============================================================
+
+  /**
+   * Start a sync job in the background. Returns a jobId immediately so the
+   * HTTP request doesn't time out on long-running weekly syncs (10-20 min).
+   * Poll getSyncJobStatus with the returned jobId to track progress.
+   */
   triggerSync: publicProcedure
     .input(
       z.object({
@@ -133,58 +250,52 @@ export const pcoRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      console.log(`[PCO Sync] Triggering sync: ${input.syncType}`);
-      const client = await createAuthenticatedPcoClient();
-      if (!client) {
-        throw new Error("Not connected to Planning Center. Go to Settings and connect your account.");
-      }
-      console.log(`[PCO Sync] Client created, starting ${input.syncType} sync...`);
+      console.log(`[PCO Sync] Triggering background sync: ${input.syncType}`);
 
-      let results;
-      if (input.syncType === "full") {
-        // Full sync includes both monthly and weekly
-        const monthlyResults = await syncAll(client, input.dateFrom, input.dateTo);
-        const weeklyResults = await syncAllWeekly(client, input.dateFrom, input.dateTo);
-        results = [...monthlyResults, ...weeklyResults];
-      } else if (input.syncType === "weekly_all") {
-        results = await syncAllWeekly(client, input.dateFrom, input.dateTo);
-      } else {
-        let result;
-        switch (input.syncType) {
-          case "attendance":
-            result = await syncAttendance(client, input.dateFrom, input.dateTo);
-            break;
-          case "giving":
-            result = await syncGiving(client, input.dateFrom, input.dateTo);
-            break;
-          case "groups":
-            result = await syncGroups(client);
-            break;
-          case "events":
-            result = await syncEvents(client, input.dateFrom, input.dateTo);
-            break;
-          case "people":
-            result = await syncPeople(client);
-            break;
-          case "weekly_attendance":
-            result = await syncWeeklyAttendance(client, input.dateFrom, input.dateTo);
-            break;
-          case "weekly_giving":
-            result = await syncWeeklyGiving(client, input.dateFrom, input.dateTo);
-            break;
-          default:
-            throw new Error(`Unknown sync type: ${input.syncType}`);
+      // Validate token BEFORE spawning the background job so we can return a
+      // clear error immediately rather than having the job fail silently.
+      const tokenInfo = await getTokenInfo();
+      if (!tokenInfo?.connected) {
+        throw new Error(
+          "Not connected to Planning Center. Please go to Settings and click \"Connect to Planning Center\" to authorize your account."
+        );
+      }
+
+      // Create the job record and return its ID immediately
+      const job = createJob(input.syncType);
+      console.log(`[PCO Sync] Created job ${job.jobId} for ${input.syncType}`);
+
+      // Run the sync in the background — do NOT await
+      runSyncJob(job.jobId, input.syncType, input.dateFrom, input.dateTo).catch(
+        (err) => {
+          console.error(`[PCO Sync] Unhandled error in job ${job.jobId}:`, err);
+          updateJob(job.jobId, {
+            status: "failed",
+            error: err.message ?? "Unknown error",
+            message: "Sync failed unexpectedly.",
+            completedAt: new Date(),
+          });
         }
-        results = [result!];
-      }
+      );
 
-      // Log all results
-      for (const result of results) {
-        await logSyncResult(result);
-      }
-
-      return { results };
+      return { jobId: job.jobId };
     }),
+
+  /**
+   * Poll this to get live progress of a running or completed sync job.
+   */
+  getSyncJobStatus: publicProcedure
+    .input(z.object({ jobId: z.string() }))
+    .query(({ input }) => {
+      return getJob(input.jobId);
+    }),
+
+  /**
+   * Get the most recent sync jobs (for the Settings page history panel).
+   */
+  getRecentSyncJobs: publicProcedure.query(() => {
+    return getRecentJobs();
+  }),
 
   getSyncLogs: publicProcedure
     .input(

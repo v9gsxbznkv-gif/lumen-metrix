@@ -298,3 +298,77 @@ describe("pco.triggerSync", () => {
     ).rejects.toThrow("Not connected to Planning Center");
   });
 });
+
+describe("pco.getSyncJobStatus", () => {
+  it("returns null for a non-existent job ID", async () => {
+    const ctx = createMockContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.pco.getSyncJobStatus({ jobId: "non-existent-job-id" });
+    expect(result).toBeNull();
+  });
+});
+
+describe("pco.getRecentSyncJobs", () => {
+  it("returns an array of recent sync jobs", async () => {
+    const ctx = createMockContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.pco.getRecentSyncJobs();
+    expect(Array.isArray(result)).toBe(true);
+  });
+});
+
+describe("jobManager", () => {
+  it("createJob creates a job with pending status and correct syncType", async () => {
+    const { createJob, getJob } = await import("./jobManager");
+
+    const job = createJob("weekly_attendance");
+    expect(job.jobId).toBeDefined();
+    expect(job.status).toBe("pending");
+    expect(job.syncType).toBe("weekly_attendance");
+    expect(job.progress).toBe(0);
+    expect(job.recordsProcessed).toBe(0);
+    expect(job.results).toEqual([]);
+    expect(job.error).toBeNull();
+    expect(job.completedAt).toBeNull();
+
+    // Should be retrievable by ID
+    const fetched = getJob(job.jobId);
+    expect(fetched).not.toBeNull();
+    expect(fetched!.jobId).toBe(job.jobId);
+  });
+
+  it("updateJob patches the job record", async () => {
+    const { createJob, updateJob, getJob } = await import("./jobManager");
+
+    const job = createJob("giving");
+    updateJob(job.jobId, { status: "running", progress: 42, message: "Processing donations…" });
+
+    const updated = getJob(job.jobId);
+    expect(updated!.status).toBe("running");
+    expect(updated!.progress).toBe(42);
+    expect(updated!.message).toBe("Processing donations…");
+  });
+
+  it("getJob returns null for unknown jobId", async () => {
+    const { getJob } = await import("./jobManager");
+    expect(getJob("totally-fake-id")).toBeNull();
+  });
+
+  it("getRecentJobs returns jobs sorted by startedAt descending", async () => {
+    const { createJob, getRecentJobs } = await import("./jobManager");
+
+    // Create two jobs in sequence
+    const j1 = createJob("attendance");
+    await new Promise((r) => setTimeout(r, 5)); // ensure different timestamps
+    const j2 = createJob("giving");
+
+    const recent = getRecentJobs();
+    expect(recent.length).toBeGreaterThanOrEqual(2);
+    // Most recent should come first
+    const j2Idx = recent.findIndex((j) => j.jobId === j2.jobId);
+    const j1Idx = recent.findIndex((j) => j.jobId === j1.jobId);
+    expect(j2Idx).toBeLessThan(j1Idx);
+  });
+});
