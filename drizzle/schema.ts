@@ -421,3 +421,26 @@ export const syncJobs = mysqlTable("sync_jobs", {
 });
 export type SyncJobRow = typeof syncJobs.$inferSelect;
 export type InsertSyncJob = typeof syncJobs.$inferInsert;
+
+// ============================================================
+// Event Overrides — user-entered exact numbers for specific events
+// Takes priority over PCO weekly data and monthly estimates.
+// eventName must match the canonical event keys used in EventsPage:
+//   'Easter', 'Mother\'s Day', 'Back to School', 'Christmas Season'
+// ============================================================
+export const eventOverrides = mysqlTable("event_overrides", {
+  id: int("id").autoincrement().primaryKey(),
+  eventName: varchar("eventName", { length: 128 }).notNull(),  // e.g. 'Easter'
+  year: int("year").notNull(),
+  attendance: int("attendance"),         // null = not overridden
+  giving: decimal("giving", { precision: 12, scale: 2 }),
+  ftg: int("ftg"),                       // first-time guests
+  salvations: int("salvations"),
+  baptisms: int("baptisms"),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type EventOverrideRow = typeof eventOverrides.$inferSelect;
+export type InsertEventOverride = typeof eventOverrides.$inferInsert;

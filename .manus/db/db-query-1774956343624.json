@@ -1,0 +1,130 @@
+{
+  "query": "\nSELECT DISTINCT subgroup, campus, COUNT(*) as week_count, SUM(headcount) as total_headcount\nFROM attendance_weekly\nGROUP BY subgroup, campus\nORDER BY total_headcount DESC\nLIMIT 20;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute \nSELECT DISTINCT subgroup, campus, COUNT(*) as week_count, SUM(headcount) as total_headcount\nFROM attendance_weekly\nGROUP BY subgroup, campus\nORDER BY total_headcount DESC\nLIMIT 20;\n",
+  "rows": [
+    {
+      "subgroup": "Revolution Canton Check-In",
+      "campus": "Canton",
+      "week_count": "529",
+      "total_headcount": "354083"
+    },
+    {
+      "subgroup": "RevStudents | Canton Campus",
+      "campus": "Canton",
+      "week_count": "488",
+      "total_headcount": "119810"
+    },
+    {
+      "subgroup": "Revolution Jasper Check-In",
+      "campus": "Jasper",
+      "week_count": "370",
+      "total_headcount": "51596"
+    },
+    {
+      "subgroup": "RevStudents | Jasper Campus",
+      "campus": "Jasper",
+      "week_count": "320",
+      "total_headcount": "21951"
+    },
+    {
+      "subgroup": "Childcare | Canton Campus",
+      "campus": "Canton",
+      "week_count": "503",
+      "total_headcount": "15364"
+    },
+    {
+      "subgroup": "ESL Class",
+      "campus": "Other",
+      "week_count": "148",
+      "total_headcount": "5876"
+    },
+    {
+      "subgroup": "Childcare | Jasper Campus",
+      "campus": "Jasper",
+      "week_count": "202",
+      "total_headcount": "2595"
+    },
+    {
+      "subgroup": "YA Gathering",
+      "campus": "Other",
+      "week_count": "24",
+      "total_headcount": "1764"
+    },
+    {
+      "subgroup": "Abide Women's Night",
+      "campus": "Other",
+      "week_count": "2",
+      "total_headcount": "1706"
+    },
+    {
+      "subgroup": "Christmas Service",
+      "campus": "Other",
+      "week_count": "2",
+      "total_headcount": "1523"
+    },
+    {
+      "subgroup": "Abide Men's Night",
+      "campus": "Other",
+      "week_count": "2",
+      "total_headcount": "1505"
+    },
+    {
+      "subgroup": "Revival",
+      "campus": "Other",
+      "week_count": "1",
+      "total_headcount": "1468"
+    },
+    {
+      "subgroup": "ABIDE Night",
+      "campus": "Other",
+      "week_count": "2",
+      "total_headcount": "1013"
+    },
+    {
+      "subgroup": "ABIDE Nights",
+      "campus": "Other",
+      "week_count": "2",
+      "total_headcount": "894"
+    },
+    {
+      "subgroup": "Parent Night | Canton Campus",
+      "campus": "Canton",
+      "week_count": "21",
+      "total_headcount": "829"
+    },
+    {
+      "subgroup": "WoCo One Day: LUNCH OPTION - October 7, 2023",
+      "campus": "Other",
+      "week_count": "1",
+      "total_headcount": "787"
+    },
+    {
+      "subgroup": "WoCo One Day: LUNCH OPTION - October 1, 2022",
+      "campus": "Other",
+      "week_count": "1",
+      "total_headcount": "775"
+    },
+    {
+      "subgroup": "WoCo One Day: LUNCH OPTION - October 2, 2021",
+      "campus": "Other",
+      "week_count": "1",
+      "total_headcount": "610"
+    },
+    {
+      "subgroup": "Crazy Game Night",
+      "campus": "Other",
+      "week_count": "1",
+      "total_headcount": "556"
+    },
+    {
+      "subgroup": "3to5 Gathering",
+      "campus": "Other",
+      "week_count": "2",
+      "total_headcount": "534"
+    }
+  ],
+  "messages": [],
+  "stdout": "subgroup\tcampus\tweek_count\ttotal_headcount\nRevolution Canton Check-In\tCanton\t529\t354083\nRevStudents | Canton Campus\tCanton\t488\t119810\nRevolution Jasper Check-In\tJasper\t370\t51596\nRevStudents | Jasper Campus\tJasper\t320\t21951\nChildcare | Canton Campus\tCanton\t503\t15364\nESL Class\tOther\t148\t5876\nChildcare | Jasper Campus\tJasper\t202\t2595\nYA Gathering\tOther\t24\t1764\nAbide Women's Night\tOther\t2\t1706\nChristmas Service\tOther\t2\t1523\nAbide Men's Night\tOther\t2\t1505\nRevival\tOther\t1\t1468\nABIDE Night\tOther\t2\t1013\nABIDE Nights\tOther\t2\t894\nParent Night | Canton Campus\tCanton\t21\t829\nWoCo One Day: LUNCH OPTION - October 7, 2023\tOther\t1\t787\nWoCo One Day: LUNCH OPTION - October 1, 2022\tOther\t1\t775\nWoCo One Day: LUNCH OPTION - October 2, 2021\tOther\t1\t610\nCrazy Game Night\tOther\t1\t556\n3to5 Gathering\tOther\t2\t534\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}

@@ -1,0 +1,9 @@
+{
+  "query": "\nCREATE TABLE IF NOT EXISTS `event_overrides` (\n  `id` int NOT NULL AUTO_INCREMENT,\n  `eventName` varchar(128) NOT NULL,\n  `year` int NOT NULL,\n  `attendance` int DEFAULT NULL,\n  `giving` decimal(12,2) DEFAULT NULL,\n  `ftg` int DEFAULT NULL,\n  `salvations` int DEFAULT NULL,\n  `baptisms` int DEFAULT NULL,\n  `notes` text,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `event_overrides_eventName_year_unique` (`eventName`, `year`)\n);\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute \nCREATE TABLE IF NOT EXISTS `event_overrides` (\n  `id` int NOT NULL AUTO_INCREMENT,\n  `eventName` varchar(128) NOT NULL,\n  `year` int NOT NULL,\n  `attendance` int DEFAULT NULL,\n  `giving` decimal(12,2) DEFAULT NULL,\n  `ftg` int DEFAULT NULL,\n  `salvations` int DEFAULT NULL,\n  `baptisms` int DEFAULT NULL,\n  `notes` text,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `event_overrides_eventName_year_unique` (`eventName`, `year`)\n);\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 108
+}

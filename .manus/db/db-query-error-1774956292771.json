@@ -1,0 +1,8 @@
+{
+  "query": "\nSELECT id, (accessToken IS NOT NULL) as has_token, (refreshToken IS NOT NULL) as has_refresh, expiresAt, updatedAt, organizationName FROM pco_tokens ORDER BY id DESC LIMIT 3;\nSELECT id, sync_type, status, progress, message, created_at, completed_at FROM sync_jobs ORDER BY created_at DESC LIMIT 5;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute \nSELECT id, (accessToken IS NOT NULL) as has_token, (refreshToken IS NOT NULL) as has_refresh, expiresAt, updatedAt, organizationName FROM pco_tokens ORDER BY id DESC LIMIT 3;\nSELECT id, sync_type, status, progress, message, created_at, completed_at FROM sync_jobs ORDER BY created_at DESC LIMIT 5;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 3: Unknown column 'sync_type' in 'field list'"
+  ]
+}

@@ -1,0 +1,142 @@
+{
+  "query": "\n-- Check all attendance_weekly rows for April 2025 to see what events are captured\nSELECT weekStartDate, campus, subgroup, headcount\nFROM attendance_weekly\nWHERE weekStartDate BETWEEN '2025-04-13' AND '2025-04-27'\nORDER BY weekStartDate, campus, subgroup;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute \n-- Check all attendance_weekly rows for April 2025 to see what events are captured\nSELECT weekStartDate, campus, subgroup, headcount\nFROM attendance_weekly\nWHERE weekStartDate BETWEEN '2025-04-13' AND '2025-04-27'\nORDER BY weekStartDate, campus, subgroup;\n",
+  "rows": [
+    {
+      "weekStartDate": "2025-04-13",
+      "campus": "Canton",
+      "subgroup": "Childcare | Canton Campus",
+      "headcount": "6"
+    },
+    {
+      "weekStartDate": "2025-04-13",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "1363"
+    },
+    {
+      "weekStartDate": "2025-04-13",
+      "campus": "Canton",
+      "subgroup": "RevStudents | Canton Campus",
+      "headcount": "376"
+    },
+    {
+      "weekStartDate": "2025-04-13",
+      "campus": "Jasper",
+      "subgroup": "Childcare | Jasper Campus",
+      "headcount": "14"
+    },
+    {
+      "weekStartDate": "2025-04-13",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "headcount": "199"
+    },
+    {
+      "weekStartDate": "2025-04-13",
+      "campus": "Jasper",
+      "subgroup": "RevStudents | Jasper Campus",
+      "headcount": "97"
+    },
+    {
+      "weekStartDate": "2025-04-13",
+      "campus": "Other",
+      "subgroup": "ESL Class",
+      "headcount": "23"
+    },
+    {
+      "weekStartDate": "2025-04-20",
+      "campus": "Canton",
+      "subgroup": "Childcare | Canton Campus",
+      "headcount": "2"
+    },
+    {
+      "weekStartDate": "2025-04-20",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "863"
+    },
+    {
+      "weekStartDate": "2025-04-20",
+      "campus": "Canton",
+      "subgroup": "RevStudents | Canton Campus",
+      "headcount": "368"
+    },
+    {
+      "weekStartDate": "2025-04-20",
+      "campus": "Jasper",
+      "subgroup": "Childcare | Jasper Campus",
+      "headcount": "15"
+    },
+    {
+      "weekStartDate": "2025-04-20",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "headcount": "281"
+    },
+    {
+      "weekStartDate": "2025-04-20",
+      "campus": "Jasper",
+      "subgroup": "RevStudents | Jasper Campus",
+      "headcount": "92"
+    },
+    {
+      "weekStartDate": "2025-04-20",
+      "campus": "Other",
+      "subgroup": "ESL Class",
+      "headcount": "21"
+    },
+    {
+      "weekStartDate": "2025-04-27",
+      "campus": "Canton",
+      "subgroup": "Childcare | Canton Campus",
+      "headcount": "4"
+    },
+    {
+      "weekStartDate": "2025-04-27",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "896"
+    },
+    {
+      "weekStartDate": "2025-04-27",
+      "campus": "Canton",
+      "subgroup": "RevStudents | Canton Campus",
+      "headcount": "414"
+    },
+    {
+      "weekStartDate": "2025-04-27",
+      "campus": "Jasper",
+      "subgroup": "Childcare | Jasper Campus",
+      "headcount": "14"
+    },
+    {
+      "weekStartDate": "2025-04-27",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "headcount": "183"
+    },
+    {
+      "weekStartDate": "2025-04-27",
+      "campus": "Jasper",
+      "subgroup": "RevStudents | Jasper Campus",
+      "headcount": "107"
+    },
+    {
+      "weekStartDate": "2025-04-27",
+      "campus": "Other",
+      "subgroup": "ESL Class",
+      "headcount": "26"
+    },
+    {
+      "weekStartDate": "2025-04-27",
+      "campus": "Other",
+      "subgroup": "Test Gathering",
+      "headcount": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekStartDate\tcampus\tsubgroup\theadcount\n2025-04-13\tCanton\tChildcare | Canton Campus\t6\n2025-04-13\tCanton\tRevolution Canton Check-In\t1363\n2025-04-13\tCanton\tRevStudents | Canton Campus\t376\n2025-04-13\tJasper\tChildcare | Jasper Campus\t14\n2025-04-13\tJasper\tRevolution Jasper Check-In\t199\n2025-04-13\tJasper\tRevStudents | Jasper Campus\t97\n2025-04-13\tOther\tESL Class\t23\n2025-04-20\tCanton\tChildcare | Canton Campus\t2\n2025-04-20\tCanton\tRevolution Canton Check-In\t863\n2025-04-20\tCanton\tRevStudents | Canton Campus\t368\n2025-04-20\tJasper\tChildcare | Jasper Campus\t15\n2025-04-20\tJasper\tRevolution Jasper Check-In\t281\n2025-04-20\tJasper\tRevStudents | Jasper Campus\t92\n2025-04-20\tOther\tESL Class\t21\n2025-04-27\tCanton\tChildcare | Canton Campus\t4\n2025-04-27\tCanton\tRevolution Canton Check-In\t896\n2025-04-27\tCanton\tRevStudents | Canton Campus\t414\n2025-04-27\tJasper\tChildcare | Jasper Campus\t14\n2025-04-27\tJasper\tRevolution Jasper Check-In\t183\n2025-04-27\tJasper\tRevStudents | Jasper Campus\t107\n2025-04-27\tOther\tESL Class\t26\n2025-04-27\tOther\tTest Gathering\t1\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

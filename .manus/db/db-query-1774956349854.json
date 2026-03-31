@@ -1,0 +1,22 @@
+{
+  "query": "\n-- Normal week (April 13) vs Easter week (April 20) for Canton main check-in\nSELECT weekStartDate, SUM(headcount) as total\nFROM attendance_weekly\nWHERE campus IN ('Canton','Jasper') AND weekStartDate IN ('2025-04-13','2025-04-20','2025-04-27')\nGROUP BY weekStartDate ORDER BY weekStartDate;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute \n-- Normal week (April 13) vs Easter week (April 20) for Canton main check-in\nSELECT weekStartDate, SUM(headcount) as total\nFROM attendance_weekly\nWHERE campus IN ('Canton','Jasper') AND weekStartDate IN ('2025-04-13','2025-04-20','2025-04-27')\nGROUP BY weekStartDate ORDER BY weekStartDate;\n",
+  "rows": [
+    {
+      "weekStartDate": "2025-04-13",
+      "total": "2055"
+    },
+    {
+      "weekStartDate": "2025-04-20",
+      "total": "1621"
+    },
+    {
+      "weekStartDate": "2025-04-27",
+      "total": "1618"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekStartDate\ttotal\n2025-04-13\t2055\n2025-04-20\t1621\n2025-04-27\t1618\n",
+  "stderr": "",
+  "execution_time_ms": 62
+}

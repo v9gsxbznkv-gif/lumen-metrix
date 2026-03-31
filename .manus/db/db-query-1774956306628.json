@@ -1,0 +1,60 @@
+{
+  "query": "SELECT jobId, syncType, status, progress, message, error, startedAt, completedAt FROM sync_jobs ORDER BY startedAt DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT jobId, syncType, status, progress, message, error, startedAt, completedAt FROM sync_jobs ORDER BY startedAt DESC LIMIT 5;",
+  "rows": [
+    {
+      "jobId": "job_1774955191786_xt8v2d",
+      "syncType": "weekly_all",
+      "status": "completed",
+      "progress": "100",
+      "message": "Sync complete — 14408 records processed",
+      "error": "NULL",
+      "startedAt": "2026-03-31 11:06:31",
+      "completedAt": "2026-03-31 11:15:13"
+    },
+    {
+      "jobId": "weekly_all-1774954381699-0oxthd",
+      "syncType": "weekly_all",
+      "status": "completed",
+      "progress": "100",
+      "message": "Completed — 13,762 records synced",
+      "error": "NULL",
+      "startedAt": "2026-03-31 10:53:01",
+      "completedAt": "2026-03-31 11:02:24"
+    },
+    {
+      "jobId": "weekly_all-1774953818005-6of38s",
+      "syncType": "weekly_all",
+      "status": "completed",
+      "progress": "100",
+      "message": "Completed — 13,762 records synced",
+      "error": "NULL",
+      "startedAt": "2026-03-31 10:43:38",
+      "completedAt": "2026-03-31 10:56:37"
+    },
+    {
+      "jobId": "weekly_all-1774953329616-089qzy",
+      "syncType": "weekly_all",
+      "status": "running",
+      "progress": "15",
+      "message": "Syncing weekly attendance and giving…",
+      "error": "NULL",
+      "startedAt": "2026-03-31 10:35:29",
+      "completedAt": "NULL"
+    },
+    {
+      "jobId": "weekly_all-1774953287907-br3wq1",
+      "syncType": "weekly_all",
+      "status": "running",
+      "progress": "15",
+      "message": "Syncing weekly attendance and giving…",
+      "error": "NULL",
+      "startedAt": "2026-03-31 10:34:47",
+      "completedAt": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "jobId\tsyncType\tstatus\tprogress\tmessage\terror\tstartedAt\tcompletedAt\njob_1774955191786_xt8v2d\tweekly_all\tcompleted\t100\tSync complete — 14408 records processed\tNULL\t2026-03-31 11:06:31\t2026-03-31 11:15:13\nweekly_all-1774954381699-0oxthd\tweekly_all\tcompleted\t100\tCompleted — 13,762 records synced\tNULL\t2026-03-31 10:53:01\t2026-03-31 11:02:24\nweekly_all-1774953818005-6of38s\tweekly_all\tcompleted\t100\tCompleted — 13,762 records synced\tNULL\t2026-03-31 10:43:38\t2026-03-31 10:56:37\nweekly_all-1774953329616-089qzy\tweekly_all\trunning\t15\tSyncing weekly attendance and giving…\tNULL\t2026-03-31 10:35:29\tNULL\nweekly_all-1774953287907-br3wq1\tweekly_all\trunning\t15\tSyncing weekly attendance and giving…\tNULL\t2026-03-31 10:34:47\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

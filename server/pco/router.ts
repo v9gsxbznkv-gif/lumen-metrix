@@ -26,6 +26,7 @@ import {
   pcoGroups,
   pcoEvents,
   pcoPeople,
+  eventOverrides,
 } from "../../drizzle/schema";
 import {
   getPcoAuthorizeUrl,
@@ -305,6 +306,7 @@ export const pcoRouter = router({
       nextStepsMonthlyRows,
       servingRows,
       servingMonthlyRows,
+      eventOverrideRows,
     ] = await Promise.all([
       db.select().from(attendance).where(sourceFilter(attendance)),
       db.select().from(attendanceMonthly).where(sourceFilter(attendanceMonthly)),
@@ -322,6 +324,7 @@ export const pcoRouter = router({
       db.select().from(servingMonthly).where(
         and(eq(servingMonthly.source, "spreadsheet"), ne(servingMonthly.campus, "All Campuses"))
       ),
+      db.select().from(eventOverrides),
     ]);
 
     // Extract unique years from ALL tables so that years with partial data
@@ -411,6 +414,16 @@ export const pcoRouter = router({
         designated: Number(r.designated),
         donationCount: r.donationCount,
       })),
+      event_overrides: eventOverrideRows.map((r) => ({
+        eventName: r.eventName,
+        year: r.year,
+        attendance: r.attendance,
+        giving: r.giving !== null ? Number(r.giving) : null,
+        ftg: r.ftg,
+        salvations: r.salvations,
+        baptisms: r.baptisms,
+        notes: r.notes,
+      })),
       years,
       campuses,
     };
@@ -451,11 +464,9 @@ export const pcoRouter = router({
   getPeopleStats: publicProcedure.query(async () => {
     const db = await getDb();
     if (!db) return { total: 0, byMembership: [] };
-
     const [totalResult] = await db
       .select({ count: sql<number>`COUNT(*)` })
       .from(pcoPeople);
-
     const byMembership = await db
       .select({
         membershipType: pcoPeople.membershipType,
@@ -463,10 +474,120 @@ export const pcoRouter = router({
       })
       .from(pcoPeople)
       .groupBy(pcoPeople.membershipType);
-
     return {
       total: totalResult?.count || 0,
       byMembership,
     };
   }),
+
+  // ============================================================
+  // Event Overrides — user-entered exact numbers for specific events
+  // Priority: override > PCO weekly > monthly estimate
+  // ============================================================
+
+  /**
+   * Get all event overrides (or for a specific event/year).
+   */
+  getEventOverrides: publicProcedure
+    .input(z.object({
+      eventName: z.string().optional(),
+      year: z.number().optional(),
+    }).optional())
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const rows = await db.select().from(eventOverrides);
+      return rows.map((r) => ({
+        id: r.id,
+        eventName: r.eventName,
+        year: r.year,
+        attendance: r.attendance,
+        giving: r.giving !== null ? Number(r.giving) : null,
+        ftg: r.ftg,
+        salvations: r.salvations,
+        baptisms: r.baptisms,
+        notes: r.notes,
+        updatedAt: r.updatedAt,
+      }));
+    }),
+
+  /**
+   * Create or update an event override for a specific event+year.
+   * Passing null for a field clears that override (falls back to calculated value).
+   */
+  upsertEventOverride: publicProcedure
+    .input(z.object({
+      eventName: z.string().min(1),
+      year: z.number().int().min(2010).max(2100),
+      attendance: z.number().int().min(0).nullable().optional(),
+      giving: z.number().min(0).nullable().optional(),
+      ftg: z.number().int().min(0).nullable().optional(),
+      salvations: z.number().int().min(0).nullable().optional(),
+      baptisms: z.number().int().min(0).nullable().optional(),
+      notes: z.string().max(1000).nullable().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      // Check if override already exists
+      const existing = await db
+        .select({ id: eventOverrides.id })
+        .from(eventOverrides)
+        .where(and(
+          eq(eventOverrides.eventName, input.eventName),
+          eq(eventOverrides.year, input.year)
+        ))
+        .limit(1);
+
+      if (existing.length > 0) {
+        // Update
+        await db.update(eventOverrides)
+          .set({
+            attendance: input.attendance ?? null,
+            giving: input.giving !== undefined ? (input.giving !== null ? String(input.giving) : null) : undefined,
+            ftg: input.ftg ?? null,
+            salvations: input.salvations ?? null,
+            baptisms: input.baptisms ?? null,
+            notes: input.notes ?? null,
+          })
+          .where(and(
+            eq(eventOverrides.eventName, input.eventName),
+            eq(eventOverrides.year, input.year)
+          ));
+      } else {
+        // Insert
+        await db.insert(eventOverrides).values({
+          eventName: input.eventName,
+          year: input.year,
+          attendance: input.attendance ?? null,
+          giving: input.giving !== null && input.giving !== undefined ? String(input.giving) : null,
+          ftg: input.ftg ?? null,
+          salvations: input.salvations ?? null,
+          baptisms: input.baptisms ?? null,
+          notes: input.notes ?? null,
+        });
+      }
+
+      return { success: true };
+    }),
+
+  /**
+   * Delete an event override (revert to calculated value).
+   */
+  deleteEventOverride: publicProcedure
+    .input(z.object({
+      eventName: z.string(),
+      year: z.number().int(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      await db.delete(eventOverrides)
+        .where(and(
+          eq(eventOverrides.eventName, input.eventName),
+          eq(eventOverrides.year, input.year)
+        ));
+      return { success: true };
+    }),
 });

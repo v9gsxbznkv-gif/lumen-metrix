@@ -105,6 +105,7 @@ interface RawDashboard {
   serving_monthly: RawServingMonthly[];
   attendance_weekly?: RawAttendanceWeekly[];
   giving_weekly?: RawGivingWeekly[];
+  event_overrides?: EventOverride[];
 }
 
 // ============================================================
@@ -213,6 +214,17 @@ export interface GivingWeekly {
   donationCount: number;
 }
 
+export interface EventOverride {
+  eventName: string;
+  year: number;
+  attendance: number | null;
+  giving: number | null;
+  ftg: number | null;
+  salvations: number | null;
+  baptisms: number | null;
+  notes: string | null;
+}
+
 export interface DashboardData {
   attendance: AttendanceRecord[];
   attendance_monthly: AttendanceMonthly[];
@@ -224,6 +236,7 @@ export interface DashboardData {
   next_steps_monthly: NextStepsMonthly[];
   serving: ServingAnnual[];
   serving_monthly: ServingMonthly[];
+  event_overrides: EventOverride[];
   computed: {
     giving_per_capita: GivingPerCapita[];
     volunteer_ratio: VolunteerRatio[];
@@ -385,6 +398,7 @@ function transformRawData(raw: RawDashboard): DashboardData {
     next_steps_monthly: raw.next_steps_monthly,
     serving: raw.serving,
     serving_monthly: raw.serving_monthly,
+    event_overrides: raw.event_overrides || [],
     computed: {
       giving_per_capita: gpc,
       volunteer_ratio: vr,

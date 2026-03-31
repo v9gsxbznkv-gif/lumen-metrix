@@ -221,3 +221,16 @@
 - [x] Fix router.ts to pass onProgress callback to syncWeeklyAttendance/syncWeeklyGiving
 - [x] 91 tests passing, zero TypeScript errors
 - [x] Checkpoint and deploy
+
+## Round 27: Event Manual Overrides
+
+- [x] Add event_overrides table to drizzle schema (eventName, year, attendance, giving, ftg, salvations, baptisms, notes, updatedAt)
+- [x] Run pnpm db:push to migrate schema
+- [x] Add tRPC procedures: pco.getEventOverrides, pco.upsertEventOverride, pco.deleteEventOverride
+- [x] Include event_overrides in getDashboardData response
+- [x] Add EventOverride type to data.ts
+- [x] Rewrite EventsTab with priority logic: override > PCO weekly > monthly estimate
+- [x] Build inline edit UI on Events page: pencil icon per row, OverrideModal dialog
+- [x] Show data source badge per row: ◆ Override / ● PCO Weekly / ○ Estimate
+- [x] Write vitest tests for override priority logic and input validation (102 total passing)
+- [x] Checkpoint and deploy

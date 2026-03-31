@@ -1,0 +1,73 @@
+{
+  "query": "\n-- Easter 2025 was April 20, 2025 — week starting April 20 (Sunday)\nSELECT weekStartDate, campus, subgroup, headcount, regularCount, guestCount, volunteerCount\nFROM attendance_weekly\nWHERE weekStartDate = '2025-04-20'\nORDER BY campus, subgroup;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute \n-- Easter 2025 was April 20, 2025 — week starting April 20 (Sunday)\nSELECT weekStartDate, campus, subgroup, headcount, regularCount, guestCount, volunteerCount\nFROM attendance_weekly\nWHERE weekStartDate = '2025-04-20'\nORDER BY campus, subgroup;\n",
+  "rows": [
+    {
+      "weekStartDate": "2025-04-20",
+      "campus": "Canton",
+      "subgroup": "Childcare | Canton Campus",
+      "headcount": "2",
+      "regularCount": "2",
+      "guestCount": "0",
+      "volunteerCount": "0"
+    },
+    {
+      "weekStartDate": "2025-04-20",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "863",
+      "regularCount": "489",
+      "guestCount": "0",
+      "volunteerCount": "374"
+    },
+    {
+      "weekStartDate": "2025-04-20",
+      "campus": "Canton",
+      "subgroup": "RevStudents | Canton Campus",
+      "headcount": "368",
+      "regularCount": "296",
+      "guestCount": "0",
+      "volunteerCount": "72"
+    },
+    {
+      "weekStartDate": "2025-04-20",
+      "campus": "Jasper",
+      "subgroup": "Childcare | Jasper Campus",
+      "headcount": "15",
+      "regularCount": "15",
+      "guestCount": "0",
+      "volunteerCount": "0"
+    },
+    {
+      "weekStartDate": "2025-04-20",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "headcount": "281",
+      "regularCount": "148",
+      "guestCount": "0",
+      "volunteerCount": "133"
+    },
+    {
+      "weekStartDate": "2025-04-20",
+      "campus": "Jasper",
+      "subgroup": "RevStudents | Jasper Campus",
+      "headcount": "92",
+      "regularCount": "57",
+      "guestCount": "0",
+      "volunteerCount": "35"
+    },
+    {
+      "weekStartDate": "2025-04-20",
+      "campus": "Other",
+      "subgroup": "ESL Class",
+      "headcount": "21",
+      "regularCount": "9",
+      "guestCount": "0",
+      "volunteerCount": "12"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekStartDate\tcampus\tsubgroup\theadcount\tregularCount\tguestCount\tvolunteerCount\n2025-04-20\tCanton\tChildcare | Canton Campus\t2\t2\t0\t0\n2025-04-20\tCanton\tRevolution Canton Check-In\t863\t489\t0\t374\n2025-04-20\tCanton\tRevStudents | Canton Campus\t368\t296\t0\t72\n2025-04-20\tJasper\tChildcare | Jasper Campus\t15\t15\t0\t0\n2025-04-20\tJasper\tRevolution Jasper Check-In\t281\t148\t0\t133\n2025-04-20\tJasper\tRevStudents | Jasper Campus\t92\t57\t0\t35\n2025-04-20\tOther\tESL Class\t21\t9\t0\t12\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}
