@@ -1,0 +1,58 @@
+{
+  "query": "SELECT DISTINCT subgroup, campus FROM attendance WHERE year = 2025 ORDER BY subgroup, campus LIMIT 20",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT subgroup, campus FROM attendance WHERE year = 2025 ORDER BY subgroup, campus LIMIT 20",
+  "rows": [
+    {
+      "subgroup": "Adults",
+      "campus": "Canton"
+    },
+    {
+      "subgroup": "Adults",
+      "campus": "Jasper"
+    },
+    {
+      "subgroup": "Adults",
+      "campus": "Online"
+    },
+    {
+      "subgroup": "Kids",
+      "campus": "Canton"
+    },
+    {
+      "subgroup": "Kids",
+      "campus": "Jasper"
+    },
+    {
+      "subgroup": "Students",
+      "campus": "Canton"
+    },
+    {
+      "subgroup": "Students",
+      "campus": "Jasper"
+    },
+    {
+      "subgroup": "Total",
+      "campus": "All Campuses"
+    },
+    {
+      "subgroup": "Total",
+      "campus": "Canton"
+    },
+    {
+      "subgroup": "Total",
+      "campus": "Jasper"
+    },
+    {
+      "subgroup": "Total",
+      "campus": "Online"
+    },
+    {
+      "subgroup": "Young Adults",
+      "campus": "Canton"
+    }
+  ],
+  "messages": [],
+  "stdout": "subgroup\tcampus\nAdults\tCanton\nAdults\tJasper\nAdults\tOnline\nKids\tCanton\nKids\tJasper\nStudents\tCanton\nStudents\tJasper\nTotal\tAll Campuses\nTotal\tCanton\nTotal\tJasper\nTotal\tOnline\nYoung Adults\tCanton\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}

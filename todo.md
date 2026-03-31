@@ -281,3 +281,11 @@
 - [x] Verified: attendance numbers now match expected totals (not inflated)
 - [x] All 107 tests passing
 - [x] Ready to deploy
+
+## Round 31: Fix Annual Report Summary Cards
+
+- [x] Fixed buildAttendanceSummary: annual attendance table uses subgroup="Total" not "Revolution Canton Check-In" — was filtering for wrong subgroup name, returning zero rows
+- [x] Now uses cantonRow/jasperRow/onlineRow from subgroup="Total" directly — Canton 2025: 2,901 avg weekly / 150,865 total; Jasper: 569 / 29,601; Online: 490 / 25,010
+- [x] Online data confirmed present in attendance table (490 avg weekly for 2025)
+- [x] All 107 tests passing
+- [x] Deploy fix

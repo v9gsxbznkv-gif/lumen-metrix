@@ -212,18 +212,18 @@ export const annualReportRouter = router({
       }
 
       function buildAttendanceSummary(yr: number): AnnualSummary {
-        // Use only the main check-in subgroups (not individual demographics)
+        // The annual attendance table uses subgroup="Total" for campus-level totals
         const totalRows = attRows.filter(
-          (r) => r.year === yr && r.campus !== "All Campuses" &&
-                 (r.subgroup === "Revolution Canton Check-In" || 
-                  r.subgroup === "Revolution Jasper Check-In" ||
-                  r.subgroup === "Online")
+          (r) => r.year === yr && r.subgroup === "Total" && r.campus !== "All Campuses"
         );
-        const canton = sumField(totalRows.filter((r) => r.campus === "Canton"), (r) => r.avgWeekly ?? 0);
-        const jasper = sumField(totalRows.filter((r) => r.campus === "Jasper"), (r) => r.avgWeekly ?? 0);
-        const online = sumField(totalRows.filter((r) => r.campus === "Online"), (r) => r.avgWeekly ?? 0);
+        const cantonRow = totalRows.find((r) => r.campus === "Canton");
+        const jasperRow = totalRows.find((r) => r.campus === "Jasper");
+        const onlineRow = totalRows.find((r) => r.campus === "Online");
+        const canton = cantonRow?.avgWeekly ?? 0;
+        const jasper = jasperRow?.avgWeekly ?? 0;
+        const online = onlineRow?.avgWeekly ?? 0;
         const avgWeekly = canton + jasper + online;
-        const totalAtt = sumField(totalRows.filter((r) => r.campus !== "All Campuses"), (r) => r.total ?? 0);
+        const totalAtt = (cantonRow?.total ?? 0) + (jasperRow?.total ?? 0) + (onlineRow?.total ?? 0);
         return { total: totalAtt, avgWeekly, canton, jasper, online };
       }
 
