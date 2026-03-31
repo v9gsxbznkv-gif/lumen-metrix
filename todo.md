@@ -201,4 +201,14 @@
 - [x] Update Events page: uses actual event-week data from attendance_weekly/giving_weekly when available, falls back to monthly avg_weekly/division
 - [x] Update Weekly Reports: uses actual weekly snapshots when available, falls back to monthly estimates; labels data source in report
 - [x] Write 33 event tests + 9 weekly report tests (91 total passing)
-- [ ] Checkpoint and deploy
+- [x] Checkpoint and deploy (Round 25: background job system rebuilt from scratch)
+
+## Background Job Sync Fix - Final (Round 25)
+- [x] Rebuilt jobManager.ts from scratch with DB-backed persistence (sync_jobs table)
+- [x] triggerSync: validates PCO token, creates DB job, fires runSyncInBackground without await, returns jobId immediately
+- [x] runSyncInBackground: writes progress to DB at each stage (15% connected, 20% syncing, 60% second module, 100% done)
+- [x] getSyncJobStatus: reads from DB so any Cloud Run instance can serve the poll
+- [x] getRecentSyncJobs: returns last 10 jobs from DB
+- [x] SettingsTab: polls getSyncJobStatus every 2s, shows live progress bar, useEffect handles completed/failed toasts
+- [x] 91 tests passing, zero TypeScript errors
+- [x] Checkpoint saved (e093ed20) and deployed
