@@ -309,3 +309,14 @@
 - [x] Add "Re-sync this week" button on Weekly Report page with polling for completion
 - [x] All 107 tests passing
 - [x] Checkpoint and deploy
+
+## Round 34: Kids & Students Breakdown for 2026+ (Pending)
+
+- [ ] Add configurable "Weekly sync day" setting to Settings page (default: Tuesday)
+- [ ] Update scheduler to use the configurable sync day instead of hardcoded Tuesday
+- [ ] Update weekly sync to pull all kids subgroups: Canton Thursday RevKids, Sunday RevKids Preschool (Babies, Young Toddlers, Older Toddlers, Pre-K), Sunday RevKids Elementary (The Campground, The Treehouse, The Cove, ReRuns), Jasper Preschool (Nursery, Pre-K), Jasper Elementary (Treehouse, Cove, ReRuns)
+- [ ] Update weekly sync to pull Students (Middle School, High School) and Young Adults separately
+- [ ] Build Kids & Students Breakdown table on Attendance page with all subgroups organized by campus and age group
+- [ ] Update weekend metrics aggregation: Kids + Adults = Weekend Attendance; Students and Young Adults separate
+- [ ] Write vitest tests for subgroup aggregation and breakdown table
+- [ ] Checkpoint and deploy

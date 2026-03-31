@@ -38,6 +38,7 @@ export const pcoSettings = mysqlTable("pco_settings", {
   secret: varchar("secret", { length: 255 }).notNull(),
   churchName: varchar("churchName", { length: 255 }),
   isActive: boolean("isActive").default(true).notNull(),
+  weeklySyncDay: int("weeklySyncDay").default(2).notNull(), // 0=Sunday, 1=Monday, ..., 2=Tuesday, ..., 6=Saturday
   lastValidated: timestamp("lastValidated"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

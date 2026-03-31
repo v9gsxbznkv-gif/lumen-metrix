@@ -71,6 +71,13 @@
       "when": 1774967641716,
       "tag": "0009_fearless_ben_urich",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1774994235810,
+      "tag": "0010_happy_demogoblin",
+      "breakpoints": true
     }
   ]
 }

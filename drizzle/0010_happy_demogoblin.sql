@@ -1,0 +1,1 @@
+ALTER TABLE `pco_settings` ADD `weeklySyncDay` int DEFAULT 2 NOT NULL;
