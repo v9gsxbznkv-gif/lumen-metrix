@@ -1,0 +1,16 @@
+{
+  "query": "-- Update March 29 giving to the correct PCO figures\n-- Total: $172,713.49, 408 donors (donationCount), 4 new donors, 241 recurring\n-- The table only has donationCount, total, general, designated — no separate new/recurring donor fields\nUPDATE giving_weekly\nSET total = 172713.49,\n    general = 172713.49,\n    designated = 0.00,\n    donationCount = 408\nWHERE weekStartDate = '2026-03-29'\n  AND campus = 'All Campuses';\n\n-- Verify\nSELECT weekStartDate, campus, total, donationCount\nFROM giving_weekly\nWHERE weekStartDate = '2026-03-29'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute -- Update March 29 giving to the correct PCO figures\n-- Total: $172,713.49, 408 donors (donationCount), 4 new donors, 241 recurring\n-- The table only has donationCount, total, general, designated — no separate new/recurring donor fields\nUPDATE giving_weekly\nSET total = 172713.49,\n    general = 172713.49,\n    designated = 0.00,\n    donationCount = 408\nWHERE weekStartDate = '2026-03-29'\n  AND campus = 'All Campuses';\n\n-- Verify\nSELECT weekStartDate, campus, total, donationCount\nFROM giving_weekly\nWHERE weekStartDate = '2026-03-29'",
+  "rows": [
+    {
+      "weekStartDate": "2026-03-29",
+      "campus": "All Campuses",
+      "total": "172713.49",
+      "donationCount": "408"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekStartDate\tcampus\ttotal\tdonationCount\n2026-03-29\tAll Campuses\t172713.49\t408\n",
+  "stderr": "",
+  "execution_time_ms": 70
+}

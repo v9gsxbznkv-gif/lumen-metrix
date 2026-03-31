@@ -218,6 +218,11 @@ export async function syncWeeklyAttendance(
           .limit(1);
 
         if (existingRows.length > 0) {
+          // Skip manually locked records — they've been corrected by the user
+          if (existingRows[0].manualLock) {
+            console.log(`[PCO Weekly Sync] Skipping locked attendance row: ${row.weekStartDate} ${row.campus} ${row.subgroup}`);
+            continue;
+          }
           await db
             .update(attendanceWeekly)
             .set({
@@ -403,6 +408,11 @@ export async function syncWeeklyGiving(
           .limit(1);
 
         if (existingRows.length > 0) {
+          // Skip manually locked records — they've been corrected by the user
+          if (existingRows[0].manualLock) {
+            console.log(`[PCO Weekly Giving] Skipping locked giving row: ${row.weekStartDate} ${row.campus}`);
+            continue;
+          }
           await db
             .update(givingWeekly)
             .set({

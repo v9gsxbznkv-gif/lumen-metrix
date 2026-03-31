@@ -1,0 +1,430 @@
+{
+  "query": "-- This is what the Events page sums for the monthly estimate\n-- Easter = April, Mother's Day = May, Back to School = August, Christmas = December\nSELECT year, month, subgroup, campus, avgWeekly\nFROM attendance_monthly \nWHERE month IN (4, 5, 8, 12) \n  AND subgroup IN ('Adults', 'Kids', 'Students', 'Young Adults')\n  AND campus IN ('Canton', 'Jasper')\nORDER BY year DESC, month, campus, subgroup\nLIMIT 60",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute -- This is what the Events page sums for the monthly estimate\n-- Easter = April, Mother's Day = May, Back to School = August, Christmas = December\nSELECT year, month, subgroup, campus, avgWeekly\nFROM attendance_monthly \nWHERE month IN (4, 5, 8, 12) \n  AND subgroup IN ('Adults', 'Kids', 'Students', 'Young Adults')\n  AND campus IN ('Canton', 'Jasper')\nORDER BY year DESC, month, campus, subgroup\nLIMIT 60",
+  "rows": [
+    {
+      "year": "2025",
+      "month": "4",
+      "subgroup": "Adults",
+      "campus": "Canton",
+      "avgWeekly": "2326"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "subgroup": "Kids",
+      "campus": "Canton",
+      "avgWeekly": "527"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "subgroup": "Students",
+      "campus": "Canton",
+      "avgWeekly": "310"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "subgroup": "Young Adults",
+      "campus": "Canton",
+      "avgWeekly": "74"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "subgroup": "Adults",
+      "campus": "Jasper",
+      "avgWeekly": "454"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "subgroup": "Kids",
+      "campus": "Jasper",
+      "avgWeekly": "100"
+    },
+    {
+      "year": "2025",
+      "month": "4",
+      "subgroup": "Students",
+      "campus": "Jasper",
+      "avgWeekly": "66"
+    },
+    {
+      "year": "2025",
+      "month": "5",
+      "subgroup": "Adults",
+      "campus": "Canton",
+      "avgWeekly": "1973"
+    },
+    {
+      "year": "2025",
+      "month": "5",
+      "subgroup": "Kids",
+      "campus": "Canton",
+      "avgWeekly": "502"
+    },
+    {
+      "year": "2025",
+      "month": "5",
+      "subgroup": "Students",
+      "campus": "Canton",
+      "avgWeekly": "279"
+    },
+    {
+      "year": "2025",
+      "month": "5",
+      "subgroup": "Young Adults",
+      "campus": "Canton",
+      "avgWeekly": "75"
+    },
+    {
+      "year": "2025",
+      "month": "5",
+      "subgroup": "Adults",
+      "campus": "Jasper",
+      "avgWeekly": "414"
+    },
+    {
+      "year": "2025",
+      "month": "5",
+      "subgroup": "Kids",
+      "campus": "Jasper",
+      "avgWeekly": "104"
+    },
+    {
+      "year": "2025",
+      "month": "5",
+      "subgroup": "Students",
+      "campus": "Jasper",
+      "avgWeekly": "63"
+    },
+    {
+      "year": "2025",
+      "month": "8",
+      "subgroup": "Adults",
+      "campus": "Canton",
+      "avgWeekly": "2222"
+    },
+    {
+      "year": "2025",
+      "month": "8",
+      "subgroup": "Kids",
+      "campus": "Canton",
+      "avgWeekly": "579"
+    },
+    {
+      "year": "2025",
+      "month": "8",
+      "subgroup": "Students",
+      "campus": "Canton",
+      "avgWeekly": "476"
+    },
+    {
+      "year": "2025",
+      "month": "8",
+      "subgroup": "Young Adults",
+      "campus": "Canton",
+      "avgWeekly": "129"
+    },
+    {
+      "year": "2025",
+      "month": "8",
+      "subgroup": "Adults",
+      "campus": "Jasper",
+      "avgWeekly": "441"
+    },
+    {
+      "year": "2025",
+      "month": "8",
+      "subgroup": "Kids",
+      "campus": "Jasper",
+      "avgWeekly": "101"
+    },
+    {
+      "year": "2025",
+      "month": "8",
+      "subgroup": "Students",
+      "campus": "Jasper",
+      "avgWeekly": "80"
+    },
+    {
+      "year": "2025",
+      "month": "12",
+      "subgroup": "Adults",
+      "campus": "Canton",
+      "avgWeekly": "2743"
+    },
+    {
+      "year": "2025",
+      "month": "12",
+      "subgroup": "Kids",
+      "campus": "Canton",
+      "avgWeekly": "506"
+    },
+    {
+      "year": "2025",
+      "month": "12",
+      "subgroup": "Students",
+      "campus": "Canton",
+      "avgWeekly": "405"
+    },
+    {
+      "year": "2025",
+      "month": "12",
+      "subgroup": "Young Adults",
+      "campus": "Canton",
+      "avgWeekly": "101"
+    },
+    {
+      "year": "2025",
+      "month": "12",
+      "subgroup": "Adults",
+      "campus": "Jasper",
+      "avgWeekly": "464"
+    },
+    {
+      "year": "2025",
+      "month": "12",
+      "subgroup": "Kids",
+      "campus": "Jasper",
+      "avgWeekly": "96"
+    },
+    {
+      "year": "2025",
+      "month": "12",
+      "subgroup": "Students",
+      "campus": "Jasper",
+      "avgWeekly": "75"
+    },
+    {
+      "year": "2024",
+      "month": "4",
+      "subgroup": "Adults",
+      "campus": "Canton",
+      "avgWeekly": "1748"
+    },
+    {
+      "year": "2024",
+      "month": "4",
+      "subgroup": "Kids",
+      "campus": "Canton",
+      "avgWeekly": "439"
+    },
+    {
+      "year": "2024",
+      "month": "4",
+      "subgroup": "Students",
+      "campus": "Canton",
+      "avgWeekly": "248"
+    },
+    {
+      "year": "2024",
+      "month": "4",
+      "subgroup": "Young Adults",
+      "campus": "Canton",
+      "avgWeekly": "105"
+    },
+    {
+      "year": "2024",
+      "month": "4",
+      "subgroup": "Adults",
+      "campus": "Jasper",
+      "avgWeekly": "394"
+    },
+    {
+      "year": "2024",
+      "month": "4",
+      "subgroup": "Kids",
+      "campus": "Jasper",
+      "avgWeekly": "102"
+    },
+    {
+      "year": "2024",
+      "month": "4",
+      "subgroup": "Students",
+      "campus": "Jasper",
+      "avgWeekly": "72"
+    },
+    {
+      "year": "2024",
+      "month": "5",
+      "subgroup": "Adults",
+      "campus": "Canton",
+      "avgWeekly": "1886"
+    },
+    {
+      "year": "2024",
+      "month": "5",
+      "subgroup": "Kids",
+      "campus": "Canton",
+      "avgWeekly": "461"
+    },
+    {
+      "year": "2024",
+      "month": "5",
+      "subgroup": "Students",
+      "campus": "Canton",
+      "avgWeekly": "246"
+    },
+    {
+      "year": "2024",
+      "month": "5",
+      "subgroup": "Young Adults",
+      "campus": "Canton",
+      "avgWeekly": "118"
+    },
+    {
+      "year": "2024",
+      "month": "5",
+      "subgroup": "Adults",
+      "campus": "Jasper",
+      "avgWeekly": "386"
+    },
+    {
+      "year": "2024",
+      "month": "5",
+      "subgroup": "Kids",
+      "campus": "Jasper",
+      "avgWeekly": "104"
+    },
+    {
+      "year": "2024",
+      "month": "5",
+      "subgroup": "Students",
+      "campus": "Jasper",
+      "avgWeekly": "68"
+    },
+    {
+      "year": "2024",
+      "month": "8",
+      "subgroup": "Adults",
+      "campus": "Canton",
+      "avgWeekly": "2067"
+    },
+    {
+      "year": "2024",
+      "month": "8",
+      "subgroup": "Kids",
+      "campus": "Canton",
+      "avgWeekly": "531"
+    },
+    {
+      "year": "2024",
+      "month": "8",
+      "subgroup": "Students",
+      "campus": "Canton",
+      "avgWeekly": "311"
+    },
+    {
+      "year": "2024",
+      "month": "8",
+      "subgroup": "Young Adults",
+      "campus": "Canton",
+      "avgWeekly": "109"
+    },
+    {
+      "year": "2024",
+      "month": "8",
+      "subgroup": "Adults",
+      "campus": "Jasper",
+      "avgWeekly": "403"
+    },
+    {
+      "year": "2024",
+      "month": "8",
+      "subgroup": "Kids",
+      "campus": "Jasper",
+      "avgWeekly": "102"
+    },
+    {
+      "year": "2024",
+      "month": "8",
+      "subgroup": "Students",
+      "campus": "Jasper",
+      "avgWeekly": "86"
+    },
+    {
+      "year": "2024",
+      "month": "12",
+      "subgroup": "Adults",
+      "campus": "Canton",
+      "avgWeekly": "2098"
+    },
+    {
+      "year": "2024",
+      "month": "12",
+      "subgroup": "Kids",
+      "campus": "Canton",
+      "avgWeekly": "424"
+    },
+    {
+      "year": "2024",
+      "month": "12",
+      "subgroup": "Students",
+      "campus": "Canton",
+      "avgWeekly": "308"
+    },
+    {
+      "year": "2024",
+      "month": "12",
+      "subgroup": "Young Adults",
+      "campus": "Canton",
+      "avgWeekly": "97"
+    },
+    {
+      "year": "2024",
+      "month": "12",
+      "subgroup": "Adults",
+      "campus": "Jasper",
+      "avgWeekly": "407"
+    },
+    {
+      "year": "2024",
+      "month": "12",
+      "subgroup": "Kids",
+      "campus": "Jasper",
+      "avgWeekly": "91"
+    },
+    {
+      "year": "2024",
+      "month": "12",
+      "subgroup": "Students",
+      "campus": "Jasper",
+      "avgWeekly": "71"
+    },
+    {
+      "year": "2023",
+      "month": "4",
+      "subgroup": "Adults",
+      "campus": "Canton",
+      "avgWeekly": "1997"
+    },
+    {
+      "year": "2023",
+      "month": "4",
+      "subgroup": "Kids",
+      "campus": "Canton",
+      "avgWeekly": "389"
+    },
+    {
+      "year": "2023",
+      "month": "4",
+      "subgroup": "Students",
+      "campus": "Canton",
+      "avgWeekly": "219"
+    },
+    {
+      "year": "2023",
+      "month": "4",
+      "subgroup": "Adults",
+      "campus": "Jasper",
+      "avgWeekly": "461"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tmonth\tsubgroup\tcampus\tavgWeekly\n2025\t4\tAdults\tCanton\t2326\n2025\t4\tKids\tCanton\t527\n2025\t4\tStudents\tCanton\t310\n2025\t4\tYoung Adults\tCanton\t74\n2025\t4\tAdults\tJasper\t454\n2025\t4\tKids\tJasper\t100\n2025\t4\tStudents\tJasper\t66\n2025\t5\tAdults\tCanton\t1973\n2025\t5\tKids\tCanton\t502\n2025\t5\tStudents\tCanton\t279\n2025\t5\tYoung Adults\tCanton\t75\n2025\t5\tAdults\tJasper\t414\n2025\t5\tKids\tJasper\t104\n2025\t5\tStudents\tJasper\t63\n2025\t8\tAdults\tCanton\t2222\n2025\t8\tKids\tCanton\t579\n2025\t8\tStudents\tCanton\t476\n2025\t8\tYoung Adults\tCanton\t129\n2025\t8\tAdults\tJasper\t441\n2025\t8\tKids\tJasper\t101\n2025\t8\tStudents\tJasper\t80\n2025\t12\tAdults\tCanton\t2743\n2025\t12\tKids\tCanton\t506\n2025\t12\tStudents\tCanton\t405\n2025\t12\tYoung Adults\tCanton\t101\n2025\t12\tAdults\tJasper\t464\n2025\t12\tKids\tJasper\t96\n2025\t12\tStudents\tJasper\t75\n2024\t4\tAdults\tCanton\t1748\n2024\t4\tKids\tCanton\t439\n2024\t4\tStudents\tCanton\t248\n2024\t4\tYoung Adults\tCanton\t105\n2024\t4\tAdults\tJasper\t394\n2024\t4\tKids\tJasper\t102\n2024\t4\tStudents\tJasper\t72\n2024\t5\tAdults\tCanton\t1886\n2024\t5\tKids\tCanton\t461\n2024\t5\tStudents\tCanton\t246\n2024\t5\tYoung Adults\tCanton\t118\n2024\t5\tAdults\tJasper\t386\n2024\t5\tKids\tJasper\t104\n2024\t5\tStudents\tJasper\t68\n2024\t8\tAdults\tCanton\t2067\n2024\t8\tKids\tCanton\t531\n2024\t8\tStudents\tCanton\t311\n2024\t8\tYoung Adults\tCanton\t109\n2024\t8\tAdults\tJasper\t403\n2024\t8\tKids\tJasper\t102\n2024\t8\tStudents\tJasper\t86\n2024\t12\tAdults\tCanton\t2098\n2024\t12\tKids\tCanton\t424\n2024\t12\tStudents\tCanton\t308\n2024\t12\tYoung Adults\tCanton\t97\n2024\t12\tAdults\tJasper\t407\n2024\t12\tKids\tJasper\t91\n2024\t12\tStudents\tJasper\t71\n2023\t4\tAdults\tCanton\t1997\n2023\t4\tKids\tCanton\t389\n2023\t4\tStudents\tCanton\t219\n2023\t4\tAdults\tJasper\t461\n",
+  "stderr": "",
+  "execution_time_ms": 62
+}

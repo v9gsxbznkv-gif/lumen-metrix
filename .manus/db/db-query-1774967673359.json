@@ -1,0 +1,31 @@
+{
+  "query": "-- Lock the manually corrected March 29 attendance records\nUPDATE attendance_weekly SET manualLock = true \nWHERE weekStartDate = '2026-03-29' AND campus IN ('Canton', 'Jasper');\n\n-- Lock the manually corrected March 29 giving record\nUPDATE giving_weekly SET manualLock = true \nWHERE weekStartDate = '2026-03-29' AND campus = 'All Campuses';\n\n-- Verify\nSELECT 'attendance' as tbl, weekStartDate, campus, headcount, manualLock \nFROM attendance_weekly WHERE manualLock = true\nUNION ALL\nSELECT 'giving', weekStartDate, campus, total, manualLock \nFROM giving_weekly WHERE manualLock = true",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute -- Lock the manually corrected March 29 attendance records\nUPDATE attendance_weekly SET manualLock = true \nWHERE weekStartDate = '2026-03-29' AND campus IN ('Canton', 'Jasper');\n\n-- Lock the manually corrected March 29 giving record\nUPDATE giving_weekly SET manualLock = true \nWHERE weekStartDate = '2026-03-29' AND campus = 'All Campuses';\n\n-- Verify\nSELECT 'attendance' as tbl, weekStartDate, campus, headcount, manualLock \nFROM attendance_weekly WHERE manualLock = true\nUNION ALL\nSELECT 'giving', weekStartDate, campus, total, manualLock \nFROM giving_weekly WHERE manualLock = true",
+  "rows": [
+    {
+      "tbl": "giving",
+      "weekStartDate": "2026-03-29",
+      "campus": "All Campuses",
+      "headcount": "172713.49",
+      "manualLock": "1"
+    },
+    {
+      "tbl": "attendance",
+      "weekStartDate": "2026-03-29",
+      "campus": "Canton",
+      "headcount": "3207.00",
+      "manualLock": "1"
+    },
+    {
+      "tbl": "attendance",
+      "weekStartDate": "2026-03-29",
+      "campus": "Jasper",
+      "headcount": "604.00",
+      "manualLock": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "tbl\tweekStartDate\tcampus\theadcount\tmanualLock\ngiving\t2026-03-29\tAll Campuses\t172713.49\t1\nattendance\t2026-03-29\tCanton\t3207.00\t1\nattendance\t2026-03-29\tJasper\t604.00\t1\n",
+  "stderr": "",
+  "execution_time_ms": 110
+}

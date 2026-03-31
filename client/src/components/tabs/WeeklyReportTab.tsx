@@ -23,6 +23,7 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -151,6 +152,32 @@ export default function WeeklyReportTab() {
     onError: () => toast.error("Failed to generate report"),
   });
 
+  const resyncMutation = trpc.pco.triggerSync.useMutation({
+    onSuccess: (data) => {
+      toast.success("Re-sync started. Data will refresh in 1-2 minutes.");
+      // Poll for completion, then invalidate
+      const pollInterval = setInterval(async () => {
+        try {
+          const job = await utils.client.pco.getSyncJobStatus.query({ jobId: data.jobId });
+          if (job && (job.status === "completed" || job.status === "failed")) {
+            clearInterval(pollInterval);
+            if (job.status === "completed") {
+              toast.success(`Re-sync complete: ${job.recordsProcessed} records updated`);
+              utils.weeklyReport.getData.invalidate();
+            } else {
+              toast.error(`Re-sync failed: ${job.error || "Unknown error"}`);
+            }
+          }
+        } catch {
+          // ignore polling errors
+        }
+      }, 3000);
+      // Safety timeout: stop polling after 5 minutes
+      setTimeout(() => clearInterval(pollInterval), 5 * 60 * 1000);
+    },
+    onError: (err) => toast.error(`Re-sync failed: ${err.message}`),
+  });
+
   // Schedule form state
   const [schedDay, setSchedDay] = useState(scheduleData?.dayOfWeek ?? 1);
   const [schedHour, setSchedHour] = useState(scheduleData?.hour ?? 8);
@@ -218,6 +245,51 @@ export default function WeeklyReportTab() {
           ) : (
             <ChevronDown className="w-3 h-3" />
           )}
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            if (!current) {
+              toast.error("No week data loaded to re-sync");
+              return;
+            }
+            // Calculate the week start/end for the currently viewed week
+            const weekStart = current.label; // e.g. "Mar 23, 2026"
+            // Use the weekNumber and year to compute date range
+            const yr = current.year;
+            const wk = current.weekNumber;
+            // ISO week to date: Jan 4 is always in week 1
+            const jan4 = new Date(yr, 0, 4);
+            const dayOfWeek = jan4.getDay() || 7; // Mon=1...Sun=7
+            const weekStart2 = new Date(jan4);
+            weekStart2.setDate(jan4.getDate() - dayOfWeek + 1 + (wk - 1) * 7);
+            // Sunday of that week (PCO uses Sunday as week start)
+            const sunday = new Date(weekStart2);
+            sunday.setDate(weekStart2.getDate() - 1); // Go to previous Sunday
+            const satEnd = new Date(sunday);
+            satEnd.setDate(sunday.getDate() + 6);
+            const fmt = (d: Date) => d.toISOString().slice(0, 10);
+            const dateFrom = fmt(sunday);
+            const dateTo = fmt(satEnd);
+
+            toast.info(`Re-syncing week of ${dateFrom}...`);
+            resyncMutation.mutate({
+              syncType: "weekly_all",
+              dateFrom,
+              dateTo,
+            });
+          }}
+          disabled={resyncMutation.isPending}
+          className="gap-1.5"
+        >
+          {resyncMutation.isPending ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <RefreshCw className="w-3.5 h-3.5" />
+          )}
+          Re-sync Week
         </Button>
 
         <Button

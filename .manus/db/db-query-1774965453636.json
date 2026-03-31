@@ -1,0 +1,90 @@
+{
+  "query": "SELECT DISTINCT campus, subgroup FROM attendance_monthly ORDER BY campus, subgroup LIMIT 20",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT campus, subgroup FROM attendance_monthly ORDER BY campus, subgroup LIMIT 20",
+  "rows": [
+    {
+      "campus": "All Campuses",
+      "subgroup": "\"The Talk\""
+    },
+    {
+      "campus": "All Campuses",
+      "subgroup": "3to5 Gathering"
+    },
+    {
+      "campus": "All Campuses",
+      "subgroup": "6th Grade Preview Night: RevStudents - July 28, 2021"
+    },
+    {
+      "campus": "All Campuses",
+      "subgroup": "Abide Men's Night"
+    },
+    {
+      "campus": "All Campuses",
+      "subgroup": "ABIDE Night"
+    },
+    {
+      "campus": "All Campuses",
+      "subgroup": "ABIDE Nights"
+    },
+    {
+      "campus": "All Campuses",
+      "subgroup": "Abide Women's Night"
+    },
+    {
+      "campus": "All Campuses",
+      "subgroup": "AmandaTest"
+    },
+    {
+      "campus": "All Campuses",
+      "subgroup": "Baptism Registration"
+    },
+    {
+      "campus": "All Campuses",
+      "subgroup": "Christmas Service"
+    },
+    {
+      "campus": "All Campuses",
+      "subgroup": "Crazy Game Night"
+    },
+    {
+      "campus": "All Campuses",
+      "subgroup": "Easter"
+    },
+    {
+      "campus": "All Campuses",
+      "subgroup": "ESL Class"
+    },
+    {
+      "campus": "All Campuses",
+      "subgroup": "Girls Night"
+    },
+    {
+      "campus": "All Campuses",
+      "subgroup": "Group Leader Vision Dinner"
+    },
+    {
+      "campus": "All Campuses",
+      "subgroup": "Guys Night 2K16"
+    },
+    {
+      "campus": "All Campuses",
+      "subgroup": "Memorial Service"
+    },
+    {
+      "campus": "All Campuses",
+      "subgroup": "Parent Conference: Check-In"
+    },
+    {
+      "campus": "All Campuses",
+      "subgroup": "Preschool Childcare"
+    },
+    {
+      "campus": "All Campuses",
+      "subgroup": "Revival"
+    }
+  ],
+  "messages": [],
+  "stdout": "campus\tsubgroup\nAll Campuses\t\"The Talk\"\nAll Campuses\t3to5 Gathering\nAll Campuses\t6th Grade Preview Night: RevStudents - July 28, 2021\nAll Campuses\tAbide Men's Night\nAll Campuses\tABIDE Night\nAll Campuses\tABIDE Nights\nAll Campuses\tAbide Women's Night\nAll Campuses\tAmandaTest\nAll Campuses\tBaptism Registration\nAll Campuses\tChristmas Service\nAll Campuses\tCrazy Game Night\nAll Campuses\tEaster\nAll Campuses\tESL Class\nAll Campuses\tGirls Night\nAll Campuses\tGroup Leader Vision Dinner\nAll Campuses\tGuys Night 2K16\nAll Campuses\tMemorial Service\nAll Campuses\tParent Conference: Check-In\nAll Campuses\tPreschool Childcare\nAll Campuses\tRevival\n",
+  "stderr": "",
+  "execution_time_ms": 69
+}

@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO event_overrides (id, event_name, year, attendance, notes, updated_at)\nVALUES (\n  REPLACE(UUID(), '-', ''),\n  'Easter',\n  2025,\n  6866,\n  'Canton: 5,982 | Jasper: 884 | Adults and kids combined',\n  UNIX_TIMESTAMP() * 1000\n)\nON DUPLICATE KEY UPDATE\n  attendance = 6866,\n  notes = 'Canton: 5,982 | Jasper: 884 | Adults and kids combined',\n  updated_at = UNIX_TIMESTAMP() * 1000",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute INSERT INTO event_overrides (id, event_name, year, attendance, notes, updated_at)\nVALUES (\n  REPLACE(UUID(), '-', ''),\n  'Easter',\n  2025,\n  6866,\n  'Canton: 5,982 | Jasper: 884 | Adults and kids combined',\n  UNIX_TIMESTAMP() * 1000\n)\nON DUPLICATE KEY UPDATE\n  attendance = 6866,\n  notes = 'Canton: 5,982 | Jasper: 884 | Adults and kids combined',\n  updated_at = UNIX_TIMESTAMP() * 1000",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'event_name' in 'field list'"
+  ]
+}

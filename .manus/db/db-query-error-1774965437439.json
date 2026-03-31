@@ -1,0 +1,10 @@
+{
+  "query": "-- Verify the override\nSELECT eventName, year, attendance, notes FROM event_overrides ORDER BY eventName, year;\n\n-- Pull monthly attendance data to compute what the estimates would be for each special event year\n-- Easter is in April, Christmas in December, Mother's Day in May, Back to School in August\nSELECT year, month, campus, subgroup, avg_weekly \nFROM attendance_monthly \nWHERE month IN (4, 5, 8, 12) \n  AND subgroup = 'Total'\n  AND campus = 'All Campuses'\nORDER BY year DESC, month",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute -- Verify the override\nSELECT eventName, year, attendance, notes FROM event_overrides ORDER BY eventName, year;\n\n-- Pull monthly attendance data to compute what the estimates would be for each special event year\n-- Easter is in April, Christmas in December, Mother's Day in May, Back to School in August\nSELECT year, month, campus, subgroup, avg_weekly \nFROM attendance_monthly \nWHERE month IN (4, 5, 8, 12) \n  AND subgroup = 'Total'\n  AND campus = 'All Campuses'\nORDER BY year DESC, month",
+  "returncode": 1,
+  "logs": [
+    "eventName\tyear\tattendance\tnotes",
+    "Easter Sunday\t2025\t6866\tCanton: 5,982 | Jasper: 884 | Adults and kids combined",
+    "ERROR 1054 (42S22) at line 6: Unknown column 'avg_weekly' in 'field list'"
+  ]
+}

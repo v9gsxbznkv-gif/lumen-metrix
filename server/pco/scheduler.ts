@@ -1,6 +1,8 @@
 /**
  * PCO Auto-Sync Scheduler
- * Runs a full sync at midnight (Eastern Time) every night.
+ * Runs a full sync at midnight (Eastern Time) every Tuesday night.
+ * Tuesday gives PCO 2 full days after Sunday services to finalize
+ * all check-in and donation data.
  * Uses setInterval with 30-minute checks to avoid drift.
  */
 import { createAuthenticatedPcoClient } from "./client";
@@ -23,6 +25,19 @@ function getEasternHour(): number {
   return parseInt(eastern);
 }
 
+/** Get Eastern day of week: 0=Sunday, 1=Monday, 2=Tuesday, ... */
+function getEasternDayOfWeek(): number {
+  const now = new Date();
+  const dayStr = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    weekday: "short",
+  }).format(now);
+  const dayMap: Record<string, number> = {
+    Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6,
+  };
+  return dayMap[dayStr] ?? -1;
+}
+
 function getEasternTimeString(): string {
   return new Intl.DateTimeFormat("en-US", {
     timeZone: "America/New_York",
@@ -43,7 +58,7 @@ async function runNightlySync(): Promise<void> {
 
   isRunning = true;
   const startTime = Date.now();
-  console.log(`[Scheduler] Starting nightly sync at ${getEasternTimeString()}`);
+  console.log(`[Scheduler] Starting Tuesday nightly sync at ${getEasternTimeString()}`);
 
   try {
     const client = await createAuthenticatedPcoClient();
@@ -99,9 +114,12 @@ async function runNightlySync(): Promise<void> {
   }
 }
 
+// Sync day: Tuesday (day 2)
+const SYNC_DAY = 2;
+
 /**
  * Start the auto-sync scheduler.
- * Checks every 30 minutes if it's midnight Eastern, then runs the sync.
+ * Checks every 30 minutes if it's midnight Eastern on Tuesday, then runs the sync.
  */
 export function startAutoSyncScheduler(): void {
   if (schedulerInterval) {
@@ -109,18 +127,19 @@ export function startAutoSyncScheduler(): void {
     return;
   }
 
-  console.log("[Scheduler] Auto-sync scheduler started. Will sync at midnight Eastern Time.");
+  console.log("[Scheduler] Auto-sync scheduler started. Will sync at midnight Eastern Time every Tuesday.");
 
   // Check every 30 minutes
   schedulerInterval = setInterval(() => {
     const hour = getEasternHour();
+    const day = getEasternDayOfWeek();
     const today = new Intl.DateTimeFormat("en-US", {
       timeZone: "America/New_York",
       dateStyle: "short",
     }).format(new Date());
 
-    // Run at midnight (hour 0) and only once per day
-    if (hour === 0 && lastSyncDate !== today) {
+    // Run at midnight (hour 0) on Tuesday (day 2) and only once per day
+    if (hour === 0 && day === SYNC_DAY && lastSyncDate !== today) {
       lastSyncDate = today;
       runNightlySync().catch((err) =>
         console.error("[Scheduler] Unhandled sync error:", err)
@@ -149,18 +168,25 @@ export function getSchedulerStatus(): {
   isCurrentlySyncing: boolean;
   lastSyncAt: string | null;
 } {
-  // Calculate next midnight Eastern
+  // Calculate next Tuesday midnight Eastern
   const now = new Date();
   const easternNow = new Date(
     now.toLocaleString("en-US", { timeZone: "America/New_York" })
   );
-  const nextMidnight = new Date(easternNow);
-  nextMidnight.setDate(nextMidnight.getDate() + 1);
-  nextMidnight.setHours(0, 0, 0, 0);
+  const currentDay = easternNow.getDay(); // 0=Sun...6=Sat
+  // Days until next Tuesday (day 2)
+  let daysUntilTuesday = (SYNC_DAY - currentDay + 7) % 7;
+  // If it's already Tuesday past midnight, next one is in 7 days
+  if (daysUntilTuesday === 0 && easternNow.getHours() >= 1) {
+    daysUntilTuesday = 7;
+  }
+  const nextTuesday = new Date(easternNow);
+  nextTuesday.setDate(nextTuesday.getDate() + daysUntilTuesday);
+  nextTuesday.setHours(0, 0, 0, 0);
 
   return {
     active: schedulerInterval !== null,
-    nextSyncTime: nextMidnight.toISOString(),
+    nextSyncTime: nextTuesday.toISOString(),
     isCurrentlySyncing: isRunning,
     lastSyncAt: lastSyncAt ? lastSyncAt.toISOString() : null,
   };

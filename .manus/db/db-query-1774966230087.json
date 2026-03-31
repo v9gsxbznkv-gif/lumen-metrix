@@ -1,0 +1,26 @@
+{
+  "query": "-- Update Canton: replace the 6-count stub with the real 3,207 total\n-- Adults(2074) + RevKids(506) + FTG Adults(11) + FTG Kids(19) = 2,610 base + 597 kids/students = 3,207\n-- FTGs are guests, so regularCount = 2,610 (non-FTG), guestCount = 30 (FTG Adults 11 + FTG Kids 19)\nUPDATE attendance_weekly\nSET headcount = 3207,\n    regularCount = 3177,\n    guestCount = 30\nWHERE weekStartDate = '2026-03-29'\n  AND campus = 'Canton'\n  AND subgroup = 'Revolution Canton Check-In';\n\n-- Update Jasper: replace 226 with 604\n-- Adults(454) + RevKids(126) + RS 5-6th(14) = 594 base, FTG Adults(3) + FTG Kids(6) + FTG 5/6th(1) = 10 guests\nUPDATE attendance_weekly\nSET headcount = 604,\n    regularCount = 594,\n    guestCount = 10\nWHERE weekStartDate = '2026-03-29'\n  AND campus = 'Jasper'\n  AND subgroup = 'Revolution Jasper Check-In';\n\n-- Verify the updates\nSELECT weekStartDate, campus, subgroup, headcount, regularCount, guestCount\nFROM attendance_weekly\nWHERE weekStartDate = '2026-03-29'\n  AND campus IN ('Canton', 'Jasper')\nORDER BY campus",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute -- Update Canton: replace the 6-count stub with the real 3,207 total\n-- Adults(2074) + RevKids(506) + FTG Adults(11) + FTG Kids(19) = 2,610 base + 597 kids/students = 3,207\n-- FTGs are guests, so regularCount = 2,610 (non-FTG), guestCount = 30 (FTG Adults 11 + FTG Kids 19)\nUPDATE attendance_weekly\nSET headcount = 3207,\n    regularCount = 3177,\n    guestCount = 30\nWHERE weekStartDate = '2026-03-29'\n  AND campus = 'Canton'\n  AND subgroup = 'Revolution Canton Check-In';\n\n-- Update Jasper: replace 226 with 604\n-- Adults(454) + RevKids(126) + RS 5-6th(14) = 594 base, FTG Adults(3) + FTG Kids(6) + FTG 5/6th(1) = 10 guests\nUPDATE attendance_weekly\nSET headcount = 604,\n    regularCount = 594,\n    guestCount = 10\nWHERE weekStartDate = '2026-03-29'\n  AND campus = 'Jasper'\n  AND subgroup = 'Revolution Jasper Check-In';\n\n-- Verify the updates\nSELECT weekStartDate, campus, subgroup, headcount, regularCount, guestCount\nFROM attendance_weekly\nWHERE weekStartDate = '2026-03-29'\n  AND campus IN ('Canton', 'Jasper')\nORDER BY campus",
+  "rows": [
+    {
+      "weekStartDate": "2026-03-29",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "3207",
+      "regularCount": "3177",
+      "guestCount": "30"
+    },
+    {
+      "weekStartDate": "2026-03-29",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "headcount": "604",
+      "regularCount": "594",
+      "guestCount": "10"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekStartDate\tcampus\tsubgroup\theadcount\tregularCount\tguestCount\n2026-03-29\tCanton\tRevolution Canton Check-In\t3207\t3177\t30\n2026-03-29\tJasper\tRevolution Jasper Check-In\t604\t594\t10\n",
+  "stderr": "",
+  "execution_time_ms": 81
+}

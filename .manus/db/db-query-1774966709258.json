@@ -1,0 +1,50 @@
+{
+  "query": "SELECT weekStartDate, campus, total, general, designated, donationCount\nFROM giving_weekly\nWHERE weekStartDate >= '2026-03-01' AND weekStartDate <= '2026-04-05'\nORDER BY weekStartDate, campus",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekStartDate, campus, total, general, designated, donationCount\nFROM giving_weekly\nWHERE weekStartDate >= '2026-03-01' AND weekStartDate <= '2026-04-05'\nORDER BY weekStartDate, campus",
+  "rows": [
+    {
+      "weekStartDate": "2026-03-01",
+      "campus": "All Campuses",
+      "total": "284519.20",
+      "general": "284519.20",
+      "designated": "0.00",
+      "donationCount": "733"
+    },
+    {
+      "weekStartDate": "2026-03-08",
+      "campus": "All Campuses",
+      "total": "176874.16",
+      "general": "176874.16",
+      "designated": "0.00",
+      "donationCount": "453"
+    },
+    {
+      "weekStartDate": "2026-03-15",
+      "campus": "All Campuses",
+      "total": "201433.53",
+      "general": "201433.53",
+      "designated": "0.00",
+      "donationCount": "581"
+    },
+    {
+      "weekStartDate": "2026-03-22",
+      "campus": "All Campuses",
+      "total": "95343.88",
+      "general": "95343.88",
+      "designated": "0.00",
+      "donationCount": "366"
+    },
+    {
+      "weekStartDate": "2026-03-29",
+      "campus": "All Campuses",
+      "total": "74400.71",
+      "general": "74400.71",
+      "designated": "0.00",
+      "donationCount": "196"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekStartDate\tcampus\ttotal\tgeneral\tdesignated\tdonationCount\n2026-03-01\tAll Campuses\t284519.20\t284519.20\t0.00\t733\n2026-03-08\tAll Campuses\t176874.16\t176874.16\t0.00\t453\n2026-03-15\tAll Campuses\t201433.53\t201433.53\t0.00\t581\n2026-03-22\tAll Campuses\t95343.88\t95343.88\t0.00\t366\n2026-03-29\tAll Campuses\t74400.71\t74400.71\t0.00\t196\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

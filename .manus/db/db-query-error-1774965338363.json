@@ -1,0 +1,10 @@
+{
+  "query": "-- Check all existing overrides\nSELECT eventName, year, attendance, giving, ftg, salvations, baptisms, notes FROM event_overrides ORDER BY eventName, year;\n\n-- Check what event metrics exist in the database for special events\nSELECT DISTINCT event_name FROM event_metrics ORDER BY event_name LIMIT 30",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute -- Check all existing overrides\nSELECT eventName, year, attendance, giving, ftg, salvations, baptisms, notes FROM event_overrides ORDER BY eventName, year;\n\n-- Check what event metrics exist in the database for special events\nSELECT DISTINCT event_name FROM event_metrics ORDER BY event_name LIMIT 30",
+  "returncode": 1,
+  "logs": [
+    "eventName\tyear\tattendance\tgiving\tftg\tsalvations\tbaptisms\tnotes",
+    "Easter\t2025\t6866\tNULL\tNULL\tNULL\tNULL\tCanton: 5,982 | Jasper: 884 | Adults and kids combined",
+    "ERROR 1146 (42S02) at line 5: Table 'emzmxpmcwkqz2bikerl4cm.event_metrics' doesn't exist"
+  ]
+}

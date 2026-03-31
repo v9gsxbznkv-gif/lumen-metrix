@@ -1,0 +1,90 @@
+{
+  "query": "-- The sync uses getSunday() which returns the Sunday of the week\n-- March 29, 2026 is a Sunday, so weekStartDate should be 2026-03-29\n-- March 26, 2026 is a Thursday, so its Sunday anchor is also 2026-03-23 or 2026-03-29?\n-- Let's check what's actually stored\nSELECT weekStartDate, campus, subgroup, headcount, regularCount, guestCount\nFROM attendance_weekly\nWHERE weekStartDate IN ('2026-03-22', '2026-03-23', '2026-03-29')\n  AND campus IN ('Canton', 'Jasper')\nORDER BY weekStartDate, campus, subgroup",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute -- The sync uses getSunday() which returns the Sunday of the week\n-- March 29, 2026 is a Sunday, so weekStartDate should be 2026-03-29\n-- March 26, 2026 is a Thursday, so its Sunday anchor is also 2026-03-23 or 2026-03-29?\n-- Let's check what's actually stored\nSELECT weekStartDate, campus, subgroup, headcount, regularCount, guestCount\nFROM attendance_weekly\nWHERE weekStartDate IN ('2026-03-22', '2026-03-23', '2026-03-29')\n  AND campus IN ('Canton', 'Jasper')\nORDER BY weekStartDate, campus, subgroup",
+  "rows": [
+    {
+      "weekStartDate": "2026-03-22",
+      "campus": "Canton",
+      "subgroup": "Childcare | Canton Campus",
+      "headcount": "5",
+      "regularCount": "5",
+      "guestCount": "0"
+    },
+    {
+      "weekStartDate": "2026-03-22",
+      "campus": "Canton",
+      "subgroup": "Parent Night | Canton Campus",
+      "headcount": "22",
+      "regularCount": "22",
+      "guestCount": "0"
+    },
+    {
+      "weekStartDate": "2026-03-22",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "891",
+      "regularCount": "476",
+      "guestCount": "0"
+    },
+    {
+      "weekStartDate": "2026-03-22",
+      "campus": "Canton",
+      "subgroup": "RevStudents | Canton Campus",
+      "headcount": "417",
+      "regularCount": "325",
+      "guestCount": "0"
+    },
+    {
+      "weekStartDate": "2026-03-22",
+      "campus": "Jasper",
+      "subgroup": "Childcare | Jasper Campus",
+      "headcount": "11",
+      "regularCount": "11",
+      "guestCount": "0"
+    },
+    {
+      "weekStartDate": "2026-03-22",
+      "campus": "Jasper",
+      "subgroup": "Parent Night | Jasper Campus",
+      "headcount": "9",
+      "regularCount": "9",
+      "guestCount": "0"
+    },
+    {
+      "weekStartDate": "2026-03-22",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "headcount": "209",
+      "regularCount": "106",
+      "guestCount": "0"
+    },
+    {
+      "weekStartDate": "2026-03-22",
+      "campus": "Jasper",
+      "subgroup": "RevStudents | Jasper Campus",
+      "headcount": "105",
+      "regularCount": "69",
+      "guestCount": "0"
+    },
+    {
+      "weekStartDate": "2026-03-29",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "6",
+      "regularCount": "6",
+      "guestCount": "0"
+    },
+    {
+      "weekStartDate": "2026-03-29",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "headcount": "226",
+      "regularCount": "134",
+      "guestCount": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekStartDate\tcampus\tsubgroup\theadcount\tregularCount\tguestCount\n2026-03-22\tCanton\tChildcare | Canton Campus\t5\t5\t0\n2026-03-22\tCanton\tParent Night | Canton Campus\t22\t22\t0\n2026-03-22\tCanton\tRevolution Canton Check-In\t891\t476\t0\n2026-03-22\tCanton\tRevStudents | Canton Campus\t417\t325\t0\n2026-03-22\tJasper\tChildcare | Jasper Campus\t11\t11\t0\n2026-03-22\tJasper\tParent Night | Jasper Campus\t9\t9\t0\n2026-03-22\tJasper\tRevolution Jasper Check-In\t209\t106\t0\n2026-03-22\tJasper\tRevStudents | Jasper Campus\t105\t69\t0\n2026-03-29\tCanton\tRevolution Canton Check-In\t6\t6\t0\n2026-03-29\tJasper\tRevolution Jasper Check-In\t226\t134\t0\n",
+  "stderr": "",
+  "execution_time_ms": 60
+}

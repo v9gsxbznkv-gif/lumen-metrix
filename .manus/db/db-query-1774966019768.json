@@ -1,0 +1,94 @@
+{
+  "query": "SELECT weekStartDate, campus, subgroup, headcount, source\nFROM attendance_weekly\nWHERE weekStartDate >= '2026-03-22' AND weekStartDate <= '2026-04-05'\nORDER BY weekStartDate, campus, subgroup",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekStartDate, campus, subgroup, headcount, source\nFROM attendance_weekly\nWHERE weekStartDate >= '2026-03-22' AND weekStartDate <= '2026-04-05'\nORDER BY weekStartDate, campus, subgroup",
+  "rows": [
+    {
+      "weekStartDate": "2026-03-22",
+      "campus": "Canton",
+      "subgroup": "Childcare | Canton Campus",
+      "headcount": "5",
+      "source": "pco"
+    },
+    {
+      "weekStartDate": "2026-03-22",
+      "campus": "Canton",
+      "subgroup": "Parent Night | Canton Campus",
+      "headcount": "22",
+      "source": "pco"
+    },
+    {
+      "weekStartDate": "2026-03-22",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "891",
+      "source": "pco"
+    },
+    {
+      "weekStartDate": "2026-03-22",
+      "campus": "Canton",
+      "subgroup": "RevStudents | Canton Campus",
+      "headcount": "417",
+      "source": "pco"
+    },
+    {
+      "weekStartDate": "2026-03-22",
+      "campus": "Jasper",
+      "subgroup": "Childcare | Jasper Campus",
+      "headcount": "11",
+      "source": "pco"
+    },
+    {
+      "weekStartDate": "2026-03-22",
+      "campus": "Jasper",
+      "subgroup": "Parent Night | Jasper Campus",
+      "headcount": "9",
+      "source": "pco"
+    },
+    {
+      "weekStartDate": "2026-03-22",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "headcount": "209",
+      "source": "pco"
+    },
+    {
+      "weekStartDate": "2026-03-22",
+      "campus": "Jasper",
+      "subgroup": "RevStudents | Jasper Campus",
+      "headcount": "105",
+      "source": "pco"
+    },
+    {
+      "weekStartDate": "2026-03-22",
+      "campus": "Other",
+      "subgroup": "ESL Class",
+      "headcount": "28",
+      "source": "pco"
+    },
+    {
+      "weekStartDate": "2026-03-29",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "6",
+      "source": "pco"
+    },
+    {
+      "weekStartDate": "2026-03-29",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "headcount": "226",
+      "source": "pco"
+    },
+    {
+      "weekStartDate": "2026-03-29",
+      "campus": "Other",
+      "subgroup": "ESL Class",
+      "headcount": "1",
+      "source": "pco"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekStartDate\tcampus\tsubgroup\theadcount\tsource\n2026-03-22\tCanton\tChildcare | Canton Campus\t5\tpco\n2026-03-22\tCanton\tParent Night | Canton Campus\t22\tpco\n2026-03-22\tCanton\tRevolution Canton Check-In\t891\tpco\n2026-03-22\tCanton\tRevStudents | Canton Campus\t417\tpco\n2026-03-22\tJasper\tChildcare | Jasper Campus\t11\tpco\n2026-03-22\tJasper\tParent Night | Jasper Campus\t9\tpco\n2026-03-22\tJasper\tRevolution Jasper Check-In\t209\tpco\n2026-03-22\tJasper\tRevStudents | Jasper Campus\t105\tpco\n2026-03-22\tOther\tESL Class\t28\tpco\n2026-03-29\tCanton\tRevolution Canton Check-In\t6\tpco\n2026-03-29\tJasper\tRevolution Jasper Check-In\t226\tpco\n2026-03-29\tOther\tESL Class\t1\tpco\n",
+  "stderr": "",
+  "execution_time_ms": 61
+}

@@ -376,6 +376,7 @@ export const attendanceWeekly = mysqlTable("attendance_weekly", {
   guestCount: int("guestCount").default(0).notNull(),
   volunteerCount: int("volunteerCount").default(0).notNull(),
   source: varchar("source", { length: 32 }).default("pco").notNull(),
+  manualLock: boolean("manualLock").default(false).notNull(), // true = skip during auto-sync
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -397,6 +398,7 @@ export const givingWeekly = mysqlTable("giving_weekly", {
   designated: decimal("designated", { precision: 12, scale: 2 }).default("0").notNull(),
   donationCount: int("donationCount").default(0).notNull(),
   source: varchar("source", { length: 32 }).default("pco").notNull(),
+  manualLock: boolean("manualLock").default(false).notNull(), // true = skip during auto-sync
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

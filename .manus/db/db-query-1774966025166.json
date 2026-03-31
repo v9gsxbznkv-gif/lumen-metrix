@@ -1,0 +1,154 @@
+{
+  "query": "-- Check the last 8 weeks of main check-in data to see the pattern\nSELECT weekStartDate, campus, subgroup, headcount\nFROM attendance_weekly\nWHERE subgroup IN ('Revolution Canton Check-In', 'Revolution Jasper Check-In')\n  AND weekStartDate >= '2026-01-01'\nORDER BY weekStartDate DESC, campus\nLIMIT 30",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute -- Check the last 8 weeks of main check-in data to see the pattern\nSELECT weekStartDate, campus, subgroup, headcount\nFROM attendance_weekly\nWHERE subgroup IN ('Revolution Canton Check-In', 'Revolution Jasper Check-In')\n  AND weekStartDate >= '2026-01-01'\nORDER BY weekStartDate DESC, campus\nLIMIT 30",
+  "rows": [
+    {
+      "weekStartDate": "2026-03-29",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "6"
+    },
+    {
+      "weekStartDate": "2026-03-29",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "headcount": "226"
+    },
+    {
+      "weekStartDate": "2026-03-22",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "891"
+    },
+    {
+      "weekStartDate": "2026-03-22",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "headcount": "209"
+    },
+    {
+      "weekStartDate": "2026-03-15",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "940"
+    },
+    {
+      "weekStartDate": "2026-03-15",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "headcount": "245"
+    },
+    {
+      "weekStartDate": "2026-03-08",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "947"
+    },
+    {
+      "weekStartDate": "2026-03-08",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "headcount": "226"
+    },
+    {
+      "weekStartDate": "2026-03-01",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "925"
+    },
+    {
+      "weekStartDate": "2026-03-01",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "headcount": "239"
+    },
+    {
+      "weekStartDate": "2026-02-22",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "922"
+    },
+    {
+      "weekStartDate": "2026-02-22",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "headcount": "221"
+    },
+    {
+      "weekStartDate": "2026-02-15",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "816"
+    },
+    {
+      "weekStartDate": "2026-02-15",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "headcount": "202"
+    },
+    {
+      "weekStartDate": "2026-02-08",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "823"
+    },
+    {
+      "weekStartDate": "2026-02-08",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "headcount": "229"
+    },
+    {
+      "weekStartDate": "2026-02-01",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "999"
+    },
+    {
+      "weekStartDate": "2026-01-25",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "121"
+    },
+    {
+      "weekStartDate": "2026-01-18",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "135"
+    },
+    {
+      "weekStartDate": "2026-01-18",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "headcount": "228"
+    },
+    {
+      "weekStartDate": "2026-01-11",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "1028"
+    },
+    {
+      "weekStartDate": "2026-01-11",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "headcount": "229"
+    },
+    {
+      "weekStartDate": "2026-01-04",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "1927"
+    },
+    {
+      "weekStartDate": "2026-01-04",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "headcount": "202"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekStartDate\tcampus\tsubgroup\theadcount\n2026-03-29\tCanton\tRevolution Canton Check-In\t6\n2026-03-29\tJasper\tRevolution Jasper Check-In\t226\n2026-03-22\tCanton\tRevolution Canton Check-In\t891\n2026-03-22\tJasper\tRevolution Jasper Check-In\t209\n2026-03-15\tCanton\tRevolution Canton Check-In\t940\n2026-03-15\tJasper\tRevolution Jasper Check-In\t245\n2026-03-08\tCanton\tRevolution Canton Check-In\t947\n2026-03-08\tJasper\tRevolution Jasper Check-In\t226\n2026-03-01\tCanton\tRevolution Canton Check-In\t925\n2026-03-01\tJasper\tRevolution Jasper Check-In\t239\n2026-02-22\tCanton\tRevolution Canton Check-In\t922\n2026-02-22\tJasper\tRevolution Jasper Check-In\t221\n2026-02-15\tCanton\tRevolution Canton Check-In\t816\n2026-02-15\tJasper\tRevolution Jasper Check-In\t202\n2026-02-08\tCanton\tRevolution Canton Check-In\t823\n2026-02-08\tJasper\tRevolution Jasper Check-In\t229\n2026-02-01\tCanton\tRevolution Canton Check-In\t999\n2026-01-25\tCanton\tRevolution Canton Check-In\t121\n2026-01-18\tCanton\tRevolution Canton Check-In\t135\n2026-01-18\tJasper\tRevolution Jasper Check-In\t228\n2026-01-11\tCanton\tRevolution Canton Check-In\t1028\n2026-01-11\tJasper\tRevolution Jasper Check-In\t229\n2026-01-04\tCanton\tRevolution Canton Check-In\t1927\n2026-01-04\tJasper\tRevolution Jasper Check-In\t202\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}

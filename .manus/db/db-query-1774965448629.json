@@ -1,0 +1,9 @@
+{
+  "query": "-- Easter (April), Mother's Day (May), Back to School (August), Christmas (December)\n-- Using subgroup='Total' and campus='All Campuses' for the true total\nSELECT year, month, subgroup, campus, avgWeekly, total\nFROM attendance_monthly \nWHERE month IN (4, 5, 8, 12) \n  AND subgroup = 'Total'\n  AND campus = 'All Campuses'\nORDER BY year DESC, month",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute -- Easter (April), Mother's Day (May), Back to School (August), Christmas (December)\n-- Using subgroup='Total' and campus='All Campuses' for the true total\nSELECT year, month, subgroup, campus, avgWeekly, total\nFROM attendance_monthly \nWHERE month IN (4, 5, 8, 12) \n  AND subgroup = 'Total'\n  AND campus = 'All Campuses'\nORDER BY year DESC, month",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 63
+}

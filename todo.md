@@ -298,3 +298,14 @@
 - [x] Per-campus breakdown cards still show individual campus values correctly
 - [x] All 107 tests passing
 - [x] Deploy fix
+
+## Round 33: Sync Improvements
+
+- [x] Add manualLock boolean column to attendance_weekly table
+- [x] Add manualLock boolean column to giving_weekly table
+- [x] Set manualLock=true on existing corrected records (Mar 29 attendance and giving)
+- [x] Update weeklySync upsert logic to skip records where manualLock=true
+- [x] Move nightly scheduler from midnight every night to Tuesday midnight ET only
+- [x] Add "Re-sync this week" button on Weekly Report page with polling for completion
+- [x] All 107 tests passing
+- [x] Checkpoint and deploy

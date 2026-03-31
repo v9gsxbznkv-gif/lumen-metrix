@@ -1,0 +1,20 @@
+{
+  "query": "SELECT eventName, year, attendance, giving, ftg, salvations, baptisms, notes FROM event_overrides ORDER BY eventName, year",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT eventName, year, attendance, giving, ftg, salvations, baptisms, notes FROM event_overrides ORDER BY eventName, year",
+  "rows": [
+    {
+      "eventName": "Easter",
+      "year": "2025",
+      "attendance": "6866",
+      "giving": "NULL",
+      "ftg": "NULL",
+      "salvations": "NULL",
+      "baptisms": "NULL",
+      "notes": "Canton: 5,982 | Jasper: 884 | Adults and kids combined"
+    }
+  ],
+  "messages": [],
+  "stdout": "eventName\tyear\tattendance\tgiving\tftg\tsalvations\tbaptisms\tnotes\nEaster\t2025\t6866\tNULL\tNULL\tNULL\tNULL\tCanton: 5,982 | Jasper: 884 | Adults and kids combined\n",
+  "stderr": "",
+  "execution_time_ms": 65
+}

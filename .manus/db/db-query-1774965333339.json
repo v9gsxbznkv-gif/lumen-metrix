@@ -1,0 +1,23 @@
+{
+  "query": "SELECT * FROM event_overrides WHERE eventName = 'Easter' AND year = 2025",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT * FROM event_overrides WHERE eventName = 'Easter' AND year = 2025",
+  "rows": [
+    {
+      "id": "1",
+      "eventName": "Easter",
+      "year": "2025",
+      "attendance": "6866",
+      "giving": "NULL",
+      "ftg": "NULL",
+      "salvations": "NULL",
+      "baptisms": "NULL",
+      "notes": "Canton: 5,982 | Jasper: 884 | Adults and kids combined",
+      "createdAt": "2026-03-31 13:55:28",
+      "updatedAt": "2026-03-31 13:55:28"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\teventName\tyear\tattendance\tgiving\tftg\tsalvations\tbaptisms\tnotes\tcreatedAt\tupdatedAt\n1\tEaster\t2025\t6866\tNULL\tNULL\tNULL\tNULL\tCanton: 5,982 | Jasper: 884 | Adults and kids combined\t2026-03-31 13:55:28\t2026-03-31 13:55:28\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}
