@@ -368,3 +368,15 @@
   - Young Adults: "Young Adults" (annual) with fallback to "YA Gathering" (monthly)
 - [x] All 107 tests passing
 - [x] Test and deploy
+
+## Round 35: Data Normalization, Fresh Sync, and Overview KPI Cards (Complete)
+
+- [x] Run one-time historical data normalization script for attendance_monthly subgroup names:
+  - "Elem Reruns" → "Reruns" (201 rows updated)
+  - Updated AttendanceTab breakdown to use "Reruns" instead of "Elem Reruns"
+- [x] Fresh sync deferred to user (requires live PCO session from Settings page)
+- [x] Add Kids KPI card to Overview tab (Baby icon, orange border, partial-year-aware YoY)
+- [x] Add Students KPI card to Overview tab (GraduationCap icon, blue border, partial-year-aware YoY)
+- [x] Both KPI cards filter by selected campus and support partial-year comparisons
+- [x] All 107 tests passing
+- [x] Checkpoint and deploy

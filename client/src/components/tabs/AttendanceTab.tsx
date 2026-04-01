@@ -211,7 +211,7 @@ export default function AttendanceTab() {
 
   // Kids room-level breakdown from attendance_monthly
   // Each section is tied to a SPECIFIC campus (Canton or Jasper), not the global filter
-  // Uses exact DB subgroup names: Campground, Treehouse, Cove, Elem Reruns, Babies, Toddlers, Pre-K
+  // Uses exact DB subgroup names: Campground, Treehouse, Cove, Reruns, Babies, Toddlers, Pre-K
   const kidsBreakdown = useMemo(() => {
     if (!data) return [];
 
@@ -256,7 +256,7 @@ export default function AttendanceTab() {
         items: [
           { label: "Treehouse", subgroup: "Treehouse", weeklySubgroup: "Kids: Jasper Treehouse" },
           { label: "Cove", subgroup: "Cove", weeklySubgroup: "Kids: Jasper Cove" },
-          { label: "ReRuns", subgroup: "Elem Reruns", weeklySubgroup: "Kids: Jasper Reruns" },
+          { label: "ReRuns", subgroup: "Reruns", weeklySubgroup: "Kids: Jasper Reruns" },
         ],
       },
     ];

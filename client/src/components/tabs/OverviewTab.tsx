@@ -32,7 +32,7 @@ import {
   Bar,
   Legend,
 } from "recharts";
-import { Users, DollarSign, Heart, HandHelping } from "lucide-react";
+import { Users, DollarSign, Heart, HandHelping, Baby, GraduationCap } from "lucide-react";
 
 const TOOLTIP_STYLE = {
   fontSize: 12,
@@ -41,6 +41,25 @@ const TOOLTIP_STYLE = {
   boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
   fontFamily: "'Inter', sans-serif",
 };
+
+// Helper: get subgroup attendance avg_weekly for a year/campus
+function getSubgroupAttendance(
+  data: { year: number; campus: string; subgroup: string; avg_weekly: number }[],
+  year: number,
+  campus: string,
+  subgroup: string
+): number {
+  if (campus === "All Campuses") {
+    return data
+      .filter((r) => r.year === year && r.subgroup === subgroup && r.campus !== "All Campuses")
+      .reduce((s, r) => s + r.avg_weekly, 0);
+  }
+  return (
+    data.find(
+      (r) => r.year === year && r.campus === campus && r.subgroup === subgroup
+    )?.avg_weekly ?? 0
+  );
+}
 
 // Helper: get attendance avg_weekly for a year/campus from the flat array
 function getAttendance(
@@ -198,6 +217,42 @@ export default function OverviewTab() {
         })()
       : getYoYChange(getGpc(latestYear), getGpc(priorYear));
 
+    // Kids and Students subgroup data
+    const kidsAtt = (y: number) => getSubgroupAttendance(data.attendance, y, filters.campus, "Kids");
+    const studentsAtt = (y: number) => getSubgroupAttendance(data.attendance, y, filters.campus, "Students");
+
+    const kidsChange = partial
+      ? (() => {
+          const getKidsMonthly = (y: number, months: number[]) => {
+            const rows = data.attendance_monthly.filter(
+              (m) =>
+                m.year === y &&
+                months.includes(m.month) &&
+                m.subgroup === "Kids" &&
+                (filters.campus === "All Campuses" ? m.campus !== "All Campuses" : m.campus === filters.campus)
+            );
+            return rows.reduce((s, m) => s + m.avg_weekly, 0) / (rows.length || 1);
+          };
+          return getYoYChange(getKidsMonthly(latestYear, compMonths), getKidsMonthly(priorYear, compMonths));
+        })()
+      : getYoYChange(kidsAtt(latestYear), kidsAtt(priorYear));
+
+    const studentsChange = partial
+      ? (() => {
+          const getStudentsMonthly = (y: number, months: number[]) => {
+            const rows = data.attendance_monthly.filter(
+              (m) =>
+                m.year === y &&
+                months.includes(m.month) &&
+                m.subgroup === "Students" &&
+                (filters.campus === "All Campuses" ? m.campus !== "All Campuses" : m.campus === filters.campus)
+            );
+            return rows.reduce((s, m) => s + m.avg_weekly, 0) / (rows.length || 1);
+          };
+          return getYoYChange(getStudentsMonthly(latestYear, compMonths), getStudentsMonthly(priorYear, compMonths));
+        })()
+      : getYoYChange(studentsAtt(latestYear), studentsAtt(priorYear));
+
     return {
       year: latestYear,
       partial,
@@ -214,6 +269,10 @@ export default function OverviewTab() {
       salvationsChange: salvChange,
       baptisms: getNs(latestYear, "Baptisms"),
       baptismsChange: bapChange,
+      kids: kidsAtt(latestYear),
+      kidsChange,
+      students: studentsAtt(latestYear),
+      studentsChange,
     };
   }, [data, filters, filteredYears]);
 
@@ -274,6 +333,26 @@ export default function OverviewTab() {
           change={{ ...kpis.baptismsChange, label: `${kpis.baptismsChange.label} ${vsLabel}` }}
           subtitle={ytdLabel}
           icon={<HandHelping className="w-5 h-5" />}
+        />
+      </div>
+
+      {/* Kids & Students KPI Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3">
+        <KpiCard
+          label="Avg Weekly Kids"
+          value={formatNumber(kpis.kids)}
+          change={{ ...kpis.kidsChange, label: `${kpis.kidsChange.label} ${vsLabel}` }}
+          subtitle={ytdLabel}
+          icon={<Baby className="w-5 h-5" />}
+          borderColor="#E8913A"
+        />
+        <KpiCard
+          label="Avg Weekly Students"
+          value={formatNumber(kpis.students)}
+          change={{ ...kpis.studentsChange, label: `${kpis.studentsChange.label} ${vsLabel}` }}
+          subtitle={ytdLabel}
+          icon={<GraduationCap className="w-5 h-5" />}
+          borderColor="#4A7FB5"
         />
       </div>
 
