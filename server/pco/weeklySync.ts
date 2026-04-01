@@ -372,6 +372,18 @@ export async function syncWeeklyAttendance(
           // to get per-room kids counts and adult totals
           // -------------------------------------------------------
           const periodId = (period as any).id;
+
+          // Heartbeat: update progress for each period within main check-in events
+          // This keeps the stall watchdog alive during the slow location_event_periods calls
+          if (onProgress) {
+            const periodIdx = periodsResult.data.indexOf(period);
+            await onProgress(
+              eventPct,
+              `Processing ${eventName} period ${periodIdx + 1}/${periodsResult.data.length} (fetching room-level data)...`,
+              recordsProcessed
+            );
+          }
+
           let locationPeriods;
           try {
             locationPeriods = await client.paginateAll(

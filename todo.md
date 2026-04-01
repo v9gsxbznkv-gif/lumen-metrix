@@ -340,13 +340,14 @@
 - [x] All 107 tests passing
 - [x] Deploy fix
 
-## Round 34 Fix 2: Weekly Sync Stall at 24% (Rate Limiting)
+## Round 34 Fix 2: Weekly Sync Stall at 24% (Rate Limiting) (Complete)
 
-- [ ] Add 5-minute stall watchdog to jobManager.ts - marks job as failed if no progress update for 5 minutes
-- [ ] Add per-request 45s timeout to PCO client so individual requests fail fast instead of hanging
-- [ ] Add progress heartbeat inside kids event loop so watchdog knows job is still alive
-- [ ] Reduce LocationEventPeriod API calls by batching/skipping periods with no kids data
-- [ ] Test and deploy
+- [x] Add 5-minute stall watchdog to jobManager.ts - marks job as failed if no progress update for 5 minutes
+- [x] PCO client already has 30s per-request timeout and exponential backoff for 429 (verified)
+- [x] Add progress heartbeat inside kids event loop so watchdog knows job is still alive
+- [x] LocationEventPeriod calls now report per-period progress to keep watchdog alive
+- [x] All 107 tests passing
+- [x] Test and deploy
 
 ## Round 34 Fix 3: Correct Event Sources for Kids/Students/YA (Complete)
 

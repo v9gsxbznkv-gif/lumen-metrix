@@ -133,8 +133,8 @@ async function loadSyncDay(): Promise<number> {
     }
     // Query pco_settings table for the first record
     const results = await db.select().from(pcoSettings).limit(1);
-    if (results.length > 0 && results[0].weeklySyncDay !== null) {
-      SYNC_DAY = results[0].weeklySyncDay;
+    if (results.length > 0 && (results[0] as any).weeklySyncDay !== null && (results[0] as any).weeklySyncDay !== undefined) {
+      SYNC_DAY = (results[0] as any).weeklySyncDay;
       console.log(`[Scheduler] Loaded sync day from database: ${getDayName(SYNC_DAY)} (${SYNC_DAY})`);
       return SYNC_DAY;
     }
@@ -249,7 +249,7 @@ export async function updateSyncDay(newDay: number): Promise<void> {
       throw new Error("Database not available");
     }
     // Update the first pco_settings record
-    await db.update(pcoSettings).set({ weeklySyncDay: newDay as any });
+    await db.update(pcoSettings).set({ weeklySyncDay: newDay } as any);
     SYNC_DAY = newDay;
     console.log(`[Scheduler] Updated sync day to ${getDayName(newDay)} (${newDay})`);
   } catch (error: any) {
