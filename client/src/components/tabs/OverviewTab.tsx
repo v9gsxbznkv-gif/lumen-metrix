@@ -32,7 +32,7 @@ import {
   Bar,
   Legend,
 } from "recharts";
-import { Users, DollarSign, Heart, HandHelping, Baby, GraduationCap } from "lucide-react";
+import { Users, DollarSign, Heart, HandHelping, Baby, GraduationCap, Sparkles } from "lucide-react";
 
 const TOOLTIP_STYLE = {
   fontSize: 12,
@@ -217,9 +217,10 @@ export default function OverviewTab() {
         })()
       : getYoYChange(getGpc(latestYear), getGpc(priorYear));
 
-    // Kids and Students subgroup data
+    // Kids, Students, and Young Adults subgroup data
     const kidsAtt = (y: number) => getSubgroupAttendance(data.attendance, y, filters.campus, "Kids");
     const studentsAtt = (y: number) => getSubgroupAttendance(data.attendance, y, filters.campus, "Students");
+    const yaAtt = (y: number) => getSubgroupAttendance(data.attendance, y, filters.campus, "Young Adults");
 
     const kidsChange = partial
       ? (() => {
@@ -253,6 +254,22 @@ export default function OverviewTab() {
         })()
       : getYoYChange(studentsAtt(latestYear), studentsAtt(priorYear));
 
+    const yaChange = partial
+      ? (() => {
+          const getYAMonthly = (y: number, months: number[]) => {
+            const rows = data.attendance_monthly.filter(
+              (m) =>
+                m.year === y &&
+                months.includes(m.month) &&
+                (m.subgroup === "Young Adults" || m.subgroup === "YA Gathering") &&
+                (filters.campus === "All Campuses" ? m.campus !== "All Campuses" : m.campus === filters.campus)
+            );
+            return rows.reduce((s, m) => s + m.avg_weekly, 0) / (rows.length || 1);
+          };
+          return getYoYChange(getYAMonthly(latestYear, compMonths), getYAMonthly(priorYear, compMonths));
+        })()
+      : getYoYChange(yaAtt(latestYear), yaAtt(priorYear));
+
     return {
       year: latestYear,
       partial,
@@ -273,6 +290,8 @@ export default function OverviewTab() {
       kidsChange,
       students: studentsAtt(latestYear),
       studentsChange,
+      youngAdults: yaAtt(latestYear),
+      youngAdultsChange: yaChange,
     };
   }, [data, filters, filteredYears]);
 
@@ -336,8 +355,8 @@ export default function OverviewTab() {
         />
       </div>
 
-      {/* Kids & Students KPI Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3">
+      {/* Kids, Students & Young Adults KPI Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <KpiCard
           label="Avg Weekly Kids"
           value={formatNumber(kpis.kids)}
@@ -353,6 +372,14 @@ export default function OverviewTab() {
           subtitle={ytdLabel}
           icon={<GraduationCap className="w-5 h-5" />}
           borderColor="#4A7FB5"
+        />
+        <KpiCard
+          label="Avg Weekly Young Adults"
+          value={formatNumber(kpis.youngAdults)}
+          change={{ ...kpis.youngAdultsChange, label: `${kpis.youngAdultsChange.label} ${vsLabel}` }}
+          subtitle={ytdLabel}
+          icon={<Sparkles className="w-5 h-5" />}
+          borderColor="#7C5CBF"
         />
       </div>
 

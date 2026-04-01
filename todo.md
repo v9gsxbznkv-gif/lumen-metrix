@@ -380,3 +380,11 @@
 - [x] Both KPI cards filter by selected campus and support partial-year comparisons
 - [x] All 107 tests passing
 - [x] Checkpoint and deploy
+
+## Round 36: Young Adults KPI Card on Overview Tab
+
+- [x] Add Young Adults KPI card to Overview tab (Sparkles icon, purple border)
+- [x] Include YoY change indicator and campus filtering
+- [x] Support partial-year-aware comparisons using monthly data
+- [x] All tests passing
+- [x] Checkpoint and deploy
