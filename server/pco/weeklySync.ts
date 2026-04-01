@@ -7,13 +7,24 @@
  * PCO Check-Ins hierarchy:
  *   Event → EventPeriod (weekly session) → LocationEventPeriod (per room)
  *
- *   For KIDS events (Childcare | Canton, Childcare | Jasper):
+ *   For Revolution Canton/Jasper Check-In events:
  *     We drill into each EventPeriod's location_event_periods to get per-room counts.
- *     Each LocationEventPeriod has regular_count, guest_count, volunteer_count and
- *     a linked Location with a name (e.g. "Babies", "Toddlers", "The Campground").
+ *     Individual room names are mapped to parent folder categories:
+ *       Canton Thursday RevKids: Turtle+Owl→Nursery, Woodpecker+Porcupine→Toddlers,
+ *         Room 4 - Pre-K→Pre-K, Treehouse - K-5th→Elementary
+ *       Canton Sunday: The Nest→Babies, The Campground→Campground, The Treehouse→Treehouse, The Cove→Cove
+ *       Jasper Preschool: Owls+Raccoons+Fox→Nursery, Room 1+Room 2→Pre-K
+ *       Jasper Elementary: Cove, Treehouse, Reruns
+ *     Volunteer/team locations are filtered out.
+ *     RevStudents 5th & 6th under Jasper Check-In counts as adult attendance.
  *
- *   For non-kids events (RevStudents, YA Gathering, Revolution Check-In):
- *     We use the EventPeriod-level totals as before.
+ *   For RevStudents | Canton/Jasper Campus (separate events):
+ *     Uses EventPeriod-level totals for Students.
+ *
+ *   For YA Gathering:
+ *     Uses EventPeriod-level totals for Young Adults.
+ *
+ *   Childcare events are EXCLUDED entirely.
  *
  * PCO Giving:
  *   Donations → each has received_at, amount_cents, payment_status
@@ -63,27 +74,181 @@ function mapEventToCampus(eventName: string): string {
   return "Other";
 }
 
+// ============================================================
+// Event classification
+// ============================================================
+
 /**
- * Returns true if this event is a kids/childcare event that should be
- * broken down by room/location rather than stored as a single top-level row.
+ * Events that should be EXCLUDED entirely from sync.
+ * Childcare events are not needed — kids data comes from
+ * the main Revolution Check-In events at the room level.
  */
-function isKidsEvent(eventName: string): boolean {
+function isExcludedEvent(eventName: string): boolean {
   const lower = eventName.toLowerCase();
-  return lower.includes("childcare") || lower.includes("revkids") || lower.includes("rev kids");
+  return (
+    lower.includes("childcare") ||
+    lower.includes("revkids team") ||
+    lower.includes("revkids university") ||
+    lower.includes("test")
+  );
 }
 
 /**
- * Normalize historical subgroup names to match the canonical names used in the
- * breakdown table. This ensures old spreadsheet-imported data aligns with PCO data.
+ * Returns true if this is a main campus check-in event that contains
+ * kids rooms as sub-locations. We drill into location_event_periods
+ * for these events to get per-room kids counts.
+ */
+function isMainCheckInEvent(eventName: string): boolean {
+  return (
+    eventName === "Revolution Canton Check-In" ||
+    eventName === "Revolution Jasper Check-In"
+  );
+}
+
+// ============================================================
+// Room-to-category mapping
+// ============================================================
+
+/**
+ * Maps individual PCO room/location names to their parent category names
+ * for the kids breakdown. Volunteer/team locations return null (to be skipped).
  *
- * Historical → Canonical mappings:
- *   "Elem Reruns" → "ReRuns"
- *   "Campground"  → "The Campground"
+ * The category is what appears in the breakdown table on the Attendance page.
+ */
+
+// Known volunteer/team location names to exclude
+const VOLUNTEER_LOCATIONS = new Set([
+  "Campus Safety",
+  "Gathering Leaders",
+  "Adult Worship & Production Team",
+  "GROW Band",
+  "Prayer Team Members",
+  "First Time Guests/GROW Area",
+  "General Operations",
+  "Greeter",
+  "Parking",
+  "Usher",
+  "Team Member Lounge",
+  "Welcome Team Member",
+  "FTG Gathering Leaders",
+  "Welcome Team Coach",
+  "Gathering Coordinator",
+  "Campus Safety Leader",
+  "Small Group Leader",
+  "Stage Host",
+  "Photography",
+  "Videography",
+  "RK Production",
+  "RK Band",
+  "Buddy Team",
+  "Coach",
+  "Team Leader",
+  "Team Leaders",
+  "RevKids Check-In",
+  "Welcome Team Leaders",
+  "Prayer Team",
+  "Photo & Video Team",
+  "RevStudents Team Member",
+  "RevKids TEAM MEMBER",
+  "Stage Host - K-5th",
+  "Team Leader - K-5th",
+  "WORSHIP & PRODUCTION TEAM MEMBERS",
+  "RevKids Welcome Team",
+]);
+
+// Canton room → category mapping
+const CANTON_ROOM_MAP: Record<string, string> = {
+  // Thursday RevKids Nursery
+  "Turtle": "Nursery",
+  "Owl": "Nursery",
+  // Thursday RevKids Toddlers
+  "Woodpecker": "Toddlers",
+  "Porcupine": "Toddlers",
+  // Thursday RevKids Pre-K
+  "Room 4 - Pre-K": "Pre-K",
+  // Thursday RevKids Elementary
+  "Treehouse - K-5th": "Elementary",
+  // Sunday RevKids rooms
+  "The Nest": "Babies",
+  "The Campground": "Campground",
+  "The Treehouse": "Treehouse",
+  "The Cove": "Cove",
+};
+
+// Jasper room → category mapping
+const JASPER_ROOM_MAP: Record<string, string> = {
+  // Preschool > Nursery
+  "Owls": "Nursery",
+  "Raccoons": "Nursery",
+  "Fox": "Nursery",
+  // Preschool > Pre-K
+  "Room 1": "Pre-K",
+  "Room 2": "Pre-K",
+  // Elementary
+  "Cove": "Cove",
+  "Treehouse": "Treehouse",
+  "Reruns ": "Reruns",  // Note: PCO has trailing space
+  "Reruns": "Reruns",
+};
+
+// Jasper locations that count as ADULT attendance (not kids)
+const JASPER_ADULT_LOCATIONS = new Set([
+  "5th Grade",
+  "6th Grade",
+]);
+
+/**
+ * Map a PCO location name to a kids category for the breakdown table.
+ * Returns the category name, or null if the location should be skipped
+ * (volunteer role) or counted as adult attendance.
+ *
+ * @param locationName - Raw location name from PCO
+ * @param campus - "Canton" or "Jasper"
+ * @returns Category name for kids breakdown, "ADULT" if it counts as adult, or null to skip
+ */
+function mapLocationToCategory(locationName: string, campus: string): string | null {
+  const trimmed = locationName.trim();
+
+  // Skip volunteer/team locations
+  if (VOLUNTEER_LOCATIONS.has(trimmed)) return null;
+
+  // Skip folder-type names (these are containers, not rooms)
+  const lower = trimmed.toLowerCase();
+  if (lower === "thursday revkids") return null;
+  if (lower === "elementary (k - 5th grade)") return null;
+  if (lower === "elementary") return null;
+  if (lower === "preschool") return null;
+  if (lower === "nursery") return null;
+  if (lower === "pre-k (must be potty-trained)") return null;
+  if (lower === "pre-k") return null;
+  if (lower === "toddlers") return null;
+  if (lower === "revstudents 5th & 6th") return null;
+  if (lower === "old locations (do not delete)") return null;
+  if (lower === "team member") return null;
+
+  if (campus === "Canton") {
+    const mapped = CANTON_ROOM_MAP[trimmed];
+    if (mapped) return mapped;
+  } else if (campus === "Jasper") {
+    // Check if this is an adult location under Jasper
+    if (JASPER_ADULT_LOCATIONS.has(trimmed)) return "ADULT";
+    const mapped = JASPER_ROOM_MAP[trimmed];
+    if (mapped) return mapped;
+  }
+
+  // Unknown location — log it and skip (don't pollute data with unknown rooms)
+  console.log(`[PCO Weekly Sync] Unknown location "${trimmed}" for ${campus} — skipping`);
+  return null;
+}
+
+/**
+ * Normalize historical subgroup names from spreadsheet imports to match
+ * the canonical names used in the breakdown table.
  */
 export function normalizeSubgroupName(name: string): string {
   const n = name.trim();
-  if (n === "Elem Reruns") return "ReRuns";
-  if (n === "Campground") return "The Campground";
+  if (n === "Elem Reruns") return "Reruns";
+  if (n === "Campground") return "Campground";
   return n;
 }
 
@@ -124,6 +289,18 @@ export async function syncWeeklyAttendance(
       await onProgress(22, `Found ${events.length} check-in events. Fetching weekly periods...`, 0);
     }
 
+    // Filter out excluded events upfront
+    const activeEvents = events.filter((e: any) => {
+      const name = e.attributes?.name || "";
+      if (isExcludedEvent(name)) {
+        console.log(`[PCO Weekly Sync] Excluding event: ${name}`);
+        return false;
+      }
+      return true;
+    });
+
+    console.log(`[PCO Weekly Sync] Processing ${activeEvents.length} active events (excluded ${events.length - activeEvents.length})`);
+
     // Accumulate: key = "YYYY-MM-DD|campus|subgroupName" → counts
     const weeklyMap = new Map<string, {
       year: number;
@@ -137,22 +314,22 @@ export async function syncWeeklyAttendance(
       volunteerCount: number;
     }>();
 
-    for (let i = 0; i < events.length; i++) {
-      const event = events[i] as any;
+    for (let i = 0; i < activeEvents.length; i++) {
+      const event = activeEvents[i] as any;
       const eventId = event.id;
       const eventName = event.attributes?.name || `Event-${eventId}`;
 
       // Report per-event progress: 22% → 55% across all events
-      const eventPct = 22 + Math.round((i / events.length) * 33);
+      const eventPct = 22 + Math.round((i / activeEvents.length) * 33);
       if (onProgress) {
         await onProgress(
           eventPct,
-          `Fetching periods for "${eventName}" (${i + 1}/${events.length})...`,
+          `Fetching periods for "${eventName}" (${i + 1}/${activeEvents.length})...`,
           recordsProcessed
         );
       }
 
-      console.log(`[PCO Weekly Sync] Processing event ${i + 1}/${events.length}: ${eventName}`);
+      console.log(`[PCO Weekly Sync] Processing event ${i + 1}/${activeEvents.length}: ${eventName}`);
 
       const periodParams: Record<string, any> = {
         per_page: 100,
@@ -175,7 +352,7 @@ export async function syncWeeklyAttendance(
       console.log(`[PCO Weekly Sync]   Got ${periodsResult.data.length} event periods for ${eventName}`);
 
       const campus = mapEventToCampus(eventName);
-      const isKids = isKidsEvent(eventName);
+      const isMainCheckin = isMainCheckInEvent(eventName);
 
       for (const period of periodsResult.data) {
         recordsProcessed++;
@@ -189,9 +366,10 @@ export async function syncWeeklyAttendance(
         const year = sunday.getFullYear();
         const weekNumber = getISOWeekNumber(sunday);
 
-        if (isKids) {
+        if (isMainCheckin) {
           // -------------------------------------------------------
-          // KIDS EVENT: drill into location_event_periods for per-room counts
+          // MAIN CHECK-IN EVENT: drill into location_event_periods
+          // to get per-room kids counts and adult totals
           // -------------------------------------------------------
           const periodId = (period as any).id;
           let locationPeriods;
@@ -205,7 +383,7 @@ export async function syncWeeklyAttendance(
             continue;
           }
 
-          // Build a map of location_id → location name from included
+          // Build a map of location_id → location name from included resources
           const locationNames = new Map<string, string>();
           for (const inc of locationPeriods.included || []) {
             if ((inc as any).type === "Location") {
@@ -216,6 +394,9 @@ export async function syncWeeklyAttendance(
               }
             }
           }
+
+          // Track kids totals for this period to compute adult count
+          let kidsTotal = 0;
 
           for (const locPeriod of locationPeriods.data) {
             const lpAttrs = (locPeriod as any).attributes;
@@ -231,13 +412,33 @@ export async function syncWeeklyAttendance(
             const rawLocationName = locationId ? locationNames.get(locationId) : null;
             if (!rawLocationName) continue;
 
-            // Skip folder-type locations (they are containers, not rooms)
-            // We detect folders by checking if the name matches a known folder pattern
-            // or if the location has kind="Folder" (we can't easily check that here,
-            // so we rely on the fact that folder locations typically have 0 counts)
-            const locationName = normalizeSubgroupName(rawLocationName);
+            const category = mapLocationToCategory(rawLocationName, campus);
+            if (category === null) continue; // Skip volunteer/team/folder locations
 
-            const key = `${weekStartDate}|${campus}|${locationName}`;
+            if (category === "ADULT") {
+              // RevStudents 5th & 6th under Jasper → count as adult attendance
+              const adultKey = `${weekStartDate}|${campus}|${eventName}`;
+              const existing = weeklyMap.get(adultKey);
+              if (existing) {
+                existing.headcount += totalCount;
+                existing.regularCount += regularCount;
+                existing.guestCount += guestCount;
+                existing.volunteerCount += volunteerCount;
+              } else {
+                weeklyMap.set(adultKey, {
+                  year, weekNumber, weekStartDate, campus,
+                  subgroup: eventName,
+                  headcount: totalCount,
+                  regularCount, guestCount, volunteerCount,
+                });
+              }
+              continue;
+            }
+
+            // This is a kids room — aggregate by category
+            kidsTotal += totalCount;
+            const kidsSubgroup = `Kids: ${campus} ${category}`;
+            const key = `${weekStartDate}|${campus}|${kidsSubgroup}`;
             const existing = weeklyMap.get(key);
             if (existing) {
               existing.headcount += totalCount;
@@ -246,50 +447,64 @@ export async function syncWeeklyAttendance(
               existing.volunteerCount += volunteerCount;
             } else {
               weeklyMap.set(key, {
-                year,
-                weekNumber,
-                weekStartDate,
-                campus,
-                subgroup: locationName,
+                year, weekNumber, weekStartDate, campus,
+                subgroup: kidsSubgroup,
                 headcount: totalCount,
-                regularCount,
-                guestCount,
-                volunteerCount,
+                regularCount, guestCount, volunteerCount,
               });
             }
           }
 
-          // Also store the top-level Childcare event total (for Kids aggregate)
+          // Store the top-level event total as adult attendance
+          // (total event headcount minus kids rooms = adults)
           const totalRegular = attrs.regular_count || 0;
           const totalGuest = attrs.guest_count || 0;
           const totalVolunteer = attrs.volunteer_count || 0;
           const totalCount = totalRegular + totalGuest + totalVolunteer;
-          if (totalCount > 0) {
-            const key = `${weekStartDate}|${campus}|${eventName}`;
-            const existing = weeklyMap.get(key);
+          const adultCount = Math.max(0, totalCount - kidsTotal);
+
+          if (adultCount > 0) {
+            const adultKey = `${weekStartDate}|${campus}|${eventName}`;
+            const existing = weeklyMap.get(adultKey);
             if (existing) {
-              existing.headcount += totalCount;
-              existing.regularCount += totalRegular;
+              existing.headcount += adultCount;
+              existing.regularCount += Math.max(0, totalRegular - kidsTotal);
               existing.guestCount += totalGuest;
               existing.volunteerCount += totalVolunteer;
             } else {
-              weeklyMap.set(key, {
-                year,
-                weekNumber,
-                weekStartDate,
-                campus,
+              weeklyMap.set(adultKey, {
+                year, weekNumber, weekStartDate, campus,
                 subgroup: eventName,
-                headcount: totalCount,
-                regularCount: totalRegular,
+                headcount: adultCount,
+                regularCount: Math.max(0, totalRegular - kidsTotal),
                 guestCount: totalGuest,
                 volunteerCount: totalVolunteer,
               });
             }
           }
 
+          // Also store a "Kids" aggregate total for this campus/week
+          if (kidsTotal > 0) {
+            const kidsAggKey = `${weekStartDate}|${campus}|Kids`;
+            const existing = weeklyMap.get(kidsAggKey);
+            if (existing) {
+              existing.headcount += kidsTotal;
+            } else {
+              weeklyMap.set(kidsAggKey, {
+                year, weekNumber, weekStartDate, campus,
+                subgroup: "Kids",
+                headcount: kidsTotal,
+                regularCount: kidsTotal,
+                guestCount: 0,
+                volunteerCount: 0,
+              });
+            }
+          }
+
         } else {
           // -------------------------------------------------------
-          // NON-KIDS EVENT: use event period totals as before
+          // NON-MAIN EVENT: use event period totals as before
+          // (RevStudents, YA Gathering, Parent Night, etc.)
           // -------------------------------------------------------
           const regularCount = attrs.regular_count || 0;
           const guestCount = attrs.guest_count || 0;
@@ -307,15 +522,10 @@ export async function syncWeeklyAttendance(
             existing.volunteerCount += volunteerCount;
           } else {
             weeklyMap.set(key, {
-              year,
-              weekNumber,
-              weekStartDate,
-              campus,
+              year, weekNumber, weekStartDate, campus,
               subgroup: eventName,
               headcount: totalCount,
-              regularCount,
-              guestCount,
-              volunteerCount,
+              regularCount, guestCount, volunteerCount,
             });
           }
         }
@@ -354,7 +564,7 @@ export async function syncWeeklyAttendance(
 
         if (existingRows.length > 0) {
           // Skip manually locked records — they've been corrected by the user
-          if (existingRows[0].manualLock) {
+          if ((existingRows[0] as any).manualLock) {
             console.log(`[PCO Weekly Sync] Skipping locked attendance row: ${row.weekStartDate} ${row.campus} ${row.subgroup}`);
             continue;
           }
@@ -533,7 +743,7 @@ export async function syncWeeklyGiving(
           .limit(1);
 
         if (existingRows.length > 0) {
-          if (existingRows[0].manualLock) {
+          if ((existingRows[0] as any).manualLock) {
             console.log(`[PCO Weekly Giving] Skipping locked giving row: ${row.weekStartDate}`);
             continue;
           }

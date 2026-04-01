@@ -339,3 +339,31 @@
 - [x] Cleared TypeScript build cache - zero TS errors confirmed
 - [x] All 107 tests passing
 - [x] Deploy fix
+
+## Round 34 Fix 2: Weekly Sync Stall at 24% (Rate Limiting)
+
+- [ ] Add 5-minute stall watchdog to jobManager.ts - marks job as failed if no progress update for 5 minutes
+- [ ] Add per-request 45s timeout to PCO client so individual requests fail fast instead of hanging
+- [ ] Add progress heartbeat inside kids event loop so watchdog knows job is still alive
+- [ ] Reduce LocationEventPeriod API calls by batching/skipping periods with no kids data
+- [ ] Test and deploy
+
+## Round 34 Fix 3: Correct Event Sources for Kids/Students/YA (Complete)
+
+- [x] Verify PCO API shows kids rooms (Nursery, Toddlers, Pre-K, etc.) under Revolution Canton/Jasper Check-In events
+- [x] Update weeklySync.ts: Kids data comes from Revolution Canton/Jasper Check-In (room-level locations), NOT Childcare events
+- [x] Map individual room names to parent folder categories:
+  - Canton Thursday RevKids: Turtle+Owl→Nursery, Woodpecker+Porcupine→Toddlers, Room 4-Pre-K→Pre-K, Treehouse-K-5th→Elementary
+  - Canton Sunday: The Nest→Babies, The Campground→Campground, The Treehouse→Treehouse, The Cove→Cove
+  - Jasper Preschool: Owls+Raccoons+Fox→Nursery, Room 1+Room 2→Pre-K
+  - Jasper Elementary: Cove, Treehouse, Reruns
+- [x] Exclude Childcare events entirely from sync
+- [x] Count RevStudents 5th & 6th under adult attendance for Jasper (not students)
+- [x] Students from RevStudents | Canton/Jasper Campus (separate events)
+- [x] Young Adults from YA Gathering
+- [x] Update Attendance breakdown table to match new data sources
+  - Kids breakdown: campus-specific filtering (Canton sections → Canton, Jasper sections → Jasper)
+  - Students: uses "Students" subgroup per campus from annual table
+  - Young Adults: "Young Adults" (annual) with fallback to "YA Gathering" (monthly)
+- [x] All 107 tests passing
+- [x] Test and deploy

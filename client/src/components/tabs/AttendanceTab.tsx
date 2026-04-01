@@ -62,6 +62,25 @@ function getSubgroupAvg(
 }
 
 // Lookup avg_weekly from monthly table for a given year (average across all months)
+// Always filters by specific campus (not "All Campuses")
+function getMonthlySubgroupAvgByCampus(
+  monthly: { year: number; month: number; campus: string; subgroup: string; avg_weekly: number }[],
+  year: number,
+  campus: string,
+  subgroup: string
+): number {
+  const rows = monthly.filter(
+    (m) =>
+      m.year === year &&
+      m.subgroup === subgroup &&
+      m.campus === campus
+  );
+  if (rows.length === 0) return 0;
+  const total = rows.reduce((s, m) => s + m.avg_weekly, 0);
+  return total / rows.length;
+}
+
+// Lookup avg_weekly from monthly table, respecting the global campus filter
 function getMonthlySubgroupAvg(
   monthly: { year: number; month: number; campus: string; subgroup: string; avg_weekly: number }[],
   year: number,
@@ -75,8 +94,6 @@ function getMonthlySubgroupAvg(
       (campus === "All Campuses" ? m.campus !== "All Campuses" : m.campus === campus)
   );
   if (rows.length === 0) return 0;
-  // Sum avg_weekly across months (each month already represents avg for that month)
-  // then divide by number of months to get annual average
   const total = rows.reduce((s, m) => s + m.avg_weekly, 0);
   return total / rows.length;
 }
@@ -193,84 +210,110 @@ export default function AttendanceTab() {
   }, [data, filters, latestYear, partial, compMonths]);
 
   // Kids room-level breakdown from attendance_monthly
+  // Each section is tied to a SPECIFIC campus (Canton or Jasper), not the global filter
   // Uses exact DB subgroup names: Campground, Treehouse, Cove, Elem Reruns, Babies, Toddlers, Pre-K
   const kidsBreakdown = useMemo(() => {
     if (!data) return [];
 
-    // Sections with exact DB subgroup names
+    // For 2026+, also check weekly data for new "Kids: Canton Nursery" style subgroups
+    const hasWeeklyKidsData = data.attendance_weekly?.some(
+      (w: any) => w.subgroup?.startsWith("Kids:") && w.year === latestYear
+    );
+
+    // Sections with exact DB subgroup names — each section has a fixed campus
     const sections = [
       {
         title: "Canton Thursday RevKids",
+        campus: "Canton",
         items: [
-          { label: "Nursery", subgroup: "Nursery" },
-          { label: "Toddlers", subgroup: "Toddlers" },
-          { label: "Pre-K", subgroup: "Pre-K" },
-          { label: "Elementary", subgroup: "Elementary" },
+          { label: "Nursery", subgroup: "Nursery", weeklySubgroup: "Kids: Canton Nursery" },
+          { label: "Toddlers", subgroup: "Toddlers", weeklySubgroup: "Kids: Canton Toddlers" },
+          { label: "Pre-K", subgroup: "Pre-K", weeklySubgroup: "Kids: Canton Pre-K" },
+          { label: "Elementary", subgroup: "Elementary", weeklySubgroup: "Kids: Canton Elementary" },
         ],
       },
       {
-        title: "Sunday RevKids Preschool",
+        title: "Canton Sunday RevKids",
+        campus: "Canton",
         items: [
-          { label: "Babies", subgroup: "Babies" },
-          { label: "Young Toddlers", subgroup: "Young Toddlers" },
-          { label: "Older Toddlers", subgroup: "Older Toddlers" },
-          { label: "Pre-K", subgroup: "Pre-K" },
-        ],
-      },
-      {
-        title: "Sunday RevKids Elementary",
-        items: [
-          { label: "The Campground", subgroup: "Campground" },
-          { label: "The Treehouse", subgroup: "Treehouse" },
-          { label: "The Cove", subgroup: "Cove" },
-          { label: "ReRuns", subgroup: "Elem Reruns" },
+          { label: "Babies", subgroup: "Babies", weeklySubgroup: "Kids: Canton Babies" },
+          { label: "The Campground", subgroup: "Campground", weeklySubgroup: "Kids: Canton Campground" },
+          { label: "The Treehouse", subgroup: "Treehouse", weeklySubgroup: "Kids: Canton Treehouse" },
+          { label: "The Cove", subgroup: "Cove", weeklySubgroup: "Kids: Canton Cove" },
         ],
       },
       {
         title: "Jasper Preschool",
+        campus: "Jasper",
         items: [
-          { label: "Nursery", subgroup: "Nursery" },
-          { label: "Pre-K", subgroup: "Pre-K" },
+          { label: "Nursery", subgroup: "Nursery", weeklySubgroup: "Kids: Jasper Nursery" },
+          { label: "Pre-K", subgroup: "Pre-K", weeklySubgroup: "Kids: Jasper Pre-K" },
         ],
       },
       {
         title: "Jasper Elementary",
+        campus: "Jasper",
         items: [
-          { label: "Treehouse", subgroup: "Treehouse" },
-          { label: "Cove", subgroup: "Cove" },
-          { label: "ReRuns", subgroup: "Elem Reruns" },
+          { label: "Treehouse", subgroup: "Treehouse", weeklySubgroup: "Kids: Jasper Treehouse" },
+          { label: "Cove", subgroup: "Cove", weeklySubgroup: "Kids: Jasper Cove" },
+          { label: "ReRuns", subgroup: "Elem Reruns", weeklySubgroup: "Kids: Jasper Reruns" },
         ],
       },
     ];
 
-    return sections.map((section) => ({
+    // If a specific campus is selected, only show sections for that campus
+    const filteredSections = filters.campus === "All Campuses"
+      ? sections
+      : sections.filter((s) => s.campus === filters.campus);
+
+    return filteredSections.map((section) => ({
       title: section.title,
-      items: section.items.map((item) => ({
-        label: item.label,
-        avg: Math.round(getMonthlySubgroupAvg(data.attendance_monthly, latestYear, filters.campus, item.subgroup)),
-      })),
+      items: section.items.map((item) => {
+        // Try monthly data first (historical spreadsheet data)
+        let avg = Math.round(
+          getMonthlySubgroupAvgByCampus(data.attendance_monthly, latestYear, section.campus, item.subgroup)
+        );
+
+        // If no monthly data and we have weekly kids data, try weekly subgroup names
+        if (avg === 0 && hasWeeklyKidsData && data.attendance_weekly) {
+          const weeklyRows = data.attendance_weekly.filter(
+            (w: any) =>
+              w.year === latestYear &&
+              w.campus === section.campus &&
+              w.subgroup === item.weeklySubgroup
+          );
+          if (weeklyRows.length > 0) {
+            const totalHeadcount = weeklyRows.reduce((s: number, w: any) => s + (w.headcount || 0), 0);
+            avg = Math.round(totalHeadcount / weeklyRows.length);
+          }
+        }
+
+        return { label: item.label, avg };
+      }),
     }));
   }, [data, filters, latestYear]);
 
-  // Students breakdown — uses annual table (RevStudents | Campus)
+  // Students breakdown — uses annual table with subgroup "Students" per campus
   const studentsBreakdown = useMemo(() => {
     if (!data) return [];
-    return [
-      { label: "Canton Campus", subgroup: "RevStudents | Canton Campus" },
-      { label: "Jasper Campus", subgroup: "RevStudents | Jasper Campus" },
-    ].map((item) => ({
-      label: item.label,
-      avg: Math.round(getSubgroupAvg(data.attendance, latestYear, filters.campus, item.subgroup)),
+
+    const campuses = filters.campus === "All Campuses"
+      ? ["Canton", "Jasper"]
+      : [filters.campus];
+
+    return campuses.map((campus) => ({
+      label: `${campus} Campus`,
+      avg: Math.round(getSubgroupAvg(data.attendance, latestYear, campus, "Students")),
     })).filter((item) => item.avg > 0);
   }, [data, filters, latestYear]);
 
-  // Young Adults — annual table uses "Young Adults"; monthly uses "YA Gathering"
+  // Young Adults — annual table uses "Young Adults"
   const youngAdultsAvg = useMemo(() => {
     if (!data) return 0;
     // Try annual first
     const annual = getSubgroupAvg(data.attendance, latestYear, filters.campus, "Young Adults");
     if (annual > 0) return Math.round(annual);
-    // Fall back to monthly average
+    // Fall back to monthly average using "YA Gathering"
     return Math.round(getMonthlySubgroupAvg(data.attendance_monthly, latestYear, filters.campus, "YA Gathering"));
   }, [data, filters, latestYear]);
 
