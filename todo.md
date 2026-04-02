@@ -442,3 +442,11 @@
 - [x] Fix baptisms: now shows monthly MTD total with "March MTD" label instead of dividing by weeks
 - [x] All tests passing
 - [x] Checkpoint and deploy
+
+## Round 43: Per-Campus Giving & Baptisms Zero-State
+
+- [x] Add per-campus giving estimates from giving_monthly to weekly report backend
+- [x] Show Canton vs Jasper giving split in campus breakdown table (labeled as monthly estimate)
+- [x] Show dash (—) instead of 0 for baptisms when monthly MTD count is zero
+- [x] All tests passing
+- [x] Checkpoint and deploy

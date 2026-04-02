@@ -88,7 +88,8 @@ const METRIC_CONFIG = [
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-function formatNumber(val: number, prefix: string): string {
+function formatNumber(val: number, prefix: string, dashIfZero = false): string {
+  if (dashIfZero && val === 0) return "—";
   if (prefix === "$") {
     return val >= 1000
       ? `$${(val / 1000).toFixed(1)}K`
@@ -488,7 +489,7 @@ export default function WeeklyReportTab() {
             )}
             {current.givingIsCombined && (
               <span className="text-[11px] px-2 py-0.5 rounded-full border border-border/60 text-muted-foreground">
-                Giving: combined total (no per-campus split available)
+                Campus giving: estimated from monthly data
               </span>
             )}
           </div>
@@ -511,13 +512,13 @@ export default function WeeklyReportTab() {
                     </span>
                   </div>
                   <p className="text-xl font-bold" style={{ fontFamily: "'DM Mono', monospace" }}>
-                    {formatNumber(val, metric.prefix)}
+                    {formatNumber(val, metric.prefix, isBaptisms)}
                   </p>
                   {isBaptisms && current.totals.baptismsMonthLabel && (
                     <p className="text-[10px] text-muted-foreground mt-0.5">{current.totals.baptismsMonthLabel}</p>
                   )}
                   {isGiving && current.givingIsCombined && (
-                    <p className="text-[10px] text-muted-foreground mt-0.5">Combined total</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Campus: est. from monthly</p>
                   )}
 
                   {/* Comparison indicators */}
@@ -578,7 +579,7 @@ export default function WeeklyReportTab() {
                           <div className="text-[9px] font-normal normal-case text-muted-foreground/70">{current.totals.baptismsMonthLabel}</div>
                         )}
                         {m.key === "giving" && current.givingIsCombined && (
-                          <div className="text-[9px] font-normal normal-case text-muted-foreground/70">combined</div>
+                          <div className="text-[9px] font-normal normal-case text-muted-foreground/70">campus: est.</div>
                         )}
                       </th>
                     ))}
@@ -590,7 +591,7 @@ export default function WeeklyReportTab() {
                       <td className="px-5 py-3 font-medium text-sm">{campus.campus}</td>
                       {METRIC_CONFIG.map((m) => (
                         <td key={m.key} className="text-right px-4 py-3 tabular-nums" style={{ fontFamily: "'DM Mono', monospace", fontSize: "13px" }}>
-                          {formatNumber(campus[m.key as keyof CampusMetrics] as number, m.prefix)}
+                          {formatNumber(campus[m.key as keyof CampusMetrics] as number, m.prefix, m.key === "baptisms")}
                         </td>
                       ))}
                     </tr>
@@ -600,7 +601,7 @@ export default function WeeklyReportTab() {
                     <td className="px-5 py-3 text-sm">All Campuses</td>
                     {METRIC_CONFIG.map((m) => (
                       <td key={m.key} className="text-right px-4 py-3 tabular-nums" style={{ fontFamily: "'DM Mono', monospace", fontSize: "13px" }}>
-                        {formatNumber(current.totals[m.key as keyof CampusMetrics] as number, m.prefix)}
+                        {formatNumber(current.totals[m.key as keyof CampusMetrics] as number, m.prefix, m.key === "baptisms")}
                       </td>
                     ))}
                   </tr>
