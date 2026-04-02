@@ -270,24 +270,23 @@ export default function WeeklyReportTab() {
               toast.error("No week data loaded to re-sync");
               return;
             }
-            // Calculate the week start/end for the currently viewed week
-            const weekStart = current.label; // e.g. "Mar 23, 2026"
-            // Use the weekNumber and year to compute date range
-            const yr = current.year;
-            const wk = current.weekNumber;
-            // ISO week to date: Jan 4 is always in week 1
-            const jan4 = new Date(yr, 0, 4);
-            const dayOfWeek = jan4.getDay() || 7; // Mon=1...Sun=7
-            const weekStart2 = new Date(jan4);
-            weekStart2.setDate(jan4.getDate() - dayOfWeek + 1 + (wk - 1) * 7);
-            // Sunday of that week (PCO uses Sunday as week start)
-            const sunday = new Date(weekStart2);
-            sunday.setDate(weekStart2.getDate() - 1); // Go to previous Sunday
+            // Use the weekStartDate from the server (the actual Sunday stored in DB)
+            // This avoids off-by-one errors from ISO week number calculations
+            let dateFrom: string;
+            if (current.weekStartDate) {
+              dateFrom = current.weekStartDate;
+            } else {
+              // Monthly fallback: estimate Sunday from year/month
+              const d = new Date(current.year, current.month - 1, 1);
+              // Find the last Sunday of the month
+              const lastDay = new Date(current.year, current.month, 0);
+              lastDay.setDate(lastDay.getDate() - lastDay.getDay());
+              dateFrom = lastDay.toISOString().slice(0, 10);
+            }
+            const sunday = new Date(dateFrom + "T00:00:00");
             const satEnd = new Date(sunday);
             satEnd.setDate(sunday.getDate() + 6);
-            const fmt = (d: Date) => d.toISOString().slice(0, 10);
-            const dateFrom = fmt(sunday);
-            const dateTo = fmt(satEnd);
+            const dateTo = satEnd.toISOString().slice(0, 10);
 
             toast.info(`Re-syncing week of ${dateFrom}...`);
             resyncMutation.mutate({

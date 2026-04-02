@@ -49,6 +49,7 @@ interface WeeklyPeriod {
   month: number;
   label: string;
   weekNumber: number;
+  weekStartDate?: string; // ISO date of the Sunday that starts this week (e.g. "2026-03-29")
   campuses: CampusWeeklyMetrics[];
   totals: CampusWeeklyMetrics;
   source: "weekly" | "monthly";
@@ -331,6 +332,7 @@ async function getWeeklySnapshot(
     month,
     label: weekLabel(weekStartDate, weekNumber),
     weekNumber,
+    weekStartDate, // expose so frontend can use exact Sunday date for re-sync
     campuses,
     totals,
     source: "weekly",

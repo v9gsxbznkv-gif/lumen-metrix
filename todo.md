@@ -450,3 +450,11 @@
 - [x] Show dash (—) instead of 0 for baptisms when monthly MTD count is zero
 - [x] All tests passing
 - [x] Checkpoint and deploy
+
+## Round 44: Fix Re-sync Week Button
+
+- [x] Trace re-sync flow: frontend mutation → backend procedure → sync function
+- [x] Identify why re-sync does not update weekly data (off-by-one week in ISO week→date calc)
+- [x] Fix the re-sync logic (use weekStartDate from server instead of computing from ISO week number)
+- [x] All tests passing
+- [x] Checkpoint and deploy
