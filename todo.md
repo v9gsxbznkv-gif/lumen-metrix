@@ -466,3 +466,12 @@
 - [x] Fix root cause: narrow re-sync was scanning all 300+ events; added fast path to scan only 5 key events for date ranges ≤14 days
 - [x] All tests passing
 - [x] Checkpoint and deploy
+
+## Round 46: Fix Canton Kids Week 13 Showing 0
+
+- [x] Live-test PCO API for Canton Check-In event periods on March 29th
+- [x] Identify root cause: getSunday() used UTC, so 7pm ET Sunday services (23:00 UTC) mapped to wrong week
+- [x] Fix: getSunday() now converts UTC to Eastern Time before computing the week's Sunday
+- [x] Cleared stale week 13 DB rows (Canton 3207 was wrong due to timezone bug)
+- [x] All tests passing
+- [x] Checkpoint and deploy

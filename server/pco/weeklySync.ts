@@ -42,11 +42,28 @@ import type { SyncResult } from "./sync";
 // Date helpers
 // ============================================================
 
+/**
+ * Get the Sunday that anchors the week for a given event timestamp.
+ * PCO stores event times in UTC. Revolution services run Sunday evenings
+ * (e.g. 7pm ET = 23:00 UTC), so we must convert to Eastern Time before
+ * computing the week's Sunday to avoid off-by-one day errors.
+ */
 function getSunday(date: Date): Date {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  const day = d.getDay();
-  d.setDate(d.getDate() - day);
+  // Convert UTC timestamp to Eastern Time wall-clock date
+  // Using Intl.DateTimeFormat to get the local date parts in ET
+  const etParts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+  const etYear = parseInt(etParts.find(p => p.type === 'year')!.value);
+  const etMonth = parseInt(etParts.find(p => p.type === 'month')!.value) - 1;
+  const etDay = parseInt(etParts.find(p => p.type === 'day')!.value);
+  // Build a local midnight date using ET wall-clock values
+  const d = new Date(etYear, etMonth, etDay, 0, 0, 0, 0);
+  const day = d.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  d.setDate(d.getDate() - day); // roll back to Sunday
   return d;
 }
 
