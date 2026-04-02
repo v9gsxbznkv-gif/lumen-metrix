@@ -458,3 +458,11 @@
 - [x] Fix the re-sync logic (use weekStartDate from server instead of computing from ISO week number)
 - [x] All tests passing
 - [x] Checkpoint and deploy
+
+## Round 45: Re-sync Week Still Not Working
+
+- [x] Check server logs for sync errors after re-sync button press
+- [x] Test the sync end-to-end against PCO API (token valid, PCO API works)
+- [x] Fix root cause: narrow re-sync was scanning all 300+ events; added fast path to scan only 5 key events for date ranges ≤14 days
+- [x] All tests passing
+- [x] Checkpoint and deploy

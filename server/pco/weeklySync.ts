@@ -290,7 +290,7 @@ export async function syncWeeklyAttendance(
     }
 
     // Filter out excluded events upfront
-    const activeEvents = events.filter((e: any) => {
+    const allActiveEvents = events.filter((e: any) => {
       const name = e.attributes?.name || "";
       if (isExcludedEvent(name)) {
         console.log(`[PCO Weekly Sync] Excluding event: ${name}`);
@@ -299,7 +299,33 @@ export async function syncWeeklyAttendance(
       return true;
     });
 
-    console.log(`[PCO Weekly Sync] Processing ${activeEvents.length} active events (excluded ${events.length - activeEvents.length})`);
+    // Fast path: when syncing a narrow date range (≤14 days), only scan the
+    // key events that contain relevant data. This avoids scanning 300+ old
+    // RSVP events and makes a single-week re-sync complete in seconds.
+    const isNarrowRange = (() => {
+      const from = new Date(effectiveDateFrom);
+      const to = new Date(effectiveDateTo);
+      const diffDays = (to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24);
+      return diffDays <= 14;
+    })();
+
+    const KEY_EVENTS = new Set([
+      "Revolution Canton Check-In",
+      "Revolution Jasper Check-In",
+      "RevStudents | Canton Campus",
+      "RevStudents | Jasper Campus",
+      "YA Gathering",
+    ]);
+
+    const activeEvents = isNarrowRange
+      ? allActiveEvents.filter((e: any) => KEY_EVENTS.has(e.attributes?.name || ""))
+      : allActiveEvents;
+
+    if (isNarrowRange) {
+      console.log(`[PCO Weekly Sync] Narrow date range detected — scanning only ${activeEvents.length} key events (skipping ${allActiveEvents.length - activeEvents.length} historical events)`);
+    } else {
+      console.log(`[PCO Weekly Sync] Processing ${activeEvents.length} active events (excluded ${events.length - allActiveEvents.length})`);
+    }
 
     // Accumulate: key = "YYYY-MM-DD|campus|subgroupName" → counts
     const weeklyMap = new Map<string, {
