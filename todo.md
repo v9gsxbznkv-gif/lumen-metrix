@@ -413,3 +413,15 @@
 - [x] Verify report generates and sends successfully
 - [x] All tests passing
 - [x] Checkpoint and deploy
+
+## Round 40: Fix Weekly Report Data & Add Demographic Metrics
+
+- [x] Audit March 19th data: trace which subgroups are being summed for attendance
+- [x] Fix attendance to use only "Revolution Canton Check-In" and "Revolution Jasper Check-In" for main headcount
+- [x] Add RevKids subgroup headcount to weekly report data
+- [x] Add RevStudents subgroup headcount to weekly report data
+- [x] Add Young Adults subgroup headcount to weekly report data
+- [x] Add Groups attendance to weekly report data
+- [x] Update WeeklyReportTab UI to display the new demographic columns
+- [x] All tests passing
+- [x] Checkpoint and deploy

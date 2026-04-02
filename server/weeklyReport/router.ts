@@ -17,6 +17,7 @@ import {
   attendanceWeekly,
   givingMonthly,
   givingWeekly,
+  groupsMonthly,
   nextStepsMonthly,
   servingMonthly,
   weeklyReportConfig,
@@ -29,7 +30,11 @@ import { invokeLLM } from "../_core/llm";
 
 interface CampusWeeklyMetrics {
   campus: string;
-  attendance: number;
+  attendance: number;   // Main Check-In headcount only
+  revKids: number;      // Sum of Kids:* subgroups
+  revStudents: number;  // RevStudents subgroups
+  youngAdults: number;  // YA Gathering
+  groups: number;       // Groups avg attendance (monthly ÷ weeks)
   giving: number;
   volunteers: number;
   ftg: number;
@@ -77,34 +82,50 @@ function weekLabel(weekStartDate: string, weekNumber: number): string {
   return `${monthName} ${d.getDate()}, ${d.getFullYear()} (Week ${weekNumber})`;
 }
 
-// PCO event name → canonical attendance category mapping
-const PCO_ADULTS_SUBGROUPS = [
+// ─── Subgroup classification ────────────────────────────────────────────────
+
+/** Main weekend service check-in subgroups — these are the adult headcount */
+const PCO_CHECKIN_SUBGROUPS = [
   "Revolution Canton Check-In",
   "Revolution Jasper Check-In",
   "Revolution Online Check-In",
 ];
+
+/** RevStudents subgroups */
 const PCO_STUDENTS_SUBGROUPS = [
   "RevStudents | Canton Campus",
   "RevStudents | Jasper Campus",
   "RevStudents | Online Campus",
 ];
-const PCO_KIDS_SUBGROUPS = [
-  "Childcare | Canton Campus",
-  "Childcare | Jasper Campus",
-  "Childcare | Online Campus",
+
+/** Young Adults subgroups */
+const PCO_YOUNG_ADULTS_SUBGROUPS = [
+  "YA Gathering",
+  "Young Adults",
 ];
-const SPREADSHEET_ADULTS = ["Adults", "Young Adults"];
+
+/** Kids subgroups — any subgroup starting with "Kids" or "Kids:" */
+function isKidsSubgroup(subgroup: string): boolean {
+  return subgroup === "Kids" || subgroup.startsWith("Kids:") || subgroup.startsWith("Kids ");
+}
+
+/** Spreadsheet-era subgroups used in monthly fallback */
+const SPREADSHEET_ADULTS = ["Adults"];
 const SPREADSHEET_STUDENTS = ["Students"];
 const SPREADSHEET_KIDS = ["Kids"];
+const SPREADSHEET_YOUNG_ADULTS = ["Young Adults"];
 
+/** For monthly fallback: any subgroup that contributes to total attendance */
 function isAttendanceSubgroup(subgroup: string): boolean {
   return (
     SPREADSHEET_ADULTS.includes(subgroup) ||
     SPREADSHEET_STUDENTS.includes(subgroup) ||
     SPREADSHEET_KIDS.includes(subgroup) ||
-    PCO_ADULTS_SUBGROUPS.includes(subgroup) ||
+    SPREADSHEET_YOUNG_ADULTS.includes(subgroup) ||
+    PCO_CHECKIN_SUBGROUPS.includes(subgroup) ||
     PCO_STUDENTS_SUBGROUPS.includes(subgroup) ||
-    PCO_KIDS_SUBGROUPS.includes(subgroup)
+    PCO_YOUNG_ADULTS_SUBGROUPS.includes(subgroup) ||
+    isKidsSubgroup(subgroup)
   );
 }
 
@@ -161,8 +182,23 @@ async function getWeeklySnapshot(
       )
     );
 
+  // Get groups data for this month (monthly granularity only)
+  const grpRows = await db
+    .select()
+    .from(groupsMonthly)
+    .where(
+      and(
+        eq(groupsMonthly.year, year),
+        eq(groupsMonthly.month, month)
+      )
+    );
+
+  // Collect campus names from all sources, but exclude "Other" from main campus list
+  // (Young Adults / ESL are cross-campus and will be rolled into totals)
   const campusNames = new Set<string>();
-  for (const r of attRows) campusNames.add(r.campus);
+  for (const r of attRows) {
+    if (r.campus !== "Other") campusNames.add(r.campus);
+  }
   for (const r of givRows) campusNames.add(r.campus);
   for (const r of nsRows) campusNames.add(r.campus);
   for (const r of srvRows) campusNames.add(r.campus);
@@ -170,9 +206,21 @@ async function getWeeklySnapshot(
   const campuses: CampusWeeklyMetrics[] = [];
 
   for (const campus of Array.from(campusNames)) {
-    // Attendance: sum all subgroup headcounts for this campus this week
-    const attTotal = attRows
-      .filter((r: any) => r.campus === campus)
+    const campusAtt = attRows.filter((r: any) => r.campus === campus);
+
+    // Attendance: ONLY main Check-In subgroups (not Kids, Students, etc.)
+    const attTotal = campusAtt
+      .filter((r: any) => PCO_CHECKIN_SUBGROUPS.includes(r.subgroup))
+      .reduce((sum: number, r: any) => sum + r.headcount, 0);
+
+    // RevKids: all Kids:* subgroups for this campus
+    const revKidsTotal = campusAtt
+      .filter((r: any) => isKidsSubgroup(r.subgroup))
+      .reduce((sum: number, r: any) => sum + r.headcount, 0);
+
+    // RevStudents: RevStudents subgroups for this campus
+    const revStudentsTotal = campusAtt
+      .filter((r: any) => PCO_STUDENTS_SUBGROUPS.includes(r.subgroup))
       .reduce((sum: number, r: any) => sum + r.headcount, 0);
 
     // Giving: sum all giving for this campus this week
@@ -196,9 +244,18 @@ async function getWeeklySnapshot(
       .filter((r: any) => r.campus === campus)
       .reduce((sum: number, r: any) => sum + r.total, 0);
 
+    // Groups: monthly avgAttendance for this campus
+    const grpAvg = grpRows
+      .filter((r: any) => r.campus === campus)
+      .reduce((sum: number, r: any) => sum + r.avgAttendance, 0);
+
     campuses.push({
       campus,
       attendance: attTotal,
+      revKids: revKidsTotal,
+      revStudents: revStudentsTotal,
+      youngAdults: 0, // populated in totals from "Other" campus rows
+      groups: grpAvg,
       giving: Math.round(givTotal),
       volunteers: sundaysInMonth > 0 ? Math.round(srvTotal / sundaysInMonth) : 0,
       ftg: sundaysInMonth > 0 ? Math.round(ftgTotal / sundaysInMonth) : 0,
@@ -207,9 +264,18 @@ async function getWeeklySnapshot(
     });
   }
 
+  // Young Adults: cross-campus, stored under "Other" campus in attendance_weekly
+  const yaTotal = attRows
+    .filter((r: any) => r.campus === "Other" && PCO_YOUNG_ADULTS_SUBGROUPS.includes(r.subgroup))
+    .reduce((sum: number, r: any) => sum + r.headcount, 0);
+
   const totals: CampusWeeklyMetrics = {
     campus: "All Campuses",
     attendance: campuses.reduce((s, c) => s + c.attendance, 0),
+    revKids: campuses.reduce((s, c) => s + c.revKids, 0),
+    revStudents: campuses.reduce((s, c) => s + c.revStudents, 0),
+    youngAdults: yaTotal,
+    groups: campuses.reduce((s, c) => s + c.groups, 0),
     giving: campuses.reduce((s, c) => s + c.giving, 0),
     volunteers: campuses.reduce((s, c) => s + c.volunteers, 0),
     ftg: campuses.reduce((s, c) => s + c.ftg, 0),
@@ -284,9 +350,20 @@ async function getMonthlySnapshot(
   }
 
   const weeks = weeksInMonth(year, month);
-  const campusNames = new Set<string>();
 
-  for (const r of attRows) campusNames.add(r.campus);
+  // Also fetch groups monthly data
+  const grpRows = await db
+    .select()
+    .from(groupsMonthly)
+    .where(
+      and(
+        eq(groupsMonthly.year, year),
+        eq(groupsMonthly.month, month)
+      )
+    );
+
+  const campusNames = new Set<string>();
+  for (const r of attRows) if (r.campus !== "All Campuses") campusNames.add(r.campus);
   for (const r of givRows) campusNames.add(r.campus);
   for (const r of nsRows) campusNames.add(r.campus);
   for (const r of srvRows) campusNames.add(r.campus);
@@ -294,10 +371,32 @@ async function getMonthlySnapshot(
   const campuses: CampusWeeklyMetrics[] = [];
 
   for (const campus of Array.from(campusNames)) {
-    const attTotal = attRows
-      .filter(
-        (r: any) =>
-          r.campus === campus && isAttendanceSubgroup(r.subgroup)
+    // Monthly attendance uses subgroup column; filter to Adults/Check-In only
+    const campusAtt = attRows.filter((r: any) => r.campus === campus);
+    const attTotal = campusAtt
+      .filter((r: any) =>
+        SPREADSHEET_ADULTS.includes(r.subgroup) ||
+        PCO_CHECKIN_SUBGROUPS.includes(r.subgroup)
+      )
+      .reduce((sum: number, r: any) => sum + r.total, 0);
+
+    const revKidsTotal = campusAtt
+      .filter((r: any) =>
+        SPREADSHEET_KIDS.includes(r.subgroup) || isKidsSubgroup(r.subgroup)
+      )
+      .reduce((sum: number, r: any) => sum + r.total, 0);
+
+    const revStudentsTotal = campusAtt
+      .filter((r: any) =>
+        SPREADSHEET_STUDENTS.includes(r.subgroup) ||
+        PCO_STUDENTS_SUBGROUPS.includes(r.subgroup)
+      )
+      .reduce((sum: number, r: any) => sum + r.total, 0);
+
+    const youngAdultsTotal = campusAtt
+      .filter((r: any) =>
+        SPREADSHEET_YOUNG_ADULTS.includes(r.subgroup) ||
+        PCO_YOUNG_ADULTS_SUBGROUPS.includes(r.subgroup)
       )
       .reduce((sum: number, r: any) => sum + r.total, 0);
 
@@ -319,9 +418,17 @@ async function getMonthlySnapshot(
       .filter((r: any) => r.campus === campus)
       .reduce((sum: number, r: any) => sum + r.total, 0);
 
+    const grpAvg = grpRows
+      .filter((r: any) => r.campus === campus)
+      .reduce((sum: number, r: any) => sum + r.avgAttendance, 0);
+
     campuses.push({
       campus,
       attendance: Math.round(attTotal / weeks),
+      revKids: Math.round(revKidsTotal / weeks),
+      revStudents: Math.round(revStudentsTotal / weeks),
+      youngAdults: Math.round(youngAdultsTotal / weeks),
+      groups: grpAvg,
       giving: Math.round(givTotal / weeks),
       volunteers: Math.round(srvTotal / weeks),
       ftg: Math.round(ftgTotal / weeks),
@@ -333,6 +440,10 @@ async function getMonthlySnapshot(
   const totals: CampusWeeklyMetrics = {
     campus: "All Campuses",
     attendance: campuses.reduce((s, c) => s + c.attendance, 0),
+    revKids: campuses.reduce((s, c) => s + c.revKids, 0),
+    revStudents: campuses.reduce((s, c) => s + c.revStudents, 0),
+    youngAdults: campuses.reduce((s, c) => s + c.youngAdults, 0),
+    groups: campuses.reduce((s, c) => s + c.groups, 0),
     giving: campuses.reduce((s, c) => s + c.giving, 0),
     volunteers: campuses.reduce((s, c) => s + c.volunteers, 0),
     ftg: campuses.reduce((s, c) => s + c.ftg, 0),
@@ -380,6 +491,10 @@ async function getYTDSnapshot(
     campuses.push({
       campus,
       attendance: Math.round(campusMonths.reduce((s, c) => s + c.attendance, 0) / count),
+      revKids: Math.round(campusMonths.reduce((s, c) => s + c.revKids, 0) / count),
+      revStudents: Math.round(campusMonths.reduce((s, c) => s + c.revStudents, 0) / count),
+      youngAdults: Math.round(campusMonths.reduce((s, c) => s + c.youngAdults, 0) / count),
+      groups: Math.round(campusMonths.reduce((s, c) => s + c.groups, 0) / count),
       giving: Math.round(campusMonths.reduce((s, c) => s + c.giving, 0) / count),
       volunteers: Math.round(campusMonths.reduce((s, c) => s + c.volunteers, 0) / count),
       ftg: Math.round(campusMonths.reduce((s, c) => s + c.ftg, 0) / count),
@@ -391,6 +506,10 @@ async function getYTDSnapshot(
   const totals: CampusWeeklyMetrics = {
     campus: "All Campuses",
     attendance: campuses.reduce((s, c) => s + c.attendance, 0),
+    revKids: campuses.reduce((s, c) => s + c.revKids, 0),
+    revStudents: campuses.reduce((s, c) => s + c.revStudents, 0),
+    youngAdults: campuses.reduce((s, c) => s + c.youngAdults, 0),
+    groups: campuses.reduce((s, c) => s + c.groups, 0),
     giving: campuses.reduce((s, c) => s + c.giving, 0),
     volunteers: campuses.reduce((s, c) => s + c.volunteers, 0),
     ftg: campuses.reduce((s, c) => s + c.ftg, 0),
@@ -640,7 +759,11 @@ export const weeklyReportRouter = router({
       let summary = `Weekly Report — ${current.label}\n`;
       summary += `Data source: ${current.source === "weekly" ? "PCO weekly data" : "Monthly estimate"}\n\n`;
       summary += `ALL CAMPUSES:\n`;
-      summary += `  Attendance: ${current.totals.attendance}\n`;
+      summary += `  Attendance (Check-In): ${current.totals.attendance}\n`;
+      summary += `  RevKids: ${current.totals.revKids}\n`;
+      summary += `  RevStudents: ${current.totals.revStudents}\n`;
+      summary += `  Young Adults: ${current.totals.youngAdults}\n`;
+      summary += `  Groups: ${current.totals.groups}\n`;
       summary += `  Giving: $${current.totals.giving.toLocaleString()}\n`;
       summary += `  Volunteers: ${current.totals.volunteers}\n`;
       summary += `  First-Time Guests: ${current.totals.ftg}\n`;
@@ -649,7 +772,7 @@ export const weeklyReportRouter = router({
 
       for (const c of current.campuses) {
         summary += `${c.campus.toUpperCase()}:\n`;
-        summary += `  Attendance: ${c.attendance}\n`;
+        summary += `  Attendance: ${c.attendance} | Kids: ${c.revKids} | Students: ${c.revStudents}\n`;
         summary += `  Giving: $${c.giving.toLocaleString()}\n`;
         summary += `  Volunteers: ${c.volunteers}\n`;
         summary += `  FTG: ${c.ftg} | Salvations: ${c.salvations} | Baptisms: ${c.baptisms}\n\n`;
@@ -682,7 +805,7 @@ export const weeklyReportRouter = router({
         : "📊 *Data estimated from monthly averages (run Weekly Sync for exact numbers)*";
 
       const campusMdRows = current.campuses
-        .map(c => `| **${c.campus}** | ${c.attendance.toLocaleString()} | $${c.giving.toLocaleString()} | ${c.volunteers} | ${c.ftg} | ${c.salvations} | ${c.baptisms} |`)
+        .map(c => `| **${c.campus}** | ${c.attendance.toLocaleString()} | ${c.revKids.toLocaleString()} | ${c.revStudents.toLocaleString()} | $${c.giving.toLocaleString()} | ${c.volunteers} | ${c.ftg} | ${c.salvations} | ${c.baptisms} |`)
         .join('\n');
 
       const mdContent = [
@@ -696,16 +819,16 @@ export const weeklyReportRouter = router({
         ``,
         `### All Campuses`,
         ``,
-        `| Attendance | Giving | Volunteers | FTG | Salvations | Baptisms |`,
-        `|:---:|:---:|:---:|:---:|:---:|:---:|`,
-        `| **${current.totals.attendance.toLocaleString()}** | **$${current.totals.giving.toLocaleString()}** | **${current.totals.volunteers.toLocaleString()}** | **${current.totals.ftg}** | **${current.totals.salvations}** | **${current.totals.baptisms}** |`,
+        `| Attendance | RevKids | RevStudents | Young Adults | Groups | Giving | Volunteers | FTG | Salvations | Baptisms |`,
+        `|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|`,
+        `| **${current.totals.attendance.toLocaleString()}** | **${current.totals.revKids.toLocaleString()}** | **${current.totals.revStudents.toLocaleString()}** | **${current.totals.youngAdults.toLocaleString()}** | **${current.totals.groups.toLocaleString()}** | **$${current.totals.giving.toLocaleString()}** | **${current.totals.volunteers.toLocaleString()}** | **${current.totals.ftg}** | **${current.totals.salvations}** | **${current.totals.baptisms}** |`,
         ``,
         `---`,
         ``,
         `### Campus Breakdown`,
         ``,
-        `| Campus | Attendance | Giving | Volunteers | FTG | Salvations | Baptisms |`,
-        `|:---|---:|---:|---:|---:|---:|---:|`,
+        `| Campus | Attendance | RevKids | RevStudents | Giving | Volunteers | FTG | Salvations | Baptisms |`,
+        `|:---|---:|---:|---:|---:|---:|---:|---:|---:|`,
         campusMdRows,
         ``,
         ...(aiSummary ? [

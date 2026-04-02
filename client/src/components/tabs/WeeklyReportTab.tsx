@@ -40,6 +40,10 @@ import {
 interface CampusMetrics {
   campus: string;
   attendance: number;
+  revKids: number;
+  revStudents: number;
+  youngAdults: number;
+  groups: number;
   giving: number;
   volunteers: number;
   ftg: number;
@@ -68,8 +72,12 @@ const DAY_LABELS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Fri
 
 const METRIC_CONFIG = [
   { key: "attendance" as const, label: "Attendance", icon: Users, color: "#4A7FB5", prefix: "" },
+  { key: "revKids" as const, label: "RevKids", icon: Users, color: "#E8913A", prefix: "" },
+  { key: "revStudents" as const, label: "RevStudents", icon: Users, color: "#8B6DAF", prefix: "" },
+  { key: "youngAdults" as const, label: "Young Adults", icon: Users, color: "#7C5CBF", prefix: "" },
+  { key: "groups" as const, label: "Groups", icon: Users, color: "#2D8B8B", prefix: "" },
   { key: "giving" as const, label: "Giving", icon: DollarSign, color: "#4A7C59", prefix: "$" },
-  { key: "volunteers" as const, label: "Volunteers", icon: Heart, color: "#8B6DAF", prefix: "" },
+  { key: "volunteers" as const, label: "Volunteers", icon: Heart, color: "#C45B4A", prefix: "" },
   { key: "ftg" as const, label: "First-Time Guests", icon: UserPlus, color: "#E8913A", prefix: "" },
   { key: "salvations" as const, label: "Salvations", icon: Sparkles, color: "#C45B4A", prefix: "" },
   { key: "baptisms" as const, label: "Baptisms", icon: Droplets, color: "#2D8B8B", prefix: "" },
