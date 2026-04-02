@@ -396,3 +396,12 @@
 - [x] Verify schedule can be saved successfully end-to-end
 - [x] All tests passing
 - [x] Checkpoint and deploy
+
+## Round 38: Fix Weekly Report Auto-Generation Schedule (Bug)
+
+- [x] Diagnose why Weekly Report schedule form is missing email field
+- [x] Add email field to the auto-generation schedule UI
+- [x] Fix the Save Schedule button so it actually saves
+- [x] Verify schedule saves and loads correctly
+- [x] All tests passing
+- [x] Checkpoint and deploy

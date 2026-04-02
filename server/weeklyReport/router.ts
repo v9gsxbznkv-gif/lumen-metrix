@@ -560,6 +560,7 @@ export const weeklyReportRouter = router({
         hour: 8,
         minute: 0,
         enabled: false,
+        deliveryEmail: "",
         lastGeneratedAt: null,
       };
     }
@@ -569,6 +570,7 @@ export const weeklyReportRouter = router({
       hour: r.hour,
       minute: r.minute,
       enabled: r.enabled,
+      deliveryEmail: r.deliveryEmail ?? "",
       lastGeneratedAt: r.lastGeneratedAt ? r.lastGeneratedAt.toISOString() : null,
     };
   }),
@@ -576,13 +578,14 @@ export const weeklyReportRouter = router({
   /**
    * Save auto-generation schedule
    */
-  saveSchedule: protectedProcedure
+  saveSchedule: publicProcedure
     .input(
       z.object({
         dayOfWeek: z.number().min(0).max(6),
         hour: z.number().min(0).max(23),
         minute: z.number().min(0).max(59),
         enabled: z.boolean(),
+        deliveryEmail: z.string().email().optional().or(z.literal("")),
       })
     )
     .mutation(async ({ input }) => {
@@ -599,6 +602,7 @@ export const weeklyReportRouter = router({
             hour: input.hour,
             minute: input.minute,
             enabled: input.enabled,
+            deliveryEmail: input.deliveryEmail || null,
           })
           .where(eq(weeklyReportConfig.id, existing[0].id));
       } else {
@@ -607,6 +611,7 @@ export const weeklyReportRouter = router({
           hour: input.hour,
           minute: input.minute,
           enabled: input.enabled,
+          deliveryEmail: input.deliveryEmail || null,
         });
       }
 

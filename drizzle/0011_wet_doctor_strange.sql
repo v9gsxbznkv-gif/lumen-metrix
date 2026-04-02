@@ -1,0 +1,1 @@
+ALTER TABLE `weekly_report_config` ADD `deliveryEmail` varchar(255);

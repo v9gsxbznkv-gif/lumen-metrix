@@ -354,6 +354,7 @@ export const weeklyReportConfig = mysqlTable("weekly_report_config", {
   hour: int("hour").notNull().default(8), // 0-23 in Eastern Time
   minute: int("minute").notNull().default(0), // 0-59
   enabled: boolean("enabled").default(false).notNull(),
+  deliveryEmail: varchar("deliveryEmail", { length: 255 }),
   lastGeneratedAt: timestamp("lastGeneratedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

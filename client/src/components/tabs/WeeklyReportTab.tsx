@@ -183,6 +183,8 @@ export default function WeeklyReportTab() {
   const [schedHour, setSchedHour] = useState(scheduleData?.hour ?? 8);
   const [schedMinute, setSchedMinute] = useState(scheduleData?.minute ?? 0);
   const [schedEnabled, setSchedEnabled] = useState(scheduleData?.enabled ?? false);
+  const [schedEmail, setSchedEmail] = useState(scheduleData?.deliveryEmail ?? "");
+  const [emailAttempted, setEmailAttempted] = useState(false);
 
   // Update schedule form when data loads
   useMemo(() => {
@@ -191,6 +193,7 @@ export default function WeeklyReportTab() {
       setSchedHour(scheduleData.hour);
       setSchedMinute(scheduleData.minute);
       setSchedEnabled(scheduleData.enabled);
+      setSchedEmail(scheduleData.deliveryEmail ?? "");
     }
   }, [scheduleData]);
 
@@ -325,6 +328,25 @@ export default function WeeklyReportTab() {
           </p>
 
           <div className="flex flex-wrap items-end gap-4">
+            <div className="w-full">
+              <label className="text-[11px] font-medium text-muted-foreground block mb-1">
+                Delivery Email <span className="text-[#C45B4A]">*</span>
+              </label>
+              <input
+                type="email"
+                value={schedEmail}
+                onChange={(e) => { setSchedEmail(e.target.value); setEmailAttempted(false); }}
+                placeholder="pastor@revolutionchurch.com"
+                className={`h-9 px-3 text-sm rounded-md border bg-background text-foreground focus:outline-none focus:ring-1 transition-colors w-full max-w-sm ${
+                  emailAttempted && schedEnabled && !schedEmail.trim()
+                    ? "border-[#C45B4A] focus:ring-[#C45B4A]/40"
+                    : "border-border/60 focus:ring-[#E8913A]/40"
+                }`}
+              />
+              {emailAttempted && schedEnabled && !schedEmail.trim() && (
+                <p className="text-[11px] text-[#C45B4A] mt-1">An email address is required when the schedule is enabled.</p>
+              )}
+            </div>
             <div>
               <label className="text-[11px] font-medium text-muted-foreground block mb-1">Day</label>
               <Select value={String(schedDay)} onValueChange={(v) => setSchedDay(Number(v))}>
@@ -383,15 +405,21 @@ export default function WeeklyReportTab() {
             <Button
               size="sm"
               variant="outline"
-              onClick={() =>
+              onClick={() => {
+                const emailMissing = schedEnabled && !schedEmail.trim();
+                if (emailMissing) {
+                  setEmailAttempted(true);
+                  return;
+                }
                 saveScheduleMutation.mutate({
                   dayOfWeek: schedDay,
                   hour: schedHour,
                   minute: schedMinute,
                   enabled: schedEnabled,
-                })
-              }
-              disabled={saveScheduleMutation.isPending || !isAuthenticated}
+                  deliveryEmail: schedEmail,
+                });
+              }}
+              disabled={saveScheduleMutation.isPending}
             >
               {saveScheduleMutation.isPending ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
