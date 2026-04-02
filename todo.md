@@ -433,3 +433,12 @@
 - [x] Ensure sync completion state is clearly communicated to the user
 - [x] All tests passing
 - [x] Checkpoint and deploy
+
+## Round 42: Fix March 29th Weekly Report Data Issues
+
+- [x] Audit DB: check what Kids subgroups exist for week 13 (March 29) per campus
+- [x] Fix Canton Kids subgroup matching (week 13 has no Kids:* rows — PCO not finalized yet, shows 0 correctly)
+- [x] Add giving note: giving_weekly is combined-only (no per-campus split); show "combined total" badge in UI
+- [x] Fix baptisms: now shows monthly MTD total with "March MTD" label instead of dividing by weeks
+- [x] All tests passing
+- [x] Checkpoint and deploy

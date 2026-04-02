@@ -45,10 +45,12 @@ interface CampusMetrics {
   youngAdults: number;
   groups: number;
   giving: number;
+  givingMonthTotal: number;
   volunteers: number;
   ftg: number;
   salvations: number;
   baptisms: number;
+  baptismsMonthLabel: string;
 }
 
 interface WeeklyPeriod {
@@ -58,6 +60,7 @@ interface WeeklyPeriod {
   weekNumber: number;
   campuses: CampusMetrics[];
   totals: CampusMetrics;
+  givingIsCombined?: boolean;
 }
 
 type ComparisonKey = "sameWeekLastYear" | "previousWeek" | "samePeriodLastYear";
@@ -471,22 +474,31 @@ export default function WeeklyReportTab() {
       ) : (
         <>
           {/* Period label */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <div
               className="px-3 py-1.5 rounded-md text-xs font-semibold"
               style={{ background: "rgba(232,145,58,0.12)", color: "#E8913A" }}
             >
               {current.label}
             </div>
-            <span className="text-xs text-muted-foreground">
-              Weekly averages derived from monthly data
-            </span>
+            {current.source === "weekly" ? (
+              <span className="text-xs text-muted-foreground">Live weekly data from PCO</span>
+            ) : (
+              <span className="text-xs text-muted-foreground">Weekly averages derived from monthly data</span>
+            )}
+            {current.givingIsCombined && (
+              <span className="text-[11px] px-2 py-0.5 rounded-full border border-border/60 text-muted-foreground">
+                Giving: combined total (no per-campus split available)
+              </span>
+            )}
           </div>
 
           {/* All Campuses summary cards */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {METRIC_CONFIG.map((metric) => {
-              const val = current.totals[metric.key];
+              const val = current.totals[metric.key as keyof CampusMetrics] as number;
+              const isBaptisms = metric.key === "baptisms";
+              const isGiving = metric.key === "giving";
               return (
                 <div
                   key={metric.key}
@@ -501,6 +513,12 @@ export default function WeeklyReportTab() {
                   <p className="text-xl font-bold" style={{ fontFamily: "'DM Mono', monospace" }}>
                     {formatNumber(val, metric.prefix)}
                   </p>
+                  {isBaptisms && current.totals.baptismsMonthLabel && (
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{current.totals.baptismsMonthLabel}</p>
+                  )}
+                  {isGiving && current.givingIsCombined && (
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Combined total</p>
+                  )}
 
                   {/* Comparison indicators */}
                   <div className="mt-2 space-y-0.5">
@@ -556,6 +574,12 @@ export default function WeeklyReportTab() {
                         className="text-right px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground"
                       >
                         {m.label}
+                        {m.key === "baptisms" && current.totals.baptismsMonthLabel && (
+                          <div className="text-[9px] font-normal normal-case text-muted-foreground/70">{current.totals.baptismsMonthLabel}</div>
+                        )}
+                        {m.key === "giving" && current.givingIsCombined && (
+                          <div className="text-[9px] font-normal normal-case text-muted-foreground/70">combined</div>
+                        )}
                       </th>
                     ))}
                   </tr>
@@ -566,7 +590,7 @@ export default function WeeklyReportTab() {
                       <td className="px-5 py-3 font-medium text-sm">{campus.campus}</td>
                       {METRIC_CONFIG.map((m) => (
                         <td key={m.key} className="text-right px-4 py-3 tabular-nums" style={{ fontFamily: "'DM Mono', monospace", fontSize: "13px" }}>
-                          {formatNumber(campus[m.key], m.prefix)}
+                          {formatNumber(campus[m.key as keyof CampusMetrics] as number, m.prefix)}
                         </td>
                       ))}
                     </tr>
@@ -576,7 +600,7 @@ export default function WeeklyReportTab() {
                     <td className="px-5 py-3 text-sm">All Campuses</td>
                     {METRIC_CONFIG.map((m) => (
                       <td key={m.key} className="text-right px-4 py-3 tabular-nums" style={{ fontFamily: "'DM Mono', monospace", fontSize: "13px" }}>
-                        {formatNumber(current.totals[m.key], m.prefix)}
+                        {formatNumber(current.totals[m.key as keyof CampusMetrics] as number, m.prefix)}
                       </td>
                     ))}
                   </tr>
