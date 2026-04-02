@@ -622,7 +622,7 @@ export const weeklyReportRouter = router({
    * Manually trigger report generation and send via notification.
    * Uses weekly data when available.
    */
-  generateAndSend: protectedProcedure
+  generateAndSend: publicProcedure
     .input(
       z.object({
         year: z.number(),

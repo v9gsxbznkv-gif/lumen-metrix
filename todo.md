@@ -405,3 +405,11 @@
 - [x] Verify schedule saves and loads correctly
 - [x] All tests passing
 - [x] Checkpoint and deploy
+
+## Round 39: Fix Weekly Report "Generate & Send" Button (Bug)
+
+- [x] Diagnose why Generate & Send button does not work
+- [x] Fix the generateAndSend procedure (likely protectedProcedure guard)
+- [x] Verify report generates and sends successfully
+- [x] All tests passing
+- [x] Checkpoint and deploy

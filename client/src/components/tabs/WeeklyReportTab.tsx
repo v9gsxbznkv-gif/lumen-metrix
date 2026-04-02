@@ -303,7 +303,7 @@ export default function WeeklyReportTab() {
               comparisons: selectedComparisons,
             })
           }
-          disabled={generateMutation.isPending || !isAuthenticated}
+          disabled={generateMutation.isPending}
           className="gap-1.5"
           style={{ background: "#E8913A" }}
         >
