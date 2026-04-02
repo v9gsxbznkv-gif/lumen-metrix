@@ -254,7 +254,26 @@ export const pcoRouter = router({
   getSyncJobStatus: publicProcedure
     .input(z.object({ jobId: z.string() }))
     .query(async ({ input }) => {
-      return await getJob(input.jobId);
+      const job = await getJob(input.jobId);
+      if (!job) return null;
+
+      // If the job has been "running" for more than 10 minutes, it likely
+      // stalled due to a container restart (in-memory watchdog was wiped).
+      // Auto-mark it as failed so the UI doesn't stay stuck.
+      if (job.status === "running") {
+        const ageMs = Date.now() - job.startedAt.getTime();
+        const TEN_MINUTES_MS = 10 * 60 * 1000;
+        if (ageMs > TEN_MINUTES_MS) {
+          await updateJob(input.jobId, {
+            status: "failed",
+            error: "Sync timed out — the server may have restarted mid-sync. Please try again.",
+            completedAt: new Date(),
+          });
+          return await getJob(input.jobId);
+        }
+      }
+
+      return job;
     }),
 
   getRecentSyncJobs: publicProcedure

@@ -425,3 +425,11 @@
 - [x] Update WeeklyReportTab UI to display the new demographic columns
 - [x] All tests passing
 - [x] Checkpoint and deploy
+
+## Round 41: Fix Sync Progress Bar Reset Bug
+
+- [x] Diagnose why progress bar resets to 0 while sync is still running
+- [x] Fix progress bar state so it stays accurate until sync fully completes
+- [x] Ensure sync completion state is clearly communicated to the user
+- [x] All tests passing
+- [x] Checkpoint and deploy

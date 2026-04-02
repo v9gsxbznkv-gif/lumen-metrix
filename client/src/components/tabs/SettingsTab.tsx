@@ -340,6 +340,14 @@ function SyncControlsSection() {
   const [dateTo, setDateTo] = useState("");
   const [showLogs, setShowLogs] = useState(false);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
+  // Persist the last known job status so the progress bar doesn't reset to 0
+  // when activeJobId is cleared on completion/failure
+  const [lastJobStatus, setLastJobStatus] = useState<{
+    status: string;
+    progress: number;
+    message: string;
+    recordsProcessed: number;
+  } | null>(null);
 
   const { data: connectionStatus } = trpc.pco.getConnectionStatus.useQuery();
   const { data: logs, refetch: refetchLogs } = trpc.pco.getSyncLogs.useQuery({ limit: 10 });
@@ -350,6 +358,17 @@ function SyncControlsSection() {
     { enabled: activeJobId != null, refetchInterval: 2000 }
   );
 
+  // Mirror live job status into lastJobStatus so we always have the latest snapshot
+  useEffect(() => {
+    if (!jobStatus) return;
+    setLastJobStatus({
+      status: jobStatus.status,
+      progress: jobStatus.progress,
+      message: jobStatus.message,
+      recordsProcessed: jobStatus.recordsProcessed,
+    });
+  }, [jobStatus]);
+
   // When job finishes, show toast and clear the active job
   useEffect(() => {
     if (!jobStatus) return;
@@ -357,6 +376,8 @@ function SyncControlsSection() {
       toast.success(`Sync complete — ${jobStatus.recordsProcessed.toLocaleString()} records processed`);
       setActiveJobId(null);
       refetchLogs();
+      // Auto-clear the completed panel after 8 seconds
+      setTimeout(() => setLastJobStatus(null), 8000);
     } else if (jobStatus.status === "failed") {
       const errMsg = jobStatus.error ?? "Unknown error";
       if (errMsg.toLowerCase().includes("not connected") || errMsg.toLowerCase().includes("planning center")) {
@@ -366,12 +387,15 @@ function SyncControlsSection() {
       }
       setActiveJobId(null);
       refetchLogs();
+      // Keep failed state visible for 10 seconds
+      setTimeout(() => setLastJobStatus(null), 10000);
     }
   }, [jobStatus?.status]);
 
   const syncMutation = trpc.pco.triggerSync.useMutation({
     onSuccess: (result) => {
-      // result.jobId — store it so polling starts
+      // Reset last status and start polling the new job
+      setLastJobStatus({ status: "running", progress: 5, message: "Starting sync…", recordsProcessed: 0 });
       setActiveJobId(result.jobId);
     },
     onError: (err) => {
@@ -385,7 +409,9 @@ function SyncControlsSection() {
   });
 
   const isConnected = connectionStatus?.connected === true;
-  const isRunning = syncMutation.isPending || (activeJobId != null && jobStatus?.status === "running");
+  const isRunning = syncMutation.isPending || (activeJobId != null && (jobStatus?.status === "running" || jobStatus == null));
+  // Use live jobStatus when available, fall back to lastJobStatus to avoid reset
+  const displayStatus = jobStatus ?? (lastJobStatus ? { ...lastJobStatus } as any : null);
 
   return (
     <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
@@ -486,14 +512,30 @@ function SyncControlsSection() {
           </button>
 
           {/* Live progress panel — shown while job is running or just completed */}
-          {activeJobId != null && (
-            <div className="rounded-md border border-border/40 bg-muted/10 p-3 space-y-2">
+          {(activeJobId != null || lastJobStatus != null) && displayStatus && (
+            <div className={`rounded-md border p-3 space-y-2 ${
+              displayStatus.status === "completed"
+                ? "border-green-500/40 bg-green-50 dark:bg-green-950/20"
+                : displayStatus.status === "failed"
+                ? "border-red-500/40 bg-red-50 dark:bg-red-950/20"
+                : "border-border/40 bg-muted/10"
+            }`}>
               <div className="flex items-center justify-between text-xs">
-                <span className="font-medium text-muted-foreground">
-                  {jobStatus ? jobStatus.message : "Connecting to PCO…"}
+                <span className={`font-medium ${
+                  displayStatus.status === "completed"
+                    ? "text-green-700 dark:text-green-400"
+                    : displayStatus.status === "failed"
+                    ? "text-red-700 dark:text-red-400"
+                    : "text-muted-foreground"
+                }`}>
+                  {displayStatus.status === "completed"
+                    ? "✓ Sync complete"
+                    : displayStatus.status === "failed"
+                    ? "✗ Sync failed"
+                    : displayStatus.message || "Connecting to PCO…"}
                 </span>
                 <span className="text-muted-foreground">
-                  {jobStatus ? `${jobStatus.progress}%` : "0%"}
+                  {displayStatus.progress}%
                 </span>
               </div>
               {/* Progress bar */}
@@ -501,14 +543,17 @@ function SyncControlsSection() {
                 <div
                   className="h-full rounded-full transition-all duration-500"
                   style={{
-                    width: `${jobStatus?.progress ?? 5}%`,
-                    backgroundColor: "#E8913A",
+                    width: `${displayStatus.progress}%`,
+                    backgroundColor:
+                      displayStatus.status === "completed" ? "#4A7C59"
+                      : displayStatus.status === "failed" ? "#C45B4A"
+                      : "#E8913A",
                   }}
                 />
               </div>
-              {jobStatus && jobStatus.recordsProcessed > 0 && (
+              {displayStatus.recordsProcessed > 0 && (
                 <div className="text-[10px] text-muted-foreground">
-                  {jobStatus.recordsProcessed.toLocaleString()} records processed
+                  {displayStatus.recordsProcessed.toLocaleString()} records processed
                 </div>
               )}
             </div>
