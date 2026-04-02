@@ -607,6 +607,8 @@ function ScheduleEditor({
     email: existingSchedule?.email ?? "",
     enabled: existingSchedule?.enabled ?? true,
   });
+  const [attempted, setAttempted] = useState(false);
+  const emailMissing = schedule.enabled && !schedule.email.trim();
 
   return (
     <div className="space-y-5">
@@ -625,8 +627,11 @@ function ScheduleEditor({
             Cancel
           </button>
           <button
-            onClick={() => onSave(schedule)}
-            disabled={isSaving || (!schedule.email && schedule.enabled)}
+            onClick={() => {
+              if (emailMissing) { setAttempted(true); return; }
+              onSave(schedule);
+            }}
+            disabled={isSaving}
             className="px-4 py-1.5 text-xs font-medium rounded-md text-white transition-colors disabled:opacity-50"
             style={{ backgroundColor: "#E8913A" }}
           >
@@ -700,14 +705,21 @@ function ScheduleEditor({
 
               {/* Email */}
               <div>
-                <label className="micro-label text-muted-foreground block mb-1.5">Delivery Email</label>
+                <label className="micro-label text-muted-foreground block mb-1.5">Delivery Email <span className="text-[#C45B4A]">*</span></label>
                 <input
                   type="email"
                   value={schedule.email}
-                  onChange={(e) => setSchedule({ ...schedule, email: e.target.value })}
-                  className="w-full max-w-sm h-9 px-3 text-sm rounded-md border border-border/60 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-[#E8913A]/40"
+                  onChange={(e) => { setSchedule({ ...schedule, email: e.target.value }); setAttempted(false); }}
+                  className={`w-full max-w-sm h-9 px-3 text-sm rounded-md border bg-background text-foreground focus:outline-none focus:ring-1 transition-colors ${
+                    attempted && emailMissing
+                      ? "border-[#C45B4A] focus:ring-[#C45B4A]/40"
+                      : "border-border/60 focus:ring-[#E8913A]/40"
+                  }`}
                   placeholder="pastor@revolutionchurch.com"
                 />
+                {attempted && emailMissing && (
+                  <p className="text-[11px] text-[#C45B4A] mt-1">An email address is required to save the schedule.</p>
+                )}
               </div>
 
               {/* Summary */}

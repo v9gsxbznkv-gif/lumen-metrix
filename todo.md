@@ -388,3 +388,11 @@
 - [x] Support partial-year-aware comparisons using monthly data
 - [x] All tests passing
 - [x] Checkpoint and deploy
+
+## Round 37: Fix Reports "Save Schedule" Button (Bug)
+
+- [x] Diagnose why the Save Schedule button is grayed out / disabled
+- [x] Fix the button enable/disable logic in ReportsTab
+- [x] Verify schedule can be saved successfully end-to-end
+- [x] All tests passing
+- [x] Checkpoint and deploy
