@@ -503,3 +503,10 @@
 - [x] Default dateFrom to 2026-01-01 in syncAttendance (skip fetching historical event_periods)
 - [x] All 107 tests passing
 - [x] Checkpoint and deploy
+
+## Round 50: Stop Monthly Sync Fetching Old Events (Allowlist Fix)
+
+- [x] Replace where[updated_at][gte] filter (unreliable) with hard-coded allowlist of 5 known event names
+- [x] Monthly sync only fetches event_periods for: Revolution Canton Check-In, Revolution Jasper Check-In, RevStudents Canton, RevStudents Jasper, YA Gathering
+- [x] All 107 tests passing
+- [x] Checkpoint and deploy

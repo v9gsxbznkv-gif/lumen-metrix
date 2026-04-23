@@ -69,21 +69,30 @@ export async function syncAttendance(
     // Heartbeat: let the watchdog know we've started (before the first API call)
     if (onProgress) await onProgress(20, "Fetching events list from PCO...");
 
-    // Step 1: Get all events (services like "Sunday Service", "RevStudents", etc.)
-    // Filter to events updated in the last 3 years to avoid fetching 300+ stale events.
-    // PCO stores every RSVP/one-off event since 2013; we only care about recurring services.
-    const threeYearsAgo = new Date();
-    threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3);
-    const updatedAfter = threeYearsAgo.toISOString().split('T')[0]; // YYYY-MM-DD
-    console.log(`[PCO Sync] Fetching /check-ins/v2/events updated after ${updatedAfter}...`);
-    const eventsResult = await client.paginateAll("/check-ins/v2/events", {
-      'where[updated_at][gte]': updatedAfter,
-    });
-    console.log(`[PCO Sync] Got ${eventsResult.data.length} events (filtered to last 3 years)`);
+    // Step 1: Only process the 5 known recurring service events.
+    // PCO stores 300+ events (RSVPs, one-offs, old events from 2013).
+    // The PCO API filter `where[updated_at][gte]` is unreliable — it doesn't
+    // actually filter old events. Instead, we fetch all events once and
+    // immediately filter to only the 5 key recurring services by name.
+    // This reduces event_periods API calls from 300+ to exactly 5.
+    const KEY_EVENT_NAMES = new Set([
+      "Revolution Canton Check-In",
+      "Revolution Jasper Check-In",
+      "RevStudents | Canton Campus",
+      "RevStudents | Jasper Campus",
+      "YA Gathering",
+    ]);
 
-    const totalEvents = eventsResult.data.length;
+    console.log(`[PCO Sync] Fetching events list to find the 5 key recurring services...`);
+    const allEventsResult = await client.paginateAll("/check-ins/v2/events");
+    const eventsToProcess = allEventsResult.data.filter((e: any) =>
+      KEY_EVENT_NAMES.has(e.attributes?.name)
+    );
+    console.log(`[PCO Sync] Found ${eventsToProcess.length}/${allEventsResult.data.length} key events to process`);
+
+    const totalEvents = eventsToProcess.length;
     let eventIdx = 0;
-    for (const event of eventsResult.data) {
+    for (const event of eventsToProcess) {
       eventIdx++;
       const eventId = event.id;
       const eventName = (event as any).attributes?.name || `Event-${eventId}`;
