@@ -664,25 +664,20 @@ export async function syncAll(
   // Attendance: 20% → 40% (DB aggregation, instant)
   results.push(await syncAttendance(client, dateFrom, dateTo, onProgress));
 
-  // Giving: 40% → 48%
+  // Giving: 42% → 55% (donations from PCO)
   await p(42, "Syncing giving data from PCO...");
   results.push(await syncGiving(client, dateFrom, dateTo));
-  await p(48, "Giving sync complete");
+  await p(55, "Giving sync complete");
 
-  // Groups: 48% → 52%
-  await p(49, "Syncing groups from PCO...");
+  // Groups: 56% → 60% (small dataset, fast)
+  await p(56, "Syncing groups from PCO...");
   results.push(await syncGroups(client));
-  await p(52, "Groups sync complete");
-
-  // Events: 52% → 56%
-  await p(53, "Syncing calendar events from PCO...");
-  results.push(await syncEvents(client, dateFrom, dateTo));
-  await p(56, "Events sync complete");
-
-  // People: 56% → 60%
-  await p(57, "Syncing people from PCO...");
-  results.push(await syncPeople(client));
   await p(60, "Monthly data sync complete");
+
+  // Note: syncEvents and syncPeople are intentionally excluded from the full sync.
+  // They feed pcoEvents/pcoPeople tables which are not displayed on any dashboard view.
+  // Including them caused TCP hangs on the PCO calendar/people APIs.
+  // They can be triggered individually via the single-type sync if needed.
 
   return results;
 }

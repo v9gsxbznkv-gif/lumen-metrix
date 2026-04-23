@@ -534,3 +534,10 @@
 - [x] Wire progress 40%→60% through syncAll: giving 42-48%, groups 49-52%, events 53-56%, people 57-60%
 - [x] All 107 tests passing
 - [x] Checkpoint and deploy
+
+## Round 54: Remove Non-Essential PCO Calls from Full Sync
+
+- [x] Remove syncEvents and syncPeople from syncAll (not used in any dashboard view)
+- [x] Compress progress: attendance 20-40%, giving 42-55%, groups 56-60%
+- [x] All 107 tests passing
+- [x] Checkpoint and deploy
