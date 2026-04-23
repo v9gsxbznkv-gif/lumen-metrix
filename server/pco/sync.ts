@@ -84,7 +84,13 @@ export async function syncAttendance(
     ]);
 
     console.log(`[PCO Sync] Fetching events list to find the 5 key recurring services...`);
-    const allEventsResult = await client.paginateAll("/check-ins/v2/events");
+    const EVENTS_FETCH_TIMEOUT_MS = 60_000;
+    const allEventsResult = await Promise.race([
+      client.paginateAll("/check-ins/v2/events"),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`Timeout fetching events list after ${EVENTS_FETCH_TIMEOUT_MS}ms`)), EVENTS_FETCH_TIMEOUT_MS)
+      ),
+    ]);
     const eventsToProcess = allEventsResult.data.filter((e: any) =>
       KEY_EVENT_NAMES.has(e.attributes?.name)
     );
@@ -104,8 +110,10 @@ export async function syncAttendance(
         await onProgress(pct, `Syncing monthly attendance... (${eventIdx}/${totalEvents} events: ${eventName})`);
       }
 
-      // Step 2: Get event_periods (weekly sessions) for this event
-      // EventPeriod has: starts_at, ends_at, guest_count, regular_count, volunteer_count
+      // Step 2: Get event_periods (weekly sessions) for this event.
+      // Wrapped in Promise.race with a 45s hard timeout so a single stalled
+      // TCP connection can't block the entire sync indefinitely.
+      // Individual event failures are non-fatal: we skip and continue.
       const periodParams: Record<string, any> = {
         per_page: 100,
         order: "-starts_at", // newest first
@@ -113,11 +121,20 @@ export async function syncAttendance(
       periodParams["where[starts_at][gte]"] = effectiveDateFrom; // always set
       if (effectiveDateTo) periodParams["where[starts_at][lte]"] = effectiveDateTo;
 
-      const periodsResult = await client.paginateAll(
-        `/check-ins/v2/events/${eventId}/event_periods`,
-        periodParams
-      );
-      console.log(`[PCO Sync]   Got ${periodsResult.data.length} event periods for ${eventName}`);
+      let periodsResult: { data: any[]; included: any[] };
+      try {
+        const FETCH_TIMEOUT_MS = 45_000;
+        periodsResult = await Promise.race([
+          client.paginateAll(`/check-ins/v2/events/${eventId}/event_periods`, periodParams),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error(`Timeout fetching event_periods for ${eventName} after ${FETCH_TIMEOUT_MS}ms`)), FETCH_TIMEOUT_MS)
+          ),
+        ]);
+        console.log(`[PCO Sync]   Got ${periodsResult.data.length} event periods for ${eventName}`);
+      } catch (fetchErr: any) {
+        console.warn(`[PCO Sync]   Skipping ${eventName}: ${fetchErr.message}`);
+        continue; // non-fatal: skip this event, process the rest
+      }
 
       for (const period of periodsResult.data) {
         recordsProcessed++;

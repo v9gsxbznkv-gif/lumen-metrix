@@ -510,3 +510,11 @@
 - [x] Monthly sync only fetches event_periods for: Revolution Canton Check-In, Revolution Jasper Check-In, RevStudents Canton, RevStudents Jasper, YA Gathering
 - [x] All 107 tests passing
 - [x] Checkpoint and deploy
+
+## Round 51: Fix Sync Hanging at 40% (Per-Call Timeout + Non-Fatal Failures)
+
+- [x] Wrap each event_periods paginateAll call in Promise.race with 45s timeout
+- [x] Wrap initial events list fetch in Promise.race with 60s timeout
+- [x] Make individual event fetch failures non-fatal (skip event, log warning, continue)
+- [x] All 107 tests passing
+- [x] Checkpoint and deploy
