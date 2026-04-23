@@ -541,3 +541,12 @@
 - [x] Compress progress: attendance 20-40%, giving 42-55%, groups 56-60%
 - [x] All 107 tests passing
 - [x] Checkpoint and deploy
+
+## Round 55: Fix Weekly Sync Hanging on Per-Period Headcount Fetches
+
+- [x] Found headcount fetch loop: event_times (per period) + headcounts (per event_time)
+- [x] Added Promise.race timeout to event_times fetch (20s per period)
+- [x] Added Promise.race timeout to headcounts fetch (15s per event_time)
+- [x] Changed DEFAULT_DATE_FROM from 2023-01-01 to 2026-01-01 (cuts 780+ API calls to ~85)
+- [x] All 107 tests passing
+- [x] Checkpoint and deploy

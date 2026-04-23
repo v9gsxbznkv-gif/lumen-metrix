@@ -326,8 +326,11 @@ export function normalizeSubgroupName(name: string): string {
   return n;
 }
 
-/** Default: start of 2023 */
-const DEFAULT_DATE_FROM = "2023-01-01";
+/** Default: start of 2026.
+ * Pre-2026 data is sourced from spreadsheet imports already in the DB.
+ * Fetching 3+ years of PCO event_periods causes 780+ API calls and TCP hangs.
+ */
+const DEFAULT_DATE_FROM = "2026-01-01";
 
 // ============================================================
 // Weekly Attendance Sync
@@ -485,12 +488,19 @@ export async function syncWeeklyAttendance(
           }
 
           // Get all event_times for this period
+          // Wrapped in Promise.race with 20s timeout — TCP stalls won't throw,
+          // so we need a hard deadline per call.
           let eventTimesResult;
           try {
-            eventTimesResult = await client.paginateAll(
-              `/check-ins/v2/events/${eventId}/event_periods/${periodId}/event_times`,
-              { per_page: 25 }
-            );
+            eventTimesResult = await Promise.race([
+              client.paginateAll(
+                `/check-ins/v2/events/${eventId}/event_periods/${periodId}/event_times`,
+                { per_page: 25 }
+              ),
+              new Promise<never>((_, reject) =>
+                setTimeout(() => reject(new Error(`Timeout fetching event_times for period ${periodId}`)), 20_000)
+              ),
+            ]);
           } catch (err: any) {
             console.warn(`[PCO Weekly Sync] Skipping event_times for ${eventName} period ${periodId}: ${err.message}`);
             continue;
@@ -506,10 +516,15 @@ export async function syncWeeklyAttendance(
 
             let headcountsResult;
             try {
-              headcountsResult = await client.paginateAll(
-                `/check-ins/v2/event_times/${etId}/headcounts`,
-                { per_page: 25 }
-              );
+              headcountsResult = await Promise.race([
+                client.paginateAll(
+                  `/check-ins/v2/event_times/${etId}/headcounts`,
+                  { per_page: 25 }
+                ),
+                new Promise<never>((_, reject) =>
+                  setTimeout(() => reject(new Error(`Timeout fetching headcounts for event_time ${etId}`)), 15_000)
+                ),
+              ]);
             } catch (err: any) {
               console.warn(`[PCO Weekly Sync] Skipping headcounts for event_time ${etId}: ${err.message}`);
               continue;
