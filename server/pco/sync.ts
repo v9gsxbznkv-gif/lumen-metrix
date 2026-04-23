@@ -7,12 +7,13 @@
  *   Event → EventPeriod (week/session) → EventTime (service time) → Headcount
  *   EventPeriod already has guest_count, regular_count, volunteer_count
  */
-import { eq, and } from "drizzle-orm";
+import { eq, and, gte, lte, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { PcoClient } from "./client";
 import {
   attendance,
   attendanceMonthly,
+  attendanceWeekly,
   giving,
   givingMonthly,
   nextSteps,
@@ -40,11 +41,13 @@ export interface SyncResult {
 }
 
 // ============================================================
-// Attendance Sync (Check-Ins API)
-// Uses: events → event_periods (which have built-in counts)
+// Attendance Sync
+// Aggregates attendance_weekly rows (already synced by weekly sync)
+// into attendance_monthly. No PCO API calls — uses DB data only.
+// This avoids the PCO event_periods endpoint which causes TCP hangs.
 // ============================================================
 export async function syncAttendance(
-  client: PcoClient,
+  _client: PcoClient,
   dateFrom?: string,
   dateTo?: string,
   onProgress?: (pct: number, msg: string) => Promise<void>
@@ -58,132 +61,113 @@ export async function syncAttendance(
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
-    // Default dateFrom to 2026-01-01 if not specified.
-    // Historical data (2025 and earlier) comes from spreadsheets, not PCO.
-    // Fetching all event_periods back to 2013 would cause thousands of unnecessary
-    // API calls and DB writes. This keeps the monthly sync fast and focused.
+    // Default dateFrom to 2026-01-01 — historical data comes from spreadsheets.
     const effectiveDateFrom = dateFrom || '2026-01-01';
     const effectiveDateTo = dateTo;
 
-    console.log(`[PCO Sync] Starting attendance sync (${effectiveDateFrom} → ${effectiveDateTo || 'now'})...`);
-    // Heartbeat: let the watchdog know we've started (before the first API call)
-    if (onProgress) await onProgress(20, "Fetching events list from PCO...");
+    console.log(`[PCO Sync] Starting attendance sync (DB aggregation, ${effectiveDateFrom} → ${effectiveDateTo || 'now'})...`);
+    if (onProgress) await onProgress(22, "Aggregating weekly attendance into monthly totals...");
 
-    // Step 1: Only process the 5 known recurring service events.
-    // PCO stores 300+ events (RSVPs, one-offs, old events from 2013).
-    // The PCO API filter `where[updated_at][gte]` is unreliable — it doesn't
-    // actually filter old events. Instead, we fetch all events once and
-    // immediately filter to only the 5 key recurring services by name.
-    // This reduces event_periods API calls from 300+ to exactly 5.
-    const KEY_EVENT_NAMES = new Set([
-      "Revolution Canton Check-In",
-      "Revolution Jasper Check-In",
-      "RevStudents | Canton Campus",
-      "RevStudents | Jasper Campus",
-      "YA Gathering",
-    ]);
+    // Query attendance_weekly rows for the date range.
+    // weekStartDate is stored as 'YYYY-MM-DD'.
+    const conditions = [gte(attendanceWeekly.weekStartDate, effectiveDateFrom)];
+    if (effectiveDateTo) conditions.push(lte(attendanceWeekly.weekStartDate, effectiveDateTo));
 
-    console.log(`[PCO Sync] Fetching events list to find the 5 key recurring services...`);
-    const EVENTS_FETCH_TIMEOUT_MS = 60_000;
-    const allEventsResult = await Promise.race([
-      client.paginateAll("/check-ins/v2/events"),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error(`Timeout fetching events list after ${EVENTS_FETCH_TIMEOUT_MS}ms`)), EVENTS_FETCH_TIMEOUT_MS)
-      ),
-    ]);
-    const eventsToProcess = allEventsResult.data.filter((e: any) =>
-      KEY_EVENT_NAMES.has(e.attributes?.name)
-    );
-    console.log(`[PCO Sync] Found ${eventsToProcess.length}/${allEventsResult.data.length} key events to process`);
+    const weeklyRows = await db
+      .select()
+      .from(attendanceWeekly)
+      .where(and(...conditions));
 
-    const totalEvents = eventsToProcess.length;
-    let eventIdx = 0;
-    for (const event of eventsToProcess) {
-      eventIdx++;
-      const eventId = event.id;
-      const eventName = (event as any).attributes?.name || `Event-${eventId}`;
-      console.log(`[PCO Sync] Processing event: ${eventName} (ID: ${eventId}) [${eventIdx}/${totalEvents}]`);
-      // Emit heartbeat before EVERY event's API call so the watchdog sees activity
-      // even if a single event_periods fetch hangs (socket-level stall).
-      if (onProgress) {
-        const pct = Math.round(20 + (eventIdx / totalEvents) * 20); // 20%–40%
-        await onProgress(pct, `Syncing monthly attendance... (${eventIdx}/${totalEvents} events: ${eventName})`);
-      }
+    console.log(`[PCO Sync] Found ${weeklyRows.length} weekly rows to aggregate`);
+    if (onProgress) await onProgress(30, `Aggregating ${weeklyRows.length} weekly rows...`);
 
-      // Step 2: Get event_periods (weekly sessions) for this event.
-      // Wrapped in Promise.race with a 45s hard timeout so a single stalled
-      // TCP connection can't block the entire sync indefinitely.
-      // Individual event failures are non-fatal: we skip and continue.
-      const periodParams: Record<string, any> = {
-        per_page: 100,
-        order: "-starts_at", // newest first
-      };
-      periodParams["where[starts_at][gte]"] = effectiveDateFrom; // always set
-      if (effectiveDateTo) periodParams["where[starts_at][lte]"] = effectiveDateTo;
+    // Group by year/month/campus/subgroup and sum headcounts.
+    // weekStartDate 'YYYY-MM-DD' → extract year and month.
+    const monthlyMap = new Map<string, {
+      year: number;
+      month: number;
+      campus: string;
+      subgroup: string;
+      totalHeadcount: number;
+      weekCount: number;
+    }>();
 
-      let periodsResult: { data: any[]; included: any[] };
-      try {
-        const FETCH_TIMEOUT_MS = 45_000;
-        periodsResult = await Promise.race([
-          client.paginateAll(`/check-ins/v2/events/${eventId}/event_periods`, periodParams),
-          new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error(`Timeout fetching event_periods for ${eventName} after ${FETCH_TIMEOUT_MS}ms`)), FETCH_TIMEOUT_MS)
-          ),
-        ]);
-        console.log(`[PCO Sync]   Got ${periodsResult.data.length} event periods for ${eventName}`);
-      } catch (fetchErr: any) {
-        console.warn(`[PCO Sync]   Skipping ${eventName}: ${fetchErr.message}`);
-        continue; // non-fatal: skip this event, process the rest
-      }
+    for (const row of weeklyRows) {
+      recordsProcessed++;
+      const date = new Date(row.weekStartDate + 'T00:00:00Z');
+      const year = date.getUTCFullYear();
+      const month = date.getUTCMonth() + 1;
+      const key = `${year}-${month}-${row.campus}-${row.subgroup}`;
 
-      for (const period of periodsResult.data) {
-        recordsProcessed++;
-        const attrs = (period as any).attributes;
-        const startsAt = attrs?.starts_at;
-        if (!startsAt) continue;
-
-        const date = new Date(startsAt);
-        const year = date.getFullYear();
-        const month = date.getMonth() + 1;
-
-        // EventPeriod has built-in counts
-        const regularCount = attrs.regular_count || 0;
-        const guestCount = attrs.guest_count || 0;
-        const volunteerCount = attrs.volunteer_count || 0;
-        const totalCount = regularCount + guestCount + volunteerCount;
-
-        if (totalCount === 0) continue; // Skip empty periods
-
-        // Map event name to campus if possible
-        const campus = mapEventToCampus(eventName);
-
-        // Upsert into attendanceMonthly
-        // We aggregate by year/month/campus/subgroup
-        const key = `${year}-${month}-${campus}-${eventName}`;
-
-        try {
-          await db.insert(attendanceMonthly).values({
-            year,
-            month,
-            campus,
-            subgroup: eventName,
-            total: totalCount,
-            avgWeekly: totalCount, // Will be recalculated
-            source: "pco",
-          });
-          recordsCreated++;
-        } catch (dupError: any) {
-          // If duplicate, update instead
-          if (dupError.code === "ER_DUP_ENTRY") {
-            recordsUpdated++;
-          } else {
-            console.warn(`[PCO Sync] Insert warning for ${key}:`, dupError.message);
-          }
-        }
+      const existing = monthlyMap.get(key);
+      if (existing) {
+        existing.totalHeadcount += row.headcount;
+        existing.weekCount += 1;
+      } else {
+        monthlyMap.set(key, {
+          year,
+          month,
+          campus: row.campus,
+          subgroup: row.subgroup,
+          totalHeadcount: row.headcount,
+          weekCount: 1,
+        });
       }
     }
 
-    console.log(`[PCO Sync] Attendance sync complete: ${recordsProcessed} periods processed, ${recordsCreated} created, ${recordsUpdated} updated`);
+    console.log(`[PCO Sync] Aggregated into ${monthlyMap.size} year/month/campus/subgroup buckets`);
+    if (onProgress) await onProgress(35, `Writing ${monthlyMap.size} monthly records...`);
+
+    // Upsert each bucket into attendance_monthly.
+    let bucketIdx = 0;
+    for (const [key, bucket] of Array.from(monthlyMap.entries())) {
+      bucketIdx++;
+      const avgWeekly = bucket.weekCount > 0 ? Math.round(bucket.totalHeadcount / bucket.weekCount) : 0;
+
+      try {
+        await db.insert(attendanceMonthly).values({
+          year: bucket.year,
+          month: bucket.month,
+          campus: bucket.campus,
+          subgroup: bucket.subgroup,
+          total: bucket.totalHeadcount,
+          avgWeekly,
+          source: "pco",
+        });
+        recordsCreated++;
+      } catch (dupError: any) {
+        if (dupError.code === "ER_DUP_ENTRY") {
+          // Update existing record
+          try {
+            await db
+              .update(attendanceMonthly)
+              .set({ total: bucket.totalHeadcount, avgWeekly, source: "pco" })
+              .where(
+                and(
+                  eq(attendanceMonthly.year, bucket.year),
+                  eq(attendanceMonthly.month, bucket.month),
+                  eq(attendanceMonthly.campus, bucket.campus),
+                  eq(attendanceMonthly.subgroup, bucket.subgroup)
+                )
+              );
+            recordsUpdated++;
+          } catch (updateErr: any) {
+            console.warn(`[PCO Sync] Update warning for ${key}:`, updateErr.message);
+          }
+        } else {
+          console.warn(`[PCO Sync] Insert warning for ${key}:`, dupError.message);
+        }
+      }
+
+      // Progress: 35% → 40% across all buckets
+      if (onProgress && bucketIdx % 10 === 0) {
+        const pct = 35 + Math.round((bucketIdx / monthlyMap.size) * 5);
+        await onProgress(pct, `Writing monthly records... (${bucketIdx}/${monthlyMap.size})`);
+      }
+    }
+
+    console.log(`[PCO Sync] Attendance sync complete: ${recordsProcessed} weekly rows → ${recordsCreated} created, ${recordsUpdated} updated`);
+    if (onProgress) await onProgress(40, "Monthly attendance aggregation complete");
 
     return {
       syncType: "attendance",
@@ -195,18 +179,13 @@ export async function syncAttendance(
     };
   } catch (error: any) {
     console.error("[PCO Sync] Attendance sync failed:", error.message);
-    if (error.response) {
-      console.error("[PCO Sync] Response status:", error.response.status);
-      console.error("[PCO Sync] Response URL:", error.config?.url);
-      console.error("[PCO Sync] Response data:", JSON.stringify(error.response.data)?.substring(0, 500));
-    }
     return {
       syncType: "attendance",
       status: "failed",
       recordsProcessed,
       recordsCreated,
       recordsUpdated,
-      errorMessage: `${error.message}${error.response ? ` (URL: ${error.config?.url}, Status: ${error.response.status})` : ""}`,
+      errorMessage: error.message,
       durationMs: Date.now() - start,
     };
   }

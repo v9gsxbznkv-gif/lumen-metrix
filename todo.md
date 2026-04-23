@@ -518,3 +518,10 @@
 - [x] Make individual event fetch failures non-fatal (skip event, log warning, continue)
 - [x] All 107 tests passing
 - [x] Checkpoint and deploy
+
+## Round 52: Eliminate Monthly Attendance PCO Calls (Aggregate from Weekly DB)
+
+- [x] Rewrite syncAttendance to aggregate attendance_weekly rows into attendance_monthly (no PCO API calls)
+- [x] Sum weekly headcounts by year/month/campus/subgroup, compute avgWeekly
+- [x] All 107 tests passing
+- [x] Checkpoint and deploy
