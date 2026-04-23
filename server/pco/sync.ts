@@ -58,12 +58,28 @@ export async function syncAttendance(
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
-    console.log("[PCO Sync] Starting attendance sync...");
+    // Default dateFrom to 2026-01-01 if not specified.
+    // Historical data (2025 and earlier) comes from spreadsheets, not PCO.
+    // Fetching all event_periods back to 2013 would cause thousands of unnecessary
+    // API calls and DB writes. This keeps the monthly sync fast and focused.
+    const effectiveDateFrom = dateFrom || '2026-01-01';
+    const effectiveDateTo = dateTo;
+
+    console.log(`[PCO Sync] Starting attendance sync (${effectiveDateFrom} → ${effectiveDateTo || 'now'})...`);
+    // Heartbeat: let the watchdog know we've started (before the first API call)
+    if (onProgress) await onProgress(20, "Fetching events list from PCO...");
 
     // Step 1: Get all events (services like "Sunday Service", "RevStudents", etc.)
-    console.log("[PCO Sync] Fetching /check-ins/v2/events...");
-    const eventsResult = await client.paginateAll("/check-ins/v2/events");
-    console.log(`[PCO Sync] Got ${eventsResult.data.length} events`);
+    // Filter to events updated in the last 3 years to avoid fetching 300+ stale events.
+    // PCO stores every RSVP/one-off event since 2013; we only care about recurring services.
+    const threeYearsAgo = new Date();
+    threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3);
+    const updatedAfter = threeYearsAgo.toISOString().split('T')[0]; // YYYY-MM-DD
+    console.log(`[PCO Sync] Fetching /check-ins/v2/events updated after ${updatedAfter}...`);
+    const eventsResult = await client.paginateAll("/check-ins/v2/events", {
+      'where[updated_at][gte]': updatedAfter,
+    });
+    console.log(`[PCO Sync] Got ${eventsResult.data.length} events (filtered to last 3 years)`);
 
     const totalEvents = eventsResult.data.length;
     let eventIdx = 0;
@@ -72,10 +88,11 @@ export async function syncAttendance(
       const eventId = event.id;
       const eventName = (event as any).attributes?.name || `Event-${eventId}`;
       console.log(`[PCO Sync] Processing event: ${eventName} (ID: ${eventId}) [${eventIdx}/${totalEvents}]`);
-      // Emit heartbeat every 10 events so the watchdog doesn't kill the job
-      if (onProgress && eventIdx % 10 === 0) {
+      // Emit heartbeat before EVERY event's API call so the watchdog sees activity
+      // even if a single event_periods fetch hangs (socket-level stall).
+      if (onProgress) {
         const pct = Math.round(20 + (eventIdx / totalEvents) * 20); // 20%–40%
-        await onProgress(pct, `Syncing monthly attendance... (${eventIdx}/${totalEvents} events)`);
+        await onProgress(pct, `Syncing monthly attendance... (${eventIdx}/${totalEvents} events: ${eventName})`);
       }
 
       // Step 2: Get event_periods (weekly sessions) for this event
@@ -84,8 +101,8 @@ export async function syncAttendance(
         per_page: 100,
         order: "-starts_at", // newest first
       };
-      if (dateFrom) periodParams["where[starts_at][gte]"] = dateFrom;
-      if (dateTo) periodParams["where[starts_at][lte]"] = dateTo;
+      periodParams["where[starts_at][gte]"] = effectiveDateFrom; // always set
+      if (effectiveDateTo) periodParams["where[starts_at][lte]"] = effectiveDateTo;
 
       const periodsResult = await client.paginateAll(
         `/check-ins/v2/events/${eventId}/event_periods`,

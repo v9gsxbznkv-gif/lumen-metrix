@@ -494,3 +494,12 @@
 - [x] Increase stall watchdog timeout from 5 minutes to 15 minutes
 - [x] All 107 tests passing
 - [x] Checkpoint and deploy
+
+## Round 49: Fix Full Sync Hanging at 20% (Deep Fix)
+
+- [x] Add socket-level timeout to axios client (prevent indefinite TCP hangs)
+- [x] Skip events with no recent activity in monthly attendance sync (filter to last 3 years)
+- [x] Add per-event progress heartbeat before each API call (not just every 10)
+- [x] Default dateFrom to 2026-01-01 in syncAttendance (skip fetching historical event_periods)
+- [x] All 107 tests passing
+- [x] Checkpoint and deploy

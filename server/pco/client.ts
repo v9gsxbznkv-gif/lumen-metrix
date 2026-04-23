@@ -3,6 +3,7 @@
  * Uses OAuth 2.0 Bearer tokens with automatic refresh.
  */
 import axios, { AxiosInstance, AxiosError } from "axios";
+import https from "https";
 import { eq } from "drizzle-orm";
 import { getDb } from "../db";
 import { pcoTokens } from "../../drizzle/schema";
@@ -234,13 +235,23 @@ export class PcoClient {
 
   constructor(accessToken: string) {
     this.accessToken = accessToken;
+    // Use a fresh HTTPS agent per client with keepAlive disabled.
+    // This prevents silent TCP stalls where an idle keep-alive connection
+    // is reused but the remote side has closed it — the socket hangs
+    // indefinitely without triggering the axios `timeout` (which only
+    // covers response-header arrival, not socket-level inactivity).
+    const httpsAgent = new https.Agent({
+      keepAlive: false,
+      timeout: 30000, // socket-level timeout (ms) — fires on TCP stall
+    });
     this.client = axios.create({
       baseURL: PCO_BASE_URL,
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
-      timeout: 30000,
+      timeout: 30000,   // axios response-header timeout
+      httpsAgent,
     });
   }
 
