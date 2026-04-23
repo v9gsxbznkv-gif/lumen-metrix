@@ -23,7 +23,7 @@ export interface SyncJob {
 }
 
 /** How long a job can go without a progress update before being marked as stalled */
-const STALL_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+const STALL_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes — full sync can take 10+ minutes
 
 /** In-memory map of jobId → last progress update timestamp */
 const lastProgressUpdate = new Map<string, number>();

@@ -485,3 +485,12 @@
 - [x] Sync now sums headcounts across all service times (Thu 7pm + Sun 8am + 9:30am + 11:15am)
 - [x] All 107 tests passing
 - [x] Checkpoint and deploy
+
+## Round 48: Fix Full Sync Stalling at 20% (Monthly Attendance)
+
+- [x] Diagnose why monthly attendance sync hangs silently at 20% (304+ PCO API calls with TLS disconnects, no heartbeats)
+- [x] Add TLS/socket error retry logic to rateLimitedGet (ECONNRESET, ETIMEDOUT, etc.)
+- [x] Add progress heartbeats every 10 events in syncAttendance so watchdog stays alive
+- [x] Increase stall watchdog timeout from 5 minutes to 15 minutes
+- [x] All 107 tests passing
+- [x] Checkpoint and deploy

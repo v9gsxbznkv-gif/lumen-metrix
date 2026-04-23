@@ -281,6 +281,29 @@ export class PcoClient {
           continue;
         }
 
+        // Network/TLS errors — retry with backoff
+        const isNetworkError = !status && (
+          error.code === 'ECONNRESET' ||
+          error.code === 'ECONNABORTED' ||
+          error.code === 'ETIMEDOUT' ||
+          error.code === 'ENOTFOUND' ||
+          error.code === 'EPIPE' ||
+          (error.message && (
+            error.message.includes('socket disconnected') ||
+            error.message.includes('TLS connection') ||
+            error.message.includes('network socket') ||
+            error.message.includes('ECONNRESET')
+          ))
+        );
+        if (isNetworkError && attempt < MAX_RETRIES) {
+          attempt++;
+          const backoffMs = Math.min(2 ** attempt * 1000, 30000);
+          console.warn(`[PCO API] Network error on ${url} (${error.code || error.message}) attempt ${attempt}/${MAX_RETRIES}. Waiting ${backoffMs}ms...`);
+          await new Promise((resolve) => setTimeout(resolve, backoffMs));
+          this.lastRequestTime = Date.now();
+          continue;
+        }
+
         // 401 — try refreshing the token once
         if (status === 401 && attempt === 0) {
           attempt++;

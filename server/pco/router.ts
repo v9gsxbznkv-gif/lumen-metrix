@@ -81,7 +81,7 @@ async function runSyncInBackground(
     let results;
     if (syncType === "full") {
       await progress(20, "Syncing monthly data...");
-      const monthlyResults = await syncAll(client, dateFrom, dateTo);
+      const monthlyResults = await syncAll(client, dateFrom, dateTo, progress);
       await progress(60, "Syncing weekly data...");
       const weeklyResults = await syncAllWeekly(client, dateFrom, dateTo, progress);
       results = [...monthlyResults, weeklyResults.attendance, weeklyResults.giving];

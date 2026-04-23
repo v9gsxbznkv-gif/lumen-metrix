@@ -46,7 +46,8 @@ export interface SyncResult {
 export async function syncAttendance(
   client: PcoClient,
   dateFrom?: string,
-  dateTo?: string
+  dateTo?: string,
+  onProgress?: (pct: number, msg: string) => Promise<void>
 ): Promise<SyncResult> {
   const start = Date.now();
   let recordsProcessed = 0;
@@ -64,10 +65,18 @@ export async function syncAttendance(
     const eventsResult = await client.paginateAll("/check-ins/v2/events");
     console.log(`[PCO Sync] Got ${eventsResult.data.length} events`);
 
+    const totalEvents = eventsResult.data.length;
+    let eventIdx = 0;
     for (const event of eventsResult.data) {
+      eventIdx++;
       const eventId = event.id;
       const eventName = (event as any).attributes?.name || `Event-${eventId}`;
-      console.log(`[PCO Sync] Processing event: ${eventName} (ID: ${eventId})`);
+      console.log(`[PCO Sync] Processing event: ${eventName} (ID: ${eventId}) [${eventIdx}/${totalEvents}]`);
+      // Emit heartbeat every 10 events so the watchdog doesn't kill the job
+      if (onProgress && eventIdx % 10 === 0) {
+        const pct = Math.round(20 + (eventIdx / totalEvents) * 20); // 20%–40%
+        await onProgress(pct, `Syncing monthly attendance... (${eventIdx}/${totalEvents} events)`);
+      }
 
       // Step 2: Get event_periods (weekly sessions) for this event
       // EventPeriod has: starts_at, ends_at, guest_count, regular_count, volunteer_count
@@ -607,11 +616,12 @@ export async function syncPeople(client: PcoClient): Promise<SyncResult> {
 export async function syncAll(
   client: PcoClient,
   dateFrom?: string,
-  dateTo?: string
+  dateTo?: string,
+  onProgress?: (pct: number, msg: string) => Promise<void>
 ): Promise<SyncResult[]> {
   const results: SyncResult[] = [];
 
-  results.push(await syncAttendance(client, dateFrom, dateTo));
+  results.push(await syncAttendance(client, dateFrom, dateTo, onProgress));
   results.push(await syncGiving(client, dateFrom, dateTo));
   results.push(await syncGroups(client));
   results.push(await syncEvents(client, dateFrom, dateTo));
