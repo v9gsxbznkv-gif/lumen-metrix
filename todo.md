@@ -525,3 +525,12 @@
 - [x] Sum weekly headcounts by year/month/campus/subgroup, compute avgWeekly
 - [x] All 107 tests passing
 - [x] Checkpoint and deploy
+
+## Round 53: Fix Sync Hanging at 40% (Giving/Groups/Events/People Timeouts)
+
+- [x] Add Promise.race timeouts to syncGiving paginateAll calls (90s)
+- [x] Add Promise.race timeouts to syncGroups (60s), syncEvents (60s), syncPeople (90s)
+- [x] Pass progress callbacks through syncAll to all sub-syncs
+- [x] Wire progress 40%→60% through syncAll: giving 42-48%, groups 49-52%, events 53-56%, people 57-60%
+- [x] All 107 tests passing
+- [x] Checkpoint and deploy

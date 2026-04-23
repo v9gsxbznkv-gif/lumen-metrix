@@ -236,7 +236,13 @@ export async function syncGiving(
     if (dateTo) params["where[received_at][lte]"] = dateTo;
     params["where[payment_status]"] = "succeeded";
 
-    const donationsResult = await client.paginateAll("/giving/v2/donations", params);
+    const GIVING_TIMEOUT_MS = 90_000;
+    const donationsResult = await Promise.race([
+      client.paginateAll("/giving/v2/donations", params),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`Timeout fetching donations after ${GIVING_TIMEOUT_MS}ms`)), GIVING_TIMEOUT_MS)
+      ),
+    ]);
     console.log(`[PCO Sync] Got ${donationsResult.data.length} donations`);
 
     // Group donations by year/month/campus
@@ -347,9 +353,13 @@ export async function syncGroups(client: PcoClient): Promise<SyncResult> {
 
     console.log("[PCO Sync] Starting groups sync...");
 
-    const groupsResult = await client.paginateAll("/groups/v2/groups", {
-      include: "group_type,location",
-    });
+    const GROUPS_TIMEOUT_MS = 60_000;
+    const groupsResult = await Promise.race([
+      client.paginateAll("/groups/v2/groups", { include: "group_type,location" }),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`Timeout fetching groups after ${GROUPS_TIMEOUT_MS}ms`)), GROUPS_TIMEOUT_MS)
+      ),
+    ]);
     console.log(`[PCO Sync] Got ${groupsResult.data.length} groups`);
 
     // Build lookup maps for included data
@@ -469,10 +479,13 @@ export async function syncEvents(
     params["where[starts_at][gte]"] = dateFrom || defaultFrom;
     if (dateTo) params["where[starts_at][lte]"] = dateTo;
 
-    const instancesResult = await client.paginateAll(
-      "/calendar/v2/event_instances",
-      params
-    );
+    const EVENTS_TIMEOUT_MS = 60_000;
+    const instancesResult = await Promise.race([
+      client.paginateAll("/calendar/v2/event_instances", params),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`Timeout fetching event instances after ${EVENTS_TIMEOUT_MS}ms`)), EVENTS_TIMEOUT_MS)
+      ),
+    ]);
     console.log(`[PCO Sync] Got ${instancesResult.data.length} event instances`);
 
     // Build event name lookup
@@ -565,9 +578,13 @@ export async function syncPeople(client: PcoClient): Promise<SyncResult> {
 
     console.log("[PCO Sync] Starting people sync...");
 
-    const peopleResult = await client.paginateAll("/people/v2/people", {
-      per_page: 100,
-    });
+    const PEOPLE_TIMEOUT_MS = 90_000;
+    const peopleResult = await Promise.race([
+      client.paginateAll("/people/v2/people", { per_page: 100 }),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`Timeout fetching people after ${PEOPLE_TIMEOUT_MS}ms`)), PEOPLE_TIMEOUT_MS)
+      ),
+    ]);
     console.log(`[PCO Sync] Got ${peopleResult.data.length} people`);
 
     for (const person of peopleResult.data) {
@@ -642,12 +659,30 @@ export async function syncAll(
   onProgress?: (pct: number, msg: string) => Promise<void>
 ): Promise<SyncResult[]> {
   const results: SyncResult[] = [];
+  const p = onProgress || (async () => {});
 
+  // Attendance: 20% → 40% (DB aggregation, instant)
   results.push(await syncAttendance(client, dateFrom, dateTo, onProgress));
+
+  // Giving: 40% → 48%
+  await p(42, "Syncing giving data from PCO...");
   results.push(await syncGiving(client, dateFrom, dateTo));
+  await p(48, "Giving sync complete");
+
+  // Groups: 48% → 52%
+  await p(49, "Syncing groups from PCO...");
   results.push(await syncGroups(client));
+  await p(52, "Groups sync complete");
+
+  // Events: 52% → 56%
+  await p(53, "Syncing calendar events from PCO...");
   results.push(await syncEvents(client, dateFrom, dateTo));
+  await p(56, "Events sync complete");
+
+  // People: 56% → 60%
+  await p(57, "Syncing people from PCO...");
   results.push(await syncPeople(client));
+  await p(60, "Monthly data sync complete");
 
   return results;
 }
