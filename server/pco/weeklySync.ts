@@ -98,7 +98,7 @@ function mapEventToCampus(eventName: string): string {
 /**
  * Events that should be EXCLUDED entirely from sync.
  * Childcare events are not needed — kids data comes from
- * the main Revolution Check-In events at the room level.
+ * the main Revolution Check-In events via named headcount categories.
  */
 function isExcludedEvent(eventName: string): boolean {
   const lower = eventName.toLowerCase();
@@ -111,15 +111,72 @@ function isExcludedEvent(eventName: string): boolean {
 }
 
 /**
- * Returns true if this is a main campus check-in event that contains
- * kids rooms as sub-locations. We drill into location_event_periods
- * for these events to get per-room kids counts.
+ * Returns true if this is a main campus check-in event that uses
+ * named headcount categories (1-Adults, 1-RevKids, etc.).
+ * We drill into event_times → headcounts for these events.
  */
 function isMainCheckInEvent(eventName: string): boolean {
   return (
     eventName === "Revolution Canton Check-In" ||
     eventName === "Revolution Jasper Check-In"
   );
+}
+
+// ============================================================
+// Named headcount category mapping
+// ============================================================
+
+/**
+ * Maps PCO attendance_type names to our internal subgroup categories.
+ *
+ * Canton:
+ *   1-Adults       → "Adults"
+ *   1-RevKids      → "Kids"
+ *   2-FTG Adults   → "FTG Adults"
+ *   2-FTG Kids     → "FTG Kids"
+ *   6-Online       → "Online"
+ *
+ * Jasper:
+ *   1-Adults       → "Adults"
+ *   1-RS 5-6th     → "Adults"  (5th/6th grade counts as adult for Jasper)
+ *   1-RevKids      → "Kids"
+ *   2-FTG Adults   → "FTG Adults"
+ *   2-FTG 5/6th    → "FTG Adults" (5th/6th FTG counts as FTG Adults)
+ *   2-FTG Kids     → "FTG Kids"
+ */
+const HEADCOUNT_CATEGORY_MAP: Record<string, Record<string, string>> = {
+  Canton: {
+    "1-Adults":     "Adults",
+    "1-RevKids":    "Kids",
+    "2-FTG Adults": "FTG Adults",
+    "2-FTG Kids":   "FTG Kids",
+    "6-Online":     "Online",
+  },
+  Jasper: {
+    "1-Adults":     "Adults",
+    "1-RS 5-6th":   "Adults",   // 5th/6th grade → adult attendance
+    "1-RevKids":    "Kids",
+    "2-FTG Adults": "FTG Adults",
+    "2-FTG 5/6th":  "FTG Adults", // 5th/6th FTG → FTG Adults
+    "2-FTG Kids":   "FTG Kids",
+  },
+};
+
+/** Cache attendance_type names to avoid repeated API calls */
+const attTypeNameCache = new Map<string, string>();
+
+async function getAttTypeName(client: PcoClient, attTypeId: string): Promise<string | null> {
+  if (attTypeNameCache.has(attTypeId)) return attTypeNameCache.get(attTypeId)!;
+  try {
+    const resp = await client.get(`/check-ins/v2/attendance_types/${attTypeId}`);
+    // resp.data is the PCO resource object: { id, type, attributes: { name, ... } }
+    const resource = Array.isArray(resp.data) ? resp.data[0] : resp.data;
+    const name: string = (resource as any)?.attributes?.name || "";
+    attTypeNameCache.set(attTypeId, name);
+    return name || null;
+  } catch {
+    return null;
+  }
 }
 
 // ============================================================
@@ -411,149 +468,106 @@ export async function syncWeeklyAttendance(
 
         if (isMainCheckin) {
           // -------------------------------------------------------
-          // MAIN CHECK-IN EVENT: drill into location_event_periods
-          // to get per-room kids counts and adult totals
+          // MAIN CHECK-IN EVENT: drill into event_times → headcounts
+          // using named attendance_type categories (1-Adults, 1-RevKids, etc.)
+          // This uses the manually-entered headcounts, not check-in scan counts.
           // -------------------------------------------------------
           const periodId = (period as any).id;
 
-          // Heartbeat: update progress for each period within main check-in events
-          // This keeps the stall watchdog alive during the slow location_event_periods calls
+          // Heartbeat progress update
           if (onProgress) {
             const periodIdx = periodsResult.data.indexOf(period);
             await onProgress(
               eventPct,
-              `Processing ${eventName} period ${periodIdx + 1}/${periodsResult.data.length} (fetching room-level data)...`,
+              `Processing ${eventName} period ${periodIdx + 1}/${periodsResult.data.length} (fetching headcounts)...`,
               recordsProcessed
             );
           }
 
-          let locationPeriods;
+          // Get all event_times for this period
+          let eventTimesResult;
           try {
-            locationPeriods = await client.paginateAll(
-              `/check-ins/v2/events/${eventId}/event_periods/${periodId}/location_event_periods`,
-              { include: "location", per_page: 100 }
+            eventTimesResult = await client.paginateAll(
+              `/check-ins/v2/events/${eventId}/event_periods/${periodId}/event_times`,
+              { per_page: 25 }
             );
           } catch (err: any) {
-            console.warn(`[PCO Weekly Sync] Skipping location periods for ${eventName} period ${periodId}: ${err.message}`);
+            console.warn(`[PCO Weekly Sync] Skipping event_times for ${eventName} period ${periodId}: ${err.message}`);
             continue;
           }
 
-          // Build a map of location_id → location name from included resources
-          const locationNames = new Map<string, string>();
-          for (const inc of locationPeriods.included || []) {
-            if ((inc as any).type === "Location") {
-              const locId = (inc as any).id;
-              const locName = (inc as any).attributes?.name;
-              if (locId && locName) {
-                locationNames.set(locId, locName);
-              }
-            }
-          }
+          // Accumulate headcounts by category across all service times
+          // category → total headcount
+          const categoryTotals = new Map<string, number>();
+          const campusCategoryMap = HEADCOUNT_CATEGORY_MAP[campus] || {};
 
-          // Track kids totals for this period to compute adult count
-          let kidsTotal = 0;
+          for (const eventTime of eventTimesResult.data) {
+            const etId = (eventTime as any).id;
 
-          for (const locPeriod of locationPeriods.data) {
-            const lpAttrs = (locPeriod as any).attributes;
-            const regularCount = lpAttrs?.regular_count || 0;
-            const guestCount = lpAttrs?.guest_count || 0;
-            const volunteerCount = lpAttrs?.volunteer_count || 0;
-            const totalCount = regularCount + guestCount + volunteerCount;
-
-            if (totalCount === 0) continue;
-
-            // Get location name from relationship
-            const locationId = (locPeriod as any).relationships?.location?.data?.id;
-            const rawLocationName = locationId ? locationNames.get(locationId) : null;
-            if (!rawLocationName) continue;
-
-            const category = mapLocationToCategory(rawLocationName, campus);
-            if (category === null) continue; // Skip volunteer/team/folder locations
-
-            if (category === "ADULT") {
-              // RevStudents 5th & 6th under Jasper → count as adult attendance
-              const adultKey = `${weekStartDate}|${campus}|${eventName}`;
-              const existing = weeklyMap.get(adultKey);
-              if (existing) {
-                existing.headcount += totalCount;
-                existing.regularCount += regularCount;
-                existing.guestCount += guestCount;
-                existing.volunteerCount += volunteerCount;
-              } else {
-                weeklyMap.set(adultKey, {
-                  year, weekNumber, weekStartDate, campus,
-                  subgroup: eventName,
-                  headcount: totalCount,
-                  regularCount, guestCount, volunteerCount,
-                });
-              }
+            let headcountsResult;
+            try {
+              headcountsResult = await client.paginateAll(
+                `/check-ins/v2/event_times/${etId}/headcounts`,
+                { per_page: 25 }
+              );
+            } catch (err: any) {
+              console.warn(`[PCO Weekly Sync] Skipping headcounts for event_time ${etId}: ${err.message}`);
               continue;
             }
 
-            // This is a kids room — aggregate by category
-            kidsTotal += totalCount;
-            const kidsSubgroup = `Kids: ${campus} ${category}`;
-            const key = `${weekStartDate}|${campus}|${kidsSubgroup}`;
+            for (const hc of headcountsResult.data) {
+              const total: number = (hc as any).attributes?.total || 0;
+              if (total === 0) continue;
+
+              const attTypeId: string | undefined = (hc as any).relationships?.attendance_type?.data?.id;
+              if (!attTypeId) continue;
+
+              const attTypeName = await getAttTypeName(client, attTypeId);
+              if (!attTypeName) continue;
+
+              const category = campusCategoryMap[attTypeName];
+              if (!category) {
+                console.log(`[PCO Weekly Sync] Unknown attendance_type "${attTypeName}" for ${campus} — skipping`);
+                continue;
+              }
+
+              const existing = categoryTotals.get(category) || 0;
+              categoryTotals.set(category, existing + total);
+            }
+          }
+
+          // Write each category as a separate subgroup row
+          for (const [category, total] of Array.from(categoryTotals.entries())) {
+            if (total === 0) continue;
+
+            // Use canonical subgroup names:
+            // Adults → eventName (e.g. "Revolution Canton Check-In")
+            // Kids   → "Kids"
+            // FTG Adults → "FTG Adults"
+            // FTG Kids   → "FTG Kids"
+            // Online     → "Online"
+            const subgroup = category === "Adults" ? eventName : category;
+            const key = `${weekStartDate}|${campus}|${subgroup}`;
             const existing = weeklyMap.get(key);
             if (existing) {
-              existing.headcount += totalCount;
-              existing.regularCount += regularCount;
-              existing.guestCount += guestCount;
-              existing.volunteerCount += volunteerCount;
+              existing.headcount += total;
+              existing.regularCount += total;
             } else {
               weeklyMap.set(key, {
                 year, weekNumber, weekStartDate, campus,
-                subgroup: kidsSubgroup,
-                headcount: totalCount,
-                regularCount, guestCount, volunteerCount,
-              });
-            }
-          }
-
-          // Store the top-level event total as adult attendance
-          // (total event headcount minus kids rooms = adults)
-          const totalRegular = attrs.regular_count || 0;
-          const totalGuest = attrs.guest_count || 0;
-          const totalVolunteer = attrs.volunteer_count || 0;
-          const totalCount = totalRegular + totalGuest + totalVolunteer;
-          const adultCount = Math.max(0, totalCount - kidsTotal);
-
-          if (adultCount > 0) {
-            const adultKey = `${weekStartDate}|${campus}|${eventName}`;
-            const existing = weeklyMap.get(adultKey);
-            if (existing) {
-              existing.headcount += adultCount;
-              existing.regularCount += Math.max(0, totalRegular - kidsTotal);
-              existing.guestCount += totalGuest;
-              existing.volunteerCount += totalVolunteer;
-            } else {
-              weeklyMap.set(adultKey, {
-                year, weekNumber, weekStartDate, campus,
-                subgroup: eventName,
-                headcount: adultCount,
-                regularCount: Math.max(0, totalRegular - kidsTotal),
-                guestCount: totalGuest,
-                volunteerCount: totalVolunteer,
-              });
-            }
-          }
-
-          // Also store a "Kids" aggregate total for this campus/week
-          if (kidsTotal > 0) {
-            const kidsAggKey = `${weekStartDate}|${campus}|Kids`;
-            const existing = weeklyMap.get(kidsAggKey);
-            if (existing) {
-              existing.headcount += kidsTotal;
-            } else {
-              weeklyMap.set(kidsAggKey, {
-                year, weekNumber, weekStartDate, campus,
-                subgroup: "Kids",
-                headcount: kidsTotal,
-                regularCount: kidsTotal,
+                subgroup,
+                headcount: total,
+                regularCount: total,
                 guestCount: 0,
                 volunteerCount: 0,
               });
             }
+          }
+
+          // Log summary for this period
+          if (categoryTotals.size > 0) {
+            const summary = Array.from(categoryTotals.entries()).map(([k, v]) => `${k}=${v}`).join(', ');
+            console.log(`[PCO Weekly Sync]   ${eventName} ${weekStartDate}: ${summary}`);
           }
 
         } else {

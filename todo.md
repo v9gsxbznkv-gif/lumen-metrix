@@ -475,3 +475,13 @@
 - [x] Cleared stale week 13 DB rows (Canton 3207 was wrong due to timezone bug)
 - [x] All tests passing
 - [x] Checkpoint and deploy
+
+## Round 47: Fix PCO Sync - Named Headcount Categories
+
+- [x] Verify headcount category names in PCO API via live API call (Canton: 1-Adults, 1-RevKids, 2-FTG Adults, 2-FTG Kids, 6-Online; Jasper: 1-Adults, 1-RS 5-6th, 1-RevKids, 2-FTG Adults, 2-FTG 5/6th, 2-FTG Kids)
+- [x] Rewrite weekly sync to pull event_time headcounts by category name, sum across all service times per week
+- [x] Canton: Adults=1-Adults, Kids=1-RevKids, FTG Adults=2-FTG Adults, FTG Kids=2-FTG Kids, Online=6-Online
+- [x] Jasper: Adults=1-Adults+1-RS 5-6th, Kids=1-RevKids, FTG Adults=2-FTG Adults+2-FTG 5/6th, FTG Kids=2-FTG Kids
+- [x] Sync now sums headcounts across all service times (Thu 7pm + Sun 8am + 9:30am + 11:15am)
+- [x] All 107 tests passing
+- [x] Checkpoint and deploy
