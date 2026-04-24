@@ -598,3 +598,12 @@
 - [x] Connection closed in finally block after all writes complete
 - [x] All 107 tests passing
 - [x] Checkpoint and deploy
+
+## Round 62: Collapse to Weekly-Only Architecture
+
+- [x] Full sync = weekly PCO fetch only (syncAllWeekly with 2026-01-01 to today)
+- [x] Monthly aggregates computed from attendance_weekly and giving_weekly DB rows (Rounds 52/57)
+- [x] Removed syncAll from full sync path in router.ts
+- [x] Progress: 20% start → syncWeeklyAttendance (20-60%) → syncWeeklyGiving DB aggregation (60-100%)
+- [x] All 107 tests passing
+- [x] Checkpoint and deploy

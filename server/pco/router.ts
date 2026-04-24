@@ -80,11 +80,15 @@ async function runSyncInBackground(
 
     let results;
     if (syncType === "full") {
-      await progress(20, "Syncing monthly data...");
-      const monthlyResults = await syncAll(client, dateFrom, dateTo, progress);
-      await progress(60, "Syncing weekly data...");
-      const weeklyResults = await syncAllWeekly(client, dateFrom, dateTo, progress);
-      results = [...monthlyResults, weeklyResults.attendance, weeklyResults.giving];
+      // Full sync = weekly PCO fetch only (2026-01-01 to today).
+      // Monthly aggregates are computed on-the-fly from weekly DB rows — no separate monthly PCO calls.
+      // This eliminates all the hanging PCO API calls (giving, groups, events, people) that were
+      // blocking the full sync. One source of truth: attendance_weekly + giving_weekly.
+      const effectiveDateFrom = dateFrom ?? "2026-01-01";
+      const effectiveDateTo = dateTo ?? new Date().toISOString().split("T")[0];
+      await progress(20, "Starting weekly sync from PCO (2026 data)...");
+      const weeklyResults = await syncAllWeekly(client, effectiveDateFrom, effectiveDateTo, progress);
+      results = [weeklyResults.attendance, weeklyResults.giving];
     } else if (syncType === "weekly_all") {
       const attResult = await syncWeeklyAttendance(client, dateFrom, dateTo, progress);
       await progress(60, "Syncing weekly giving...", attResult.recordsProcessed);
