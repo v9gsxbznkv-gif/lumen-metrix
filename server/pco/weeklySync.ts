@@ -564,13 +564,16 @@ export async function syncWeeklyAttendance(
 
             for (const hc of headcountsResult.data) {
               const total: number = (hc as any).attributes?.total || 0;
-              if (total === 0) continue;
-
               const attTypeId: string | undefined = (hc as any).relationships?.attendance_type?.data?.id;
-              if (!attTypeId) continue;
+              const attTypeName = attTypeId ? await getAttTypeName(client, attTypeId) : null;
 
-              const attTypeName = await getAttTypeName(client, attTypeId);
-              if (!attTypeName) continue;
+              // DEBUG: log every headcount row so we can see what PCO returns
+              if (year >= 2026 && weekNumber >= 15) {
+                console.log(`[PCO Weekly Sync DEBUG] ${eventName} ${weekStartDate} et=${etId}: att_type="${attTypeName || 'null'}" total=${total}`);
+              }
+
+              if (total === 0) continue;
+              if (!attTypeId || !attTypeName) continue;
 
               const category = campusCategoryMap[attTypeName];
               if (!category) {

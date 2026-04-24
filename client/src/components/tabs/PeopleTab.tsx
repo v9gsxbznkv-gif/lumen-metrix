@@ -98,11 +98,21 @@ export default function PeopleTab() {
     (r) => r.subgroup === "FTG Adults" || r.subgroup === "FTG Kids" || r.subgroup === "RevStudents FTG"
   );
 
-  // Find the most recent week that has FTG data
-  const latestFtgWeek = ftgRows.length > 0 ? Math.max(...ftgRows.map((r) => r.weekNumber)) : 0;
-  const latestFtgYear = ftgRows.length > 0
-    ? Math.max(...ftgRows.filter((r) => r.weekNumber === latestFtgWeek).map((r) => r.year))
-    : latestYear;
+  // Find the most recent COMPLETE week — both Canton and Jasper must have FTG Adults data.
+  // This prevents a partial week (e.g. only Jasper entered) from showing as the current week.
+  const ftgAdultRows = ftgRows.filter((r) => r.subgroup === "FTG Adults");
+  const weeksWithBothCampuses = Array.from(
+    new Set(ftgAdultRows.map((r) => `${r.year}-${r.weekNumber}`))
+  ).filter((key) => {
+    const [y, w] = key.split("-").map(Number);
+    const hasCantonFTG = ftgAdultRows.some((r) => r.year === y && r.weekNumber === w && r.campus === "Canton");
+    const hasJasperFTG = ftgAdultRows.some((r) => r.year === y && r.weekNumber === w && r.campus === "Jasper");
+    return hasCantonFTG && hasJasperFTG;
+  });
+  // Pick the latest complete week
+  const latestCompleteKey = weeksWithBothCampuses.sort().at(-1);
+  const latestFtgYear = latestCompleteKey ? Number(latestCompleteKey.split("-")[0]) : latestYear;
+  const latestFtgWeek = latestCompleteKey ? Number(latestCompleteKey.split("-")[1]) : 0;
   const latestFtgRows = ftgRows.filter((r) => r.weekNumber === latestFtgWeek && r.year === latestFtgYear);
 
   // Totals for the most recent week (respects campus filter)

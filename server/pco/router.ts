@@ -649,4 +649,56 @@ export const pcoRouter = router({
         ));
       return { success: true };
     }),
+
+  /**
+   * DEBUG: Fetch raw headcount data from PCO for a specific event's most recent period.
+   * Used to diagnose attendance_type name mismatches.
+   */
+  debugHeadcounts: publicProcedure
+    .input(z.object({ eventId: z.string().default('15287') }))
+    .query(async ({ input }) => {
+      const client = await createAuthenticatedPcoClient();
+      if (!client) throw new Error("Not connected to PCO");
+
+      // Get most recent period
+      const periods = await client.paginateAll(
+        `/check-ins/v2/events/${input.eventId}/event_periods`,
+        { per_page: 3, order: '-starts_at' }
+      );
+      const latestPeriod = periods.data[0] as any;
+      if (!latestPeriod) return { error: 'No periods found', rows: [] as any[] };
+
+      const periodId = latestPeriod.id;
+      const periodDate = latestPeriod.attributes?.starts_at;
+
+      // Get event times
+      const times = await client.paginateAll(
+        `/check-ins/v2/events/${input.eventId}/event_periods/${periodId}/event_times`,
+        { per_page: 25 }
+      );
+
+      const rows: Array<{ eventTimeId: string; attTypeId: string | null; attTypeName: string | null; total: number }> = [];
+
+      for (const et of times.data as any[]) {
+        const etId = et.id;
+        const hcs = await client.paginateAll(
+          `/check-ins/v2/event_times/${etId}/headcounts`,
+          { per_page: 25 }
+        );
+        for (const hc of hcs.data as any[]) {
+          const total: number = hc.attributes?.total ?? 0;
+          const attTypeId: string | null = hc.relationships?.attendance_type?.data?.id ?? null;
+          let attTypeName: string | null = null;
+          if (attTypeId) {
+            try {
+              const att = await client.get(`/check-ins/v2/attendance_types/${attTypeId}`);
+              attTypeName = (att as any).data?.attributes?.name ?? null;
+            } catch {}
+          }
+          rows.push({ eventTimeId: etId, attTypeId, attTypeName, total });
+        }
+      }
+
+      return { periodId, periodDate, eventId: input.eventId, rows };
+    }),
 });

@@ -686,3 +686,10 @@
 - [x] Add weekly FTG trend chart (line chart, all three types + total)
 - [x] Verify TypeScript clean and 107 tests pass
 - [x] Checkpoint and deploy
+
+## Round 72: Fix "most recent week" to use last complete week (both campuses)
+
+- [ ] Fix latestFtgWeek in PeopleTab to use last week where Canton AND Jasper both have FTG data
+- [ ] Fix most-recent-week logic in WeeklyReportTab to use last complete week
+- [ ] Verify TypeScript clean and 107 tests pass
+- [ ] Checkpoint and deploy
