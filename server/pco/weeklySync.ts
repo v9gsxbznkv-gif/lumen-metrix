@@ -737,11 +737,21 @@ export async function syncWeeklyGiving(
     }
 
     // Fetch donations with date filter
-    const donationsResult = await client.paginateAll("/giving/v2/donations", {
-      "where[received_at][gte]": effectiveDateFrom,
-      "where[received_at][lte]": effectiveDateTo,
-      per_page: 100,
-    });
+    // Wrapped in Promise.race — TCP stalls won't throw, so we need a hard deadline.
+    const WEEKLY_GIVING_TIMEOUT_MS = 90_000;
+    const donationsResult = await Promise.race([
+      client.paginateAll("/giving/v2/donations", {
+        "where[received_at][gte]": effectiveDateFrom,
+        "where[received_at][lte]": effectiveDateTo,
+        per_page: 100,
+      }),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error(`Timeout fetching weekly donations after ${WEEKLY_GIVING_TIMEOUT_MS}ms`)),
+          WEEKLY_GIVING_TIMEOUT_MS
+        )
+      ),
+    ]);
 
     const donations = donationsResult.data;
     console.log(`[PCO Weekly Giving] Got ${donations.length} donations`);

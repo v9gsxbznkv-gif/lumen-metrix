@@ -550,3 +550,11 @@
 - [x] Changed DEFAULT_DATE_FROM from 2023-01-01 to 2026-01-01 (cuts 780+ API calls to ~85)
 - [x] All 107 tests passing
 - [x] Checkpoint and deploy
+
+## Round 56: Fix Giving Sync Hanging at 62%
+
+- [x] syncGiving already has 2026-01-01 default and 90s Promise.race timeout
+- [x] Found the real hang: syncWeeklyGiving donations fetch at line 740 had NO timeout
+- [x] Added Promise.race 90s timeout to syncWeeklyGiving donations paginateAll
+- [x] All 107 tests passing
+- [x] Checkpoint and deploy
