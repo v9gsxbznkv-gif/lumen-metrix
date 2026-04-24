@@ -637,6 +637,11 @@ export async function syncWeeklyAttendance(
     // Uses raw SQL execute to avoid ORM overhead that can cause hangs on long-running connections.
     const rows = Array.from(weeklyMap.values());
 
+    // 5-second cooldown after PCO fetch to allow pool connections to recycle.
+    // TiDB drops idle connections after a long PCO API fetch; this gives the pool time to recover.
+    console.log(`[PCO Weekly Sync] Cooling down 5s before DB writes to allow pool recovery...`);
+    await new Promise(resolve => setTimeout(resolve, 5000));
+
     try {
       const writeDb = await getDb();
       if (!writeDb) throw new Error("DB not available for writes");
@@ -655,13 +660,15 @@ export async function syncWeeklyAttendance(
         await onProgress(57, `Saving ${rowsToWrite.length} attendance rows to database...`, recordsProcessed);
       }
 
-      // Ping the DB connection before writing to ensure it's alive after the long PCO fetch.
-      // The pool connection may have gone idle during the PCO API calls.
+      // Ping the DB connection before writing — wrapped in 3s timeout so a hung ping doesn't block.
       try {
-        await writeDb.execute(sql`SELECT 1`);
+        await Promise.race([
+          writeDb.execute(sql`SELECT 1`),
+          new Promise<never>((_, reject) => setTimeout(() => reject(new Error("ping timeout")), 3000))
+        ]);
         console.log(`[PCO Weekly Sync] DB connection ping OK, proceeding with writes`);
       } catch (pingErr: any) {
-        console.warn(`[PCO Weekly Sync] DB ping failed (${pingErr.message}), will attempt writes anyway`);
+        console.warn(`[PCO Weekly Sync] DB ping failed/timed out (${pingErr.message}), will attempt writes anyway`);
       }
 
       // Build a single INSERT ... ON DUPLICATE KEY UPDATE for all rows at once.

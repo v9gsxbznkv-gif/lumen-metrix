@@ -630,3 +630,10 @@
 - [x] All DB writes in sync flow now have ping + timeout protection
 - [x] All 107 tests passing
 - [x] Checkpoint and deploy
+
+## Round 66: Fix Intermittent DB Write Hang (Simpler Approach)
+
+- [x] Added 5s cooldown delay after PCO fetch completes, before DB write phase
+- [x] Wrapped DB ping in 3s Promise.race timeout so a hung ping doesn't block writes
+- [x] All 107 tests passing
+- [x] Checkpoint and deploy
