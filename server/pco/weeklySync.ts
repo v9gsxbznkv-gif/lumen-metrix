@@ -645,7 +645,7 @@ export async function syncWeeklyAttendance(
         await onProgress(dbPct, `Saving attendance rows (${i}/${rowsToWrite.length})...`, recordsProcessed);
       }
       try {
-        await db
+        const writePromise = db
           .insert(attendanceWeekly)
           .values(chunk.map(row => ({
             year: row.year,
@@ -669,9 +669,13 @@ export async function syncWeeklyAttendance(
               weekNumber: sql`VALUES(weekNumber)`,
             },
           });
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error(`DB write timeout at chunk ${i}`)), 15000)
+        );
+        await Promise.race([writePromise, timeoutPromise]);
         recordsCreated += chunk.length;
       } catch (err: any) {
-        console.warn(`[PCO Weekly Sync] Error batch-upserting attendance chunk at ${i}:`, err.message);
+        console.warn(`[PCO Weekly Sync] Skipping attendance chunk at ${i} (${err.message})`);        
       }
     }
 

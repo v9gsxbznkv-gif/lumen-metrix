@@ -582,3 +582,11 @@
 - [x] Zero PCO API calls in the monthly sync phase — all DB aggregation
 - [x] All 107 tests passing
 - [x] Checkpoint and deploy
+
+## Round 60: Fix DB Write Hang at 56% (Timeout Each Batch Write)
+
+- [x] Added mysql2 createPool with connectTimeout:15s, enableKeepAlive to db.ts
+- [x] Wrapped each batch DB upsert in Promise.race with 15s timeout
+- [x] On timeout: log warning, skip chunk, continue to next chunk
+- [x] All 107 tests passing
+- [x] Checkpoint and deploy
