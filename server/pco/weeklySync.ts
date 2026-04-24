@@ -622,50 +622,32 @@ export async function syncWeeklyAttendance(
       await onProgress(56, `Saving ${weeklyMap.size} weekly attendance rows to database...`, recordsProcessed);
     }
 
-    // Step 2: Upsert into attendance_weekly
+    // Step 2: Batch upsert into attendance_weekly using onDuplicateKeyUpdate.
+    // This replaces 168 individual SELECT+INSERT/UPDATE round-trips with 3-4 batch calls,
+    // eliminating the DB connection stall that caused the sync to hang at 60%.
     const rows = Array.from(weeklyMap.values());
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
 
-      // Report DB write progress: 56% → 60%
-      if (onProgress && i % 50 === 0) {
-        const dbPct = 56 + Math.round((i / rows.length) * 4);
-        await onProgress(dbPct, `Saving attendance rows (${i}/${rows.length})...`, recordsProcessed);
+    // Fetch all locked rows in one query so we can exclude them from the batch
+    const lockedRows = await db
+      .select({ weekStartDate: attendanceWeekly.weekStartDate, campus: attendanceWeekly.campus, subgroup: attendanceWeekly.subgroup })
+      .from(attendanceWeekly)
+      .where(eq(attendanceWeekly.manualLock, true));
+    const lockedKeys = new Set(lockedRows.map(r => `${r.weekStartDate}|${r.campus}|${r.subgroup}`));
+
+    const rowsToWrite = rows.filter(r => !lockedKeys.has(`${r.weekStartDate}|${r.campus}|${r.subgroup}`));
+    console.log(`[PCO Weekly Sync] Writing ${rowsToWrite.length} rows (${rows.length - rowsToWrite.length} locked/skipped)`);
+
+    const CHUNK_SIZE = 50;
+    for (let i = 0; i < rowsToWrite.length; i += CHUNK_SIZE) {
+      const chunk = rowsToWrite.slice(i, i + CHUNK_SIZE);
+      if (onProgress) {
+        const dbPct = 56 + Math.round((i / rowsToWrite.length) * 4);
+        await onProgress(dbPct, `Saving attendance rows (${i}/${rowsToWrite.length})...`, recordsProcessed);
       }
-
       try {
-        const existingRows = await db
-          .select()
-          .from(attendanceWeekly)
-          .where(
-            and(
-              eq(attendanceWeekly.weekStartDate, row.weekStartDate),
-              eq(attendanceWeekly.campus, row.campus),
-              eq(attendanceWeekly.subgroup, row.subgroup)
-            )
-          )
-          .limit(1);
-
-        if (existingRows.length > 0) {
-          // Skip manually locked records — they've been corrected by the user
-          if ((existingRows[0] as any).manualLock) {
-            console.log(`[PCO Weekly Sync] Skipping locked attendance row: ${row.weekStartDate} ${row.campus} ${row.subgroup}`);
-            continue;
-          }
-          await db
-            .update(attendanceWeekly)
-            .set({
-              headcount: row.headcount,
-              regularCount: row.regularCount,
-              guestCount: row.guestCount,
-              volunteerCount: row.volunteerCount,
-              year: row.year,
-              weekNumber: row.weekNumber,
-            })
-            .where(eq(attendanceWeekly.id, existingRows[0].id));
-          recordsUpdated++;
-        } else {
-          await db.insert(attendanceWeekly).values({
+        await db
+          .insert(attendanceWeekly)
+          .values(chunk.map(row => ({
             year: row.year,
             weekNumber: row.weekNumber,
             weekStartDate: row.weekStartDate,
@@ -675,12 +657,21 @@ export async function syncWeeklyAttendance(
             regularCount: row.regularCount,
             guestCount: row.guestCount,
             volunteerCount: row.volunteerCount,
-            source: "pco",
+            source: "pco" as const,
+          })))
+          .onDuplicateKeyUpdate({
+            set: {
+              headcount: sql`VALUES(headcount)`,
+              regularCount: sql`VALUES(regularCount)`,
+              guestCount: sql`VALUES(guestCount)`,
+              volunteerCount: sql`VALUES(volunteerCount)`,
+              year: sql`VALUES(year)`,
+              weekNumber: sql`VALUES(weekNumber)`,
+            },
           });
-          recordsCreated++;
-        }
+        recordsCreated += chunk.length;
       } catch (err: any) {
-        console.warn(`[PCO Weekly Sync] Error upserting attendance row:`, err.message);
+        console.warn(`[PCO Weekly Sync] Error batch-upserting attendance chunk at ${i}:`, err.message);
       }
     }
 

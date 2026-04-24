@@ -566,3 +566,11 @@
 - [x] syncGiving (monthly) already uses DB aggregation from attendance_weekly pattern
 - [x] All 107 tests passing
 - [x] Checkpoint and deploy
+
+## Round 58: Fix DB Write Hang at 60% (Batch Upserts)
+
+- [x] Replaced 168 individual SELECT+INSERT/UPDATE calls with chunked batch onDuplicateKeyUpdate (50 rows/chunk = 3-4 DB calls total)
+- [x] Fetch all locked rows in one query upfront, exclude from batch
+- [x] giving_weekly upsert already uses aggregation pattern (no row-by-row loop)
+- [x] All 107 tests passing
+- [x] Checkpoint and deploy
