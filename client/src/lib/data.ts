@@ -425,8 +425,12 @@ async function loadFromApi(): Promise<RawDashboard | null> {
     if (!response.ok) return null;
 
     const json = await response.json();
-    // tRPC wraps the result in { result: { data: ... } } where data is the RawDashboard
-    const data = json?.result?.data;
+    // tRPC + superjson wraps the result in { result: { data: { json: <actual data>, meta: ... } } }
+    // We must unwrap the superjson envelope to get the real RawDashboard object.
+    const envelope = json?.result?.data;
+    if (!envelope) return null;
+    // Unwrap superjson: actual data is at envelope.json; fall back to envelope itself if not wrapped
+    const data = (envelope?.json ?? envelope) as RawDashboard;
     if (!data) return null;
 
     // Verify we have actual data (not empty)
