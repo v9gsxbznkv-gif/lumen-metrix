@@ -68,14 +68,13 @@ async function createFreshDb(): Promise<{ db: ReturnType<typeof drizzle>; end: (
 // ============================================================
 
 /**
- * Get the Sunday that anchors the week for a given event timestamp.
- * PCO stores event times in UTC. Revolution services run Sunday evenings
- * (e.g. 7pm ET = 23:00 UTC), so we must convert to Eastern Time before
- * computing the week's Sunday to avoid off-by-one day errors.
+ * Get the Monday that anchors the week for a given event timestamp.
+ * Weeks run Monday–Sunday. PCO stores event times in UTC; Revolution services
+ * run on Sundays and Wednesdays in Eastern Time, so we convert to ET first
+ * to avoid off-by-one day errors.
  */
 function getSunday(date: Date): Date {
   // Convert UTC timestamp to Eastern Time wall-clock date
-  // Using Intl.DateTimeFormat to get the local date parts in ET
   const etParts = new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/New_York',
     year: 'numeric',
@@ -88,7 +87,9 @@ function getSunday(date: Date): Date {
   // Build a local midnight date using ET wall-clock values
   const d = new Date(etYear, etMonth, etDay, 0, 0, 0, 0);
   const day = d.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-  d.setDate(d.getDate() - day); // roll back to Sunday
+  // Roll back to Monday: if Sunday (0) go back 6 days, otherwise go back (day-1) days
+  const daysToMonday = day === 0 ? 6 : day - 1;
+  d.setDate(d.getDate() - daysToMonday);
   return d;
 }
 

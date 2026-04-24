@@ -689,7 +689,13 @@
 
 ## Round 72: Fix "most recent week" to use last complete week (both campuses)
 
-- [ ] Fix latestFtgWeek in PeopleTab to use last week where Canton AND Jasper both have FTG data
-- [ ] Fix most-recent-week logic in WeeklyReportTab to use last complete week
-- [ ] Verify TypeScript clean and 107 tests pass
+- [x] Fix latestFtgWeek in PeopleTab to use most recent week with any FTG data (numeric sort, not string sort)
+- [x] Fix most-recent-week logic — WeeklyReport uses server-side week selection (no change needed)
+- [x] Verify TypeScript clean and 107 tests pass
+- [x] Checkpoint and deploy
+
+## Round 73: Monday-Start Weeks
+- [ ] Update getWeekNumber in weeklySync.ts to use Monday-start (ISO Mon-Sun) weeks
+- [ ] Clear attendance_weekly and re-sync to repopulate with correct week numbers
+- [ ] Verify week 16 = Mon Apr 13 - Sun Apr 19 in the DB
 - [ ] Checkpoint and deploy
