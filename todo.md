@@ -745,3 +745,16 @@
 - [x] Verify giving shows real numbers in weekly report after sync (pending sync run)
 - [x] TypeScript clean (0 errors) and 107 tests pass
 - [x] Checkpoint and deploy
+
+## Round 80: Manual Giving Entry + PCO Services Volunteers
+- [x] Audit Settings page structure and identify where to add Giving Entry section
+- [x] Add givingWeeklyEntry tRPC procedures: getWeeklyGiving, upsertWeeklyGiving (with manualLock)
+- [x] Build Giving Entry UI in Settings: week picker, per-campus total/general/designated inputs, lock toggle
+- [x] Research PCO Services API for volunteer headcounts (scheduled teams per service type)
+- [x] Add syncVolunteersFromServices function to weeklySync.ts
+- [x] Wire volunteer counts into attendance_weekly as subgroup "Volunteers"
+- [x] Update weekly report to source volunteers from "Volunteers" subgroup (Services) or fallback to check-in volunteerCount
+- [x] Update fund-to-campus mapping with exact PCO fund names (canton-campus, jasper-campus, multiply, student-camp-scholarship, revkids, give-a-kid-a-chance)
+- [x] Add PCO Services scope to OAuth (requires re-auth)
+- [x] TypeScript clean (0 errors) and 107 tests pass
+- [x] Checkpoint and deploy

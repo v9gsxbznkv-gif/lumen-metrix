@@ -820,27 +820,35 @@ export async function syncWeeklyAttendance(
 // ============================================================
 
 /**
- * Map a PCO fund name to a campus identifier.
- * Fund names like "Canton General", "Jasper Designated", "All Campuses" etc.
- * Returns null if the fund should be attributed to "All Campuses" (combined).
+ * Map PCO fund name → campus.
+ * Actual PCO fund names (April 2026):
+ *   canton-campus → Canton (General)
+ *   jasper-campus → Jasper (General)
+ *   multiply → All Campuses (Designated)
+ *   student-camp-scholarship → All Campuses (Designated)
+ *   revkids → All Campuses (Designated)
+ *   give-a-kid-a-chance → All Campuses (Designated)
  */
 function mapFundToCampus(fundName: string): string {
-  const name = fundName.toLowerCase();
+  const name = fundName.toLowerCase().replace(/[\s_-]+/g, "-");
   if (name.includes("canton")) return "Canton";
   if (name.includes("jasper")) return "Jasper";
-  // Funds without a specific campus → combined
+  // All other funds (multiply, revkids, student-camp-scholarship, give-a-kid-a-chance) → combined
   return "All Campuses";
 }
 
 /**
  * Determine if a fund is "general" (tithes/offerings) vs "designated" (special purpose).
- * General funds: tithe, offering, general, unrestricted
- * Designated funds: building, missions, benevolence, special, etc.
+ * Actual PCO fund names:
+ *   General: canton-campus, jasper-campus (campus tithes/offerings)
+ *   Designated: multiply, student-camp-scholarship, revkids, give-a-kid-a-chance
  */
 function isGeneralFund(fundName: string): boolean {
-  const name = fundName.toLowerCase();
-  const designatedKeywords = ["building", "mission", "benevolence", "special", "designated", "camp", "trip", "project", "fund drive", "capital"];
-  return !designatedKeywords.some(k => name.includes(k));
+  const name = fundName.toLowerCase().replace(/[\s_-]+/g, "-");
+  // Only campus funds are "general" — everything else is designated
+  if (name.includes("canton-campus") || name.includes("jasper-campus")) return true;
+  // Explicit designated funds
+  return false;
 }
 
 export async function syncWeeklyGiving(
@@ -1156,7 +1164,192 @@ export async function syncWeeklyGiving(
 }
 
 // ============================================================
-// Combined Weekly Sync (attendance + giving)
+// Weekly Volunteer Sync from PCO Services
+// ============================================================
+
+/**
+ * Map a PCO service type name to a campus.
+ * Service types in PCO are typically named like:
+ *   "Canton Weekend Service", "Jasper Weekend Service", "Canton Wednesday", etc.
+ */
+function mapServiceTypeToCampus(name: string): string {
+  const lower = name.toLowerCase();
+  if (lower.includes("canton")) return "Canton";
+  if (lower.includes("jasper")) return "Jasper";
+  return "Other";
+}
+
+export async function syncVolunteersFromServices(
+  client: PcoClient,
+  dateFrom?: string,
+  dateTo?: string,
+  onProgress?: (pct: number, message: string, processed: number) => Promise<void>
+): Promise<SyncResult> {
+  const start = Date.now();
+  let recordsProcessed = 0;
+  let recordsCreated = 0;
+  let recordsUpdated = 0;
+  let errorMessage: string | undefined;
+
+  try {
+    const fromDate = dateFrom || "2026-01-01";
+    const toDate = dateTo || formatDate(new Date());
+
+    // Step 1: Fetch all service types
+    console.log(`[Volunteer Sync] Fetching service types...`);
+    let serviceTypes: any[] = [];
+    try {
+      const stResult = await client.paginateAll("/services/v2/service_types", {}, 10);
+      serviceTypes = stResult.data;
+      console.log(`[Volunteer Sync] Found ${serviceTypes.length} service types`);
+    } catch (err: any) {
+      // If PCO Services scope isn't authorized, log and return gracefully
+      if (err.response?.status === 403 || err.response?.status === 401) {
+        console.warn(`[Volunteer Sync] PCO Services not authorized. Re-connect PCO with 'services' scope.`);
+        return {
+          syncType: "volunteers",
+          status: "completed" as const,
+          recordsProcessed: 0,
+          recordsCreated: 0,
+          recordsUpdated: 0,
+          durationMs: Date.now() - start,
+          errorMessage: "PCO Services scope not authorized. Re-connect PCO in Settings.",
+        };
+      }
+      throw err;
+    }
+
+    // Step 2: For each service type, fetch plans in the date range
+    // Aggregate: weekStart → campus → volunteer count
+    const weekCampusVolunteers = new Map<string, Map<string, number>>();
+
+    for (const st of serviceTypes) {
+      const stName = st.attributes?.name || "Unknown";
+      const campus = mapServiceTypeToCampus(stName);
+      if (campus === "Other") {
+        console.log(`[Volunteer Sync] Skipping service type "${stName}" (no campus match)`);
+        continue;
+      }
+
+      console.log(`[Volunteer Sync] Fetching plans for "${stName}" (${campus})...`);
+
+      // Fetch plans in date range using filter parameters
+      const plansResult = await client.paginateAll(
+        `/services/v2/service_types/${st.id}/plans`,
+        {
+          filter: "after,before",
+          after: fromDate,
+          before: toDate,
+          order: "sort_date",
+        },
+        50 // max 50 pages = 5000 plans
+      );
+
+      console.log(`[Volunteer Sync] Found ${plansResult.data.length} plans for "${stName}"`);
+
+      for (const plan of plansResult.data) {
+        const sortDate = plan.attributes?.sort_date;
+        const teamMemberCount = plan.attributes?.plan_people_count ?? 0;
+        if (!sortDate || teamMemberCount === 0) continue;
+
+        // Get the week start (Sunday) for this plan date
+        const planDate = new Date(sortDate);
+        const weekStart = formatDate(getSunday(planDate));
+
+        if (!weekCampusVolunteers.has(weekStart)) {
+          weekCampusVolunteers.set(weekStart, new Map());
+        }
+        const campusMap = weekCampusVolunteers.get(weekStart)!;
+        campusMap.set(campus, (campusMap.get(campus) || 0) + teamMemberCount);
+        recordsProcessed++;
+      }
+    }
+
+    // Step 3: Write to attendance_weekly as subgroup "Volunteers"
+    const { db, end } = await createFreshDb();
+    try {
+      for (const [weekStart, campusMap] of Array.from(weekCampusVolunteers)) {
+        const weekDate = new Date(weekStart + "T00:00:00");
+        const year = weekDate.getFullYear();
+        const weekNumber = getISOWeekNumber(weekDate);
+
+        for (const [campus, volCount] of Array.from(campusMap)) {
+          // Check for existing row
+          const existing = await db
+            .select()
+            .from(attendanceWeekly)
+            .where(
+              and(
+                eq(attendanceWeekly.weekStartDate, weekStart),
+                eq(attendanceWeekly.campus, campus),
+                eq(attendanceWeekly.subgroup, "Volunteers")
+              )
+            )
+            .limit(1);
+
+          if (existing.length > 0) {
+            const row = existing[0] as any;
+            if (row.manualLock) {
+              console.log(`[Volunteer Sync] Skipping locked row: ${campus} ${weekStart}`);
+              continue;
+            }
+            await db
+              .update(attendanceWeekly)
+              .set({
+                headcount: volCount,
+                volunteerCount: volCount,
+                source: "pco_services",
+                updatedAt: new Date(),
+              })
+              .where(eq(attendanceWeekly.id, row.id));
+            recordsUpdated++;
+          } else {
+            await db.insert(attendanceWeekly).values({
+              year,
+              weekNumber,
+              weekStartDate: weekStart,
+              campus,
+              subgroup: "Volunteers",
+              headcount: volCount,
+              regularCount: 0,
+              guestCount: 0,
+              volunteerCount: volCount,
+              source: "pco_services",
+            });
+            recordsCreated++;
+          }
+        }
+      }
+    } finally {
+      await end();
+    }
+
+    console.log(`[Volunteer Sync] Done: ${recordsProcessed} plans processed, ${recordsCreated} created, ${recordsUpdated} updated`);
+
+    return {
+      syncType: "volunteers",
+      status: "completed" as const,
+      recordsProcessed,
+      recordsCreated,
+      recordsUpdated,
+      durationMs: Date.now() - start,
+    };
+  } catch (err: any) {
+    console.error(`[Volunteer Sync] Error:`, err.message);
+    return {
+      syncType: "volunteers",
+      status: "failed" as const,
+      recordsProcessed,
+      recordsCreated,
+      recordsUpdated,
+      durationMs: Date.now() - start,
+      errorMessage: err.message,
+    };
+  }
+}
+
+// ============================================================
+// Combined Weekly Sync (attendance + giving + volunteers)
 // ============================================================
 
 export async function syncAllWeekly(
@@ -1165,12 +1358,14 @@ export async function syncAllWeekly(
   dateTo?: string,
   onProgress?: (pct: number, message: string, processed: number) => Promise<void>,
   jobId?: string
-): Promise<{ attendance: SyncResult; giving: SyncResult }> {
+): Promise<{ attendance: SyncResult; giving: SyncResult; volunteers: SyncResult }> {
   let attendance: SyncResult;
   let giving: SyncResult;
+  let volunteers: SyncResult;
   try {
     attendance = await syncWeeklyAttendance(client, dateFrom, dateTo, onProgress, jobId);
     giving = await syncWeeklyGiving(client, dateFrom, dateTo, onProgress);
+    volunteers = await syncVolunteersFromServices(client, dateFrom, dateTo, onProgress);
   } catch (err: any) {
     // Hard failure — notify owner and rethrow
     try {
@@ -1185,14 +1380,16 @@ export async function syncAllWeekly(
   // Build summary notification
   const attStatus = attendance.status === 'completed' ? '✅' : '⚠️';
   const givingStatus = giving.status === 'completed' ? '✅' : '⚠️';
-  const anyFailure = attendance.status !== 'completed' || giving.status !== 'completed';
+  const volStatus = volunteers.status === 'completed' ? '✅' : '⚠️';
+  const anyFailure = attendance.status !== 'completed' || giving.status !== 'completed' || volunteers.status !== 'completed';
   const title = anyFailure
     ? '⚠️ PCO Weekly Sync Completed with Errors'
     : '✅ PCO Weekly Sync Completed';
-  const durationSec = ((attendance.durationMs + giving.durationMs) / 1000).toFixed(1);
+  const durationSec = ((attendance.durationMs + giving.durationMs + volunteers.durationMs) / 1000).toFixed(1);
   const content = [
     `**Attendance** ${attStatus}: ${attendance.recordsProcessed} processed, ${attendance.recordsCreated} created, ${attendance.recordsUpdated} updated${attendance.errorMessage ? ` — Error: ${attendance.errorMessage}` : ''}`,
     `**Giving** ${givingStatus}: ${giving.recordsProcessed} processed, ${giving.recordsCreated} created, ${giving.recordsUpdated} updated${giving.errorMessage ? ` — Error: ${giving.errorMessage}` : ''}`,
+    `**Volunteers** ${volStatus}: ${volunteers.recordsProcessed} plans processed, ${volunteers.recordsCreated} created, ${volunteers.recordsUpdated} updated${volunteers.errorMessage ? ` — ${volunteers.errorMessage}` : ''}`,
     `**Duration**: ${durationSec}s`,
     `**Date range**: ${dateFrom ?? 'default'} → ${dateTo ?? 'today'}`,
   ].join('\n');
@@ -1201,5 +1398,5 @@ export async function syncAllWeekly(
     await notifyOwner({ title, content });
   } catch { /* notification failure is non-fatal */ }
 
-  return { attendance, giving };
+  return { attendance, giving, volunteers };
 }

@@ -274,7 +274,8 @@ describe("PCO OAuth URL helpers", () => {
     expect(PCO_SCOPES).toContain("groups");
     expect(PCO_SCOPES).toContain("calendar");
     expect(PCO_SCOPES).toContain("people");
-    expect(PCO_SCOPES.length).toBe(5);
+    expect(PCO_SCOPES).toContain("services");
+    expect(PCO_SCOPES.length).toBe(6);
   });
 });
 

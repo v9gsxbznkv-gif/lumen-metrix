@@ -49,6 +49,7 @@ import {
   syncWeeklyAttendance,
   syncWeeklyGiving,
   syncAllWeekly,
+  syncVolunteersFromServices,
 } from "./weeklySync";
 import { getSchedulerStatus, updateSyncDay } from "./scheduler";
 import {
@@ -107,12 +108,12 @@ async function runSyncInBackground(
           const errText = await flushResp.text();
           console.warn(`[PCO Sync] Flush endpoint returned ${flushResp.status}: ${errText}`);
           // Flush failed — fall through to the shared-pool path as a best-effort fallback
-          results = [weeklyResults.attendance, weeklyResults.giving];
+          results = [weeklyResults.attendance, weeklyResults.giving, weeklyResults.volunteers];
         }
       } catch (flushErr: any) {
         console.warn(`[PCO Sync] Flush call failed: ${flushErr.message}`);
         // Flush failed — fall through to the shared-pool path as a best-effort fallback
-        results = [weeklyResults.attendance, weeklyResults.giving];
+        results = [weeklyResults.attendance, weeklyResults.giving, weeklyResults.volunteers];
       }
 
       // If flush succeeded (results is still undefined), skip the shared-pool log/complete path.
@@ -120,9 +121,11 @@ async function runSyncInBackground(
       if (!results) return;
     } else if (syncType === "weekly_all") {
       const attResult = await syncWeeklyAttendance(client, dateFrom, dateTo, progress);
-      await progress(60, "Syncing weekly giving...", attResult.recordsProcessed);
+      await progress(50, "Syncing weekly giving...", attResult.recordsProcessed);
       const givResult = await syncWeeklyGiving(client, dateFrom, dateTo, progress);
-      results = [attResult, givResult];
+      await progress(80, "Syncing volunteers from PCO Services...", attResult.recordsProcessed + givResult.recordsProcessed);
+      const volResult = await syncVolunteersFromServices(client, dateFrom, dateTo, progress);
+      results = [attResult, givResult, volResult];
     } else {
       await updateJob(jobId, { progress: 20, message: `Syncing ${syncType}...` });
       let result;
@@ -861,5 +864,106 @@ export const pcoRouter = router({
         givRows: givRows.map((r: any) => ({ campus: r.campus, total: r.total, general: r.general })),
         recentGivingWeeks: recentGiving.map((r: any) => ({ weekStartDate: r.weekStartDate, campus: r.campus, total: r.total })),
       };
+    }),
+
+  // ─── Manual Giving Entry ──────────────────────────────────────────────────────
+
+  /** Get giving_weekly rows for a specific week (for the entry form) */
+  getWeeklyGiving: publicProcedure
+    .input(z.object({ weekStartDate: z.string() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error('Database not available');
+      const rows = await db
+        .select()
+        .from(givingWeekly)
+        .where(eq(givingWeekly.weekStartDate, input.weekStartDate))
+        .orderBy(givingWeekly.campus);
+      return rows;
+    }),
+
+  /** Get the most recent N weeks that have giving data (for week picker) */
+  getRecentGivingWeeks: publicProcedure
+    .input(z.object({ limit: z.number().default(12) }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error('Database not available');
+      // Get distinct week start dates ordered by most recent
+      const rows = await db
+        .selectDistinct({ weekStartDate: givingWeekly.weekStartDate })
+        .from(givingWeekly)
+        .orderBy(desc(givingWeekly.weekStartDate))
+        .limit(input.limit);
+      return rows.map(r => r.weekStartDate);
+    }),
+
+  /** Upsert a giving_weekly row with manualLock=true (manual entry) */
+  upsertWeeklyGiving: publicProcedure
+    .input(z.object({
+      weekStartDate: z.string(),   // 'YYYY-MM-DD' Sunday
+      campus: z.string(),
+      total: z.number().min(0),
+      general: z.number().min(0),
+      designated: z.number().min(0),
+      donationCount: z.number().int().min(0).default(0),
+      lock: z.boolean().default(true),  // true = protect from auto-sync overwrite
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error('Database not available');
+
+      const date = new Date(input.weekStartDate);
+      const year = date.getFullYear();
+      // ISO week number
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+      const yearStart = new Date(d.getFullYear(), 0, 1);
+      const weekNumber = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+
+      await db
+        .insert(givingWeekly)
+        .values({
+          year,
+          weekNumber,
+          weekStartDate: input.weekStartDate,
+          campus: input.campus,
+          total: String(input.total.toFixed(2)),
+          general: String(input.general.toFixed(2)),
+          designated: String(input.designated.toFixed(2)),
+          donationCount: input.donationCount,
+          source: 'manual',
+          manualLock: input.lock,
+        })
+        .onDuplicateKeyUpdate({
+          set: {
+            total: sql`VALUES(total)`,
+            general: sql`VALUES(general)`,
+            designated: sql`VALUES(designated)`,
+            donationCount: sql`VALUES(donationCount)`,
+            source: sql`VALUES(source)`,
+            manualLock: sql`VALUES(manualLock)`,
+          },
+        });
+
+      return { success: true, weekStartDate: input.weekStartDate, campus: input.campus };
+    }),
+
+  /** Unlock a giving_weekly row so auto-sync can overwrite it */
+  unlockWeeklyGiving: publicProcedure
+    .input(z.object({ weekStartDate: z.string(), campus: z.string() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error('Database not available');
+      await db
+        .update(givingWeekly)
+        .set({ manualLock: false, source: 'pco' })
+        .where(
+          and(
+            eq(givingWeekly.weekStartDate, input.weekStartDate),
+            eq(givingWeekly.campus, input.campus)
+          )
+        );
+      return { success: true };
     }),
 });

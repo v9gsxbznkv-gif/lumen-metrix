@@ -88,7 +88,8 @@ async function runNightlySync(): Promise<void> {
       const weeklyResults = await syncAllWeekly(client, dateFrom, dateTo);
       await logSyncResult(weeklyResults.attendance);
       await logSyncResult(weeklyResults.giving);
-      const weeklyRecords = weeklyResults.attendance.recordsProcessed + weeklyResults.giving.recordsProcessed;
+      await logSyncResult(weeklyResults.volunteers);
+      const weeklyRecords = weeklyResults.attendance.recordsProcessed + weeklyResults.giving.recordsProcessed + weeklyResults.volunteers.recordsProcessed;
       console.log(`[Scheduler] Weekly sync completed: ${weeklyRecords} records`);
     } catch (weeklyErr: any) {
       console.warn(`[Scheduler] Weekly sync failed (non-fatal): ${weeklyErr.message}`);

@@ -605,6 +605,203 @@ function SyncControlsSection() {
   );
 }
 
+// ─── Manual Giving Entry Section ─────────────────────────────────────────────
+function GivingEntrySection() {
+  const CAMPUSES = ["Canton", "Jasper"];
+  const [weekDate, setWeekDate] = useState(() => {
+    // Default to most recent Sunday
+    const d = new Date();
+    d.setDate(d.getDate() - d.getDay());
+    return d.toISOString().slice(0, 10);
+  });
+
+  // Fetch existing data for selected week
+  const { data: existingRows, refetch } = trpc.pco.getWeeklyGiving.useQuery(
+    { weekStartDate: weekDate },
+    { enabled: !!weekDate }
+  );
+
+  // Form state per campus
+  const [formData, setFormData] = useState<Record<string, { total: string; general: string; designated: string; donationCount: string; locked: boolean }>>({});
+
+  // Populate form when data loads
+  useEffect(() => {
+    const newData: typeof formData = {};
+    for (const campus of CAMPUSES) {
+      const row = existingRows?.find((r: any) => r.campus === campus);
+      if (row) {
+        newData[campus] = {
+          total: String(Number(row.total) || 0),
+          general: String(Number(row.general) || 0),
+          designated: String(Number(row.designated) || 0),
+          donationCount: String(row.donationCount || 0),
+          locked: !!(row as any).manualLock,
+        };
+      } else {
+        newData[campus] = { total: "0", general: "0", designated: "0", donationCount: "0", locked: false };
+      }
+    }
+    setFormData(newData);
+  }, [existingRows, weekDate]);
+
+  const upsertMutation = trpc.pco.upsertWeeklyGiving.useMutation({
+    onSuccess: () => {
+      toast.success("Giving data saved");
+      refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const unlockMutation = trpc.pco.unlockWeeklyGiving.useMutation({
+    onSuccess: () => {
+      toast.success("Unlocked — auto-sync can now overwrite");
+      refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const handleSave = (campus: string) => {
+    const d = formData[campus];
+    if (!d) return;
+    upsertMutation.mutate({
+      weekStartDate: weekDate,
+      campus,
+      total: parseFloat(d.total) || 0,
+      general: parseFloat(d.general) || 0,
+      designated: parseFloat(d.designated) || 0,
+      donationCount: parseInt(d.donationCount) || 0,
+      lock: true,
+    });
+  };
+
+  const updateField = (campus: string, field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [campus]: { ...prev[campus], [field]: value },
+    }));
+  };
+
+  // Auto-calculate total when general/designated change
+  const autoTotal = (campus: string, field: "general" | "designated", value: string) => {
+    const d = formData[campus];
+    if (!d) return;
+    const gen = field === "general" ? parseFloat(value) || 0 : parseFloat(d.general) || 0;
+    const des = field === "designated" ? parseFloat(value) || 0 : parseFloat(d.designated) || 0;
+    setFormData(prev => ({
+      ...prev,
+      [campus]: { ...prev[campus], [field]: value, total: String((gen + des).toFixed(2)) },
+    }));
+  };
+
+  return (
+    <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
+      <div className="flex items-center gap-2 mb-3 sm:mb-4 flex-wrap">
+        <span className="text-base" style={{ color: "#E8913A" }}>$</span>
+        <h3 className="text-sm font-semibold">Manual Giving Entry</h3>
+        <span className="text-[10px] text-muted-foreground ml-auto">Locked rows won't be overwritten by auto-sync</span>
+      </div>
+
+      {/* Week Picker */}
+      <div className="mb-4">
+        <label className="text-[10px] text-muted-foreground uppercase tracking-wider block mb-1">Week Starting (Sunday)</label>
+        <input
+          type="date"
+          value={weekDate}
+          onChange={(e) => setWeekDate(e.target.value)}
+          className="bg-muted/30 border border-border/40 rounded-md px-3 py-1.5 text-sm w-48"
+        />
+      </div>
+
+      {/* Per-Campus Entry */}
+      <div className="space-y-4">
+        {CAMPUSES.map((campus) => {
+          const d = formData[campus];
+          if (!d) return null;
+          const existingRow = existingRows?.find((r: any) => r.campus === campus);
+          const isLocked = !!(existingRow as any)?.manualLock;
+          return (
+            <div key={campus} className="border border-border/30 rounded-md p-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold">{campus}</span>
+                <div className="flex items-center gap-2">
+                  {isLocked && (
+                    <button
+                      onClick={() => unlockMutation.mutate({ weekStartDate: weekDate, campus })}
+                      className="text-[10px] text-amber-500 hover:underline"
+                    >
+                      🔒 Unlock
+                    </button>
+                  )}
+                  {existingRow && (
+                    <span className="text-[10px] text-muted-foreground">
+                      Source: {(existingRow as any).source || "unknown"}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div>
+                  <label className="text-[10px] text-muted-foreground block mb-0.5">General $</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={d.general}
+                    onChange={(e) => autoTotal(campus, "general", e.target.value)}
+                    className="bg-muted/30 border border-border/40 rounded px-2 py-1 text-sm w-full font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-muted-foreground block mb-0.5">Designated $</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={d.designated}
+                    onChange={(e) => autoTotal(campus, "designated", e.target.value)}
+                    className="bg-muted/30 border border-border/40 rounded px-2 py-1 text-sm w-full font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-muted-foreground block mb-0.5">Total $</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={d.total}
+                    onChange={(e) => updateField(campus, "total", e.target.value)}
+                    className="bg-muted/20 border border-border/40 rounded px-2 py-1 text-sm w-full font-mono text-muted-foreground"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-muted-foreground block mb-0.5"># Donations</label>
+                  <input
+                    type="number"
+                    step="1"
+                    min="0"
+                    value={d.donationCount}
+                    onChange={(e) => updateField(campus, "donationCount", e.target.value)}
+                    className="bg-muted/30 border border-border/40 rounded px-2 py-1 text-sm w-full font-mono"
+                  />
+                </div>
+              </div>
+              <div className="mt-2 flex justify-end">
+                <button
+                  onClick={() => handleSave(campus)}
+                  disabled={upsertMutation.isPending}
+                  className="text-xs px-3 py-1 rounded bg-amber-600 hover:bg-amber-700 text-white disabled:opacity-50"
+                >
+                  {upsertMutation.isPending ? "Saving..." : "Save & Lock"}
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Settings Tab ────────────────────────────────────────────────────────
 export default function SettingsTab() {
   const { data } = useData();
@@ -670,6 +867,9 @@ export default function SettingsTab() {
 
       {/* Auto-Sync Scheduler */}
       <AutoSyncSection />
+
+      {/* Manual Giving Entry */}
+      <GivingEntrySection />
 
       {/* Data Source */}
       <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">

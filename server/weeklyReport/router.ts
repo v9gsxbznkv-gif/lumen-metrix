@@ -250,10 +250,15 @@ async function getWeeklySnapshot(
       campusGivWeekly = combinedGivingTotal * campusAttShare;
     }
 
-    // Volunteers: sum volunteerCount from attendance_weekly (stored per check-in row)
-    // This is the actual volunteer headcount from PCO check-ins for this week
-    const volunteersTotal = campusAtt
+    // Volunteers: prefer the "Volunteers" subgroup from PCO Services sync.
+    // Fall back to summing volunteerCount from check-in rows if no Services data.
+    const volSubgroupRows = campusAtt.filter((r: any) => r.subgroup === "Volunteers");
+    const volunteersFromServices = volSubgroupRows.reduce((sum: number, r: any) => sum + r.headcount, 0);
+    const volunteersFromCheckins = campusAtt
+      .filter((r: any) => r.subgroup !== "Volunteers")
       .reduce((sum: number, r: any) => sum + (r.volunteerCount || 0), 0);
+    // Use Services count if available, otherwise fall back to check-in count
+    const volunteersTotal = volunteersFromServices > 0 ? volunteersFromServices : volunteersFromCheckins;
 
     // FTG: use actual weekly subgroup data (ftgAdults + ftgKids + revStudentsFTG)
     // This replaces the old monthly estimate approach

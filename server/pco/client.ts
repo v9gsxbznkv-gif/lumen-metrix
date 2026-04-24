@@ -23,6 +23,7 @@ export const PCO_SCOPES = [
   "groups",
   "calendar",
   "people",
+  "services",
 ];
 
 export interface PcoApiResponse<T = any> {
