@@ -666,3 +666,12 @@
 - [x] Verify weekly report numbers are correct after dedup
 - [x] All 107 tests passing
 - [x] Checkpoint and deploy
+
+## Round 70: RevStudents Total Row in Weekly Report
+
+- [x] Add revStudentsTotal field to CampusWeeklyMetrics in server weeklyReport/router.ts (sum of HS + MS) — already existed as revStudents
+- [x] Add revStudentsTotal to all campus/totals build paths in router.ts — already computed
+- [x] Add revStudentsTotal to CampusMetrics interface in WeeklyReportTab.tsx — already in interface
+- [x] Add revStudents (Total) to METRIC_CONFIG before HS/MS rows
+- [x] Verify TypeScript clean and 107 tests pass
+- [x] Checkpoint and deploy
