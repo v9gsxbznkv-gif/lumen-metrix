@@ -705,3 +705,10 @@
 - [x] Fixed getLatestSnapshot to use last week with ≥3 rows (complete week) instead of absolute latest weekNumber
 - [x] TypeScript clean (0 errors), 107/107 tests pass
 - [x] Checkpoint and deploy
+
+## Round 75: Three Improvements
+- [x] Fix schema drift: add weeklySyncDay and manualLock to schema.ts, run db:push
+- [x] Fix Canton FTG: fetch PCO custom headcounts endpoint for main check-in events
+- [x] Add sync health notification: notifyOwner on sync completion and failure
+- [x] TypeScript clean and 107 tests pass
+- [x] Checkpoint and deploy

@@ -768,4 +768,65 @@ export const pcoRouter = router({
 
       return { periodId, periodDate, eventId: input.eventId, rows };
     }),
+
+  /**
+   * DEBUG: Probe the event_period headcounts endpoint to find custom FTG headcount values.
+   * Usage: pass eventId (e.g. '15287' for Canton) to see what the period-level headcounts endpoint returns.
+   */
+  debugPeriodHeadcounts: publicProcedure
+    .input(z.object({ eventId: z.string().default('15287') }))
+    .query(async ({ input }) => {
+      const client = await createAuthenticatedPcoClient();
+      if (!client) throw new Error('Not connected to PCO');
+
+      // Get most recent period
+      const periods = await client.paginateAll(
+        `/check-ins/v2/events/${input.eventId}/event_periods`,
+        { per_page: 3, order: '-starts_at' }
+      );
+      const latestPeriod = periods.data[0] as any;
+      if (!latestPeriod) return { error: 'No periods found' };
+
+      const periodId = latestPeriod.id;
+      const periodDate = latestPeriod.attributes?.starts_at;
+
+      // Try fetching headcounts at the event_period level (custom headcount types)
+      let periodHeadcounts: any = null;
+      try {
+        periodHeadcounts = await client.get(
+          `/check-ins/v2/events/${input.eventId}/event_periods/${periodId}/headcounts?per_page=25&include=headcount_type`
+        );
+      } catch (e: any) {
+        periodHeadcounts = { error: e.message };
+      }
+
+      // Also try headcount_types for the event
+      let eventHeadcountTypes: any = null;
+      try {
+        eventHeadcountTypes = await client.get(
+          `/check-ins/v2/events/${input.eventId}/headcount_types?per_page=25`
+        );
+      } catch (e: any) {
+        eventHeadcountTypes = { error: e.message };
+      }
+
+      // Also try the event_period with includes
+      let periodWithIncludes: any = null;
+      try {
+        periodWithIncludes = await client.get(
+          `/check-ins/v2/events/${input.eventId}/event_periods/${periodId}?include=headcounts`
+        );
+      } catch (e: any) {
+        periodWithIncludes = { error: e.message };
+      }
+
+      return {
+        eventId: input.eventId,
+        periodId,
+        periodDate,
+        periodHeadcounts,
+        eventHeadcountTypes,
+        periodWithIncludes,
+      };
+    }),
 });

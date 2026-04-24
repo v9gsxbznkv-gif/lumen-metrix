@@ -39,6 +39,7 @@ import { PcoClient } from "./client";
 import { attendanceWeekly, givingWeekly, givingMonthly, syncJobs } from "../../drizzle/schema";
 import { getDb } from "../db";
 import type { SyncResult } from "./sync";
+import { notifyOwner } from "../_core/notification";
 
 /**
  * Creates a brand-new dedicated MySQL connection for sync writes.
@@ -208,7 +209,6 @@ const HEADCOUNT_CATEGORY_MAP: Record<string, Record<string, string>> = {
 
 /** Cache attendance_type names to avoid repeated API calls */
 const attTypeNameCache = new Map<string, string>();
-
 async function getAttTypeName(client: PcoClient, attTypeId: string): Promise<string | null> {
   if (attTypeNameCache.has(attTypeId)) return attTypeNameCache.get(attTypeId)!;
   try {
@@ -223,6 +223,32 @@ async function getAttTypeName(client: PcoClient, attTypeId: string): Promise<str
   }
 }
 
+/**
+ * Cache of event attendance_types: eventId → Array<{ id, name }>
+ * Populated once per event to avoid repeated API calls across periods.
+ */
+const eventAttTypesCache = new Map<string, Array<{ id: string; name: string }>>();
+
+async function getEventAttendanceTypes(
+  client: PcoClient,
+  eventId: string
+): Promise<Array<{ id: string; name: string }>> {
+  if (eventAttTypesCache.has(eventId)) return eventAttTypesCache.get(eventId)!;
+  try {
+    const resp = await client.paginateAll(
+      `/check-ins/v2/events/${eventId}/attendance_types`,
+      { per_page: 25 }
+    );
+    const types = (resp.data as any[]).map((t: any) => ({
+      id: t.id as string,
+      name: (t.attributes?.name || '') as string,
+    }));
+    eventAttTypesCache.set(eventId, types);
+    return types;
+  } catch {
+     return [];
+  }
+}
 // ============================================================
 // Room-to-category mapping
 // ============================================================
@@ -487,6 +513,44 @@ export async function syncWeeklyAttendance(
 
       const campus = mapEventToCampus(eventName);
       const isMainCheckin = isMainCheckInEvent(eventName);
+      const isRevStudentsEvent = eventName.startsWith('RevStudents');
+
+      // PRE-FETCH: For main check-in events (not RevStudents), fetch all headcounts
+      // per attendance_type once per event and index by event_time ID.
+      // This catches FTG Adults/Kids headcounts that may not appear in the
+      // event_times/{id}/headcounts endpoint (e.g. entered at the period level).
+      // Map: attTypeName → Map<eventTimeId, total>
+      const attTypeHcByEventTime = new Map<string, Map<string, number>>();
+      if (isMainCheckin && !isRevStudentsEvent) {
+        const campusCategoryMapForPrefetch = HEADCOUNT_CATEGORY_MAP[eventName] || HEADCOUNT_CATEGORY_MAP[campus] || {};
+        const attTypes = await getEventAttendanceTypes(client, eventId);
+        for (const attType of attTypes) {
+          if (!campusCategoryMapForPrefetch[attType.name]) continue; // not in our map, skip
+          try {
+            const hcsResp = await Promise.race([
+              client.paginateAll(
+                `/check-ins/v2/events/${eventId}/attendance_types/${attType.id}/headcounts`,
+                { per_page: 100 }
+              ),
+              new Promise<never>((_, reject) =>
+                setTimeout(() => reject(new Error(`Timeout pre-fetching headcounts for ${attType.name}`)), 20_000)
+              ),
+            ]);
+            const byEt = new Map<string, number>();
+            for (const hc of hcsResp.data as any[]) {
+              const total: number = (hc as any).attributes?.total || 0;
+              if (total === 0) continue;
+              const etId: string | undefined = (hc as any).relationships?.event_time?.data?.id;
+              if (!etId) continue;
+              byEt.set(etId, (byEt.get(etId) || 0) + total);
+            }
+            attTypeHcByEventTime.set(attType.name, byEt);
+            console.log(`[PCO Weekly Sync] Pre-fetched ${attType.name}: ${byEt.size} event_times with data`);
+          } catch (err: any) {
+            console.warn(`[PCO Weekly Sync] Pre-fetch failed for ${attType.name}: ${err.message}`);
+          }
+        }
+      }
 
       for (const period of periodsResult.data) {
         recordsProcessed++;
@@ -584,6 +648,36 @@ export async function syncWeeklyAttendance(
 
               const existing = categoryTotals.get(category) || 0;
               categoryTotals.set(category, existing + total);
+            }
+          }
+
+          // -------------------------------------------------------
+          // SECOND PASS: use pre-fetched attendance_type headcounts.
+          // For main check-in events (not RevStudents), we pre-fetched all
+          // headcounts per attendance_type before the period loop and indexed
+          // them by event_time ID. Here we look up the pre-fetched data for
+          // the current period's event_time IDs to catch FTG Adults/Kids
+          // headcounts that don't appear in the event_times/{id}/headcounts
+          // endpoint (e.g. entered at the period level in PCO).
+          // -------------------------------------------------------
+          if (attTypeHcByEventTime.size > 0) {
+            const periodEventTimeIds = new Set(
+              (eventTimesResult.data as any[]).map((et: any) => et.id as string)
+            );
+            for (const [attTypeName, byEt] of Array.from(attTypeHcByEventTime.entries())) {
+              const category = campusCategoryMap[attTypeName];
+              if (!category) continue;
+              if (categoryTotals.has(category)) continue; // already have data from event_time route
+
+              let periodTotal = 0;
+              for (const etId of Array.from(periodEventTimeIds)) {
+                periodTotal += byEt.get(etId) || 0;
+              }
+
+              if (periodTotal > 0) {
+                console.log(`[PCO Weekly Sync] ${eventName} ${weekStartDate}: pre-fetched att_type found ${attTypeName}=${periodTotal} (category=${category})`);
+                categoryTotals.set(category, (categoryTotals.get(category) || 0) + periodTotal);
+              }
             }
           }
 
@@ -854,7 +948,40 @@ export async function syncAllWeekly(
   onProgress?: (pct: number, message: string, processed: number) => Promise<void>,
   jobId?: string
 ): Promise<{ attendance: SyncResult; giving: SyncResult }> {
-  const attendance = await syncWeeklyAttendance(client, dateFrom, dateTo, onProgress, jobId);
-  const giving = await syncWeeklyGiving(client, dateFrom, dateTo, onProgress);
+  let attendance: SyncResult;
+  let giving: SyncResult;
+  try {
+    attendance = await syncWeeklyAttendance(client, dateFrom, dateTo, onProgress, jobId);
+    giving = await syncWeeklyGiving(client, dateFrom, dateTo, onProgress);
+  } catch (err: any) {
+    // Hard failure — notify owner and rethrow
+    try {
+      await notifyOwner({
+        title: "⚠️ PCO Weekly Sync Failed",
+        content: `The weekly sync encountered a fatal error and did not complete.\n\nError: ${err.message}\n\nDate range: ${dateFrom ?? 'default'} → ${dateTo ?? 'today'}`,
+      });
+    } catch { /* notification failure is non-fatal */ }
+    throw err;
+  }
+
+  // Build summary notification
+  const attStatus = attendance.status === 'completed' ? '✅' : '⚠️';
+  const givingStatus = giving.status === 'completed' ? '✅' : '⚠️';
+  const anyFailure = attendance.status !== 'completed' || giving.status !== 'completed';
+  const title = anyFailure
+    ? '⚠️ PCO Weekly Sync Completed with Errors'
+    : '✅ PCO Weekly Sync Completed';
+  const durationSec = ((attendance.durationMs + giving.durationMs) / 1000).toFixed(1);
+  const content = [
+    `**Attendance** ${attStatus}: ${attendance.recordsProcessed} processed, ${attendance.recordsCreated} created, ${attendance.recordsUpdated} updated${attendance.errorMessage ? ` — Error: ${attendance.errorMessage}` : ''}`,
+    `**Giving** ${givingStatus}: ${giving.recordsProcessed} processed, ${giving.recordsCreated} created, ${giving.recordsUpdated} updated${giving.errorMessage ? ` — Error: ${giving.errorMessage}` : ''}`,
+    `**Duration**: ${durationSec}s`,
+    `**Date range**: ${dateFrom ?? 'default'} → ${dateTo ?? 'today'}`,
+  ].join('\n');
+
+  try {
+    await notifyOwner({ title, content });
+  } catch { /* notification failure is non-fatal */ }
+
   return { attendance, giving };
 }
