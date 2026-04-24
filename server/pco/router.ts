@@ -654,6 +654,48 @@ export const pcoRouter = router({
    * DEBUG: Fetch raw headcount data from PCO for a specific event's most recent period.
    * Used to diagnose attendance_type name mismatches.
    */
+  /**
+   * DEBUG: Fetch raw event_time data from PCO to find custom headcount fields.
+   */
+  debugEventTime: publicProcedure
+    .input(z.object({ eventTimeId: z.string() }))
+    .query(async ({ input }) => {
+      const client = await createAuthenticatedPcoClient();
+      if (!client) throw new Error("Not connected to PCO");
+
+      // Fetch the raw event_time with all includes
+      const etRaw = await client.get(`/check-ins/v2/event_times/${input.eventTimeId}?include=headcounts`);
+
+      // Also try fetching headcount_types for this event
+      let headcountTypes: any = null;
+      try {
+        headcountTypes = await client.get(`/check-ins/v2/event_times/${input.eventTimeId}/headcount_types?per_page=25`);
+      } catch (e: any) {
+        headcountTypes = { error: e.message };
+      }
+
+      // Also try the event's headcount_types
+      let eventHeadcountTypes: any = null;
+      try {
+        // The event_time belongs to an event — get the event's headcount_types
+        const etData = (etRaw as any).data;
+        const eventId = etData?.relationships?.event?.data?.id;
+        if (eventId) {
+          eventHeadcountTypes = await client.get(`/check-ins/v2/events/${eventId}/headcount_types?per_page=25`);
+        }
+      } catch (e: any) {
+        eventHeadcountTypes = { error: (e as any).message };
+      }
+
+      return {
+        eventTime: (etRaw as any).data?.attributes,
+        eventTimeRelationships: (etRaw as any).data?.relationships,
+        included: (etRaw as any).included,
+        headcountTypes,
+        eventHeadcountTypes,
+      };
+    }),
+
   debugHeadcounts: publicProcedure
     .input(z.object({ eventId: z.string().default('15287') }))
     .query(async ({ input }) => {
