@@ -30,17 +30,20 @@ import { invokeLLM } from "../_core/llm";
 
 interface CampusWeeklyMetrics {
   campus: string;
-  attendance: number;   // Main Check-In headcount only
-  revKids: number;      // Sum of Kids:* subgroups
-  revStudents: number;  // RevStudents subgroups
-  youngAdults: number;  // YA Gathering
-  groups: number;       // Groups avg attendance (monthly ÷ weeks)
-  giving: number;       // Weekly giving (or "All Campuses" combined if no per-campus split)
+  attendance: number;      // Main Check-In headcount only
+  revKids: number;         // Sum of Kids:* subgroups
+  revStudents: number;     // RevStudents combined (legacy fallback)
+  revStudentsHS: number;   // RevStudents High School (from PCO custom headcount "HS Total")
+  revStudentsMS: number;   // RevStudents Middle School (from PCO custom headcount "MS Total")
+  revStudentsFTG: number;  // RevStudents First Timers
+  youngAdults: number;     // YA Gathering
+  groups: number;          // Groups avg attendance (monthly ÷ weeks)
+  giving: number;          // Weekly giving (or "All Campuses" combined if no per-campus split)
   givingMonthTotal: number; // Monthly giving total for this campus (for reference)
   volunteers: number;
-  ftg: number;          // Monthly total ÷ Sundays (estimated weekly)
-  salvations: number;   // Monthly total ÷ Sundays (estimated weekly)
-  baptisms: number;     // Monthly total (NOT divided — shown as month-to-date)
+  ftg: number;             // Monthly total ÷ Sundays (estimated weekly)
+  salvations: number;      // Monthly total ÷ Sundays (estimated weekly)
+  baptisms: number;        // Monthly total (NOT divided — shown as month-to-date)
   baptismsMonthLabel: string; // e.g. "March MTD" to clarify it's a monthly figure
 }
 
@@ -242,10 +245,25 @@ async function getWeeklySnapshot(
       .filter((r: any) => isKidsSubgroup(r.subgroup))
       .reduce((sum: number, r: any) => sum + r.headcount, 0);
 
-    // RevStudents: RevStudents subgroups for this campus
-    const revStudentsTotal = campusAtt
+    // RevStudents: use new HS/MS split subgroups from PCO custom headcounts.
+    // Legacy combined subgroup ("RevStudents | Canton Campus") kept as fallback.
+    const revStudentsHSTotal = campusAtt
+      .filter((r: any) => r.subgroup === "RevStudents HS")
+      .reduce((sum: number, r: any) => sum + r.headcount, 0);
+    const revStudentsMSTotal = campusAtt
+      .filter((r: any) => r.subgroup === "RevStudents MS")
+      .reduce((sum: number, r: any) => sum + r.headcount, 0);
+    const revStudentsFTGTotal = campusAtt
+      .filter((r: any) => r.subgroup === "RevStudents FTG")
+      .reduce((sum: number, r: any) => sum + r.headcount, 0);
+    // Legacy fallback: old combined row (pre-HS/MS split sync)
+    const revStudentsLegacy = campusAtt
       .filter((r: any) => PCO_STUDENTS_SUBGROUPS.includes(r.subgroup))
       .reduce((sum: number, r: any) => sum + r.headcount, 0);
+    // Use HS+MS if available, else fall back to legacy combined
+    const revStudentsTotal = (revStudentsHSTotal + revStudentsMSTotal) > 0
+      ? revStudentsHSTotal + revStudentsMSTotal
+      : revStudentsLegacy;
 
     // Giving: use per-campus weekly row if available, otherwise estimate from monthly
     // (giving_weekly often only has "All Campuses" combined)
@@ -288,6 +306,9 @@ async function getWeeklySnapshot(
       attendance: attTotal,
       revKids: revKidsTotal,
       revStudents: revStudentsTotal,
+      revStudentsHS: revStudentsHSTotal,
+      revStudentsMS: revStudentsMSTotal,
+      revStudentsFTG: revStudentsFTGTotal,
       youngAdults: 0, // populated in totals from "Other" campus rows
       groups: grpAvg,
       giving: Math.round(givTotal),
@@ -316,6 +337,9 @@ async function getWeeklySnapshot(
     attendance: campuses.reduce((s, c) => s + c.attendance, 0),
     revKids: campuses.reduce((s, c) => s + c.revKids, 0),
     revStudents: campuses.reduce((s, c) => s + c.revStudents, 0),
+    revStudentsHS: campuses.reduce((s, c) => s + c.revStudentsHS, 0),
+    revStudentsMS: campuses.reduce((s, c) => s + c.revStudentsMS, 0),
+    revStudentsFTG: campuses.reduce((s, c) => s + c.revStudentsFTG, 0),
     youngAdults: yaTotal,
     groups: campuses.reduce((s, c) => s + c.groups, 0),
     giving: Math.round(combinedGivingWeekly),
@@ -474,6 +498,9 @@ async function getMonthlySnapshot(
       attendance: Math.round(attTotal / weeks),
       revKids: Math.round(revKidsTotal / weeks),
       revStudents: Math.round(revStudentsTotal / weeks),
+      revStudentsHS: 0, // not available from monthly data
+      revStudentsMS: 0,
+      revStudentsFTG: 0,
       youngAdults: Math.round(youngAdultsTotal / weeks),
       groups: grpAvg,
       giving: Math.round(givTotal / weeks),
@@ -491,6 +518,9 @@ async function getMonthlySnapshot(
     attendance: campuses.reduce((s, c) => s + c.attendance, 0),
     revKids: campuses.reduce((s, c) => s + c.revKids, 0),
     revStudents: campuses.reduce((s, c) => s + c.revStudents, 0),
+    revStudentsHS: 0,
+    revStudentsMS: 0,
+    revStudentsFTG: 0,
     youngAdults: campuses.reduce((s, c) => s + c.youngAdults, 0),
     groups: campuses.reduce((s, c) => s + c.groups, 0),
     giving: campuses.reduce((s, c) => s + c.giving, 0),
@@ -545,6 +575,9 @@ async function getYTDSnapshot(
       attendance: Math.round(campusMonths.reduce((s, c) => s + c.attendance, 0) / count),
       revKids: Math.round(campusMonths.reduce((s, c) => s + c.revKids, 0) / count),
       revStudents: Math.round(campusMonths.reduce((s, c) => s + c.revStudents, 0) / count),
+      revStudentsHS: Math.round(campusMonths.reduce((s, c) => s + c.revStudentsHS, 0) / count),
+      revStudentsMS: Math.round(campusMonths.reduce((s, c) => s + c.revStudentsMS, 0) / count),
+      revStudentsFTG: Math.round(campusMonths.reduce((s, c) => s + c.revStudentsFTG, 0) / count),
       youngAdults: Math.round(campusMonths.reduce((s, c) => s + c.youngAdults, 0) / count),
       groups: Math.round(campusMonths.reduce((s, c) => s + c.groups, 0) / count),
       giving: Math.round(campusMonths.reduce((s, c) => s + c.giving, 0) / count),
@@ -562,6 +595,9 @@ async function getYTDSnapshot(
     attendance: campuses.reduce((s, c) => s + c.attendance, 0),
     revKids: campuses.reduce((s, c) => s + c.revKids, 0),
     revStudents: campuses.reduce((s, c) => s + c.revStudents, 0),
+    revStudentsHS: campuses.reduce((s, c) => s + c.revStudentsHS, 0),
+    revStudentsMS: campuses.reduce((s, c) => s + c.revStudentsMS, 0),
+    revStudentsFTG: campuses.reduce((s, c) => s + c.revStudentsFTG, 0),
     youngAdults: campuses.reduce((s, c) => s + c.youngAdults, 0),
     groups: campuses.reduce((s, c) => s + c.groups, 0),
     giving: campuses.reduce((s, c) => s + c.giving, 0),

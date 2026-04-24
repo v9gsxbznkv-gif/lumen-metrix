@@ -42,6 +42,9 @@ interface CampusMetrics {
   attendance: number;
   revKids: number;
   revStudents: number;
+  revStudentsHS: number;
+  revStudentsMS: number;
+  revStudentsFTG: number;
   youngAdults: number;
   groups: number;
   giving: number;
@@ -76,7 +79,9 @@ const DAY_LABELS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Fri
 const METRIC_CONFIG = [
   { key: "attendance" as const, label: "Attendance", icon: Users, color: "#4A7FB5", prefix: "" },
   { key: "revKids" as const, label: "RevKids", icon: Users, color: "#E8913A", prefix: "" },
-  { key: "revStudents" as const, label: "RevStudents", icon: Users, color: "#8B6DAF", prefix: "" },
+  { key: "revStudentsHS" as const, label: "RevStudents HS", icon: Users, color: "#8B6DAF", prefix: "" },
+  { key: "revStudentsMS" as const, label: "RevStudents MS", icon: Users, color: "#A07CC5", prefix: "" },
+  { key: "revStudentsFTG" as const, label: "Students FTG", icon: UserPlus, color: "#C58B6D", prefix: "" },
   { key: "youngAdults" as const, label: "Young Adults", icon: Users, color: "#7C5CBF", prefix: "" },
   { key: "groups" as const, label: "Groups", icon: Users, color: "#2D8B8B", prefix: "" },
   { key: "giving" as const, label: "Giving", icon: DollarSign, color: "#4A7C59", prefix: "$" },

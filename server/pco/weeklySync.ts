@@ -143,7 +143,9 @@ function isExcludedEvent(eventName: string): boolean {
 function isMainCheckInEvent(eventName: string): boolean {
   return (
     eventName === "Revolution Canton Check-In" ||
-    eventName === "Revolution Jasper Check-In"
+    eventName === "Revolution Jasper Check-In" ||
+    eventName === "RevStudents | Canton Campus" ||
+    eventName === "RevStudents | Jasper Campus"
   );
 }
 
@@ -184,6 +186,22 @@ const HEADCOUNT_CATEGORY_MAP: Record<string, Record<string, string>> = {
     "2-FTG Adults": "FTG Adults",
     "2-FTG 5/6th":  "FTG Adults", // 5th/6th FTG → FTG Adults
     "2-FTG Kids":   "FTG Kids",
+  },
+  // RevStudents events use custom headcount categories (not attendance_types)
+  // These map PCO custom headcount names → our internal subgroup names
+  "RevStudents | Canton Campus": {
+    "Attendance":    "RevStudents Attendance",
+    "HS Total":      "RevStudents HS",
+    "MS Total":      "RevStudents MS",
+    "First Timers":  "RevStudents FTG",
+    "Salvations":    "RevStudents Salvations",
+  },
+  "RevStudents | Jasper Campus": {
+    "Attendance":    "RevStudents Attendance",
+    "HS Total":      "RevStudents HS",
+    "MS Total":      "RevStudents MS",
+    "First Timers":  "RevStudents FTG",
+    "Salvations":    "RevStudents Salvations",
   },
 };
 
@@ -521,7 +539,9 @@ export async function syncWeeklyAttendance(
           // Accumulate headcounts by category across all service times
           // category → total headcount
           const categoryTotals = new Map<string, number>();
-          const campusCategoryMap = HEADCOUNT_CATEGORY_MAP[campus] || {};
+          // RevStudents events have their own headcount category map keyed by event name.
+          // Main check-in events use the campus-level map.
+          const campusCategoryMap = HEADCOUNT_CATEGORY_MAP[eventName] || HEADCOUNT_CATEGORY_MAP[campus] || {};
 
           for (const eventTime of eventTimesResult.data) {
             const etId = (eventTime as any).id;
@@ -573,6 +593,7 @@ export async function syncWeeklyAttendance(
             // FTG Adults → "FTG Adults"
             // FTG Kids   → "FTG Kids"
             // Online     → "Online"
+            // RevStudents categories ("RevStudents HS", "RevStudents MS", etc.) pass through as-is
             const subgroup = category === "Adults" ? eventName : category;
             const key = `${weekStartDate}|${campus}|${subgroup}`;
             const existing = weeklyMap.get(key);
