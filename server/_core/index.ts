@@ -85,6 +85,115 @@ async function startServer() {
       res.redirect(`/?tab=settings&pco=error&message=${encodeURIComponent(err.message)}`);
     }
   });
+  // POST /api/sync/flush — Phase 2 of two-phase sync architecture.
+  // Reads the rawData JSON blob stored in sync_jobs, writes attendance rows to attendance_weekly
+  // using a brand-new DB connection (avoids TiDB idle-drop hang after long PCO fetch),
+  // then clears rawData and updates job progress.
+  app.post("/api/sync/flush", async (req, res) => {
+    const { jobId } = req.body as { jobId?: string };
+    if (!jobId) {
+      return res.status(400).json({ ok: false, error: "jobId is required" });
+    }
+    let conn: import("mysql2").Connection | null = null;
+    try {
+      const mysql2 = await import("mysql2");
+      const { drizzle } = await import("drizzle-orm/mysql2");
+      const { eq, and, sql } = await import("drizzle-orm");
+      const { syncJobs, attendanceWeekly } = await import("../../drizzle/schema");
+
+      // Open a fresh connection — NOT from the shared pool
+      conn = mysql2.default.createConnection({
+        uri: process.env.DATABASE_URL!,
+        connectTimeout: 20000,
+      });
+      await new Promise<void>((resolve, reject) => {
+        conn!.connect((err) => (err ? reject(err) : resolve()));
+      });
+      const freshDb = drizzle(conn as any);
+
+      // Read rawData from the job row
+      const jobRows = await freshDb
+        .select({ rawData: syncJobs.rawData })
+        .from(syncJobs)
+        .where(eq(syncJobs.jobId, jobId))
+        .limit(1);
+
+      if (!jobRows.length || !jobRows[0].rawData) {
+        return res.json({ ok: true, rowsWritten: 0, message: "No rawData to flush" });
+      }
+
+      const blob = JSON.parse(jobRows[0].rawData) as { type: string; rows: any[] };
+      if (blob.type !== "attendance_weekly" || !Array.isArray(blob.rows)) {
+        return res.status(400).json({ ok: false, error: "Unexpected rawData format" });
+      }
+
+      const allRows = blob.rows;
+      console.log(`[Flush] Writing ${allRows.length} attendance rows for job ${jobId}...`);
+
+      // Fetch locked rows upfront so we can skip them
+      const lockedRows = await freshDb
+        .select({ year: attendanceWeekly.year, weekNumber: attendanceWeekly.weekNumber, campus: attendanceWeekly.campus, subgroup: attendanceWeekly.subgroup })
+        .from(attendanceWeekly)
+        .where(eq(attendanceWeekly.manualLock, true));
+
+      const lockedSet = new Set(
+        lockedRows.map((r) => `${r.year}|${r.weekNumber}|${r.campus}|${r.subgroup}`)
+      );
+
+      const rowsToWrite = allRows.filter(
+        (r) => !lockedSet.has(`${r.year}|${r.weekNumber}|${r.campus}|${r.subgroup}`)
+      );
+
+      // Batch upsert in chunks of 50
+      const CHUNK = 50;
+      let rowsWritten = 0;
+      for (let i = 0; i < rowsToWrite.length; i += CHUNK) {
+        const chunk = rowsToWrite.slice(i, i + CHUNK);
+        if (!chunk.length) continue;
+        await freshDb
+          .insert(attendanceWeekly)
+          .values(chunk.map((r) => ({
+            year: r.year,
+            weekNumber: r.weekNumber,
+            weekStartDate: r.weekStartDate,
+            campus: r.campus,
+            subgroup: r.subgroup,
+            headcount: r.headcount,
+            regularCount: r.regularCount ?? 0,
+            guestCount: r.guestCount ?? 0,
+            volunteerCount: r.volunteerCount ?? 0,
+            source: "pco",
+          })))
+          .onDuplicateKeyUpdate({
+            set: {
+              headcount: sql`VALUES(headcount)`,
+              regularCount: sql`VALUES(regularCount)`,
+              guestCount: sql`VALUES(guestCount)`,
+              volunteerCount: sql`VALUES(volunteerCount)`,
+              source: sql`VALUES(source)`,
+            },
+          });
+        rowsWritten += chunk.length;
+      }
+
+      // Clear rawData and update progress to 60%
+      await freshDb
+        .update(syncJobs)
+        .set({ rawData: null, progress: 60, message: `Attendance rows saved to database (${rowsWritten} rows)` })
+        .where(eq(syncJobs.jobId, jobId));
+
+      console.log(`[Flush] Done — ${rowsWritten} rows written for job ${jobId}`);
+      return res.json({ ok: true, rowsWritten });
+    } catch (err: any) {
+      console.error(`[Flush] Error for job ${jobId}:`, err.message);
+      return res.status(500).json({ ok: false, error: err.message });
+    } finally {
+      if (conn) {
+        conn.end();
+      }
+    }
+  });
+
   // tRPC API
   app.use(
     "/api/trpc",

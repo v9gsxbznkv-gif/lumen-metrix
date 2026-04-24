@@ -36,7 +36,7 @@ import { eq, and, gte, lte, sql } from "drizzle-orm";
 import mysql from "mysql2";
 import { drizzle } from "drizzle-orm/mysql2";
 import { PcoClient } from "./client";
-import { attendanceWeekly, givingWeekly, givingMonthly } from "../../drizzle/schema";
+import { attendanceWeekly, givingWeekly, givingMonthly, syncJobs } from "../../drizzle/schema";
 import { getDb } from "../db";
 import type { SyncResult } from "./sync";
 
@@ -365,7 +365,8 @@ export async function syncWeeklyAttendance(
   client: PcoClient,
   dateFrom?: string,
   dateTo?: string,
-  onProgress?: (pct: number, message: string, processed: number) => Promise<void>
+  onProgress?: (pct: number, message: string, processed: number) => Promise<void>,
+  jobId?: string
 ): Promise<SyncResult> {
   const start = Date.now();
   let recordsProcessed = 0;
@@ -630,92 +631,31 @@ export async function syncWeeklyAttendance(
     console.log(`[PCO Weekly Sync] Aggregated ${weeklyMap.size} weekly attendance rows`);
 
     if (onProgress) {
-      await onProgress(56, `Saving ${weeklyMap.size} weekly attendance rows to database...`, recordsProcessed);
+      await onProgress(56, `Fetched ${weeklyMap.size} weekly attendance rows from PCO — queuing DB write...`, recordsProcessed);
     }
 
-    // Step 2: Batch upsert into attendance_weekly using the shared app DB connection.
-    // Uses raw SQL execute to avoid ORM overhead that can cause hangs on long-running connections.
+    // Step 2: Store rows as JSON blob in sync_jobs.rawData.
+    // The actual DB write to attendance_weekly happens in a SEPARATE HTTP request (POST /api/sync/flush)
+    // so it gets a brand-new DB connection — avoiding the TiDB idle-connection drop that occurs
+    // after a 2-5 minute PCO API fetch.
     const rows = Array.from(weeklyMap.values());
+    recordsCreated = rows.length; // will be confirmed by flush endpoint
+    console.log(`[PCO Weekly Sync] Storing ${rows.length} rows in rawData blob for flush...`);
 
-    // 5-second cooldown after PCO fetch to allow pool connections to recycle.
-    // TiDB drops idle connections after a long PCO API fetch; this gives the pool time to recover.
-    console.log(`[PCO Weekly Sync] Cooling down 5s before DB writes to allow pool recovery...`);
-    await new Promise(resolve => setTimeout(resolve, 5000));
-
-    try {
-      const writeDb = await getDb();
-      if (!writeDb) throw new Error("DB not available for writes");
-
-      // Fetch all locked rows in one query so we can exclude them from the batch
-      const lockedRows = await writeDb
-        .select({ weekStartDate: attendanceWeekly.weekStartDate, campus: attendanceWeekly.campus, subgroup: attendanceWeekly.subgroup })
-        .from(attendanceWeekly)
-        .where(eq(attendanceWeekly.manualLock, true));
-      const lockedKeys = new Set(lockedRows.map(r => `${r.weekStartDate}|${r.campus}|${r.subgroup}`));
-
-      const rowsToWrite = rows.filter(r => !lockedKeys.has(`${r.weekStartDate}|${r.campus}|${r.subgroup}`));
-      console.log(`[PCO Weekly Sync] Writing ${rowsToWrite.length} rows (${rows.length - rowsToWrite.length} locked/skipped)`);
-
-      if (onProgress) {
-        await onProgress(57, `Saving ${rowsToWrite.length} attendance rows to database...`, recordsProcessed);
-      }
-
-      // Ping the DB connection before writing — wrapped in 3s timeout so a hung ping doesn't block.
+    // Store the raw rows in the job's rawData field (small write to existing row — always fast)
+    if (jobId) {
       try {
-        await Promise.race([
-          writeDb.execute(sql`SELECT 1`),
-          new Promise<never>((_, reject) => setTimeout(() => reject(new Error("ping timeout")), 3000))
-        ]);
-        console.log(`[PCO Weekly Sync] DB connection ping OK, proceeding with writes`);
-      } catch (pingErr: any) {
-        console.warn(`[PCO Weekly Sync] DB ping failed/timed out (${pingErr.message}), will attempt writes anyway`);
-      }
-
-      // Build a single INSERT ... ON DUPLICATE KEY UPDATE for all rows at once.
-      // One DB round-trip per chunk instead of N individual queries.
-      if (rowsToWrite.length > 0) {
-        const CHUNK_SIZE = 100;
-        for (let i = 0; i < rowsToWrite.length; i += CHUNK_SIZE) {
-          const chunk = rowsToWrite.slice(i, i + CHUNK_SIZE);
-          const insertPromise = writeDb
-            .insert(attendanceWeekly)
-            .values(chunk.map(row => ({
-              year: row.year,
-              weekNumber: row.weekNumber,
-              weekStartDate: row.weekStartDate,
-              campus: row.campus,
-              subgroup: row.subgroup,
-              headcount: row.headcount,
-              regularCount: row.regularCount,
-              guestCount: row.guestCount,
-              volunteerCount: row.volunteerCount,
-              source: "pco" as const,
-            })))
-            .onDuplicateKeyUpdate({
-              set: {
-                headcount: sql`VALUES(headcount)`,
-                regularCount: sql`VALUES(regularCount)`,
-                guestCount: sql`VALUES(guestCount)`,
-                volunteerCount: sql`VALUES(volunteerCount)`,
-                year: sql`VALUES(year)`,
-                weekNumber: sql`VALUES(weekNumber)`,
-                source: sql`VALUES(source)`,
-              },
-            });
-          // 30s hard timeout per chunk — if DB stalls, skip and continue
-          const timeoutPromise = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error(`DB write timeout chunk ${i}`)), 30000)
-          );
-          try {
-            await Promise.race([insertPromise, timeoutPromise]);
-            recordsCreated += chunk.length;
-          } catch (chunkErr: any) {
-            console.warn(`[PCO Weekly Sync] Chunk ${i} write failed/timed out: ${chunkErr.message}`);
-          }
+        const db = await getDb();
+        if (db) {
+          await db
+            .update(syncJobs)
+            .set({ rawData: JSON.stringify({ type: "attendance_weekly", rows }) })
+            .where(eq(syncJobs.jobId, jobId));
+          console.log(`[PCO Weekly Sync] rawData blob stored for job ${jobId}`);
         }
+      } catch (blobErr: any) {
+        console.warn(`[PCO Weekly Sync] Failed to store rawData blob: ${blobErr.message}`);
       }
-    } catch (writeErr: any) {
-      console.error(`[PCO Weekly Sync] DB write error: ${writeErr.message}`);
     }
 
     console.log(`[PCO Weekly Sync] Weekly attendance sync complete: ${recordsProcessed} periods → ${recordsCreated} created, ${recordsUpdated} updated`);
@@ -886,9 +826,10 @@ export async function syncAllWeekly(
   client: PcoClient,
   dateFrom?: string,
   dateTo?: string,
-  onProgress?: (pct: number, message: string, processed: number) => Promise<void>
+  onProgress?: (pct: number, message: string, processed: number) => Promise<void>,
+  jobId?: string
 ): Promise<{ attendance: SyncResult; giving: SyncResult }> {
-  const attendance = await syncWeeklyAttendance(client, dateFrom, dateTo, onProgress);
+  const attendance = await syncWeeklyAttendance(client, dateFrom, dateTo, onProgress, jobId);
   const giving = await syncWeeklyGiving(client, dateFrom, dateTo, onProgress);
   return { attendance, giving };
 }

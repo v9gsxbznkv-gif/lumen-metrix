@@ -87,7 +87,30 @@ async function runSyncInBackground(
       const effectiveDateFrom = dateFrom ?? "2026-01-01";
       const effectiveDateTo = dateTo ?? new Date().toISOString().split("T")[0];
       await progress(20, "Starting weekly sync from PCO (2026 data)...");
-      const weeklyResults = await syncAllWeekly(client, effectiveDateFrom, effectiveDateTo, progress);
+      const weeklyResults = await syncAllWeekly(client, effectiveDateFrom, effectiveDateTo, progress, jobId);
+
+      // Phase 2: flush attendance rows from rawData blob via a fresh HTTP request.
+      // This gives the DB write a brand-new connection, avoiding the TiDB idle-drop hang
+      // that occurs after the 2-5 minute PCO API fetch.
+      try {
+        const port = process.env.PORT || 3000;
+        const flushResp = await fetch(`http://localhost:${port}/api/sync/flush`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ jobId }),
+        });
+        if (flushResp.ok) {
+          const flushData = await flushResp.json() as { ok: boolean; rowsWritten?: number };
+          console.log(`[PCO Sync] Flush complete: ${flushData.rowsWritten ?? 0} rows written`);
+          await progress(60, `Attendance rows saved to database (${flushData.rowsWritten ?? 0} rows)`);
+        } else {
+          const errText = await flushResp.text();
+          console.warn(`[PCO Sync] Flush endpoint returned ${flushResp.status}: ${errText}`);
+        }
+      } catch (flushErr: any) {
+        console.warn(`[PCO Sync] Flush call failed: ${flushErr.message}`);
+      }
+
       results = [weeklyResults.attendance, weeklyResults.giving];
     } else if (syncType === "weekly_all") {
       const attResult = await syncWeeklyAttendance(client, dateFrom, dateTo, progress);

@@ -419,6 +419,7 @@ export const syncJobs = mysqlTable("sync_jobs", {
   message: varchar("message", { length: 512 }).default("").notNull(),
   recordsProcessed: int("recordsProcessed").default(0).notNull(),
   results: text("results"),                                 // JSON array of SyncResult
+  rawData: text("rawData"),                                  // JSON blob: PCO fetch results pending DB write
   error: varchar("error", { length: 1024 }),
   startedAt: timestamp("startedAt").defaultNow().notNull(),
   completedAt: timestamp("completedAt"),

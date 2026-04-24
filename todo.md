@@ -637,3 +637,13 @@
 - [x] Wrapped DB ping in 3s Promise.race timeout so a hung ping doesn't block writes
 - [x] All 107 tests passing
 - [x] Checkpoint and deploy
+
+## Round 67: Two-Phase Sync Architecture
+
+- [x] Add rawData TEXT column to sync_jobs table in schema.ts
+- [x] Run pnpm db:push to migrate (applied via direct SQL)
+- [x] syncWeeklyAttendance: after PCO fetch, store rows as JSON in sync_jobs.rawData (small fast write)
+- [x] Add POST /api/sync/flush Express endpoint that reads rawData and writes attendance_weekly rows
+- [x] Router calls localhost flush endpoint after PCO fetch completes (fresh HTTP request = fresh DB connection)
+- [x] All 107 tests passing
+- [x] Checkpoint and deploy
