@@ -401,16 +401,9 @@ export async function syncWeeklyAttendance(
       return true;
     });
 
-    // Fast path: when syncing a narrow date range (≤14 days), only scan the
-    // key events that contain relevant data. This avoids scanning 300+ old
-    // RSVP events and makes a single-week re-sync complete in seconds.
-    const isNarrowRange = (() => {
-      const from = new Date(effectiveDateFrom);
-      const to = new Date(effectiveDateTo);
-      const diffDays = (to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24);
-      return diffDays <= 14;
-    })();
-
+    // Always filter to the 5 known recurring service events.
+    // We never need to scan 300+ historical RSVP/one-off events regardless of date range.
+    // These 5 events are the only source of weekly attendance data for the dashboard.
     const KEY_EVENTS = new Set([
       "Revolution Canton Check-In",
       "Revolution Jasper Check-In",
@@ -419,15 +412,8 @@ export async function syncWeeklyAttendance(
       "YA Gathering",
     ]);
 
-    const activeEvents = isNarrowRange
-      ? allActiveEvents.filter((e: any) => KEY_EVENTS.has(e.attributes?.name || ""))
-      : allActiveEvents;
-
-    if (isNarrowRange) {
-      console.log(`[PCO Weekly Sync] Narrow date range detected — scanning only ${activeEvents.length} key events (skipping ${allActiveEvents.length - activeEvents.length} historical events)`);
-    } else {
-      console.log(`[PCO Weekly Sync] Processing ${activeEvents.length} active events (excluded ${events.length - allActiveEvents.length})`);
-    }
+    const activeEvents = allActiveEvents.filter((e: any) => KEY_EVENTS.has(e.attributes?.name || ""));
+    console.log(`[PCO Weekly Sync] Filtered to ${activeEvents.length} key events (skipped ${allActiveEvents.length - activeEvents.length} non-key events out of ${events.length} total)`);
 
     // Accumulate: key = "YYYY-MM-DD|campus|subgroupName" → counts
     const weeklyMap = new Map<string, {

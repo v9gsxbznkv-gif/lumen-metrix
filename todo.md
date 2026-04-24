@@ -607,3 +607,10 @@
 - [x] Progress: 20% start → syncWeeklyAttendance (20-60%) → syncWeeklyGiving DB aggregation (60-100%)
 - [x] All 107 tests passing
 - [x] Checkpoint and deploy
+
+## Round 63: Always Filter to KEY_EVENTS Only
+
+- [x] Removed isNarrowRange check — always filter allActiveEvents to KEY_EVENTS (5 events)
+- [x] Never scan 300+ historical events regardless of date range
+- [x] All 107 tests passing
+- [x] Checkpoint and deploy
