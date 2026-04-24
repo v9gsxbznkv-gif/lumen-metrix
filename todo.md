@@ -765,4 +765,14 @@
 - [x] Week picker still allows navigating to any week (no frontend changes needed)
 - [x] Added regression test: "selects a complete week with ≥2 campuses, not a partial week"
 - [x] TypeScript clean (0 errors via npx tsc --noEmit) and 108 tests pass
+- [x] Checkpoint and deploy
+
+## Round 82: Attendance Sync Hanging on Headcount Fetch
+- [x] Sync hangs at "Processing Revolution Canton Check-In period 9/17 (fetching headcounts)..." at 29% — TCP stall on PCO API
+- [x] Added AbortController-based 25s hard timeout per request in PcoClient.rateLimitedGet — catches TCP stalls that axios/https.Agent timeouts miss
+- [x] Added Promise.race timeout (10s) to getAttTypeName calls — previously had no timeout wrapper
+- [x] Added Promise.race timeout (15s) to getEventAttendanceTypes calls
+- [x] Added overall 90s per-period timeout in main check-in headcount loop — bails out if a single period takes too long
+- [x] AbortController cancellations treated as retryable network errors (up to 8 retries with exponential backoff)
+- [x] TypeScript clean (0 errors) and 108 tests pass
 - [ ] Checkpoint and deploy

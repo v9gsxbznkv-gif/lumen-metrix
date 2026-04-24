@@ -226,7 +226,12 @@ const attTypeNameCache = new Map<string, string>();
 async function getAttTypeName(client: PcoClient, attTypeId: string): Promise<string | null> {
   if (attTypeNameCache.has(attTypeId)) return attTypeNameCache.get(attTypeId)!;
   try {
-    const resp = await client.get(`/check-ins/v2/attendance_types/${attTypeId}`);
+    const resp = await Promise.race([
+      client.get(`/check-ins/v2/attendance_types/${attTypeId}`),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`Timeout fetching att_type name for ${attTypeId}`)), 10_000)
+      ),
+    ]);
     // resp.data is the PCO resource object: { id, type, attributes: { name, ... } }
     const resource = Array.isArray(resp.data) ? resp.data[0] : resp.data;
     const name: string = (resource as any)?.attributes?.name || "";
@@ -249,10 +254,15 @@ async function getEventAttendanceTypes(
 ): Promise<Array<{ id: string; name: string }>> {
   if (eventAttTypesCache.has(eventId)) return eventAttTypesCache.get(eventId)!;
   try {
-    const resp = await client.paginateAll(
-      `/check-ins/v2/events/${eventId}/attendance_types`,
-      { per_page: 25 }
-    );
+    const resp = await Promise.race([
+      client.paginateAll(
+        `/check-ins/v2/events/${eventId}/attendance_types`,
+        { per_page: 25 }
+      ),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`Timeout fetching attendance_types for event ${eventId}`)), 15_000)
+      ),
+    ]);
     const types = (resp.data as any[]).map((t: any) => ({
       id: t.id as string,
       name: (t.attributes?.name || '') as string,
@@ -585,16 +595,22 @@ export async function syncWeeklyAttendance(
           // This uses the manually-entered headcounts, not check-in scan counts.
           // -------------------------------------------------------
           const periodId = (period as any).id;
+          const periodIdx = periodsResult.data.indexOf(period);
 
           // Heartbeat progress update
           if (onProgress) {
-            const periodIdx = periodsResult.data.indexOf(period);
             await onProgress(
               eventPct,
               `Processing ${eventName} period ${periodIdx + 1}/${periodsResult.data.length} (fetching headcounts)...`,
               recordsProcessed
             );
           }
+
+          // OVERALL PER-PERIOD TIMEOUT: If the entire headcount drill-down
+          // for this period takes longer than 90s, skip it and move on.
+          // This prevents a single stalled TCP connection from blocking the entire sync.
+          const periodStartTime = Date.now();
+          const PERIOD_TIMEOUT_MS = 90_000;
 
           // Get all event_times for this period
           // Wrapped in Promise.race with 20s timeout — TCP stalls won't throw,
@@ -622,7 +638,15 @@ export async function syncWeeklyAttendance(
           // Main check-in events use the campus-level map.
           const campusCategoryMap = HEADCOUNT_CATEGORY_MAP[eventName] || HEADCOUNT_CATEGORY_MAP[campus] || {};
 
+          let periodTimedOut = false;
           for (const eventTime of eventTimesResult.data) {
+            // Check overall period timeout before each event_time
+            if (Date.now() - periodStartTime > PERIOD_TIMEOUT_MS) {
+              console.warn(`[PCO Weekly Sync] Period ${periodId} exceeded ${PERIOD_TIMEOUT_MS / 1000}s overall timeout — skipping remaining event_times`);
+              periodTimedOut = true;
+              break;
+            }
+
             const etId = (eventTime as any).id;
 
             let headcountsResult;
@@ -663,6 +687,10 @@ export async function syncWeeklyAttendance(
               const existing = categoryTotals.get(category) || 0;
               categoryTotals.set(category, existing + total);
             }
+          }
+
+          if (periodTimedOut) {
+            console.warn(`[PCO Weekly Sync] Period ${periodIdx + 1}/${periodsResult.data.length} for ${eventName} timed out — partial data may be missing`);
           }
 
           // -------------------------------------------------------

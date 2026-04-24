@@ -273,9 +273,27 @@ export class PcoClient {
 
     while (true) {
       try {
-        const response = await this.client.get(url, { params });
+        // Use AbortController with a hard 25s deadline per request.
+        // This catches TCP stalls that axios timeout (response-header only)
+        // and https.Agent timeout (socket-level) sometimes miss.
+        const controller = new AbortController();
+        const abortTimer = setTimeout(() => controller.abort(), 25_000);
+        const response = await this.client.get(url, { params, signal: controller.signal as any });
+        clearTimeout(abortTimer);
         return response.data;
       } catch (error: any) {
+        // Treat AbortController cancellation as a network error for retry
+        if (error.name === 'CanceledError' || error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
+          const isRetryable = attempt < MAX_RETRIES;
+          if (isRetryable) {
+            attempt++;
+            const backoffMs = Math.min(2 ** attempt * 1000, 30000);
+            console.warn(`[PCO API] Request aborted (timeout) on ${url} attempt ${attempt}/${MAX_RETRIES}. Waiting ${backoffMs}ms...`);
+            await new Promise((resolve) => setTimeout(resolve, backoffMs));
+            this.lastRequestTime = Date.now();
+            continue;
+          }
+        }
         const status = error.response?.status;
 
         // 429 — rate limited: back off and retry
