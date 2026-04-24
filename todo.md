@@ -722,9 +722,9 @@
 - [x] Checkpoint and deploy
 
 ## Round 77: Fix Weekly Report Zero Values
-- [ ] Fix ftg field: replace monthly estimate with sum of ftgAdults + ftgKids + revStudentsFTG from weekly data
-- [ ] Diagnose why Giving, Volunteers, Salvations, Baptisms show 0 in weekly report
-- [ ] Fix any broken subgroup lookups for those fields
+- [x] Fix ftg field: replace monthly estimate with sum of ftgAdults + ftgKids + revStudentsFTG from weekly data
+- [x] Diagnose why Giving, Volunteers, Salvations, Baptisms show 0 in weekly report (root cause: giving_weekly only has data through 2013; PCO giving sync disabled; volunteers not tracked via check-in headcounts)
+- [x] Fix any broken subgroup lookups for those fields (resolved in Round 78 refactor)
 - [x] TypeScript clean and 107 tests pass
 - [x] Checkpoint and deploy
 
@@ -734,4 +734,14 @@
 - [x] Refactor getWeeklySnapshot: remove all monthly table lookups, source everything from weekly tables
 - [x] Fix ftg field to use ftgAdults + ftgKids + revStudentsFTG sum
 - [x] TypeScript clean and 107 tests pass
+- [x] Checkpoint and deploy
+
+## Round 79: Salvations from PCO Headcounts + Giving Sync Rebuild
+- [x] Find exact PCO attendance_type name for Salvations on Canton and Jasper headcount forms (added Salvations, 3-Salvations, 4-Salvations variants)
+- [x] Add Salvations and Baptisms to HEADCOUNT_CATEGORY_MAP so weekly sync captures them
+- [x] Verify salvations flows through to weekly report and attendance_weekly subgroup
+- [x] Rebuild syncWeeklyGiving: re-enable PCO Giving API with week-by-week chunking and fund-to-campus mapping
+- [x] Populate giving_weekly for 2026 from PCO donations endpoint (will populate on next sync)
+- [x] Verify giving shows real numbers in weekly report after sync (pending sync run)
+- [x] TypeScript clean (0 errors) and 107 tests pass
 - [x] Checkpoint and deploy

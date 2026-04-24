@@ -259,10 +259,15 @@ async function getWeeklySnapshot(
     // This replaces the old monthly estimate approach
     const ftgWeeklyTotal = ftgAdultsTotal + ftgKidsTotal + revStudentsFTGTotal;
 
-    // Salvations / Baptisms / Groups: PCO does not track these at weekly granularity.
-    // Show 0 — honest about data availability rather than showing stale monthly estimates.
-    const salvationsTotal = 0;
-    const baptismsMonthTotal = 0;
+    // Salvations / Baptisms: sourced from attendance_weekly subgroups populated by
+    // the manual headcount form in PCO (same mechanism as FTG Adults/Kids).
+    // After a sync runs with the updated HEADCOUNT_CATEGORY_MAP, these will populate.
+    const salvationsTotal = campusAtt
+      .filter((r: any) => r.subgroup === "Salvations")
+      .reduce((sum: number, r: any) => sum + r.headcount, 0);
+    const baptismsMonthTotal = campusAtt
+      .filter((r: any) => r.subgroup === "Baptisms")
+      .reduce((sum: number, r: any) => sum + r.headcount, 0);
     const grpAvg = 0;
 
     campuses.push({

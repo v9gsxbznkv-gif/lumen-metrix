@@ -175,19 +175,33 @@ function isMainCheckInEvent(eventName: string): boolean {
  */
 const HEADCOUNT_CATEGORY_MAP: Record<string, Record<string, string>> = {
   Canton: {
-    "1-Adults":     "Adults",
-    "1-RevKids":    "Kids",
-    "2-FTG Adults": "FTG Adults",
-    "2-FTG Kids":   "FTG Kids",
-    "6-Online":     "Online",
+    "1-Adults":       "Adults",
+    "1-RevKids":      "Kids",
+    "2-FTG Adults":   "FTG Adults",
+    "2-FTG Kids":     "FTG Kids",
+    "6-Online":       "Online",
+    // Manual headcount form entries (salvations, baptisms)
+    "Salvations":     "Salvations",
+    "3-Salvations":   "Salvations",
+    "4-Salvations":   "Salvations",
+    "Baptisms":       "Baptisms",
+    "3-Baptisms":     "Baptisms",
+    "4-Baptisms":     "Baptisms",
   },
   Jasper: {
-    "1-Adults":     "Adults",
-    "1-RS 5-6th":   "Adults",   // 5th/6th grade → adult attendance
-    "1-RevKids":    "Kids",
-    "2-FTG Adults": "FTG Adults",
-    "2-FTG 5/6th":  "FTG Adults", // 5th/6th FTG → FTG Adults
-    "2-FTG Kids":   "FTG Kids",
+    "1-Adults":       "Adults",
+    "1-RS 5-6th":     "Adults",   // 5th/6th grade → adult attendance
+    "1-RevKids":      "Kids",
+    "2-FTG Adults":   "FTG Adults",
+    "2-FTG 5/6th":    "FTG Adults", // 5th/6th FTG → FTG Adults
+    "2-FTG Kids":     "FTG Kids",
+    // Manual headcount form entries (salvations, baptisms)
+    "Salvations":     "Salvations",
+    "3-Salvations":   "Salvations",
+    "4-Salvations":   "Salvations",
+    "Baptisms":       "Baptisms",
+    "3-Baptisms":     "Baptisms",
+    "4-Baptisms":     "Baptisms",
   },
   // RevStudents events use custom headcount categories (not attendance_types)
   // These map PCO custom headcount names → our internal subgroup names
@@ -805,16 +819,36 @@ export async function syncWeeklyAttendance(
 // Weekly Giving Sync
 // ============================================================
 
+/**
+ * Map a PCO fund name to a campus identifier.
+ * Fund names like "Canton General", "Jasper Designated", "All Campuses" etc.
+ * Returns null if the fund should be attributed to "All Campuses" (combined).
+ */
+function mapFundToCampus(fundName: string): string {
+  const name = fundName.toLowerCase();
+  if (name.includes("canton")) return "Canton";
+  if (name.includes("jasper")) return "Jasper";
+  // Funds without a specific campus → combined
+  return "All Campuses";
+}
+
+/**
+ * Determine if a fund is "general" (tithes/offerings) vs "designated" (special purpose).
+ * General funds: tithe, offering, general, unrestricted
+ * Designated funds: building, missions, benevolence, special, etc.
+ */
+function isGeneralFund(fundName: string): boolean {
+  const name = fundName.toLowerCase();
+  const designatedKeywords = ["building", "mission", "benevolence", "special", "designated", "camp", "trip", "project", "fund drive", "capital"];
+  return !designatedKeywords.some(k => name.includes(k));
+}
+
 export async function syncWeeklyGiving(
-  _client: PcoClient,
+  client: PcoClient,
   dateFrom?: string,
   dateTo?: string,
   onProgress?: (pct: number, message: string, processed: number) => Promise<void>
 ): Promise<SyncResult> {
-  // NOTE: This function no longer calls the PCO Giving API.
-  // The PCO /giving/v2/donations endpoint causes TCP hangs that no timeout can reliably fix.
-  // Instead, we aggregate giving_weekly rows (already in DB from spreadsheet imports + manual entry)
-  // into giving_monthly totals. This is instant and always reliable.
   const start = Date.now();
   let recordsProcessed = 0;
   let recordsCreated = 0;
@@ -827,14 +861,222 @@ export async function syncWeeklyGiving(
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
-    console.log(`[Weekly Giving] Aggregating giving_weekly → giving_monthly (${effectiveDateFrom} → ${effectiveDateTo})...`);
+    console.log(`[Weekly Giving] Starting PCO giving sync (${effectiveDateFrom} → ${effectiveDateTo})...`);
 
     if (onProgress) {
-      await onProgress(62, "Aggregating weekly giving into monthly totals...", 0);
+      await onProgress(5, "Fetching PCO fund list...", 0);
     }
 
-    // Read giving_weekly rows for the date range
-    const weeklyRows = await db
+    // Step 1: Fetch all funds to build fund_id → { campus, isGeneral } map
+    const fundMap = new Map<string, { campus: string; isGeneral: boolean; name: string }>();
+    try {
+      const fundsResp = await client.paginateAll("/giving/v2/funds", { per_page: 100 });
+      for (const fund of fundsResp.data as any[]) {
+        const fundId = fund.id as string;
+        const fundName: string = fund.attributes?.name || "";
+        fundMap.set(fundId, {
+          campus: mapFundToCampus(fundName),
+          isGeneral: isGeneralFund(fundName),
+          name: fundName,
+        });
+      }
+      console.log(`[Weekly Giving] Loaded ${fundMap.size} funds from PCO`);
+    } catch (fundErr: any) {
+      console.warn(`[Weekly Giving] Failed to fetch funds: ${fundErr.message}. Will attribute all donations to 'All Campuses'.`);
+    }
+
+    if (onProgress) {
+      await onProgress(10, "Fetching donations from PCO...", 0);
+    }
+
+    // Step 2: Fetch all donations with designations in the date range
+    // Process in weekly chunks to avoid TCP hangs from large responses
+    const weeklyAgg = new Map<string, { year: number; weekNumber: number; weekStartDate: string; campus: string; total: number; general: number; designated: number; donationCount: number }>();
+
+    // Generate list of weekly chunks
+    const chunks: Array<{ from: string; to: string }> = [];
+    let chunkStart = new Date(effectiveDateFrom);
+    const endDate = new Date(effectiveDateTo);
+    while (chunkStart <= endDate) {
+      const chunkEnd = new Date(chunkStart);
+      chunkEnd.setDate(chunkEnd.getDate() + 6); // 7-day window
+      if (chunkEnd > endDate) chunkEnd.setTime(endDate.getTime());
+      chunks.push({
+        from: formatDate(chunkStart),
+        to: formatDate(chunkEnd),
+      });
+      chunkStart.setDate(chunkStart.getDate() + 7);
+    }
+
+    console.log(`[Weekly Giving] Processing ${chunks.length} weekly chunks...`);
+
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      const pct = Math.round(10 + (i / chunks.length) * 70);
+
+      if (onProgress && i % 4 === 0) {
+        await onProgress(pct, `Fetching donations ${chunk.from} → ${chunk.to} (${i + 1}/${chunks.length})...`, recordsProcessed);
+      }
+
+      try {
+        const donationsResp = await client.paginateAll(
+          "/giving/v2/donations",
+          {
+            include: "designations",
+            "where[received_at][gte]": chunk.from,
+            "where[received_at][lte]": chunk.to,
+            per_page: 100,
+          },
+          50 // max 50 pages per chunk (5000 donations per week is more than enough)
+        );
+
+        const donations = donationsResp.data as any[];
+        const included = donationsResp.included as any[];
+
+        // Build designation lookup: designation_id → { fund_id, amount_cents }
+        const designationMap = new Map<string, { fundId: string; amountCents: number }>();
+        for (const inc of included) {
+          if (inc.type === "Designation") {
+            designationMap.set(inc.id, {
+              fundId: inc.relationships?.fund?.data?.id || "",
+              amountCents: inc.attributes?.amount_cents || 0,
+            });
+          }
+        }
+
+        for (const donation of donations) {
+          recordsProcessed++;
+          const receivedAt: string = donation.attributes?.received_at || chunk.from;
+          const donationDate = new Date(receivedAt);
+          // Get the Sunday of the week containing this donation date
+          const dow = donationDate.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+          const weekStart = new Date(donationDate);
+          weekStart.setDate(donationDate.getDate() - dow);
+          weekStart.setHours(0, 0, 0, 0);
+          const weekStartStr = formatDate(weekStart);
+          const year = weekStart.getFullYear();
+          const weekNum = getISOWeekNumber(weekStart);
+
+          // Get designations for this donation
+          const designationRefs = donation.relationships?.designations?.data || [];
+
+          if (designationRefs.length === 0) {
+            // No designations: use total amount_cents, attribute to All Campuses general
+            const amountCents: number = donation.attributes?.amount_cents || 0;
+            const amountDollars = amountCents / 100;
+            const campus = "All Campuses";
+            const key = `${weekStartStr}-${campus}`;
+            const existing = weeklyAgg.get(key);
+            if (existing) {
+              existing.total += amountDollars;
+              existing.general += amountDollars;
+              existing.donationCount++;
+            } else {
+              weeklyAgg.set(key, { year, weekNumber: weekNum, weekStartDate: weekStartStr, campus, total: amountDollars, general: amountDollars, designated: 0, donationCount: 1 });
+            }
+          } else {
+            // Process each designation
+            for (const ref of designationRefs) {
+              const desig = designationMap.get(ref.id);
+              if (!desig) continue;
+              const amountDollars = desig.amountCents / 100;
+              const fundInfo = fundMap.get(desig.fundId);
+              const campus = fundInfo?.campus || "All Campuses";
+              const isGeneral = fundInfo?.isGeneral ?? true;
+              const key = `${weekStartStr}-${campus}`;
+              const existing = weeklyAgg.get(key);
+              if (existing) {
+                existing.total += amountDollars;
+                if (isGeneral) existing.general += amountDollars;
+                else existing.designated += amountDollars;
+                existing.donationCount++;
+              } else {
+                weeklyAgg.set(key, {
+                  year,
+                  weekNumber: weekNum,
+                  weekStartDate: weekStartStr,
+                  campus,
+                  total: amountDollars,
+                  general: isGeneral ? amountDollars : 0,
+                  designated: isGeneral ? 0 : amountDollars,
+                  donationCount: 1,
+                });
+              }
+            }
+          }
+        }
+      } catch (chunkErr: any) {
+        console.warn(`[Weekly Giving] Failed to fetch chunk ${chunk.from}→${chunk.to}: ${chunkErr.message}`);
+        // Continue with next chunk rather than failing the whole sync
+      }
+    }
+
+    console.log(`[Weekly Giving] Processed ${recordsProcessed} donations into ${weeklyAgg.size} weekly campus rows`);
+
+    if (onProgress) {
+      await onProgress(82, `Writing ${weeklyAgg.size} weekly giving rows to database...`, recordsProcessed);
+    }
+
+    // Step 3: Fetch locked rows to skip them
+    const lockedRows = await db
+      .select({ weekStartDate: givingWeekly.weekStartDate, campus: givingWeekly.campus })
+      .from(givingWeekly)
+      .where(eq(givingWeekly.manualLock, true));
+    const lockedSet = new Set(lockedRows.map(r => `${r.weekStartDate}-${r.campus}`));
+
+    // Step 4: Upsert giving_weekly rows (skip locked)
+    const weeklyBatch: typeof givingWeekly.$inferInsert[] = [];
+    for (const [key, agg] of Array.from(weeklyAgg.entries())) {
+      if (lockedSet.has(key)) {
+        console.log(`[Weekly Giving] Skipping locked row: ${key}`);
+        continue;
+      }
+      weeklyBatch.push({
+        year: agg.year,
+        weekNumber: agg.weekNumber,
+        weekStartDate: agg.weekStartDate,
+        campus: agg.campus,
+        total: String(agg.total.toFixed(2)),
+        general: String(agg.general.toFixed(2)),
+        designated: String(agg.designated.toFixed(2)),
+        donationCount: agg.donationCount,
+        source: "pco",
+      });
+    }
+
+    if (weeklyBatch.length > 0) {
+      // Process in batches of 100 to avoid large inserts
+      const BATCH_SIZE = 100;
+      for (let i = 0; i < weeklyBatch.length; i += BATCH_SIZE) {
+        const batch = weeklyBatch.slice(i, i + BATCH_SIZE);
+        try {
+          await db
+            .insert(givingWeekly)
+            .values(batch)
+            .onDuplicateKeyUpdate({
+              set: {
+                total: sql`VALUES(total)`,
+                general: sql`VALUES(general)`,
+                designated: sql`VALUES(designated)`,
+                donationCount: sql`VALUES(donationCount)`,
+                source: sql`VALUES(source)`,
+              },
+            });
+          recordsCreated += batch.length;
+        } catch (batchErr: any) {
+          console.warn(`[Weekly Giving] Batch write failed: ${batchErr.message}`);
+        }
+      }
+    }
+
+    console.log(`[Weekly Giving] Wrote ${recordsCreated} giving_weekly rows`);
+
+    if (onProgress) {
+      await onProgress(90, "Aggregating weekly giving into monthly totals...", recordsProcessed);
+    }
+
+    // Step 5: Aggregate giving_weekly → giving_monthly (for the synced date range)
+    const allWeeklyRows = await db
       .select()
       .from(givingWeekly)
       .where(
@@ -844,76 +1086,52 @@ export async function syncWeeklyGiving(
         )
       );
 
-    console.log(`[Weekly Giving] Found ${weeklyRows.length} weekly giving rows to aggregate`);
-    recordsProcessed = weeklyRows.length;
-
-    // Aggregate by year/month/campus
-    const monthlyMap = new Map<string, { year: number; month: number; campus: string; total: number; general: number; designated: number; weekCount: number }>();
-
-    for (const row of weeklyRows) {
+    const monthlyMap = new Map<string, { year: number; month: number; campus: string; total: number; general: number; designated: number }>();
+    for (const row of allWeeklyRows) {
       const date = new Date(row.weekStartDate);
       const year = date.getFullYear();
       const month = date.getMonth() + 1;
       const campus = row.campus;
       const key = `${year}-${month}-${campus}`;
-
       const existing = monthlyMap.get(key);
       const total = parseFloat(row.total || "0");
       const general = parseFloat(row.general || "0");
       const designated = parseFloat(row.designated || "0");
-
       if (existing) {
         existing.total += total;
         existing.general += general;
         existing.designated += designated;
-        existing.weekCount++;
       } else {
-        monthlyMap.set(key, { year, month, campus, total, general, designated, weekCount: 1 });
+        monthlyMap.set(key, { year, month, campus, total, general, designated });
       }
     }
 
-    if (onProgress) {
-      await onProgress(88, `Writing ${monthlyMap.size} monthly giving totals...`, recordsProcessed);
-    }
-
-    // Ping DB before batch write to wake up idle pool connection
-    try {
-      await db.execute(sql`SELECT 1`);
-    } catch (pingErr: any) {
-      console.warn(`[Weekly Giving] DB ping failed: ${pingErr.message}`);
-    }
-
-    // Build batch rows for giving_monthly upsert
-    const batchRows: { year: number; month: number; campus: string; subgroup: string; total: string; source: string }[] = [];
+    const monthlyBatch: { year: number; month: number; campus: string; subgroup: string; total: string; source: string }[] = [];
     for (const [, agg] of Array.from(monthlyMap.entries())) {
-      batchRows.push({ year: agg.year, month: agg.month, campus: agg.campus, subgroup: "Tithes and Offerings", total: String(agg.general.toFixed(2)), source: "aggregated" });
+      monthlyBatch.push({ year: agg.year, month: agg.month, campus: agg.campus, subgroup: "Tithes and Offerings", total: String(agg.general.toFixed(2)), source: "aggregated" });
       if (agg.designated > 0) {
-        batchRows.push({ year: agg.year, month: agg.month, campus: agg.campus, subgroup: "Designated", total: String(agg.designated.toFixed(2)), source: "aggregated" });
+        monthlyBatch.push({ year: agg.year, month: agg.month, campus: agg.campus, subgroup: "Designated", total: String(agg.designated.toFixed(2)), source: "aggregated" });
       }
     }
 
-    if (batchRows.length > 0) {
-      const insertPromise = db
-        .insert(givingMonthly)
-        .values(batchRows)
-        .onDuplicateKeyUpdate({
-          set: {
-            total: sql`VALUES(total)`,
-            source: sql`VALUES(source)`,
-          },
-        });
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("DB write timeout for giving_monthly")), 30000)
-      );
+    if (monthlyBatch.length > 0) {
       try {
-        await Promise.race([insertPromise, timeoutPromise]);
-        recordsCreated += batchRows.length;
-      } catch (writeErr: any) {
-        console.warn(`[Weekly Giving] giving_monthly write failed/timed out: ${writeErr.message}`);
+        await db
+          .insert(givingMonthly)
+          .values(monthlyBatch)
+          .onDuplicateKeyUpdate({
+            set: {
+              total: sql`VALUES(total)`,
+              source: sql`VALUES(source)`,
+            },
+          });
+        recordsUpdated += monthlyBatch.length;
+      } catch (monthlyErr: any) {
+        console.warn(`[Weekly Giving] giving_monthly write failed: ${monthlyErr.message}`);
       }
     }
 
-    console.log(`[Weekly Giving] Aggregation complete: ${recordsProcessed} weekly rows → ${recordsCreated} created, ${recordsUpdated} updated monthly rows`);
+    console.log(`[Weekly Giving] Complete: ${recordsProcessed} donations → ${recordsCreated} weekly rows, ${recordsUpdated} monthly rows`);
 
     return {
       syncType: "weekly_giving",
@@ -924,7 +1142,7 @@ export async function syncWeeklyGiving(
       durationMs: Date.now() - start,
     };
   } catch (error: any) {
-    console.error("[Weekly Giving] Aggregation failed:", error.message);
+    console.error("[Weekly Giving] Sync failed:", error.message);
     return {
       syncType: "weekly_giving",
       status: "failed",

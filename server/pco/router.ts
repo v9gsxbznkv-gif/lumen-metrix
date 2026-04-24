@@ -834,6 +834,7 @@ export const pcoRouter = router({
     .input(z.object({ weekStartDate: z.string().default('2026-04-13') }))
     .query(async ({ input }) => {
       const db = await getDb();
+      if (!db) throw new Error('Database not available');
 
       const attRows = await db
         .select()
