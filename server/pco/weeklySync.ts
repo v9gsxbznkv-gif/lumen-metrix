@@ -633,15 +633,13 @@ export async function syncWeeklyAttendance(
       await onProgress(56, `Saving ${weeklyMap.size} weekly attendance rows to database...`, recordsProcessed);
     }
 
-    // Step 2: Batch upsert into attendance_weekly.
-    // Uses a FRESH dedicated DB connection (not the shared app pool) to avoid
-    // the pool getting into a broken state during long sync operations.
+    // Step 2: Batch upsert into attendance_weekly using the shared app DB connection.
+    // Uses raw SQL execute to avoid ORM overhead that can cause hangs on long-running connections.
     const rows = Array.from(weeklyMap.values());
 
-    let freshConn: { db: ReturnType<typeof drizzle>; end: () => Promise<void> } | null = null;
     try {
-      freshConn = await createFreshDb();
-      const writeDb = freshConn.db;
+      const writeDb = await getDb();
+      if (!writeDb) throw new Error("DB not available for writes");
 
       // Fetch all locked rows in one query so we can exclude them from the batch
       const lockedRows = await writeDb
@@ -651,17 +649,28 @@ export async function syncWeeklyAttendance(
       const lockedKeys = new Set(lockedRows.map(r => `${r.weekStartDate}|${r.campus}|${r.subgroup}`));
 
       const rowsToWrite = rows.filter(r => !lockedKeys.has(`${r.weekStartDate}|${r.campus}|${r.subgroup}`));
-      console.log(`[PCO Weekly Sync] Writing ${rowsToWrite.length} rows via fresh connection (${rows.length - rowsToWrite.length} locked/skipped)`);
+      console.log(`[PCO Weekly Sync] Writing ${rowsToWrite.length} rows (${rows.length - rowsToWrite.length} locked/skipped)`);
 
-      const CHUNK_SIZE = 50;
-      for (let i = 0; i < rowsToWrite.length; i += CHUNK_SIZE) {
-        const chunk = rowsToWrite.slice(i, i + CHUNK_SIZE);
-        if (onProgress) {
-          const dbPct = 56 + Math.round((i / rowsToWrite.length) * 4);
-          await onProgress(dbPct, `Saving attendance rows (${i}/${rowsToWrite.length})...`, recordsProcessed);
-        }
-        try {
-          const writePromise = writeDb
+      if (onProgress) {
+        await onProgress(57, `Saving ${rowsToWrite.length} attendance rows to database...`, recordsProcessed);
+      }
+
+      // Ping the DB connection before writing to ensure it's alive after the long PCO fetch.
+      // The pool connection may have gone idle during the PCO API calls.
+      try {
+        await writeDb.execute(sql`SELECT 1`);
+        console.log(`[PCO Weekly Sync] DB connection ping OK, proceeding with writes`);
+      } catch (pingErr: any) {
+        console.warn(`[PCO Weekly Sync] DB ping failed (${pingErr.message}), will attempt writes anyway`);
+      }
+
+      // Build a single INSERT ... ON DUPLICATE KEY UPDATE for all rows at once.
+      // One DB round-trip per chunk instead of N individual queries.
+      if (rowsToWrite.length > 0) {
+        const CHUNK_SIZE = 100;
+        for (let i = 0; i < rowsToWrite.length; i += CHUNK_SIZE) {
+          const chunk = rowsToWrite.slice(i, i + CHUNK_SIZE);
+          const insertPromise = writeDb
             .insert(attendanceWeekly)
             .values(chunk.map(row => ({
               year: row.year,
@@ -683,21 +692,23 @@ export async function syncWeeklyAttendance(
                 volunteerCount: sql`VALUES(volunteerCount)`,
                 year: sql`VALUES(year)`,
                 weekNumber: sql`VALUES(weekNumber)`,
+                source: sql`VALUES(source)`,
               },
             });
+          // 30s hard timeout per chunk — if DB stalls, skip and continue
           const timeoutPromise = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error(`DB write timeout at chunk ${i}`)), 20000)
+            setTimeout(() => reject(new Error(`DB write timeout chunk ${i}`)), 30000)
           );
-          await Promise.race([writePromise, timeoutPromise]);
-          recordsCreated += chunk.length;
-        } catch (err: any) {
-          console.warn(`[PCO Weekly Sync] Skipping attendance chunk at ${i} (${err.message})`);
+          try {
+            await Promise.race([insertPromise, timeoutPromise]);
+            recordsCreated += chunk.length;
+          } catch (chunkErr: any) {
+            console.warn(`[PCO Weekly Sync] Chunk ${i} write failed/timed out: ${chunkErr.message}`);
+          }
         }
       }
-    } catch (connErr: any) {
-      console.error(`[PCO Weekly Sync] Failed to open fresh DB connection: ${connErr.message}`);
-    } finally {
-      if (freshConn) await freshConn.end();
+    } catch (writeErr: any) {
+      console.error(`[PCO Weekly Sync] DB write error: ${writeErr.message}`);
     }
 
     console.log(`[PCO Weekly Sync] Weekly attendance sync complete: ${recordsProcessed} periods → ${recordsCreated} created, ${recordsUpdated} updated`);

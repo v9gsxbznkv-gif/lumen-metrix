@@ -614,3 +614,11 @@
 - [x] Never scan 300+ historical events regardless of date range
 - [x] All 107 tests passing
 - [x] Checkpoint and deploy
+
+## Round 64: Fix DB Write Hang at 56% (Definitive Fix)
+
+- [x] Removed createFreshDb() — use shared getDb() connection instead
+- [x] Added SELECT 1 ping before INSERT to wake up idle pool connection
+- [x] Added 30s Promise.race timeout per chunk so stalled writes don't block forever
+- [x] All 107 tests passing
+- [x] Checkpoint and deploy
