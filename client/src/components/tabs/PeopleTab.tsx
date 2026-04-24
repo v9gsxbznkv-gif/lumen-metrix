@@ -109,8 +109,14 @@ export default function PeopleTab() {
     const hasJasperFTG = ftgAdultRows.some((r) => r.year === y && r.weekNumber === w && r.campus === "Jasper");
     return hasCantonFTG && hasJasperFTG;
   });
-  // Pick the latest complete week
-  const latestCompleteKey = weeksWithBothCampuses.sort().at(-1);
+  // Pick the latest complete week — sort numerically by year then week (pad week to avoid "9" > "15" lexicographic bug)
+  const latestCompleteKey = weeksWithBothCampuses
+    .sort((a, b) => {
+      const [ay, aw] = a.split("-").map(Number);
+      const [by, bw] = b.split("-").map(Number);
+      return ay !== by ? ay - by : aw - bw;
+    })
+    .at(-1);
   const latestFtgYear = latestCompleteKey ? Number(latestCompleteKey.split("-")[0]) : latestYear;
   const latestFtgWeek = latestCompleteKey ? Number(latestCompleteKey.split("-")[1]) : 0;
   const latestFtgRows = ftgRows.filter((r) => r.weekNumber === latestFtgWeek && r.year === latestFtgYear);

@@ -719,10 +719,11 @@ export const pcoRouter = router({
         { per_page: 25 }
       );
 
-      const rows: Array<{ eventTimeId: string; attTypeId: string | null; attTypeName: string | null; total: number }> = [];
+      const rows: Array<{ eventTimeId: string; dayOfWeek: number; startsAt: string; hour: number; regularCount: number; totalCount: number; attTypeId: string | null; attTypeName: string | null; total: number }> = [];
 
       for (const et of times.data as any[]) {
         const etId = et.id;
+        const etAttrs = et.attributes ?? {};
         const hcs = await client.paginateAll(
           `/check-ins/v2/event_times/${etId}/headcounts`,
           { per_page: 25 }
@@ -737,7 +738,31 @@ export const pcoRouter = router({
               attTypeName = (att as any).data?.attributes?.name ?? null;
             } catch {}
           }
-          rows.push({ eventTimeId: etId, attTypeId, attTypeName, total });
+          rows.push({
+            eventTimeId: etId,
+            dayOfWeek: etAttrs.day_of_week,
+            startsAt: etAttrs.starts_at,
+            hour: etAttrs.hour,
+            regularCount: etAttrs.regular_count,
+            totalCount: etAttrs.total_count,
+            attTypeId,
+            attTypeName,
+            total
+          });
+        }
+        // If no headcounts, still log the event time so we can see all times
+        if ((hcs.data as any[]).length === 0) {
+          rows.push({
+            eventTimeId: etId,
+            dayOfWeek: etAttrs.day_of_week,
+            startsAt: etAttrs.starts_at,
+            hour: etAttrs.hour,
+            regularCount: etAttrs.regular_count,
+            totalCount: etAttrs.total_count,
+            attTypeId: null,
+            attTypeName: 'NO_HEADCOUNTS',
+            total: 0
+          });
         }
       }
 
