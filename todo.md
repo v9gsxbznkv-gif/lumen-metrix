@@ -558,3 +558,11 @@
 - [x] Added Promise.race 90s timeout to syncWeeklyGiving donations paginateAll
 - [x] All 107 tests passing
 - [x] Checkpoint and deploy
+
+## Round 57: Eliminate PCO Giving API — Aggregate from DB Instead
+
+- [x] giving_weekly has: year, weekNumber, weekStartDate, campus, total, general, designated, donationCount
+- [x] Rewrote syncWeeklyGiving to aggregate giving_weekly rows into giving_monthly (zero PCO calls)
+- [x] syncGiving (monthly) already uses DB aggregation from attendance_weekly pattern
+- [x] All 107 tests passing
+- [x] Checkpoint and deploy

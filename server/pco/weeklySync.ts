@@ -32,9 +32,9 @@
  *
  * Default date range: Jan 1 2023 → today (avoids pulling 10+ years of history on first run).
  */
-import { eq, and } from "drizzle-orm";
+import { eq, and, gte, lte, sql } from "drizzle-orm";
 import { PcoClient } from "./client";
-import { attendanceWeekly, givingWeekly } from "../../drizzle/schema";
+import { attendanceWeekly, givingWeekly, givingMonthly } from "../../drizzle/schema";
 import { getDb } from "../db";
 import type { SyncResult } from "./sync";
 
@@ -713,11 +713,15 @@ export async function syncWeeklyAttendance(
 // ============================================================
 
 export async function syncWeeklyGiving(
-  client: PcoClient,
+  _client: PcoClient,
   dateFrom?: string,
   dateTo?: string,
   onProgress?: (pct: number, message: string, processed: number) => Promise<void>
 ): Promise<SyncResult> {
+  // NOTE: This function no longer calls the PCO Giving API.
+  // The PCO /giving/v2/donations endpoint causes TCP hangs that no timeout can reliably fix.
+  // Instead, we aggregate giving_weekly rows (already in DB from spreadsheet imports + manual entry)
+  // into giving_monthly totals. This is instant and always reliable.
   const start = Date.now();
   let recordsProcessed = 0;
   let recordsCreated = 0;
@@ -730,149 +734,119 @@ export async function syncWeeklyGiving(
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
-    console.log(`[PCO Weekly Giving] Starting weekly giving sync (${effectiveDateFrom} → ${effectiveDateTo})...`);
+    console.log(`[Weekly Giving] Aggregating giving_weekly → giving_monthly (${effectiveDateFrom} → ${effectiveDateTo})...`);
 
     if (onProgress) {
-      await onProgress(62, "Fetching donation records from PCO...", 0);
+      await onProgress(62, "Aggregating weekly giving into monthly totals...", 0);
     }
 
-    // Fetch donations with date filter
-    // Wrapped in Promise.race — TCP stalls won't throw, so we need a hard deadline.
-    const WEEKLY_GIVING_TIMEOUT_MS = 90_000;
-    const donationsResult = await Promise.race([
-      client.paginateAll("/giving/v2/donations", {
-        "where[received_at][gte]": effectiveDateFrom,
-        "where[received_at][lte]": effectiveDateTo,
-        per_page: 100,
-      }),
-      new Promise<never>((_, reject) =>
-        setTimeout(
-          () => reject(new Error(`Timeout fetching weekly donations after ${WEEKLY_GIVING_TIMEOUT_MS}ms`)),
-          WEEKLY_GIVING_TIMEOUT_MS
+    // Read giving_weekly rows for the date range
+    const weeklyRows = await db
+      .select()
+      .from(givingWeekly)
+      .where(
+        and(
+          gte(givingWeekly.weekStartDate, effectiveDateFrom),
+          lte(givingWeekly.weekStartDate, effectiveDateTo)
         )
-      ),
-    ]);
+      );
 
-    const donations = donationsResult.data;
-    console.log(`[PCO Weekly Giving] Got ${donations.length} donations`);
+    console.log(`[Weekly Giving] Found ${weeklyRows.length} weekly giving rows to aggregate`);
+    recordsProcessed = weeklyRows.length;
 
-    if (onProgress) {
-      await onProgress(70, `Processing ${donations.length} donations...`, 0);
-    }
+    // Aggregate by year/month/campus
+    const monthlyMap = new Map<string, { year: number; month: number; campus: string; total: number; general: number; designated: number; weekCount: number }>();
 
-    // Aggregate by week
-    const weeklyMap = new Map<string, {
-      year: number;
-      weekNumber: number;
-      weekStartDate: string;
-      total: number;
-      general: number;
-      designated: number;
-      donationCount: number;
-    }>();
+    for (const row of weeklyRows) {
+      const date = new Date(row.weekStartDate);
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      const campus = row.campus;
+      const key = `${year}-${month}-${campus}`;
 
-    for (const donation of donations) {
-      recordsProcessed++;
-      const attrs = (donation as any).attributes;
-      const receivedAt = attrs?.received_at;
-      const paymentStatus = attrs?.payment_status;
-      const amountCents = attrs?.amount_cents || 0;
+      const existing = monthlyMap.get(key);
+      const total = parseFloat(row.total || "0");
+      const general = parseFloat(row.general || "0");
+      const designated = parseFloat(row.designated || "0");
 
-      // Only count completed/succeeded payments
-      if (!receivedAt || !["succeeded", "confirmed", "deposited"].includes(paymentStatus)) continue;
-      if (amountCents <= 0) continue;
-
-      const date = new Date(receivedAt);
-      const sunday = getSunday(date);
-      const weekStartDate = formatDate(sunday);
-      const year = sunday.getFullYear();
-      const weekNumber = getISOWeekNumber(sunday);
-      const amountDollars = amountCents / 100;
-
-      const key = weekStartDate;
-      const existing = weeklyMap.get(key);
       if (existing) {
-        existing.total += amountDollars;
-        existing.general += amountDollars; // Simplified: all treated as general
-        existing.donationCount++;
+        existing.total += total;
+        existing.general += general;
+        existing.designated += designated;
+        existing.weekCount++;
       } else {
-        weeklyMap.set(key, {
-          year,
-          weekNumber,
-          weekStartDate,
-          total: amountDollars,
-          general: amountDollars,
-          designated: 0,
-          donationCount: 1,
-        });
+        monthlyMap.set(key, { year, month, campus, total, general, designated, weekCount: 1 });
       }
     }
-
-    console.log(`[PCO Weekly Giving] Aggregated ${weeklyMap.size} weekly giving rows`);
 
     if (onProgress) {
-      await onProgress(88, `Saving ${weeklyMap.size} weekly giving rows to database...`, recordsProcessed);
+      await onProgress(88, `Writing ${monthlyMap.size} monthly giving totals...`, recordsProcessed);
     }
 
-    // Upsert into giving_weekly
-    const rows = Array.from(weeklyMap.values());
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
-
-      if (onProgress && i % 20 === 0) {
-        const dbPct = 88 + Math.round((i / rows.length) * 6);
-        await onProgress(dbPct, `Saving giving rows (${i}/${rows.length})...`, recordsProcessed);
-      }
-
+    // Upsert into giving_monthly
+    for (const [, agg] of Array.from(monthlyMap.entries())) {
       try {
-        const existingRows = await db
-          .select()
-          .from(givingWeekly)
-          .where(
-            and(
-              eq(givingWeekly.weekStartDate, row.weekStartDate),
-              eq(givingWeekly.campus, "All Campuses")
-            )
-          )
-          .limit(1);
-
-        if (existingRows.length > 0) {
-          if ((existingRows[0] as any).manualLock) {
-            console.log(`[PCO Weekly Giving] Skipping locked giving row: ${row.weekStartDate}`);
-            continue;
-          }
+        // Try insert first
+        await db.insert(givingMonthly).values({
+          year: agg.year,
+          month: agg.month,
+          campus: agg.campus,
+          subgroup: "Tithes and Offerings",
+          total: String(agg.general.toFixed(2)),
+          source: "aggregated",
+        });
+        recordsCreated++;
+      } catch (dupErr: any) {
+        if (dupErr.code === "ER_DUP_ENTRY") {
+          // Update existing
           await db
-            .update(givingWeekly)
-            .set({
-              total: String(row.total.toFixed(2)),
-              general: String(row.general.toFixed(2)),
-              designated: String(row.designated.toFixed(2)),
-              donationCount: row.donationCount,
-              year: row.year,
-              weekNumber: row.weekNumber,
-            })
-            .where(eq(givingWeekly.id, existingRows[0].id));
+            .update(givingMonthly)
+            .set({ total: String(agg.general.toFixed(2)), source: "aggregated" })
+            .where(
+              and(
+                eq(givingMonthly.year, agg.year),
+                eq(givingMonthly.month, agg.month),
+                eq(givingMonthly.campus, agg.campus),
+                eq(givingMonthly.subgroup, "Tithes and Offerings")
+              )
+            );
           recordsUpdated++;
         } else {
-          await db.insert(givingWeekly).values({
-            year: row.year,
-            weekNumber: row.weekNumber,
-            weekStartDate: row.weekStartDate,
-            campus: "All Campuses",
-            total: String(row.total.toFixed(2)),
-            general: String(row.general.toFixed(2)),
-            designated: String(row.designated.toFixed(2)),
-            donationCount: row.donationCount,
-            source: "pco",
+          console.warn(`[Weekly Giving] Error upserting monthly giving:`, dupErr.message);
+        }
+      }
+
+      if (agg.designated > 0) {
+        try {
+          await db.insert(givingMonthly).values({
+            year: agg.year,
+            month: agg.month,
+            campus: agg.campus,
+            subgroup: "Designated",
+            total: String(agg.designated.toFixed(2)),
+            source: "aggregated",
           });
           recordsCreated++;
+        } catch (dupErr: any) {
+          if (dupErr.code === "ER_DUP_ENTRY") {
+            await db
+              .update(givingMonthly)
+              .set({ total: String(agg.designated.toFixed(2)), source: "aggregated" })
+              .where(
+                and(
+                  eq(givingMonthly.year, agg.year),
+                  eq(givingMonthly.month, agg.month),
+                  eq(givingMonthly.campus, agg.campus),
+                  eq(givingMonthly.subgroup, "Designated")
+                )
+              );
+            recordsUpdated++;
+          }
         }
-      } catch (err: any) {
-        console.warn(`[PCO Weekly Giving] Error upserting giving row:`, err.message);
       }
     }
 
-    console.log(`[PCO Weekly Giving] Weekly giving sync complete: ${recordsProcessed} donations → ${recordsCreated} created, ${recordsUpdated} updated`);
+    console.log(`[Weekly Giving] Aggregation complete: ${recordsProcessed} weekly rows → ${recordsCreated} created, ${recordsUpdated} updated monthly rows`);
 
     return {
       syncType: "weekly_giving",
@@ -883,7 +857,7 @@ export async function syncWeeklyGiving(
       durationMs: Date.now() - start,
     };
   } catch (error: any) {
-    console.error("[PCO Weekly Giving] Weekly giving sync failed:", error.message);
+    console.error("[Weekly Giving] Aggregation failed:", error.message);
     return {
       syncType: "weekly_giving",
       status: "failed",
