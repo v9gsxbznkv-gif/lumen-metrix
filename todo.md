@@ -590,3 +590,11 @@
 - [x] On timeout: log warning, skip chunk, continue to next chunk
 - [x] All 107 tests passing
 - [x] Checkpoint and deploy
+
+## Round 61: Fresh DB Connection for Sync Writes
+
+- [x] Added createFreshDb() that opens a brand-new mysql2 connection (not pooled) with 20s connectTimeout
+- [x] Used createFreshDb() in syncWeeklyAttendance DB write section
+- [x] Connection closed in finally block after all writes complete
+- [x] All 107 tests passing
+- [x] Checkpoint and deploy

@@ -33,10 +33,35 @@
  * Default date range: Jan 1 2023 → today (avoids pulling 10+ years of history on first run).
  */
 import { eq, and, gte, lte, sql } from "drizzle-orm";
+import mysql from "mysql2";
+import { drizzle } from "drizzle-orm/mysql2";
 import { PcoClient } from "./client";
 import { attendanceWeekly, givingWeekly, givingMonthly } from "../../drizzle/schema";
 import { getDb } from "../db";
 import type { SyncResult } from "./sync";
+
+/**
+ * Creates a brand-new dedicated MySQL connection for sync writes.
+ * This bypasses the shared app connection pool which can get into a broken
+ * state during long-running sync operations, causing writes to hang.
+ * The caller is responsible for calling conn.end() when done.
+ */
+async function createFreshDb(): Promise<{ db: ReturnType<typeof drizzle>; end: () => Promise<void> }> {
+  return new Promise((resolve, reject) => {
+    const conn = mysql.createConnection({
+      uri: process.env.DATABASE_URL!,
+      connectTimeout: 20000,
+    });
+    conn.connect((err) => {
+      if (err) return reject(err);
+      const db = drizzle(conn as any);
+      resolve({
+        db,
+        end: () => new Promise<void>((res) => conn.end(() => res())),
+      });
+    });
+  });
+}
 
 // ============================================================
 // Date helpers
@@ -622,61 +647,71 @@ export async function syncWeeklyAttendance(
       await onProgress(56, `Saving ${weeklyMap.size} weekly attendance rows to database...`, recordsProcessed);
     }
 
-    // Step 2: Batch upsert into attendance_weekly using onDuplicateKeyUpdate.
-    // This replaces 168 individual SELECT+INSERT/UPDATE round-trips with 3-4 batch calls,
-    // eliminating the DB connection stall that caused the sync to hang at 60%.
+    // Step 2: Batch upsert into attendance_weekly.
+    // Uses a FRESH dedicated DB connection (not the shared app pool) to avoid
+    // the pool getting into a broken state during long sync operations.
     const rows = Array.from(weeklyMap.values());
 
-    // Fetch all locked rows in one query so we can exclude them from the batch
-    const lockedRows = await db
-      .select({ weekStartDate: attendanceWeekly.weekStartDate, campus: attendanceWeekly.campus, subgroup: attendanceWeekly.subgroup })
-      .from(attendanceWeekly)
-      .where(eq(attendanceWeekly.manualLock, true));
-    const lockedKeys = new Set(lockedRows.map(r => `${r.weekStartDate}|${r.campus}|${r.subgroup}`));
+    let freshConn: { db: ReturnType<typeof drizzle>; end: () => Promise<void> } | null = null;
+    try {
+      freshConn = await createFreshDb();
+      const writeDb = freshConn.db;
 
-    const rowsToWrite = rows.filter(r => !lockedKeys.has(`${r.weekStartDate}|${r.campus}|${r.subgroup}`));
-    console.log(`[PCO Weekly Sync] Writing ${rowsToWrite.length} rows (${rows.length - rowsToWrite.length} locked/skipped)`);
+      // Fetch all locked rows in one query so we can exclude them from the batch
+      const lockedRows = await writeDb
+        .select({ weekStartDate: attendanceWeekly.weekStartDate, campus: attendanceWeekly.campus, subgroup: attendanceWeekly.subgroup })
+        .from(attendanceWeekly)
+        .where(eq(attendanceWeekly.manualLock, true));
+      const lockedKeys = new Set(lockedRows.map(r => `${r.weekStartDate}|${r.campus}|${r.subgroup}`));
 
-    const CHUNK_SIZE = 50;
-    for (let i = 0; i < rowsToWrite.length; i += CHUNK_SIZE) {
-      const chunk = rowsToWrite.slice(i, i + CHUNK_SIZE);
-      if (onProgress) {
-        const dbPct = 56 + Math.round((i / rowsToWrite.length) * 4);
-        await onProgress(dbPct, `Saving attendance rows (${i}/${rowsToWrite.length})...`, recordsProcessed);
+      const rowsToWrite = rows.filter(r => !lockedKeys.has(`${r.weekStartDate}|${r.campus}|${r.subgroup}`));
+      console.log(`[PCO Weekly Sync] Writing ${rowsToWrite.length} rows via fresh connection (${rows.length - rowsToWrite.length} locked/skipped)`);
+
+      const CHUNK_SIZE = 50;
+      for (let i = 0; i < rowsToWrite.length; i += CHUNK_SIZE) {
+        const chunk = rowsToWrite.slice(i, i + CHUNK_SIZE);
+        if (onProgress) {
+          const dbPct = 56 + Math.round((i / rowsToWrite.length) * 4);
+          await onProgress(dbPct, `Saving attendance rows (${i}/${rowsToWrite.length})...`, recordsProcessed);
+        }
+        try {
+          const writePromise = writeDb
+            .insert(attendanceWeekly)
+            .values(chunk.map(row => ({
+              year: row.year,
+              weekNumber: row.weekNumber,
+              weekStartDate: row.weekStartDate,
+              campus: row.campus,
+              subgroup: row.subgroup,
+              headcount: row.headcount,
+              regularCount: row.regularCount,
+              guestCount: row.guestCount,
+              volunteerCount: row.volunteerCount,
+              source: "pco" as const,
+            })))
+            .onDuplicateKeyUpdate({
+              set: {
+                headcount: sql`VALUES(headcount)`,
+                regularCount: sql`VALUES(regularCount)`,
+                guestCount: sql`VALUES(guestCount)`,
+                volunteerCount: sql`VALUES(volunteerCount)`,
+                year: sql`VALUES(year)`,
+                weekNumber: sql`VALUES(weekNumber)`,
+              },
+            });
+          const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error(`DB write timeout at chunk ${i}`)), 20000)
+          );
+          await Promise.race([writePromise, timeoutPromise]);
+          recordsCreated += chunk.length;
+        } catch (err: any) {
+          console.warn(`[PCO Weekly Sync] Skipping attendance chunk at ${i} (${err.message})`);
+        }
       }
-      try {
-        const writePromise = db
-          .insert(attendanceWeekly)
-          .values(chunk.map(row => ({
-            year: row.year,
-            weekNumber: row.weekNumber,
-            weekStartDate: row.weekStartDate,
-            campus: row.campus,
-            subgroup: row.subgroup,
-            headcount: row.headcount,
-            regularCount: row.regularCount,
-            guestCount: row.guestCount,
-            volunteerCount: row.volunteerCount,
-            source: "pco" as const,
-          })))
-          .onDuplicateKeyUpdate({
-            set: {
-              headcount: sql`VALUES(headcount)`,
-              regularCount: sql`VALUES(regularCount)`,
-              guestCount: sql`VALUES(guestCount)`,
-              volunteerCount: sql`VALUES(volunteerCount)`,
-              year: sql`VALUES(year)`,
-              weekNumber: sql`VALUES(weekNumber)`,
-            },
-          });
-        const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error(`DB write timeout at chunk ${i}`)), 15000)
-        );
-        await Promise.race([writePromise, timeoutPromise]);
-        recordsCreated += chunk.length;
-      } catch (err: any) {
-        console.warn(`[PCO Weekly Sync] Skipping attendance chunk at ${i} (${err.message})`);        
-      }
+    } catch (connErr: any) {
+      console.error(`[PCO Weekly Sync] Failed to open fresh DB connection: ${connErr.message}`);
+    } finally {
+      if (freshConn) await freshConn.end();
     }
 
     console.log(`[PCO Weekly Sync] Weekly attendance sync complete: ${recordsProcessed} periods → ${recordsCreated} created, ${recordsUpdated} updated`);
