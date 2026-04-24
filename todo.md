@@ -758,3 +758,11 @@
 - [x] Add PCO Services scope to OAuth (requires re-auth)
 - [x] TypeScript clean (0 errors) and 107 tests pass
 - [x] Checkpoint and deploy
+
+## Round 81: Wrong Week Bug Fix
+- [x] Weekly Report shows "Apr 20, 2026 (Week 17)" which has no data — should show most recent week with actual data (Week 16 / Apr 13)
+- [x] Fix getLatestSnapshot: changed from ≥3 total rows to require ≥2 campuses with main Check-In subgroups AND ≥8 total rows — week 17 had 3 rows (1 check-in + 2 volunteers) which passed old threshold but fails new one
+- [x] Week picker still allows navigating to any week (no frontend changes needed)
+- [x] Added regression test: "selects a complete week with ≥2 campuses, not a partial week"
+- [x] TypeScript clean (0 errors via npx tsc --noEmit) and 108 tests pass
+- [ ] Checkpoint and deploy

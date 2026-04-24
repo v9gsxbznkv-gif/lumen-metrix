@@ -627,31 +627,42 @@ async function getLatestSnapshot(
     .limit(1);
 
   if (latestWeekRow.length > 0) {
-    // Find the most recent week that has a full data set (≥3 rows = main check-in + kids + at least one more)
-    // This prevents partial weeks (e.g. only Sunday check-in entered so far) from showing as the "current" week
+    // Find the most recent week that has a COMPLETE data set.
+    // A complete week must have ≥2 distinct campuses with main Check-In subgroups
+    // AND ≥8 total rows (check-in + kids + students + FTG etc.).
+    // This prevents partial weeks (e.g. only volunteer counts or a single campus check-in)
+    // from showing as the "current" week.
     const allWeekRows = await db
       .select()
       .from(attendanceWeekly)
       .where(eq(attendanceWeekly.year, year))
       .orderBy(desc(attendanceWeekly.weekNumber));
 
-    // Group by weekStartDate and find the latest one with ≥3 rows
-    const weekCounts = new Map<string, { weekNumber: number; count: number }>();
+    // Group by weekStartDate and track row count + distinct campuses with Check-In subgroups
+    const weekStats = new Map<string, { weekNumber: number; count: number; checkInCampuses: Set<string> }>();
     for (const r of allWeekRows) {
-      const existing = weekCounts.get(r.weekStartDate);
+      const existing = weekStats.get(r.weekStartDate);
       if (existing) {
         existing.count++;
+        if (PCO_CHECKIN_SUBGROUPS.includes(r.subgroup)) {
+          existing.checkInCampuses.add(r.campus);
+        }
       } else {
-        weekCounts.set(r.weekStartDate, { weekNumber: r.weekNumber, count: 1 });
+        const campuses = new Set<string>();
+        if (PCO_CHECKIN_SUBGROUPS.includes(r.subgroup)) {
+          campuses.add(r.campus);
+        }
+        weekStats.set(r.weekStartDate, { weekNumber: r.weekNumber, count: 1, checkInCampuses: campuses });
       }
     }
 
     // Sort by weekNumber descending and find the first complete week
-    const sortedWeeks = Array.from(weekCounts.entries())
+    const sortedWeeks = Array.from(weekStats.entries())
       .sort((a, b) => b[1].weekNumber - a[1].weekNumber);
 
-    // Use the latest week with ≥3 rows; if none qualify, fall back to the absolute latest
-    const completeWeek = sortedWeeks.find(([, v]) => v.count >= 3) ?? sortedWeeks[0];
+    // A week is "complete" when it has ≥2 campuses with main Check-In data AND ≥8 total rows.
+    // Fall back to the absolute latest week if none qualify.
+    const completeWeek = sortedWeeks.find(([, v]) => v.checkInCampuses.size >= 2 && v.count >= 8) ?? sortedWeeks[0];
     const [weekStartDate, { weekNumber }] = completeWeek;
 
     const snapshot = await getWeeklySnapshot(db, weekStartDate, weekNumber, year);

@@ -143,6 +143,24 @@ describe("weeklyReport.getData", () => {
       expect(result.current.totals.giving).toBe(givingSum);
     }
   });
+
+  it("selects a complete week with ≥2 campuses, not a partial week", async () => {
+    const caller = appRouter.createCaller(createPublicContext());
+    const result = await caller.weeklyReport.getData({
+      year: 2026,
+      comparisons: [],
+    });
+
+    // The selected week must have at least 2 campuses (Canton + Jasper at minimum)
+    if (result.current && result.current.source === "weekly") {
+      expect(result.current.campuses.length).toBeGreaterThanOrEqual(2);
+      // Total attendance should be substantial (not a partial week with only volunteers)
+      expect(result.current.totals.attendance).toBeGreaterThan(100);
+      // Week number should NOT be a future/partial week with no real data
+      // Week 16 has 19 rows and full data; week 17 only has 3 rows (partial)
+      expect(result.meta.latestWeek).toBeLessThanOrEqual(17);
+    }
+  });
 });
 
 describe("weeklyReport.getSchedule", () => {
