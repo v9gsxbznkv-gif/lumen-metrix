@@ -98,25 +98,17 @@ export default function PeopleTab() {
     (r) => r.subgroup === "FTG Adults" || r.subgroup === "FTG Kids" || r.subgroup === "RevStudents FTG"
   );
 
-  // Find the most recent COMPLETE week — both Canton and Jasper must have FTG Adults data.
-  // This prevents a partial week (e.g. only Jasper entered) from showing as the current week.
+  // Find the most recent week with ANY FTG data — show dashes for campuses that haven't entered yet.
+  // Sort numerically to avoid "9" > "15" lexicographic bug.
   const ftgAdultRows = ftgRows.filter((r) => r.subgroup === "FTG Adults");
-  const weeksWithBothCampuses = Array.from(
+  const allFtgWeekKeys = Array.from(
     new Set(ftgAdultRows.map((r) => `${r.year}-${r.weekNumber}`))
-  ).filter((key) => {
-    const [y, w] = key.split("-").map(Number);
-    const hasCantonFTG = ftgAdultRows.some((r) => r.year === y && r.weekNumber === w && r.campus === "Canton");
-    const hasJasperFTG = ftgAdultRows.some((r) => r.year === y && r.weekNumber === w && r.campus === "Jasper");
-    return hasCantonFTG && hasJasperFTG;
+  ).sort((a, b) => {
+    const [ay, aw] = a.split("-").map(Number);
+    const [by, bw] = b.split("-").map(Number);
+    return ay !== by ? ay - by : aw - bw;
   });
-  // Pick the latest complete week — sort numerically by year then week (pad week to avoid "9" > "15" lexicographic bug)
-  const latestCompleteKey = weeksWithBothCampuses
-    .sort((a, b) => {
-      const [ay, aw] = a.split("-").map(Number);
-      const [by, bw] = b.split("-").map(Number);
-      return ay !== by ? ay - by : aw - bw;
-    })
-    .at(-1);
+  const latestCompleteKey = allFtgWeekKeys.at(-1);
   const latestFtgYear = latestCompleteKey ? Number(latestCompleteKey.split("-")[0]) : latestYear;
   const latestFtgWeek = latestCompleteKey ? Number(latestCompleteKey.split("-")[1]) : 0;
   const latestFtgRows = ftgRows.filter((r) => r.weekNumber === latestFtgWeek && r.year === latestFtgYear);
