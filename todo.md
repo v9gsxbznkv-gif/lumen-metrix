@@ -712,3 +712,11 @@
 - [x] Add sync health notification: notifyOwner on sync completion and failure
 - [x] TypeScript clean and 107 tests pass
 - [x] Checkpoint and deploy
+
+## Round 76: FTG Trend in Weekly Report
+- [x] Review weekly report backend procedure (weeklyReport.getData) to understand current data shape
+- [x] Extend weeklyReport.getData to return FTG breakdown per campus (FTG Adults, FTG Kids, RevStudents FTG, Total FTG) for current week and comparison week
+- [x] Update WeeklyReportTab frontend: add FTG section with KPI cards (Total FTG, FTG Adults, FTG Kids, Students FTG) and per-campus FTG table with YoY comparison
+- [x] Update weekly report email template to include FTG row in the totals table
+- [x] TypeScript clean and 107+ tests pass
+- [x] Checkpoint and deploy

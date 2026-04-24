@@ -45,6 +45,8 @@ interface CampusMetrics {
   revStudentsHS: number;
   revStudentsMS: number;
   revStudentsFTG: number;
+  ftgAdults: number;
+  ftgKids: number;
   youngAdults: number;
   groups: number;
   giving: number;
@@ -83,6 +85,8 @@ const METRIC_CONFIG = [
   { key: "revStudentsHS" as const, label: "RevStudents HS", icon: Users, color: "#8B6DAF", prefix: "" },
   { key: "revStudentsMS" as const, label: "RevStudents MS", icon: Users, color: "#A07CC5", prefix: "" },
   { key: "revStudentsFTG" as const, label: "Students FTG", icon: UserPlus, color: "#C58B6D", prefix: "" },
+  { key: "ftgAdults" as const, label: "FTG Adults", icon: UserPlus, color: "#E8913A", prefix: "" },
+  { key: "ftgKids" as const, label: "FTG Kids", icon: UserPlus, color: "#D4A853", prefix: "" },
   { key: "youngAdults" as const, label: "Young Adults", icon: Users, color: "#7C5CBF", prefix: "" },
   { key: "groups" as const, label: "Groups", icon: Users, color: "#2D8B8B", prefix: "" },
   { key: "giving" as const, label: "Giving", icon: DollarSign, color: "#4A7C59", prefix: "$" },
@@ -497,6 +501,139 @@ export default function WeeklyReportTab() {
                 Campus giving: estimated from monthly data
               </span>
             )}
+          </div>
+
+          {/* FTG Trend Section */}
+          <div className="bg-card rounded-lg border border-border/60 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
+            <div className="px-5 py-3 border-b border-border/40 flex items-center gap-2">
+              <UserPlus className="w-4 h-4" style={{ color: "#E8913A" }} />
+              <h3 className="text-sm font-semibold">First-Time Guests</h3>
+              {current.source === "monthly" && (
+                <span className="text-[10px] text-muted-foreground ml-auto">FTG Adults/Kids require weekly sync</span>
+              )}
+            </div>
+            <div className="p-4 sm:p-5">
+              {/* FTG KPI row */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                {[
+                  {
+                    label: "Total FTG",
+                    value: current.totals.ftgAdults + current.totals.ftgKids + current.totals.revStudentsFTG,
+                    color: "#E8913A",
+                    compKey: (compKey: ComparisonKey) => {
+                      const d = (comparisons as any)?.[compKey];
+                      return d ? d.totals.ftgAdults + d.totals.ftgKids + d.totals.revStudentsFTG : null;
+                    },
+                  },
+                  {
+                    label: "FTG Adults",
+                    value: current.totals.ftgAdults,
+                    color: "#E8913A",
+                    compKey: (compKey: ComparisonKey) => (comparisons as any)?.[compKey]?.totals.ftgAdults ?? null,
+                  },
+                  {
+                    label: "FTG Kids",
+                    value: current.totals.ftgKids,
+                    color: "#D4A853",
+                    compKey: (compKey: ComparisonKey) => (comparisons as any)?.[compKey]?.totals.ftgKids ?? null,
+                  },
+                  {
+                    label: "Students FTG",
+                    value: current.totals.revStudentsFTG,
+                    color: "#C58B6D",
+                    compKey: (compKey: ComparisonKey) => (comparisons as any)?.[compKey]?.totals.revStudentsFTG ?? null,
+                  },
+                ].map((item) => (
+                  <div key={item.label} className="bg-muted/30 rounded-lg p-3">
+                    <div className="flex items-center gap-1 mb-1">
+                      <UserPlus className="w-3 h-3" style={{ color: item.color }} />
+                      <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{item.label}</span>
+                    </div>
+                    <p className="text-xl font-bold" style={{ fontFamily: "'DM Mono', monospace", color: item.color }}>
+                      {item.value.toLocaleString()}
+                    </p>
+                    <div className="mt-1 space-y-0.5">
+                      {selectedComparisons.map((compKey) => {
+                        const prevVal = item.compKey(compKey);
+                        if (prevVal === null) return null;
+                        return (
+                          <div key={compKey} className="flex items-center justify-between">
+                            <span className="text-[9px] text-muted-foreground">
+                              {compKey === "sameWeekLastYear" ? "vs LY" : compKey === "previousWeek" ? "vs prev" : "vs LY YTD"}
+                            </span>
+                            <ChangeIndicator current={item.value} previous={prevVal} />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Per-campus FTG table */}
+              {current.campuses.length > 0 && (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm min-w-[400px]">
+                    <thead>
+                      <tr className="border-b border-border/40">
+                        <th className="text-left py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Campus</th>
+                        <th className="text-right py-2 px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">FTG Adults</th>
+                        <th className="text-right py-2 px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">FTG Kids</th>
+                        <th className="text-right py-2 px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Students FTG</th>
+                        <th className="text-right py-2 px-3 text-[10px] font-bold uppercase tracking-wider" style={{ color: "#E8913A" }}>Total FTG</th>
+                        {selectedComparisons.length > 0 && (
+                          <th className="text-right py-2 px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">vs Prev</th>
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {current.campuses.map((campus) => {
+                        const total = campus.ftgAdults + campus.ftgKids + campus.revStudentsFTG;
+                        const compCampus = selectedComparisons.length > 0
+                          ? (comparisons as any)?.[selectedComparisons[0]]?.campuses?.find((c: any) => c.campus === campus.campus)
+                          : null;
+                        const prevTotal = compCampus ? compCampus.ftgAdults + compCampus.ftgKids + compCampus.revStudentsFTG : null;
+                        return (
+                          <tr key={campus.campus} className="border-b border-border/20 hover:bg-muted/30 transition-colors">
+                            <td className="py-2.5 font-medium text-sm">{campus.campus}</td>
+                            <td className="text-right px-3 py-2.5 tabular-nums" style={{ fontFamily: "'DM Mono', monospace", fontSize: "13px" }}>{campus.ftgAdults || "—"}</td>
+                            <td className="text-right px-3 py-2.5 tabular-nums" style={{ fontFamily: "'DM Mono', monospace", fontSize: "13px" }}>{campus.ftgKids || "—"}</td>
+                            <td className="text-right px-3 py-2.5 tabular-nums" style={{ fontFamily: "'DM Mono', monospace", fontSize: "13px" }}>{campus.revStudentsFTG || "—"}</td>
+                            <td className="text-right px-3 py-2.5 tabular-nums font-semibold" style={{ fontFamily: "'DM Mono', monospace", fontSize: "13px", color: "#E8913A" }}>{total || "—"}</td>
+                            {selectedComparisons.length > 0 && (
+                              <td className="text-right px-3 py-2.5">
+                                {prevTotal !== null ? <ChangeIndicator current={total} previous={prevTotal} /> : <span className="text-[11px] text-muted-foreground">—</span>}
+                              </td>
+                            )}
+                          </tr>
+                        );
+                      })}
+                      {/* Totals row */}
+                      <tr className="bg-muted/20 font-semibold">
+                        <td className="py-2.5 text-sm">All Campuses</td>
+                        <td className="text-right px-3 py-2.5 tabular-nums" style={{ fontFamily: "'DM Mono', monospace", fontSize: "13px" }}>{current.totals.ftgAdults || "—"}</td>
+                        <td className="text-right px-3 py-2.5 tabular-nums" style={{ fontFamily: "'DM Mono', monospace", fontSize: "13px" }}>{current.totals.ftgKids || "—"}</td>
+                        <td className="text-right px-3 py-2.5 tabular-nums" style={{ fontFamily: "'DM Mono', monospace", fontSize: "13px" }}>{current.totals.revStudentsFTG || "—"}</td>
+                        <td className="text-right px-3 py-2.5 tabular-nums font-semibold" style={{ fontFamily: "'DM Mono', monospace", fontSize: "13px", color: "#E8913A" }}>
+                          {(current.totals.ftgAdults + current.totals.ftgKids + current.totals.revStudentsFTG) || "—"}
+                        </td>
+                        {selectedComparisons.length > 0 && (
+                          <td className="text-right px-3 py-2.5">
+                            {(() => {
+                              const compData = (comparisons as any)?.[selectedComparisons[0]];
+                              if (!compData) return <span className="text-[11px] text-muted-foreground">—</span>;
+                              const prevTotal = compData.totals.ftgAdults + compData.totals.ftgKids + compData.totals.revStudentsFTG;
+                              const currTotal = current.totals.ftgAdults + current.totals.ftgKids + current.totals.revStudentsFTG;
+                              return <ChangeIndicator current={currTotal} previous={prevTotal} />;
+                            })()}
+                          </td>
+                        )}
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* All Campuses summary cards */}

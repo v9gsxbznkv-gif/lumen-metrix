@@ -36,6 +36,8 @@ interface CampusWeeklyMetrics {
   revStudentsHS: number;   // RevStudents High School (from PCO custom headcount "HS Total")
   revStudentsMS: number;   // RevStudents Middle School (from PCO custom headcount "MS Total")
   revStudentsFTG: number;  // RevStudents First Timers
+  ftgAdults: number;       // FTG Adults (from attendance_weekly "FTG Adults" subgroup)
+  ftgKids: number;         // FTG Kids (from attendance_weekly "FTG Kids" subgroup)
   youngAdults: number;     // YA Gathering
   groups: number;          // Groups avg attendance (monthly ÷ weeks)
   giving: number;          // Weekly giving (or "All Campuses" combined if no per-campus split)
@@ -256,6 +258,14 @@ async function getWeeklySnapshot(
     const revStudentsFTGTotal = campusAtt
       .filter((r: any) => r.subgroup === "RevStudents FTG")
       .reduce((sum: number, r: any) => sum + r.headcount, 0);
+
+    // FTG Adults / FTG Kids: from attendance_weekly subgroups (actual weekly PCO data)
+    const ftgAdultsTotal = campusAtt
+      .filter((r: any) => r.subgroup === "FTG Adults")
+      .reduce((sum: number, r: any) => sum + r.headcount, 0);
+    const ftgKidsTotal = campusAtt
+      .filter((r: any) => r.subgroup === "FTG Kids")
+      .reduce((sum: number, r: any) => sum + r.headcount, 0);
     // Legacy fallback: old combined row (pre-HS/MS split sync)
     const revStudentsLegacy = campusAtt
       .filter((r: any) => PCO_STUDENTS_SUBGROUPS.includes(r.subgroup))
@@ -309,6 +319,8 @@ async function getWeeklySnapshot(
       revStudentsHS: revStudentsHSTotal,
       revStudentsMS: revStudentsMSTotal,
       revStudentsFTG: revStudentsFTGTotal,
+      ftgAdults: ftgAdultsTotal,
+      ftgKids: ftgKidsTotal,
       youngAdults: 0, // populated in totals from "Other" campus rows
       groups: grpAvg,
       giving: Math.round(givTotal),
@@ -340,6 +352,8 @@ async function getWeeklySnapshot(
     revStudentsHS: campuses.reduce((s, c) => s + c.revStudentsHS, 0),
     revStudentsMS: campuses.reduce((s, c) => s + c.revStudentsMS, 0),
     revStudentsFTG: campuses.reduce((s, c) => s + c.revStudentsFTG, 0),
+    ftgAdults: campuses.reduce((s, c) => s + c.ftgAdults, 0),
+    ftgKids: campuses.reduce((s, c) => s + c.ftgKids, 0),
     youngAdults: yaTotal,
     groups: campuses.reduce((s, c) => s + c.groups, 0),
     giving: Math.round(combinedGivingWeekly),
@@ -501,6 +515,8 @@ async function getMonthlySnapshot(
       revStudentsHS: 0, // not available from monthly data
       revStudentsMS: 0,
       revStudentsFTG: 0,
+      ftgAdults: 0, // not available from monthly data (no weekly subgroup)
+      ftgKids: 0,
       youngAdults: Math.round(youngAdultsTotal / weeks),
       groups: grpAvg,
       giving: Math.round(givTotal / weeks),
@@ -521,6 +537,8 @@ async function getMonthlySnapshot(
     revStudentsHS: 0,
     revStudentsMS: 0,
     revStudentsFTG: 0,
+    ftgAdults: 0,
+    ftgKids: 0,
     youngAdults: campuses.reduce((s, c) => s + c.youngAdults, 0),
     groups: campuses.reduce((s, c) => s + c.groups, 0),
     giving: campuses.reduce((s, c) => s + c.giving, 0),
@@ -578,6 +596,8 @@ async function getYTDSnapshot(
       revStudentsHS: Math.round(campusMonths.reduce((s, c) => s + c.revStudentsHS, 0) / count),
       revStudentsMS: Math.round(campusMonths.reduce((s, c) => s + c.revStudentsMS, 0) / count),
       revStudentsFTG: Math.round(campusMonths.reduce((s, c) => s + c.revStudentsFTG, 0) / count),
+      ftgAdults: Math.round(campusMonths.reduce((s, c) => s + c.ftgAdults, 0) / count),
+      ftgKids: Math.round(campusMonths.reduce((s, c) => s + c.ftgKids, 0) / count),
       youngAdults: Math.round(campusMonths.reduce((s, c) => s + c.youngAdults, 0) / count),
       groups: Math.round(campusMonths.reduce((s, c) => s + c.groups, 0) / count),
       giving: Math.round(campusMonths.reduce((s, c) => s + c.giving, 0) / count),
@@ -598,6 +618,8 @@ async function getYTDSnapshot(
     revStudentsHS: campuses.reduce((s, c) => s + c.revStudentsHS, 0),
     revStudentsMS: campuses.reduce((s, c) => s + c.revStudentsMS, 0),
     revStudentsFTG: campuses.reduce((s, c) => s + c.revStudentsFTG, 0),
+    ftgAdults: campuses.reduce((s, c) => s + c.ftgAdults, 0),
+    ftgKids: campuses.reduce((s, c) => s + c.ftgKids, 0),
     youngAdults: campuses.reduce((s, c) => s + c.youngAdults, 0),
     groups: campuses.reduce((s, c) => s + c.groups, 0),
     giving: campuses.reduce((s, c) => s + c.giving, 0),
@@ -927,6 +949,15 @@ export const weeklyReportRouter = router({
         .map(c => `| **${c.campus}** | ${c.attendance.toLocaleString()} | ${c.revKids.toLocaleString()} | ${c.revStudents.toLocaleString()} | $${c.giving.toLocaleString()} | ${c.volunteers} | ${c.ftg} | ${c.salvations} | ${c.baptisms} |`)
         .join('\n');
 
+      // FTG breakdown rows for email
+      const ftgCampusRows = current.campuses
+        .map(c => {
+          const total = c.ftgAdults + c.ftgKids + c.revStudentsFTG;
+          return `| **${c.campus}** | ${c.ftgAdults || '—'} | ${c.ftgKids || '—'} | ${c.revStudentsFTG || '—'} | **${total || '—'}** |`;
+        })
+        .join('\n');
+      const ftgTotals = current.totals.ftgAdults + current.totals.ftgKids + current.totals.revStudentsFTG;
+
       const mdContent = [
         `<div style="background:#1C1917;padding:18px 24px;border-radius:8px 8px 0 0;display:inline-flex;align-items:center;gap:10px;"><svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="24" width="5" height="14" rx="1.5" fill="#E8913A" transform="rotate(-10 4 24)" opacity="0.7"/><rect x="10" y="14" width="5.5" height="22" rx="1.5" fill="#E8913A" transform="rotate(-2 10 14)" opacity="0.85"/><rect x="18" y="6" width="6" height="30" rx="1.5" fill="#E8913A"/><rect x="26" y="12" width="5.5" height="24" rx="1.5" fill="#C47A2E" transform="rotate(4 26 12)" opacity="0.75"/><circle cx="21" cy="4" r="2" fill="#F5C882" opacity="0.6"/></svg><span style="font-family:Arial,sans-serif;font-weight:700;font-size:17px;letter-spacing:0.06em;color:#FFFFFF;">LUMEN</span><span style="font-family:Arial,sans-serif;font-weight:400;font-size:17px;letter-spacing:0.06em;color:rgba(255,255,255,0.55);"> METRIX</span></div>`,
         ``,
@@ -941,6 +972,15 @@ export const weeklyReportRouter = router({
         `| Attendance | RevKids | RevStudents | Young Adults | Groups | Giving | Volunteers | FTG | Salvations | Baptisms |`,
         `|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|`,
         `| **${current.totals.attendance.toLocaleString()}** | **${current.totals.revKids.toLocaleString()}** | **${current.totals.revStudents.toLocaleString()}** | **${current.totals.youngAdults.toLocaleString()}** | **${current.totals.groups.toLocaleString()}** | **$${current.totals.giving.toLocaleString()}** | **${current.totals.volunteers.toLocaleString()}** | **${current.totals.ftg}** | **${current.totals.salvations}** | **${current.totals.baptisms}** |`,
+        ``,
+        `---`,
+        ``,
+        `### 👋 First-Time Guests`,
+        ``,
+        `| Campus | FTG Adults | FTG Kids | Students FTG | Total FTG |`,
+        `|:---|---:|---:|---:|---:|`,
+        ftgCampusRows,
+        `| **All Campuses** | **${current.totals.ftgAdults || '—'}** | **${current.totals.ftgKids || '—'}** | **${current.totals.revStudentsFTG || '—'}** | **${ftgTotals || '—'}** |`,
         ``,
         `---`,
         ``,
