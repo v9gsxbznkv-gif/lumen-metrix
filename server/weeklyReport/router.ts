@@ -167,70 +167,34 @@ async function getWeeklySnapshot(
   const month = d.getMonth() + 1;
 
   // Check if weekly giving is only available as combined (no per-campus weekly split)
-  // We still show per-campus estimates from monthly data in this case
   const givingWeeklyIsCombined = givRows.length > 0 &&
     givRows.every((r: any) => r.campus === "All Campuses");
-  // givingIsCombined = true means campus-level giving is estimated from monthly data
   const givingIsCombined = givingWeeklyIsCombined;
 
-  // Get next steps for this month (no weekly granularity for FTG/Salvations/Baptisms)
-  const sundaysInMonth = Math.round(weeksInMonth(year, month));
+  // Combined giving total for the week (used when per-campus split not available)
+  const combinedGivingTotal = givRows
+    .filter((r: any) => r.campus === "All Campuses")
+    .reduce((sum: number, r: any) => sum + Number(r.total), 0);
+
   const monthName = d.toLocaleString("en-US", { month: "long" });
-  const nsRows = await db
-    .select()
-    .from(nextStepsMonthly)
-    .where(
-      and(
-        eq(nextStepsMonthly.year, year),
-        eq(nextStepsMonthly.month, month),
-        ne(nextStepsMonthly.campus, "All Campuses")
-      )
-    );
 
-  // Get serving for this month (no weekly granularity)
-  const srvRows = await db
-    .select()
-    .from(servingMonthly)
-    .where(
-      and(
-        eq(servingMonthly.year, year),
-        eq(servingMonthly.month, month),
-        ne(servingMonthly.campus, "All Campuses")
-      )
-    );
-
-  // Get groups data for this month (monthly granularity only)
-  const grpRows = await db
-    .select()
-    .from(groupsMonthly)
-    .where(
-      and(
-        eq(groupsMonthly.year, year),
-        eq(groupsMonthly.month, month)
-      )
-    );
-
-  // Get monthly giving for per-campus reference (giving_weekly is combined-only)
-  const givMonthRows = await db
-    .select()
-    .from(givingMonthly)
-    .where(
-      and(
-        eq(givingMonthly.year, year),
-        eq(givingMonthly.month, month),
-        ne(givingMonthly.campus, "All Campuses")
-      )
-    );
-
-  // Collect campus names from all sources, but exclude "Other" from main campus list
-  // (Young Adults / ESL are cross-campus and will be rolled into totals)
+  // Collect campus names from attendance_weekly only (source of truth for weekly data)
+  // Exclude "Other" (Young Adults / ESL cross-campus rows)
   const campusNames = new Set<string>();
   for (const r of attRows) {
     if (r.campus !== "Other") campusNames.add(r.campus);
   }
-  for (const r of givRows) campusNames.add(r.campus);
-  for (const r of nsRows) campusNames.add(r.campus);
-  for (const r of srvRows) campusNames.add(r.campus);
+  // Also include campuses from per-campus giving rows (if available)
+  for (const r of givRows) {
+    if (r.campus !== "All Campuses") campusNames.add(r.campus);
+  }
+
+  // Pre-compute total main-service attendance across all campuses for proportional giving split
+  const totalAttendanceAllCampuses = Array.from(campusNames).reduce((total, c) => {
+    return total + attRows
+      .filter((r: any) => r.campus === c && PCO_CHECKIN_SUBGROUPS.includes(r.subgroup))
+      .reduce((sum: number, r: any) => sum + r.headcount, 0);
+  }, 0);
 
   const campuses: CampusWeeklyMetrics[] = [];
 
@@ -275,41 +239,31 @@ async function getWeeklySnapshot(
       ? revStudentsHSTotal + revStudentsMSTotal
       : revStudentsLegacy;
 
-    // Giving: use per-campus weekly row if available, otherwise estimate from monthly
-    // (giving_weekly often only has "All Campuses" combined)
-    const campusGivWeekly = givRows
+    // Giving: use per-campus weekly row if available.
+    // If giving_weekly is combined-only ("All Campuses"), split proportionally by attendance.
+    let campusGivWeekly = givRows
       .filter((r: any) => r.campus === campus)
       .reduce((sum: number, r: any) => sum + Number(r.total), 0);
-    // Monthly giving for this campus (for reference / fallback)
-    const campusGivMonth = givMonthRows
-      .filter((r: any) => r.campus === campus)
-      .reduce((sum: number, r: any) => sum + Number(r.total), 0);
-    // Use weekly per-campus if non-zero, else estimate from monthly ÷ weeks
-    const givTotal = campusGivWeekly > 0
-      ? campusGivWeekly
-      : (sundaysInMonth > 0 ? campusGivMonth / sundaysInMonth : 0);
+    if (campusGivWeekly === 0 && givingIsCombined && combinedGivingTotal > 0) {
+      // Proportional split: campus attendance / total attendance (pre-computed)
+      const campusAttShare = totalAttendanceAllCampuses > 0 ? attTotal / totalAttendanceAllCampuses : 0;
+      campusGivWeekly = combinedGivingTotal * campusAttShare;
+    }
 
-    // Next steps: divide monthly by sundays in month for FTG/Salvations
-    const ftgTotal = nsRows
-      .filter((r: any) => r.campus === campus && r.metric === "FTG")
-      .reduce((sum: number, r: any) => sum + r.count, 0);
-    const salvationsTotal = nsRows
-      .filter((r: any) => r.campus === campus && r.metric === "Salvations")
-      .reduce((sum: number, r: any) => sum + r.count, 0);
-    // Baptisms: show monthly total (NOT divided) — there is no weekly granularity
-    const baptismsMonthTotal = nsRows
-      .filter((r: any) => r.campus === campus && r.metric === "Baptisms")
-      .reduce((sum: number, r: any) => sum + r.count, 0);
+    // Volunteers: sum volunteerCount from attendance_weekly (stored per check-in row)
+    // This is the actual volunteer headcount from PCO check-ins for this week
+    const volunteersTotal = campusAtt
+      .reduce((sum: number, r: any) => sum + (r.volunteerCount || 0), 0);
 
-    // Serving: divide monthly by sundays in month
-    const srvTotal = srvRows
-      .filter((r: any) => r.campus === campus)
-      .reduce((sum: number, r: any) => sum + r.total, 0);
+    // FTG: use actual weekly subgroup data (ftgAdults + ftgKids + revStudentsFTG)
+    // This replaces the old monthly estimate approach
+    const ftgWeeklyTotal = ftgAdultsTotal + ftgKidsTotal + revStudentsFTGTotal;
 
-    // Groups: monthly avgAttendance for this campus
-    const grpAvg = grpRows
-      .filter((r: any) => r.campus === campus)
-      .reduce((sum: number, r: any) => sum + r.avgAttendance, 0);
+    // Salvations / Baptisms / Groups: PCO does not track these at weekly granularity.
+    // Show 0 — honest about data availability rather than showing stale monthly estimates.
+    const salvationsTotal = 0;
+    const baptismsMonthTotal = 0;
+    const grpAvg = 0;
 
     campuses.push({
       campus,
@@ -323,12 +277,12 @@ async function getWeeklySnapshot(
       ftgKids: ftgKidsTotal,
       youngAdults: 0, // populated in totals from "Other" campus rows
       groups: grpAvg,
-      giving: Math.round(givTotal),
-      givingMonthTotal: Math.round(campusGivMonth),
-      volunteers: sundaysInMonth > 0 ? Math.round(srvTotal / sundaysInMonth) : 0,
-      ftg: sundaysInMonth > 0 ? Math.round(ftgTotal / sundaysInMonth) : 0,
-      salvations: sundaysInMonth > 0 ? Math.round(salvationsTotal / sundaysInMonth) : 0,
-      baptisms: baptismsMonthTotal, // monthly total, not weekly estimate
+      giving: Math.round(campusGivWeekly),
+      givingMonthTotal: 0,
+      volunteers: volunteersTotal,
+      ftg: ftgWeeklyTotal,
+      salvations: salvationsTotal,
+      baptisms: baptismsMonthTotal,
       baptismsMonthLabel: `${monthName} MTD`,
     });
   }
@@ -338,10 +292,10 @@ async function getWeeklySnapshot(
     .filter((r: any) => r.campus === "Other" && PCO_YOUNG_ADULTS_SUBGROUPS.includes(r.subgroup))
     .reduce((sum: number, r: any) => sum + r.headcount, 0);
 
-  // For totals giving: if weekly is combined-only, use the actual combined weekly total
-  // (more accurate than summing per-campus monthly estimates)
+  // For totals giving: use the actual combined weekly total if available,
+  // otherwise sum per-campus values (which may be proportionally split)
   const combinedGivingWeekly = givingIsCombined
-    ? givRows.filter((r: any) => r.campus === "All Campuses").reduce((sum: number, r: any) => sum + Number(r.total), 0)
+    ? combinedGivingTotal
     : campuses.reduce((s, c) => s + c.giving, 0);
 
   const totals: CampusWeeklyMetrics = {
@@ -355,13 +309,13 @@ async function getWeeklySnapshot(
     ftgAdults: campuses.reduce((s, c) => s + c.ftgAdults, 0),
     ftgKids: campuses.reduce((s, c) => s + c.ftgKids, 0),
     youngAdults: yaTotal,
-    groups: campuses.reduce((s, c) => s + c.groups, 0),
+    groups: 0,
     giving: Math.round(combinedGivingWeekly),
-    givingMonthTotal: campuses.reduce((s, c) => s + c.givingMonthTotal, 0),
+    givingMonthTotal: 0,
     volunteers: campuses.reduce((s, c) => s + c.volunteers, 0),
     ftg: campuses.reduce((s, c) => s + c.ftg, 0),
-    salvations: campuses.reduce((s, c) => s + c.salvations, 0),
-    baptisms: campuses.reduce((s, c) => s + c.baptisms, 0),
+    salvations: 0,
+    baptisms: 0,
     baptismsMonthLabel: campuses[0]?.baptismsMonthLabel ?? "",
   };
 

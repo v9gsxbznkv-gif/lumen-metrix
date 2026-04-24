@@ -720,3 +720,18 @@
 - [x] Update weekly report email template to include FTG row in the totals table
 - [x] TypeScript clean and 107+ tests pass
 - [x] Checkpoint and deploy
+
+## Round 77: Fix Weekly Report Zero Values
+- [ ] Fix ftg field: replace monthly estimate with sum of ftgAdults + ftgKids + revStudentsFTG from weekly data
+- [ ] Diagnose why Giving, Volunteers, Salvations, Baptisms show 0 in weekly report
+- [ ] Fix any broken subgroup lookups for those fields
+- [x] TypeScript clean and 107 tests pass
+- [x] Checkpoint and deploy
+
+## Round 78: Weekly-Only Data for All Report Fields
+- [x] Audit attendance_weekly subgroups for Volunteers, Salvations, Groups, FTG
+- [x] Audit giving_weekly structure (per-campus vs combined)
+- [x] Refactor getWeeklySnapshot: remove all monthly table lookups, source everything from weekly tables
+- [x] Fix ftg field to use ftgAdults + ftgKids + revStudentsFTG sum
+- [x] TypeScript clean and 107 tests pass
+- [x] Checkpoint and deploy

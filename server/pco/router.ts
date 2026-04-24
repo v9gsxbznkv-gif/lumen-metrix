@@ -829,4 +829,36 @@ export const pcoRouter = router({
         periodWithIncludes,
       };
     }),
+
+  debugWeeklyTables: publicProcedure
+    .input(z.object({ weekStartDate: z.string().default('2026-04-13') }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+
+      const attRows = await db
+        .select()
+        .from(attendanceWeekly)
+        .where(eq(attendanceWeekly.weekStartDate, input.weekStartDate));
+
+      const givRows = await db
+        .select()
+        .from(givingWeekly)
+        .where(eq(givingWeekly.weekStartDate, input.weekStartDate));
+
+      // Also get the most recent 5 weeks in giving_weekly
+      const recentGiving = await db
+        .select()
+        .from(givingWeekly)
+        .orderBy(givingWeekly.weekStartDate)
+        .limit(10);
+
+      return {
+        weekStartDate: input.weekStartDate,
+        attRowCount: attRows.length,
+        attSubgroups: attRows.map((r: any) => ({ campus: r.campus, subgroup: r.subgroup, headcount: r.headcount, volunteerCount: r.volunteerCount })),
+        givRowCount: givRows.length,
+        givRows: givRows.map((r: any) => ({ campus: r.campus, total: r.total, general: r.general })),
+        recentGivingWeeks: recentGiving.map((r: any) => ({ weekStartDate: r.weekStartDate, campus: r.campus, total: r.total })),
+      };
+    }),
 });
