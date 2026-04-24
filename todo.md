@@ -675,3 +675,14 @@
 - [x] Add revStudents (Total) to METRIC_CONFIG before HS/MS rows
 - [x] Verify TypeScript clean and 107 tests pass
 - [x] Checkpoint and deploy
+
+## Round 71: FTG Breakdown on People Tab
+
+- [x] Deploy Round 70 (interrupted)
+- [x] Audit FTG subgroup data in attendance_weekly (FTG Adults, FTG Kids, RevStudents FTG)
+- [x] Add ftgBreakdown — no new procedure needed, data already flows via attendance_weekly in getDashboardData
+- [x] Add FTG Breakdown section to PeopleTab: Kids FTG, Students FTG, Adults FTG, Total FTG cards
+- [x] Add per-campus FTG split table for the most recent week
+- [x] Add weekly FTG trend chart (line chart, all three types + total)
+- [x] Verify TypeScript clean and 107 tests pass
+- [x] Checkpoint and deploy
