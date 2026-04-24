@@ -810,66 +810,40 @@ export async function syncWeeklyGiving(
       await onProgress(88, `Writing ${monthlyMap.size} monthly giving totals...`, recordsProcessed);
     }
 
-    // Upsert into giving_monthly
-    for (const [, agg] of Array.from(monthlyMap.entries())) {
-      try {
-        // Try insert first
-        await db.insert(givingMonthly).values({
-          year: agg.year,
-          month: agg.month,
-          campus: agg.campus,
-          subgroup: "Tithes and Offerings",
-          total: String(agg.general.toFixed(2)),
-          source: "aggregated",
-        });
-        recordsCreated++;
-      } catch (dupErr: any) {
-        if (dupErr.code === "ER_DUP_ENTRY") {
-          // Update existing
-          await db
-            .update(givingMonthly)
-            .set({ total: String(agg.general.toFixed(2)), source: "aggregated" })
-            .where(
-              and(
-                eq(givingMonthly.year, agg.year),
-                eq(givingMonthly.month, agg.month),
-                eq(givingMonthly.campus, agg.campus),
-                eq(givingMonthly.subgroup, "Tithes and Offerings")
-              )
-            );
-          recordsUpdated++;
-        } else {
-          console.warn(`[Weekly Giving] Error upserting monthly giving:`, dupErr.message);
-        }
-      }
+    // Ping DB before batch write to wake up idle pool connection
+    try {
+      await db.execute(sql`SELECT 1`);
+    } catch (pingErr: any) {
+      console.warn(`[Weekly Giving] DB ping failed: ${pingErr.message}`);
+    }
 
+    // Build batch rows for giving_monthly upsert
+    const batchRows: { year: number; month: number; campus: string; subgroup: string; total: string; source: string }[] = [];
+    for (const [, agg] of Array.from(monthlyMap.entries())) {
+      batchRows.push({ year: agg.year, month: agg.month, campus: agg.campus, subgroup: "Tithes and Offerings", total: String(agg.general.toFixed(2)), source: "aggregated" });
       if (agg.designated > 0) {
-        try {
-          await db.insert(givingMonthly).values({
-            year: agg.year,
-            month: agg.month,
-            campus: agg.campus,
-            subgroup: "Designated",
-            total: String(agg.designated.toFixed(2)),
-            source: "aggregated",
-          });
-          recordsCreated++;
-        } catch (dupErr: any) {
-          if (dupErr.code === "ER_DUP_ENTRY") {
-            await db
-              .update(givingMonthly)
-              .set({ total: String(agg.designated.toFixed(2)), source: "aggregated" })
-              .where(
-                and(
-                  eq(givingMonthly.year, agg.year),
-                  eq(givingMonthly.month, agg.month),
-                  eq(givingMonthly.campus, agg.campus),
-                  eq(givingMonthly.subgroup, "Designated")
-                )
-              );
-            recordsUpdated++;
-          }
-        }
+        batchRows.push({ year: agg.year, month: agg.month, campus: agg.campus, subgroup: "Designated", total: String(agg.designated.toFixed(2)), source: "aggregated" });
+      }
+    }
+
+    if (batchRows.length > 0) {
+      const insertPromise = db
+        .insert(givingMonthly)
+        .values(batchRows)
+        .onDuplicateKeyUpdate({
+          set: {
+            total: sql`VALUES(total)`,
+            source: sql`VALUES(source)`,
+          },
+        });
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("DB write timeout for giving_monthly")), 30000)
+      );
+      try {
+        await Promise.race([insertPromise, timeoutPromise]);
+        recordsCreated += batchRows.length;
+      } catch (writeErr: any) {
+        console.warn(`[Weekly Giving] giving_monthly write failed/timed out: ${writeErr.message}`);
       }
     }
 

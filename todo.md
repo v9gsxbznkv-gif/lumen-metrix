@@ -622,3 +622,11 @@
 - [x] Added 30s Promise.race timeout per chunk so stalled writes don't block forever
 - [x] All 107 tests passing
 - [x] Checkpoint and deploy
+
+## Round 65: Fix DB Write Hang at 88% (Giving Monthly Totals)
+
+- [x] Replaced syncWeeklyGiving individual INSERT/UPDATE loop with batch onDuplicateKeyUpdate + ping + 30s timeout
+- [x] Replaced syncAttendance individual INSERT/UPDATE loop with batch onDuplicateKeyUpdate + ping + 30s timeout
+- [x] All DB writes in sync flow now have ping + timeout protection
+- [x] All 107 tests passing
+- [x] Checkpoint and deploy

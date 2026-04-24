@@ -118,51 +118,39 @@ export async function syncAttendance(
     console.log(`[PCO Sync] Aggregated into ${monthlyMap.size} year/month/campus/subgroup buckets`);
     if (onProgress) await onProgress(35, `Writing ${monthlyMap.size} monthly records...`);
 
-    // Upsert each bucket into attendance_monthly.
-    let bucketIdx = 0;
-    for (const [key, bucket] of Array.from(monthlyMap.entries())) {
-      bucketIdx++;
-      const avgWeekly = bucket.weekCount > 0 ? Math.round(bucket.totalHeadcount / bucket.weekCount) : 0;
+    // Ping DB before batch write
+    try { await db.execute(sql`SELECT 1`); } catch (_) { /* continue anyway */ }
 
-      try {
-        await db.insert(attendanceMonthly).values({
-          year: bucket.year,
-          month: bucket.month,
-          campus: bucket.campus,
-          subgroup: bucket.subgroup,
-          total: bucket.totalHeadcount,
-          avgWeekly,
-          source: "pco",
+    // Batch upsert all buckets in one INSERT ... ON DUPLICATE KEY UPDATE
+    const batchRows = Array.from(monthlyMap.values()).map(bucket => ({
+      year: bucket.year,
+      month: bucket.month,
+      campus: bucket.campus,
+      subgroup: bucket.subgroup,
+      total: bucket.totalHeadcount,
+      avgWeekly: bucket.weekCount > 0 ? Math.round(bucket.totalHeadcount / bucket.weekCount) : 0,
+      source: "pco" as const,
+    }));
+
+    if (batchRows.length > 0) {
+      const insertPromise = db
+        .insert(attendanceMonthly)
+        .values(batchRows)
+        .onDuplicateKeyUpdate({
+          set: {
+            total: sql`VALUES(total)`,
+            avgWeekly: sql`VALUES(avgWeekly)`,
+            source: sql`VALUES(source)`,
+          },
         });
-        recordsCreated++;
-      } catch (dupError: any) {
-        if (dupError.code === "ER_DUP_ENTRY") {
-          // Update existing record
-          try {
-            await db
-              .update(attendanceMonthly)
-              .set({ total: bucket.totalHeadcount, avgWeekly, source: "pco" })
-              .where(
-                and(
-                  eq(attendanceMonthly.year, bucket.year),
-                  eq(attendanceMonthly.month, bucket.month),
-                  eq(attendanceMonthly.campus, bucket.campus),
-                  eq(attendanceMonthly.subgroup, bucket.subgroup)
-                )
-              );
-            recordsUpdated++;
-          } catch (updateErr: any) {
-            console.warn(`[PCO Sync] Update warning for ${key}:`, updateErr.message);
-          }
-        } else {
-          console.warn(`[PCO Sync] Insert warning for ${key}:`, dupError.message);
-        }
-      }
-
-      // Progress: 35% → 40% across all buckets
-      if (onProgress && bucketIdx % 10 === 0) {
-        const pct = 35 + Math.round((bucketIdx / monthlyMap.size) * 5);
-        await onProgress(pct, `Writing monthly records... (${bucketIdx}/${monthlyMap.size})`);
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("DB write timeout for attendance_monthly")), 30000)
+      );
+      try {
+        await Promise.race([insertPromise, timeoutPromise]);
+        recordsCreated += batchRows.length;
+      } catch (writeErr: any) {
+        console.warn(`[PCO Sync] attendance_monthly write failed/timed out: ${writeErr.message}`);
       }
     }
 
