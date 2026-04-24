@@ -9,6 +9,7 @@ import {
   boolean,
   json,
   bigint,
+  uniqueIndex,
 } from "drizzle-orm/mysql-core";
 
 // ============================================================
@@ -381,7 +382,10 @@ export const attendanceWeekly = mysqlTable("attendance_weekly", {
   manualLock: boolean("manualLock").default(false).notNull(), // true = skip during auto-sync
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
+}, (t) => ({
+  // Prevent duplicate rows per week/campus/subgroup — enforces upsert semantics
+  uniqWeekCampusSubgroup: uniqueIndex("idx_aw_unique").on(t.year, t.weekNumber, t.campus, t.subgroup),
+}));
 
 export type AttendanceWeeklyRow = typeof attendanceWeekly.$inferSelect;
 export type InsertAttendanceWeekly = typeof attendanceWeekly.$inferInsert;

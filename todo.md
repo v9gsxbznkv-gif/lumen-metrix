@@ -660,9 +660,9 @@
 
 ## Round 69: Fix attendance_weekly Duplicate Rows (Missing Unique Index)
 
-- [ ] Deduplicate attendance_weekly: keep only the latest row per (year, weekNumber, campus, subgroup)
-- [ ] Add unique index on attendance_weekly (year, weekNumber, campus, subgroup) via direct SQL
-- [ ] Add unique index to schema.ts so future db:push keeps it
-- [ ] Verify weekly report numbers are correct after dedup
-- [ ] All 107 tests passing
-- [ ] Checkpoint and deploy
+- [x] Deduplicate attendance_weekly: keep only the latest row per (year, weekNumber, campus, subgroup)
+- [x] Add unique index on attendance_weekly (year, weekNumber, campus, subgroup) via direct SQL
+- [x] Add unique index to schema.ts so future db:push keeps it
+- [x] Verify weekly report numbers are correct after dedup
+- [x] All 107 tests passing
+- [x] Checkpoint and deploy

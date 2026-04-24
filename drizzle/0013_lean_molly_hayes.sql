@@ -1,0 +1,1 @@
+ALTER TABLE `attendance_weekly` ADD CONSTRAINT `idx_aw_unique` UNIQUE(`year`,`weekNumber`,`campus`,`subgroup`);
