@@ -695,7 +695,13 @@
 - [x] Checkpoint and deploy
 
 ## Round 73: Monday-Start Weeks
-- [ ] Update getWeekNumber in weeklySync.ts to use Monday-start (ISO Mon-Sun) weeks
-- [ ] Clear attendance_weekly and re-sync to repopulate with correct week numbers
-- [ ] Verify week 16 = Mon Apr 13 - Sun Apr 19 in the DB
-- [ ] Checkpoint and deploy
+- [x] Update getSunday in weeklySync.ts to roll back to Monday instead of Sunday
+- [x] Verified: Sun Apr 19, Wed Apr 16, Sun Apr 13 all map to weekStart 2026-04-13 week 16
+- [x] Cleared 5229 attendance_weekly rows for re-sync with correct week numbers
+- [x] Checkpoint and deploy
+
+## Round 74: Fix Weekly Report After Monday-Start Week Change
+- [x] Confirmed week 17 (Apr 20) is partial (1 row only) — weekly report was picking it as latest
+- [x] Fixed getLatestSnapshot to use last week with ≥3 rows (complete week) instead of absolute latest weekNumber
+- [x] TypeScript clean (0 errors), 107/107 tests pass
+- [x] Checkpoint and deploy

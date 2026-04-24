@@ -641,13 +641,39 @@ async function getLatestSnapshot(
     .limit(1);
 
   if (latestWeekRow.length > 0) {
-    const row = latestWeekRow[0];
-    const snapshot = await getWeeklySnapshot(db, row.weekStartDate, row.weekNumber, year);
-    const d = new Date(row.weekStartDate + "T00:00:00");
+    // Find the most recent week that has a full data set (≥3 rows = main check-in + kids + at least one more)
+    // This prevents partial weeks (e.g. only Sunday check-in entered so far) from showing as the "current" week
+    const allWeekRows = await db
+      .select()
+      .from(attendanceWeekly)
+      .where(eq(attendanceWeekly.year, year))
+      .orderBy(desc(attendanceWeekly.weekNumber));
+
+    // Group by weekStartDate and find the latest one with ≥3 rows
+    const weekCounts = new Map<string, { weekNumber: number; count: number }>();
+    for (const r of allWeekRows) {
+      const existing = weekCounts.get(r.weekStartDate);
+      if (existing) {
+        existing.count++;
+      } else {
+        weekCounts.set(r.weekStartDate, { weekNumber: r.weekNumber, count: 1 });
+      }
+    }
+
+    // Sort by weekNumber descending and find the first complete week
+    const sortedWeeks = Array.from(weekCounts.entries())
+      .sort((a, b) => b[1].weekNumber - a[1].weekNumber);
+
+    // Use the latest week with ≥3 rows; if none qualify, fall back to the absolute latest
+    const completeWeek = sortedWeeks.find(([, v]) => v.count >= 3) ?? sortedWeeks[0];
+    const [weekStartDate, { weekNumber }] = completeWeek;
+
+    const snapshot = await getWeeklySnapshot(db, weekStartDate, weekNumber, year);
+    const d = new Date(weekStartDate + "T00:00:00");
     return {
       snapshot,
       latestMonth: d.getMonth() + 1,
-      latestWeekDate: row.weekStartDate,
+      latestWeekDate: weekStartDate,
     };
   }
 
