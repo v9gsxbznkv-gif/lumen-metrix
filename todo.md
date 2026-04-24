@@ -574,3 +574,11 @@
 - [x] giving_weekly upsert already uses aggregation pattern (no row-by-row loop)
 - [x] All 107 tests passing
 - [x] Checkpoint and deploy
+
+## Round 59: Remove Groups Sync from Full Sync Path
+
+- [x] Removed syncGroups AND syncGiving from syncAll (both PCO APIs hang)
+- [x] Full sync now: attendance DB aggregation only (20-60%) → weekly attendance + giving aggregation (60-100%)
+- [x] Zero PCO API calls in the monthly sync phase — all DB aggregation
+- [x] All 107 tests passing
+- [x] Checkpoint and deploy
