@@ -89,9 +89,10 @@ async function runSyncInBackground(
       await progress(20, "Starting weekly sync from PCO (2026 data)...");
       const weeklyResults = await syncAllWeekly(client, effectiveDateFrom, effectiveDateTo, progress, jobId);
 
-      // Phase 2: flush attendance rows from rawData blob via a fresh HTTP request.
-      // This gives the DB write a brand-new connection, avoiding the TiDB idle-drop hang
-      // that occurs after the 2-5 minute PCO API fetch.
+      // Phase 2: flush ALL post-PCO DB work via a fresh HTTP request.
+      // The flush endpoint handles: attendance_weekly writes, giving_monthly aggregation,
+      // sync log inserts, and marking the job completed at 100%.
+      // This avoids ALL shared-pool DB calls after the long PCO fetch.
       try {
         const port = process.env.PORT || 3000;
         const flushResp = await fetch(`http://localhost:${port}/api/sync/flush`, {
@@ -100,18 +101,23 @@ async function runSyncInBackground(
           body: JSON.stringify({ jobId }),
         });
         if (flushResp.ok) {
-          const flushData = await flushResp.json() as { ok: boolean; rowsWritten?: number };
-          console.log(`[PCO Sync] Flush complete: ${flushData.rowsWritten ?? 0} rows written`);
-          await progress(60, `Attendance rows saved to database (${flushData.rowsWritten ?? 0} rows)`);
+          const flushData = await flushResp.json() as { ok: boolean; rowsWritten?: number; givingRows?: number };
+          console.log(`[PCO Sync] Flush complete: ${flushData.rowsWritten ?? 0} attendance + ${flushData.givingRows ?? 0} giving rows. Job marked complete.`);
         } else {
           const errText = await flushResp.text();
           console.warn(`[PCO Sync] Flush endpoint returned ${flushResp.status}: ${errText}`);
+          // Flush failed — fall through to the shared-pool path as a best-effort fallback
+          results = [weeklyResults.attendance, weeklyResults.giving];
         }
       } catch (flushErr: any) {
         console.warn(`[PCO Sync] Flush call failed: ${flushErr.message}`);
+        // Flush failed — fall through to the shared-pool path as a best-effort fallback
+        results = [weeklyResults.attendance, weeklyResults.giving];
       }
 
-      results = [weeklyResults.attendance, weeklyResults.giving];
+      // If flush succeeded (results is still undefined), skip the shared-pool log/complete path.
+      // The flush endpoint already marked the job completed at 100%.
+      if (!results) return;
     } else if (syncType === "weekly_all") {
       const attResult = await syncWeeklyAttendance(client, dateFrom, dateTo, progress);
       await progress(60, "Syncing weekly giving...", attResult.recordsProcessed);

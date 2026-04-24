@@ -647,3 +647,13 @@
 - [x] Router calls localhost flush endpoint after PCO fetch completes (fresh HTTP request = fresh DB connection)
 - [x] All 107 tests passing
 - [x] Checkpoint and deploy
+
+## Round 68: Extend Flush to Cover All Post-PCO DB Work
+
+- [x] Extend POST /api/sync/flush to also aggregate giving_weekly → giving_monthly (fresh connection)
+- [x] Extend POST /api/sync/flush to insert sync log entries (fresh connection)
+- [x] Extend POST /api/sync/flush to mark job completed at 100% (fresh connection)
+- [x] Router: after flush succeeds, return early — skip shared-pool logSyncResult and updateJob
+- [x] Router: keep shared-pool fallback path if flush HTTP call itself fails
+- [x] All 107 tests passing
+- [x] Checkpoint and deploy
