@@ -83,8 +83,11 @@ function classifySubgroup(subgroup: string): string | null {
   if (PCO_CHECKIN_SUBGROUPS.includes(subgroup)) return "Adults";
   if (subgroup === "Adults") return "Adults";
 
-  // Kids ministry
-  if (isKidsSubgroup(subgroup)) return "Kids";
+  // Kids ministry — only the aggregate "Kids" row counts toward totals.
+  // Room-level rows like "Kids: Canton Babies" are for breakdown display only
+  // and must NOT be included here to avoid double-counting.
+  if (subgroup === "Kids") return "Kids";
+  if (subgroup.startsWith("Kids:") || subgroup.startsWith("Kids ")) return null;
 
   // Students
   if (subgroup === "RevStudents HS" || subgroup === "RevStudents MS" ||

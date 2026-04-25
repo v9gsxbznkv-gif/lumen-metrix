@@ -914,3 +914,12 @@
 - [x] Fixed all TS errors (GivingTab2 union type casts)
 - [x] Added 8 new vitest tests (subgroup classification + kids room aggregation) — 121 total passing
 - [x] Next Steps extraction: FTG from Detail tabs (2017-2025), Salvations/Baptisms from Detail tabs, Stewardship from 2024-2025
+
+## Round 97: Wire PCO Room-Level Kids Sync for 2026
+- [x] Read and understand existing PCO sync flow in weeklySync.ts
+- [x] Identify where check-in location_event_periods are fetched and how they map to rooms
+- [x] Wire mapLocationToCategory into the sync pipeline to produce per-room subgroup rows — fetches location_event_times for Canton/Jasper check-in events, maps via CANTON_ROOM_MAP/JASPER_ROOM_MAP
+- [x] Ensure each kids room gets its own "Kids: Canton Babies" etc. subgroup in attendance_weekly
+- [x] Fixed double-counting bug: classifySubgroup now returns null for room-level "Kids: *" rows; weeklyReport prefers aggregate "Kids" row over room-level sum
+- [x] Write vitest tests for room-level sync logic — 25 dataViews tests (including 3 double-counting + 7 room mapping), 133 total passing
+- [x] Checkpoint and deploy

@@ -136,7 +136,7 @@ function isAttendanceSubgroup(subgroup: string): boolean {
     PCO_CHECKIN_SUBGROUPS.includes(subgroup) ||
     PCO_STUDENTS_SUBGROUPS.includes(subgroup) ||
     PCO_YOUNG_ADULTS_SUBGROUPS.includes(subgroup) ||
-    isKidsSubgroup(subgroup)
+    subgroup === "Kids" // Only aggregate Kids, not room-level "Kids: *"
   );
 }
 
@@ -272,10 +272,14 @@ async function getWeeklySnapshot(
       .filter((r: any) => PCO_CHECKIN_SUBGROUPS.includes(r.subgroup))
       .reduce((sum: number, r: any) => sum + r.headcount, 0);
 
-    // RevKids: all Kids:* subgroups for this campus
-    const revKidsTotal = campusAtt
-      .filter((r: any) => isKidsSubgroup(r.subgroup))
-      .reduce((sum: number, r: any) => sum + r.headcount, 0);
+    // RevKids: prefer aggregate "Kids" row when it exists (manual headcount, more accurate).
+    // Only fall back to summing room-level "Kids: *" rows when no aggregate exists (e.g. 2026 PCO).
+    const kidsAggregateRow = campusAtt.find((r: any) => r.subgroup === "Kids");
+    const revKidsTotal = kidsAggregateRow
+      ? kidsAggregateRow.headcount
+      : campusAtt
+          .filter((r: any) => r.subgroup.startsWith("Kids:") || r.subgroup.startsWith("Kids "))
+          .reduce((sum: number, r: any) => sum + r.headcount, 0);
 
     // RevStudents: use new HS/MS split subgroups from PCO custom headcounts.
     // Legacy combined subgroup ("RevStudents | Canton Campus") kept as fallback.
@@ -531,11 +535,15 @@ async function getMonthlySnapshot(
       )
       .reduce((sum: number, r: any) => sum + r.total, 0);
 
-    const revKidsTotal = campusAtt
-      .filter((r: any) =>
-        SPREADSHEET_KIDS.includes(r.subgroup) || isKidsSubgroup(r.subgroup)
-      )
-      .reduce((sum: number, r: any) => sum + r.total, 0);
+    // RevKids monthly: prefer aggregate "Kids" row; fall back to room-level sum
+    const hasKidsAggregate = campusAtt.some((r: any) => r.subgroup === "Kids");
+    const revKidsTotal = hasKidsAggregate
+      ? campusAtt
+          .filter((r: any) => r.subgroup === "Kids")
+          .reduce((sum: number, r: any) => sum + r.total, 0)
+      : campusAtt
+          .filter((r: any) => r.subgroup.startsWith("Kids:") || r.subgroup.startsWith("Kids "))
+          .reduce((sum: number, r: any) => sum + r.total, 0);
 
     const revStudentsTotal = campusAtt
       .filter((r: any) =>

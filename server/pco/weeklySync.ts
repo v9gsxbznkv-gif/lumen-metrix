@@ -749,6 +749,91 @@ export async function syncWeeklyAttendance(
             }
           }
 
+          // -------------------------------------------------------
+          // ROOM-LEVEL KIDS BREAKDOWN: For Canton/Jasper check-in events,
+          // fetch location_event_times to get per-room check-in counts.
+          // These are scan-based counts (not manual headcounts) and are
+          // stored as "Kids: {campus} {room}" subgroups for the breakdown
+          // display. The aggregate "Kids" row from headcounts is kept
+          // separately for total attendance calculations.
+          // -------------------------------------------------------
+          const isCampusCheckin = (
+            eventName === "Revolution Canton Check-In" ||
+            eventName === "Revolution Jasper Check-In"
+          );
+          if (isCampusCheckin) {
+            const roomTotals = new Map<string, number>();
+            for (const eventTime of eventTimesResult.data) {
+              const etId = (eventTime as any).id;
+              try {
+                const locResult = await Promise.race([
+                  client.paginateAll(
+                    `/check-ins/v2/event_times/${etId}/location_event_times`,
+                    { per_page: 100, include: "location" }
+                  ),
+                  new Promise<never>((_, reject) =>
+                    setTimeout(() => reject(new Error(`Timeout fetching location_event_times for ${etId}`)), 15_000)
+                  ),
+                ]);
+
+                // Build a location ID → name map from included resources
+                const locationNames = new Map<string, string>();
+                if (locResult.included) {
+                  for (const inc of locResult.included as any[]) {
+                    if (inc.type === "Location" && inc.attributes?.name) {
+                      locationNames.set(inc.id, inc.attributes.name);
+                    }
+                  }
+                }
+
+                for (const let_ of locResult.data as any[]) {
+                  const regular = let_.attributes?.regular_count || 0;
+                  const guest = let_.attributes?.guest_count || 0;
+                  const total = regular + guest; // exclude volunteers from kids count
+                  if (total === 0) continue;
+
+                  // Get location name from included data or relationship
+                  const locId = let_.relationships?.location?.data?.id;
+                  const locName = locId ? locationNames.get(locId) : null;
+                  if (!locName) continue;
+
+                  const category = mapLocationToCategory(locName, campus);
+                  if (!category || category === "ADULT") continue; // skip volunteers, adults, unknown
+
+                  roomTotals.set(category, (roomTotals.get(category) || 0) + total);
+                }
+              } catch (err: any) {
+                console.warn(`[PCO Weekly Sync] Skipping location_event_times for event_time ${etId}: ${err.message}`);
+              }
+            }
+
+            // Write room-level rows to weeklyMap
+            for (const [room, total] of Array.from(roomTotals.entries())) {
+              if (total === 0) continue;
+              const subgroup = `Kids: ${campus} ${room}`;
+              const key = `${weekStartDate}|${campus}|${subgroup}`;
+              const existing = weeklyMap.get(key);
+              if (existing) {
+                existing.headcount += total;
+                existing.regularCount += total;
+              } else {
+                weeklyMap.set(key, {
+                  year, weekNumber, weekStartDate, campus,
+                  subgroup,
+                  headcount: total,
+                  regularCount: total,
+                  guestCount: 0,
+                  volunteerCount: 0,
+                });
+              }
+            }
+
+            if (roomTotals.size > 0) {
+              const roomSummary = Array.from(roomTotals.entries()).map(([k, v]) => `${k}=${v}`).join(', ');
+              console.log(`[PCO Weekly Sync]   ${eventName} ${weekStartDate} rooms: ${roomSummary}`);
+            }
+          }
+
           // Log summary for this period
           if (categoryTotals.size > 0) {
             const summary = Array.from(categoryTotals.entries()).map(([k, v]) => `${k}=${v}`).join(', ');

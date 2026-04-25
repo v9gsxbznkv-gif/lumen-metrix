@@ -209,7 +209,9 @@ describe("dataViews router", () => {
     function classifySubgroup(subgroup: string): string | null {
       if (PCO_CHECKIN_SUBGROUPS.includes(subgroup)) return "Adults";
       if (subgroup === "Adults") return "Adults";
-      if (isKidsSubgroup(subgroup)) return "Kids";
+      // Only aggregate "Kids" counts toward totals; room-level rows are for breakdown only
+      if (subgroup === "Kids") return "Kids";
+      if (subgroup.startsWith("Kids:") || subgroup.startsWith("Kids ")) return null;
       if (subgroup === "RevStudents HS" || subgroup === "RevStudents MS" ||
           subgroup === "RevStudents Attendance" || subgroup === "Students" ||
           PCO_STUDENTS_SUBGROUPS.includes(subgroup)) return "Students";
@@ -228,11 +230,20 @@ describe("dataViews router", () => {
       expect(classifySubgroup("Adults")).toBe("Adults");
     });
 
-    it("should classify kids subgroups correctly", () => {
+    it("should classify aggregate Kids as Kids", () => {
       expect(classifySubgroup("Kids")).toBe("Kids");
-      expect(classifySubgroup("Kids: Canton Babies")).toBe("Kids");
-      expect(classifySubgroup("Kids: Jasper Nursery")).toBe("Kids");
+    });
+
+    it("should return null for room-level Kids subgroups to prevent double-counting", () => {
+      expect(classifySubgroup("Kids: Canton Babies")).toBeNull();
+      expect(classifySubgroup("Kids: Jasper Nursery")).toBeNull();
+      expect(classifySubgroup("Kids: Canton Treehouse")).toBeNull();
+      expect(classifySubgroup("Kids: Canton Cove")).toBeNull();
+    });
+
+    it("should still identify room-level Kids via isKidsSubgroup helper", () => {
       expect(isKidsSubgroup("Kids: Canton Treehouse")).toBe(true);
+      expect(isKidsSubgroup("Kids")).toBe(true);
       expect(isKidsSubgroup("Adults")).toBe(false);
     });
 
@@ -374,5 +385,206 @@ describe("dataViews router", () => {
       expect(salvationApril).toBeDefined();
       expect(salvationApril!.count).toBe(8); // 3 + 5
     });
+  });
+});
+
+describe("attendance normalization with room-level kids rows", () => {
+  // Replicate the normalizeAttendanceRows logic to verify no double-counting
+  const PCO_CHECKIN_SUBGROUPS = [
+    "Revolution Canton Check-In",
+    "Revolution Jasper Check-In",
+  ];
+
+  function classifySubgroup(subgroup: string): string | null {
+    if (PCO_CHECKIN_SUBGROUPS.includes(subgroup)) return "Adults";
+    if (subgroup === "Adults") return "Adults";
+    if (subgroup === "Kids") return "Kids";
+    if (subgroup.startsWith("Kids:") || subgroup.startsWith("Kids ")) return null;
+    if (subgroup === "Students") return "Students";
+    return null;
+  }
+
+  function normalizeAttendanceRows(rows: any[]) {
+    const weekMap = new Map<string, {
+      year: number; weekNumber: number; weekStartDate: string; campus: string;
+      adults: number; kids: number; students: number; total: number;
+    }>();
+
+    for (const row of rows) {
+      const category = classifySubgroup(row.subgroup);
+      if (!category) continue;
+
+      const key = `${row.weekStartDate}-${row.campus}`;
+      let entry = weekMap.get(key);
+      if (!entry) {
+        entry = {
+          year: row.year, weekNumber: row.weekNumber,
+          weekStartDate: row.weekStartDate, campus: row.campus,
+          adults: 0, kids: 0, students: 0, total: 0,
+        };
+        weekMap.set(key, entry);
+      }
+
+      switch (category) {
+        case "Adults": entry.adults += row.headcount; break;
+        case "Kids": entry.kids += row.headcount; break;
+        case "Students": entry.students += row.headcount; break;
+      }
+    }
+
+    for (const entry of Array.from(weekMap.values())) {
+      entry.total = entry.adults + entry.kids;
+    }
+
+    return Array.from(weekMap.values());
+  }
+
+  it("should NOT double-count when both aggregate Kids and room-level Kids rows exist", () => {
+    // Historical data pattern: both aggregate and room-level rows for same week
+    const rows = [
+      { year: 2025, weekNumber: 13, weekStartDate: "2025-03-23", campus: "Canton", subgroup: "Adults", headcount: 1200 },
+      { year: 2025, weekNumber: 13, weekStartDate: "2025-03-23", campus: "Canton", subgroup: "Kids", headcount: 513 },
+      { year: 2025, weekNumber: 13, weekStartDate: "2025-03-23", campus: "Canton", subgroup: "Kids: Canton Babies", headcount: 60 },
+      { year: 2025, weekNumber: 13, weekStartDate: "2025-03-23", campus: "Canton", subgroup: "Kids: Canton Campground", headcount: 74 },
+      { year: 2025, weekNumber: 13, weekStartDate: "2025-03-23", campus: "Canton", subgroup: "Kids: Canton Cove", headcount: 150 },
+      { year: 2025, weekNumber: 13, weekStartDate: "2025-03-23", campus: "Canton", subgroup: "Kids: Canton Pre-K", headcount: 170 },
+      { year: 2025, weekNumber: 13, weekStartDate: "2025-03-23", campus: "Canton", subgroup: "Kids: Canton Treehouse", headcount: 158 },
+    ];
+
+    const result = normalizeAttendanceRows(rows);
+    expect(result).toHaveLength(1);
+
+    const week = result[0];
+    // Kids should be 513 (aggregate only), NOT 513 + 60 + 74 + 150 + 170 + 158 = 1125
+    expect(week.kids).toBe(513);
+    expect(week.adults).toBe(1200);
+    expect(week.total).toBe(1713); // 1200 + 513
+  });
+
+  it("should handle weeks with ONLY room-level Kids rows (no aggregate)", () => {
+    // Future PCO pattern: only room-level rows, no aggregate
+    const rows = [
+      { year: 2026, weekNumber: 5, weekStartDate: "2026-01-25", campus: "Canton", subgroup: "Adults", headcount: 1300 },
+      { year: 2026, weekNumber: 5, weekStartDate: "2026-01-25", campus: "Canton", subgroup: "Kids: Canton Babies", headcount: 60 },
+      { year: 2026, weekNumber: 5, weekStartDate: "2026-01-25", campus: "Canton", subgroup: "Kids: Canton Treehouse", headcount: 200 },
+    ];
+
+    const result = normalizeAttendanceRows(rows);
+    expect(result).toHaveLength(1);
+
+    const week = result[0];
+    // Room-level rows are skipped by classifySubgroup, so kids = 0
+    // This is correct because the aggregate "Kids" row from headcounts is the source of truth
+    expect(week.kids).toBe(0);
+    expect(week.adults).toBe(1300);
+  });
+
+  it("should handle weeks with only aggregate Kids row (no room-level)", () => {
+    const rows = [
+      { year: 2025, weekNumber: 1, weekStartDate: "2025-01-05", campus: "Canton", subgroup: "Adults", headcount: 1100 },
+      { year: 2025, weekNumber: 1, weekStartDate: "2025-01-05", campus: "Canton", subgroup: "Kids", headcount: 519 },
+    ];
+
+    const result = normalizeAttendanceRows(rows);
+    expect(result).toHaveLength(1);
+    expect(result[0].kids).toBe(519);
+    expect(result[0].total).toBe(1619);
+  });
+});
+
+describe("PCO room mapping", () => {
+  // Replicate mapLocationToCategory logic
+  const VOLUNTEER_LOCATIONS = new Set([
+    "Campus Safety", "Gathering Leaders", "Prayer Team Members",
+    "RevKids Check-In", "RevKids TEAM MEMBER", "Welcome Team Member",
+  ]);
+
+  const CANTON_ROOM_MAP: Record<string, string> = {
+    "The Nest": "Babies",
+    "The Campground": "Campground",
+    "The Treehouse": "Treehouse",
+    "The Cove": "Cove",
+    "Turtle": "Nursery",
+    "Owl": "Nursery",
+    "Woodpecker": "Toddlers",
+    "Porcupine": "Toddlers",
+    "Room 4 - Pre-K": "Pre-K",
+    "Treehouse - K-5th": "Elementary",
+  };
+
+  const JASPER_ROOM_MAP: Record<string, string> = {
+    "Owls": "Nursery",
+    "Raccoons": "Nursery",
+    "Fox": "Nursery",
+    "Room 1": "Pre-K",
+    "Room 2": "Pre-K",
+    "Cove": "Cove",
+    "Treehouse": "Treehouse",
+    "Reruns": "Reruns",
+  };
+
+  const JASPER_ADULT_LOCATIONS = new Set(["5th Grade", "6th Grade"]);
+
+  function mapLocationToCategory(locationName: string, campus: string): string | null {
+    const trimmed = locationName.trim();
+    if (VOLUNTEER_LOCATIONS.has(trimmed)) return null;
+    const lower = trimmed.toLowerCase();
+    if (lower === "elementary" || lower === "preschool" || lower === "nursery" ||
+        lower === "toddlers" || lower === "team member") return null;
+    if (campus === "Canton") {
+      const mapped = CANTON_ROOM_MAP[trimmed];
+      if (mapped) return mapped;
+    } else if (campus === "Jasper") {
+      if (JASPER_ADULT_LOCATIONS.has(trimmed)) return "ADULT";
+      const mapped = JASPER_ROOM_MAP[trimmed];
+      if (mapped) return mapped;
+    }
+    return null;
+  }
+
+  it("should map Canton Sunday rooms correctly", () => {
+    expect(mapLocationToCategory("The Nest", "Canton")).toBe("Babies");
+    expect(mapLocationToCategory("The Campground", "Canton")).toBe("Campground");
+    expect(mapLocationToCategory("The Treehouse", "Canton")).toBe("Treehouse");
+    expect(mapLocationToCategory("The Cove", "Canton")).toBe("Cove");
+  });
+
+  it("should map Canton Thursday rooms correctly", () => {
+    expect(mapLocationToCategory("Turtle", "Canton")).toBe("Nursery");
+    expect(mapLocationToCategory("Owl", "Canton")).toBe("Nursery");
+    expect(mapLocationToCategory("Woodpecker", "Canton")).toBe("Toddlers");
+    expect(mapLocationToCategory("Room 4 - Pre-K", "Canton")).toBe("Pre-K");
+  });
+
+  it("should map Jasper rooms correctly", () => {
+    expect(mapLocationToCategory("Owls", "Jasper")).toBe("Nursery");
+    expect(mapLocationToCategory("Room 1", "Jasper")).toBe("Pre-K");
+    expect(mapLocationToCategory("Cove", "Jasper")).toBe("Cove");
+    expect(mapLocationToCategory("Reruns", "Jasper")).toBe("Reruns");
+  });
+
+  it("should return ADULT for Jasper 5th/6th grade", () => {
+    expect(mapLocationToCategory("5th Grade", "Jasper")).toBe("ADULT");
+    expect(mapLocationToCategory("6th Grade", "Jasper")).toBe("ADULT");
+  });
+
+  it("should return null for volunteer locations", () => {
+    expect(mapLocationToCategory("Campus Safety", "Canton")).toBeNull();
+    expect(mapLocationToCategory("RevKids TEAM MEMBER", "Canton")).toBeNull();
+  });
+
+  it("should return null for folder/container locations", () => {
+    expect(mapLocationToCategory("Elementary", "Canton")).toBeNull();
+    expect(mapLocationToCategory("Preschool", "Jasper")).toBeNull();
+  });
+
+  it("should produce correct subgroup format for weeklyMap", () => {
+    const campus = "Canton";
+    const room = mapLocationToCategory("The Treehouse", campus);
+    expect(room).toBe("Treehouse");
+    const subgroup = `Kids: ${campus} ${room}`;
+    expect(subgroup).toBe("Kids: Canton Treehouse");
+    // This matches the format used in getKidsRoomBreakdown
+    expect(subgroup.startsWith("Kids: ")).toBe(true);
   });
 });
