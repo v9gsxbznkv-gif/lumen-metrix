@@ -775,4 +775,13 @@
 - [x] Added overall 90s per-period timeout in main check-in headcount loop — bails out if a single period takes too long
 - [x] AbortController cancellations treated as retryable network errors (up to 8 retries with exponential backoff)
 - [x] TypeScript clean (0 errors) and 108 tests pass
+- [x] Checkpoint and deploy
+
+## Round 83: Missing Groups, Giving, Salvations, Baptisms Data
+- [x] Groups showing 0 — ROOT CAUSE: no groups_weekly table, and weekly snapshot hardcoded groups=0. FIX: fall back to groups_monthly (current month, then previous month). March 2026 data: Canton 689, Jasper 200.
+- [x] Giving showing $0 — ROOT CAUSE: giving_weekly uses Sunday anchor (weekStartDate=2026-04-19) but attendance uses Monday anchor (2026-04-13). Query joined on weekStartDate which never matched. FIX: query giving_weekly by weekNumber+year instead of weekStartDate.
+- [x] Salvations showing 0 — ROOT CAUSE: weekly report looked for subgroup "Salvations" but PCO data uses "RevStudents Salvations". FIX: match both names + fall back to next_steps_monthly (current/previous month).
+- [x] Baptisms showing — — ROOT CAUSE: no baptism headcount category in PCO + no monthly fallback. FIX: added next_steps_monthly fallback (current/previous month).
+- [x] Totals row hardcoded groups=0, salvations=0, baptisms=0 — FIX: now sums from campus data.
+- [x] TypeScript clean (0 errors) and 108 tests pass
 - [ ] Checkpoint and deploy

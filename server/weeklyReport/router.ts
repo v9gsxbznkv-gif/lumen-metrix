@@ -149,6 +149,12 @@ async function getWeeklySnapshot(
   weekNumber: number,
   year: number
 ): Promise<WeeklyPeriod | null> {
+  // Determine month from the weekStartDate
+  const d = new Date(weekStartDate + "T00:00:00");
+  const month = d.getMonth() + 1;
+
+  // Query attendance by weekStartDate (Monday anchor) but giving by weekNumber+year
+  // because giving_weekly uses a Sunday anchor — same week number but different weekStartDate.
   const [attRows, givRows] = await Promise.all([
     db
       .select()
@@ -157,14 +163,68 @@ async function getWeeklySnapshot(
     db
       .select()
       .from(givingWeekly)
-      .where(eq(givingWeekly.weekStartDate, weekStartDate)),
+      .where(
+        and(
+          eq(givingWeekly.weekNumber, weekNumber),
+          eq(givingWeekly.year, year)
+        )
+      ),
   ]);
 
   if (attRows.length === 0 && givRows.length === 0) return null;
 
-  // Determine month from the weekStartDate
-  const d = new Date(weekStartDate + "T00:00:00");
-  const month = d.getMonth() + 1;
+  // Groups: no weekly table, fall back to monthly (current month, then previous month)
+  let grpRowsFallback = await db
+    .select()
+    .from(groupsMonthly)
+    .where(
+      and(
+        eq(groupsMonthly.year, year),
+        eq(groupsMonthly.month, month)
+      )
+    );
+  if (grpRowsFallback.length === 0) {
+    // Try previous month (handles early-month weeks where current month data isn't entered yet)
+    const prevMonth = month === 1 ? 12 : month - 1;
+    const prevYear = month === 1 ? year - 1 : year;
+    grpRowsFallback = await db
+      .select()
+      .from(groupsMonthly)
+      .where(
+        and(
+          eq(groupsMonthly.year, prevYear),
+          eq(groupsMonthly.month, prevMonth)
+        )
+      );
+  }
+  const grpRows = grpRowsFallback;
+
+  // Next steps (salvations, baptisms): fall back to monthly (current month, then previous month)
+  let nsRowsFallback = await db
+    .select()
+    .from(nextStepsMonthly)
+    .where(
+      and(
+        eq(nextStepsMonthly.year, year),
+        eq(nextStepsMonthly.month, month),
+        ne(nextStepsMonthly.campus, "All Campuses")
+      )
+    );
+  if (nsRowsFallback.length === 0) {
+    const prevMonth = month === 1 ? 12 : month - 1;
+    const prevYear = month === 1 ? year - 1 : year;
+    nsRowsFallback = await db
+      .select()
+      .from(nextStepsMonthly)
+      .where(
+        and(
+          eq(nextStepsMonthly.year, prevYear),
+          eq(nextStepsMonthly.month, prevMonth),
+          ne(nextStepsMonthly.campus, "All Campuses")
+        )
+      );
+  }
+  const nsRows = nsRowsFallback;
 
   // Check if weekly giving is only available as combined (no per-campus weekly split)
   const givingWeeklyIsCombined = givRows.length > 0 &&
@@ -264,16 +324,35 @@ async function getWeeklySnapshot(
     // This replaces the old monthly estimate approach
     const ftgWeeklyTotal = ftgAdultsTotal + ftgKidsTotal + revStudentsFTGTotal;
 
-    // Salvations / Baptisms: sourced from attendance_weekly subgroups populated by
-    // the manual headcount form in PCO (same mechanism as FTG Adults/Kids).
-    // After a sync runs with the updated HEADCOUNT_CATEGORY_MAP, these will populate.
-    const salvationsTotal = campusAtt
-      .filter((r: any) => r.subgroup === "Salvations")
+    // Salvations: check both "Salvations" and "RevStudents Salvations" subgroups
+    // in attendance_weekly (PCO headcount categories).
+    let salvationsTotal = campusAtt
+      .filter((r: any) => r.subgroup === "Salvations" || r.subgroup === "RevStudents Salvations")
       .reduce((sum: number, r: any) => sum + r.headcount, 0);
-    const baptismsMonthTotal = campusAtt
+
+    // Baptisms: check attendance_weekly subgroups
+    let baptismsMonthTotal = campusAtt
       .filter((r: any) => r.subgroup === "Baptisms")
       .reduce((sum: number, r: any) => sum + r.headcount, 0);
-    const grpAvg = 0;
+
+    // Monthly fallback for salvations/baptisms: if no weekly data, use next_steps_monthly
+    const weeks = weeksInMonth(year, month);
+    if (salvationsTotal === 0 && nsRows.length > 0) {
+      salvationsTotal = nsRows
+        .filter((r: any) => r.campus === campus && r.metric === "Salvations")
+        .reduce((sum: number, r: any) => sum + Math.round(r.count / weeks), 0);
+    }
+    if (baptismsMonthTotal === 0 && nsRows.length > 0) {
+      // Baptisms shown as month-to-date (not divided by weeks)
+      baptismsMonthTotal = nsRows
+        .filter((r: any) => r.campus === campus && r.metric === "Baptisms")
+        .reduce((sum: number, r: any) => sum + r.count, 0);
+    }
+
+    // Groups: no weekly table, use monthly avgAttendance as fallback
+    const grpAvg = grpRows
+      .filter((r: any) => r.campus === campus)
+      .reduce((sum: number, r: any) => sum + r.avgAttendance, 0);
 
     campuses.push({
       campus,
@@ -319,13 +398,13 @@ async function getWeeklySnapshot(
     ftgAdults: campuses.reduce((s, c) => s + c.ftgAdults, 0),
     ftgKids: campuses.reduce((s, c) => s + c.ftgKids, 0),
     youngAdults: yaTotal,
-    groups: 0,
+    groups: campuses.reduce((s, c) => s + c.groups, 0),
     giving: Math.round(combinedGivingWeekly),
     givingMonthTotal: 0,
     volunteers: campuses.reduce((s, c) => s + c.volunteers, 0),
     ftg: campuses.reduce((s, c) => s + c.ftg, 0),
-    salvations: 0,
-    baptisms: 0,
+    salvations: campuses.reduce((s, c) => s + c.salvations, 0),
+    baptisms: campuses.reduce((s, c) => s + c.baptisms, 0),
     baptismsMonthLabel: campuses[0]?.baptismsMonthLabel ?? "",
   };
 
