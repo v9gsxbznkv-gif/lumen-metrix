@@ -127,12 +127,27 @@ export default function AttendanceTab2() {
     endYear: viewMode === "yearly" ? Math.max(...years) : undefined,
   });
 
-  // Kids room breakdown query — uses the selected year (or latest year for yearly view)
-  const kidsYear = viewMode === "yearly" ? Math.max(...years) : year;
-  const kidsRoomQuery = trpc.dataViews.attendance.getKidsRoomBreakdown.useQuery({
-    year: kidsYear,
+  // Kids room breakdown — try selected year first, fallback to most recent year with data
+  const primaryKidsYear = viewMode === "yearly" ? Math.max(...years) : year;
+  const primaryKidsRoomQuery = trpc.dataViews.attendance.getKidsRoomBreakdown.useQuery({
+    year: primaryKidsYear,
     campus: campus === "all" ? undefined : campus,
   });
+
+  // If primary year has no data, try 2025 as fallback (most recent spreadsheet year)
+  const needsFallback = !primaryKidsRoomQuery.isLoading && (primaryKidsRoomQuery.data?.length ?? 0) === 0 && primaryKidsYear !== 2025;
+  const fallbackKidsRoomQuery = trpc.dataViews.attendance.getKidsRoomBreakdown.useQuery(
+    { year: 2025, campus: campus === "all" ? undefined : campus },
+    { enabled: needsFallback }
+  );
+
+  // Use primary data if available, otherwise fallback
+  const kidsRoomQueryData = (primaryKidsRoomQuery.data?.length ?? 0) > 0
+    ? primaryKidsRoomQuery.data
+    : fallbackKidsRoomQuery.data;
+  const kidsYear = (primaryKidsRoomQuery.data?.length ?? 0) > 0 ? primaryKidsYear : 2025;
+  const kidsRoomLoading = primaryKidsRoomQuery.isLoading || (needsFallback && fallbackKidsRoomQuery.isLoading);
+  const kidsIsFallback = needsFallback && (fallbackKidsRoomQuery.data?.length ?? 0) > 0;
 
   const isLoading = dataQuery.isLoading;
   const rawData = dataQuery.data;
@@ -262,7 +277,7 @@ export default function AttendanceTab2() {
   }, [viewMode, weeklyData, monthlyData, yearlyData]);
 
   // ─── Kids Room Breakdown ──────────────────────────────────
-  const kidsRoomData = kidsRoomQuery.data ?? [];
+  const kidsRoomData = kidsRoomQueryData ?? [];
   const kidsRoomSections = useMemo(() => {
     if (kidsRoomData.length === 0) return [];
 
@@ -593,10 +608,17 @@ export default function AttendanceTab2() {
           {/* Kids Room-Level Breakdown */}
           <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <h3 className="text-sm font-semibold" style={{ fontFamily: "'DM Sans'" }}>
-                Kids Room Breakdown — {kidsYear} Avg
-              </h3>
-              {kidsRoomQuery.isLoading && (
+              <div>
+                <h3 className="text-sm font-semibold" style={{ fontFamily: "'DM Sans'" }}>
+                  Kids Room Breakdown — {kidsYear} Avg
+                </h3>
+                {kidsIsFallback && (
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    Showing {kidsYear} data (no room-level data for {primaryKidsYear} yet)
+                  </p>
+                )}
+              </div>
+              {kidsRoomLoading && (
                 <Loader2 className="w-4 h-4 animate-spin" style={{ color: "#E8913A" }} />
               )}
             </div>
@@ -642,9 +664,9 @@ export default function AttendanceTab2() {
                   </div>
                 </div>
               </div>
-            ) : !kidsRoomQuery.isLoading ? (
+            ) : !kidsRoomLoading ? (
               <p className="text-xs text-muted-foreground italic">
-                No room-level kids data available for {kidsYear}. Room-level data is available for 2017–2025 from spreadsheet imports.
+                No room-level kids data available. Room-level data is available for 2017–2025 from spreadsheet imports.
               </p>
             ) : null}
           </div>

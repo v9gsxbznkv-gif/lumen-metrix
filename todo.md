@@ -923,3 +923,8 @@
 - [x] Fixed double-counting bug: classifySubgroup now returns null for room-level "Kids: *" rows; weeklyReport prefers aggregate "Kids" row over room-level sum
 - [x] Write vitest tests for room-level sync logic — 25 dataViews tests (including 3 double-counting + 7 room mapping), 133 total passing
 - [x] Checkpoint and deploy
+
+## Round 98: Kids Room Data Not Showing on Attendance Page
+- [x] Diagnose why kids room breakdown is not rendering — section was rendering but defaulted to 2026 which has no room-level data
+- [x] Fix the issue — added auto-fallback to 2025 when selected year has no room data, with note explaining the fallback
+- [x] Verify and checkpoint — confirmed Canton 7 rooms + Jasper 2 rooms showing correctly with progress bars
