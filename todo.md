@@ -825,3 +825,11 @@
 - [x] Unique index on (year, weekNumber, campus) from Round 86 ensures onDuplicateKeyUpdate will overwrite old Sunday-based rows with correct Monday-based data on next sync.
 - [x] TypeScript clean (0 new errors) and 108 tests pass
 - [x] Checkpoint and deploy — Re-sync required to repopulate giving with correct week alignment
+
+## Round 89: Fix All Historical Giving Week Alignment
+- [x] All 135 historical giving_weekly rows used Sunday-based weekStartDate AND wrong week numbers
+- [x] Attempted SQL migration (+1 day shift) but weekNumbers were also wrong — simple shift insufficient
+- [x] DELETED all 135 giving_weekly rows — next sync will repopulate with correct Monday-based week assignments
+- [x] FOUND ADDITIONAL BUG: date-only received_at strings ("2026-04-13") parsed as UTC midnight = Apr 12 8pm ET = wrong day! Fixed by appending T12:00:00Z for date-only strings.
+- [x] TypeScript clean (0 new errors) and 108 tests pass
+- [ ] Checkpoint and deploy — Re-sync required to repopulate all giving data with correct week alignment

@@ -983,10 +983,13 @@ export async function syncWeeklyGiving(
         for (const donation of donations) {
           recordsProcessed++;
           const receivedAt: string = donation.attributes?.received_at || chunk.from;
-          const donationDate = new Date(receivedAt);
+          // PCO received_at is often date-only ("2026-04-13"). new Date("2026-04-13")
+          // parses as UTC midnight, which is Apr 12 8pm ET — wrong day!
+          // Append T12:00:00Z for date-only strings so the ET conversion stays on the correct day.
+          const dateStr = receivedAt.includes('T') ? receivedAt : `${receivedAt}T12:00:00Z`;
+          const donationDate = new Date(dateStr);
           // Use getSunday() which returns the MONDAY of the ISO week (Mon-Sun).
           // This aligns giving weeks with attendance weeks.
-          // Previously used Sunday rollback which created a 1-day offset.
           const weekStart = getSunday(donationDate);
           const weekStartStr = formatDate(weekStart);
           const year = weekStart.getFullYear();
