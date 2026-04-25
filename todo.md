@@ -792,4 +792,11 @@
 - [x] Young Adults — shows 15 from "YA Gathering" under "Other" campus. This is actual PCO headcount. Need Chad to confirm expected number.
 - [x] Online metric added — Canton has "Online" subgroup with headcount=554 for week 16. Added to CampusWeeklyMetrics type, all 3 snapshot functions (weekly/monthly/YTD), and frontend METRIC_CONFIG.
 - [x] TypeScript clean (0 new errors, pre-existing scheduler/weeklySync errors unchanged) and 108 tests pass
-- [ ] Checkpoint and deploy
+- [x] Checkpoint and deploy
+
+## Round 85: Active Groups + Fix Young Adults Number
+- [x] Add Active Groups as separate metric in Weekly Report (from groups_monthly.activeGroups) — added to CampusWeeklyMetrics, all 3 snapshot functions, and frontend METRIC_CONFIG
+- [x] Young Adults showing 15 instead of 63 — ROOT CAUSE: YA Gathering treated as non-main event, only pulling regular+guest+volunteer counts (0+0+15=15). The actual 63 is a manual headcount entered via attendance_types in PCO. FIX: Added YA Gathering to isMainCheckInEvent + HEADCOUNT_CATEGORY_MAP so it drills into headcounts like Canton/Jasper main events.
+- [x] Added YA FTG mapping ("First Timers", "FTG", "2-FTG" → "YA FTG") and YA Salvations mapping
+- [x] TypeScript clean (0 new errors) and 108 tests pass
+- [ ] Checkpoint and deploy — NOTE: YA fix requires a re-sync to pull the manual headcounts from PCO

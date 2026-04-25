@@ -41,6 +41,7 @@ interface CampusWeeklyMetrics {
   ftgKids: number;         // FTG Kids (from attendance_weekly "FTG Kids" subgroup)
   youngAdults: number;     // YA Gathering
   groups: number;          // Groups avg attendance (monthly ÷ weeks)
+  activeGroups: number;    // Number of active groups (from groups_monthly.activeGroups)
   giving: number;          // Weekly giving (or "All Campuses" combined if no per-campus split)
   givingMonthTotal: number; // Monthly giving total for this campus (for reference)
   volunteers: number;
@@ -374,6 +375,11 @@ async function getWeeklySnapshot(
       .filter((r: any) => r.campus === campus)
       .reduce((sum: number, r: any) => sum + r.avgAttendance, 0);
 
+    // Active Groups count from monthly data
+    const activeGrpCount = grpRows
+      .filter((r: any) => r.campus === campus)
+      .reduce((sum: number, r: any) => sum + (r.activeGroups || 0), 0);
+
     campuses.push({
       campus,
       attendance: attTotal,
@@ -387,6 +393,7 @@ async function getWeeklySnapshot(
       ftgKids: ftgKidsTotal,
       youngAdults: 0, // populated in totals from "Other" campus rows
       groups: grpAvg,
+      activeGroups: activeGrpCount,
       giving: Math.round(campusGivWeekly),
       givingMonthTotal: 0,
       volunteers: volunteersTotal,
@@ -421,6 +428,7 @@ async function getWeeklySnapshot(
     ftgKids: campuses.reduce((s, c) => s + c.ftgKids, 0),
     youngAdults: yaTotal,
     groups: campuses.reduce((s, c) => s + c.groups, 0),
+    activeGroups: campuses.reduce((s, c) => s + c.activeGroups, 0),
     giving: Math.round(combinedGivingWeekly),
     givingMonthTotal: 0,
     volunteers: campuses.reduce((s, c) => s + c.volunteers, 0),
@@ -571,6 +579,10 @@ async function getMonthlySnapshot(
       .filter((r: any) => r.campus === campus)
       .reduce((sum: number, r: any) => sum + r.avgAttendance, 0);
 
+    const activeGrpCount = grpRows
+      .filter((r: any) => r.campus === campus)
+      .reduce((sum: number, r: any) => sum + (r.activeGroups || 0), 0);
+
     const monthNameStr = new Date(year, month - 1, 1).toLocaleString("en-US", { month: "long" });
     campuses.push({
       campus,
@@ -585,6 +597,7 @@ async function getMonthlySnapshot(
       ftgKids: 0,
       youngAdults: Math.round(youngAdultsTotal / weeks),
       groups: grpAvg,
+      activeGroups: activeGrpCount,
       giving: Math.round(givTotal / weeks),
       givingMonthTotal: Math.round(givTotal),
       volunteers: Math.round(srvTotal / weeks),
@@ -608,6 +621,7 @@ async function getMonthlySnapshot(
     ftgKids: 0,
     youngAdults: campuses.reduce((s, c) => s + c.youngAdults, 0),
     groups: campuses.reduce((s, c) => s + c.groups, 0),
+    activeGroups: campuses.reduce((s, c) => s + c.activeGroups, 0),
     giving: campuses.reduce((s, c) => s + c.giving, 0),
     givingMonthTotal: campuses.reduce((s, c) => s + c.givingMonthTotal, 0),
     volunteers: campuses.reduce((s, c) => s + c.volunteers, 0),
@@ -668,6 +682,7 @@ async function getYTDSnapshot(
       ftgKids: Math.round(campusMonths.reduce((s, c) => s + c.ftgKids, 0) / count),
       youngAdults: Math.round(campusMonths.reduce((s, c) => s + c.youngAdults, 0) / count),
       groups: Math.round(campusMonths.reduce((s, c) => s + c.groups, 0) / count),
+      activeGroups: Math.round(campusMonths.reduce((s, c) => s + c.activeGroups, 0) / count),
       giving: Math.round(campusMonths.reduce((s, c) => s + c.giving, 0) / count),
       givingMonthTotal: Math.round(campusMonths.reduce((s, c) => s + c.givingMonthTotal, 0) / count),
       volunteers: Math.round(campusMonths.reduce((s, c) => s + c.volunteers, 0) / count),
@@ -691,6 +706,7 @@ async function getYTDSnapshot(
     ftgKids: campuses.reduce((s, c) => s + c.ftgKids, 0),
     youngAdults: campuses.reduce((s, c) => s + c.youngAdults, 0),
     groups: campuses.reduce((s, c) => s + c.groups, 0),
+    activeGroups: campuses.reduce((s, c) => s + c.activeGroups, 0),
     giving: campuses.reduce((s, c) => s + c.giving, 0),
     givingMonthTotal: campuses.reduce((s, c) => s + c.givingMonthTotal, 0),
     volunteers: campuses.reduce((s, c) => s + c.volunteers, 0),

@@ -50,6 +50,7 @@ interface CampusMetrics {
   ftgKids: number;
   youngAdults: number;
   groups: number;
+  activeGroups: number;
   giving: number;
   givingMonthTotal: number;
   volunteers: number;
@@ -90,7 +91,8 @@ const METRIC_CONFIG = [
   { key: "ftgAdults" as const, label: "FTG Adults", icon: UserPlus, color: "#E8913A", prefix: "" },
   { key: "ftgKids" as const, label: "FTG Kids", icon: UserPlus, color: "#D4A853", prefix: "" },
   { key: "youngAdults" as const, label: "Young Adults", icon: Users, color: "#7C5CBF", prefix: "" },
-  { key: "groups" as const, label: "Groups", icon: Users, color: "#2D8B8B", prefix: "" },
+  { key: "groups" as const, label: "Groups Attendance", icon: Users, color: "#2D8B8B", prefix: "" },
+  { key: "activeGroups" as const, label: "Active Groups", icon: Users, color: "#1F7A7A", prefix: "" },
   { key: "giving" as const, label: "Giving", icon: DollarSign, color: "#4A7C59", prefix: "$" },
   { key: "volunteers" as const, label: "Volunteers", icon: Heart, color: "#C45B4A", prefix: "" },
   { key: "ftg" as const, label: "First-Time Guests", icon: UserPlus, color: "#E8913A", prefix: "" },

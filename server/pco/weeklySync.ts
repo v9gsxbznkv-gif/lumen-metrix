@@ -147,7 +147,8 @@ function isMainCheckInEvent(eventName: string): boolean {
     eventName === "Revolution Canton Check-In" ||
     eventName === "Revolution Jasper Check-In" ||
     eventName === "RevStudents | Canton Campus" ||
-    eventName === "RevStudents | Jasper Campus"
+    eventName === "RevStudents | Jasper Campus" ||
+    eventName === "YA Gathering"
   );
 }
 
@@ -202,6 +203,18 @@ const HEADCOUNT_CATEGORY_MAP: Record<string, Record<string, string>> = {
     "Baptisms":       "Baptisms",
     "3-Baptisms":     "Baptisms",
     "4-Baptisms":     "Baptisms",
+  },
+  // YA Gathering uses manual headcount categories
+  "YA Gathering": {
+    "Attendance":    "YA Gathering",
+    "1-Adults":      "YA Gathering",
+    "Young Adults":  "YA Gathering",
+    "YA":            "YA Gathering",
+    "First Timers":  "YA FTG",
+    "FTG":           "YA FTG",
+    "2-FTG":         "YA FTG",
+    "Salvations":    "YA Salvations",
+    "3-Salvations":  "YA Salvations",
   },
   // RevStudents events use custom headcount categories (not attendance_types)
   // These map PCO custom headcount names → our internal subgroup names
