@@ -455,3 +455,44 @@ export const eventOverrides = mysqlTable("event_overrides", {
 
 export type EventOverrideRow = typeof eventOverrides.$inferSelect;
 export type InsertEventOverride = typeof eventOverrides.$inferInsert;
+
+// ============================================================
+// Serving Weekly — per-Sunday volunteer/team member counts
+// ============================================================
+export const servingWeekly = mysqlTable("serving_weekly", {
+  id: int("id").autoincrement().primaryKey(),
+  year: int("year").notNull(),
+  weekNumber: int("weekNumber").notNull(),
+  weekStartDate: varchar("weekStartDate", { length: 10 }).notNull(),
+  campus: varchar("campus", { length: 64 }).notNull(),
+  total: int("total").default(0).notNull(),
+  source: varchar("source", { length: 32 }).default("spreadsheet").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (t) => ([
+  uniqueIndex("serving_weekly_year_week_campus_idx").on(t.year, t.weekNumber, t.campus),
+]));
+
+export type ServingWeeklyRow = typeof servingWeekly.$inferSelect;
+export type InsertServingWeekly = typeof servingWeekly.$inferInsert;
+
+// ============================================================
+// Next Steps Weekly — per-Sunday FTG, salvations, baptisms, stewardship
+// ============================================================
+export const nextStepsWeekly = mysqlTable("next_steps_weekly", {
+  id: int("id").autoincrement().primaryKey(),
+  year: int("year").notNull(),
+  weekNumber: int("weekNumber").notNull(),
+  weekStartDate: varchar("weekStartDate", { length: 10 }).notNull(),
+  campus: varchar("campus", { length: 64 }).notNull(),
+  metric: varchar("metric", { length: 64 }).notNull(), // 'FTG', 'Salvations', 'Baptisms', 'Stewardship'
+  count: int("count").default(0).notNull(),
+  source: varchar("source", { length: 32 }).default("spreadsheet").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (t) => ([
+  uniqueIndex("next_steps_weekly_unique_idx").on(t.year, t.weekNumber, t.campus, t.metric),
+]));
+
+export type NextStepsWeeklyRow = typeof nextStepsWeekly.$inferSelect;
+export type InsertNextStepsWeekly = typeof nextStepsWeekly.$inferInsert;

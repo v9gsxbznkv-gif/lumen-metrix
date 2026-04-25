@@ -877,3 +877,20 @@
 - [x] FIX: When per-campus rows exist, total = sum(campus giving) + sum("All Campuses" designated giving)
 - [x] Updated test: totals.giving >= sum(campus values) since designated giving is cross-campus
 - [x] 108 tests pass
+
+## Round 95: Page Rebuild — Weekly/Monthly/Yearly Views
+- [x] Audited existing historical data — only monthly data existed pre-2026, no weekly
+- [x] Downloaded 11 Google Sheets (2014-2025, missing 2015), extracted 7,945 weekly records
+- [x] Imported into DB: attendance_weekly (3,162), giving_weekly (1,026), serving_weekly (778), next_steps_weekly (3,074)
+- [x] Created new DB tables: serving_weekly, next_steps_weekly (FTG, salvations, baptisms, stewardship)
+- [x] Built backend dataViews router with attendance, giving, serving, nextSteps sub-routers
+- [x] Monthly rule: group by month of weekStartDate (Sunday determines the month) — confirmed
+- [x] Yearly rule: sum all weekly rows for that year
+- [x] Rebuilt Attendance page (AttendanceTab2) with weekly/monthly/yearly toggle + campus filter
+- [x] Rebuilt Giving page (GivingTab2) with weekly/monthly/yearly toggle + campus filter
+- [x] Created Team Members page (TeamMembersTab) with weekly/monthly/yearly toggle
+- [x] Created Assimilation page (AssimilationTab) with weekly/monthly/yearly toggle for FTG, salvations, baptisms, stewardship
+- [x] Updated sidebar: renamed Volunteers→Team Members, People→Assimilation, removed Visitors
+- [x] Reordered tabs: Dashboard, Attendance, Giving, Team Members, Groups, Assimilation, Events, Campuses, Compare, Health, Reports, AI, Settings
+- [x] 113 tests pass (5 new dataViews tests)
+- [x] Checkpoint and deploy

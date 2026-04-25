@@ -9,19 +9,18 @@ import { trpc } from "@/lib/trpc";
 import Sidebar, { type TabId } from "@/components/Sidebar";
 import DashboardHeader from "@/components/DashboardHeader";
 import OverviewTab from "@/components/tabs/OverviewTab";
-import PeopleTab from "@/components/tabs/PeopleTab";
-import GivingTab from "@/components/tabs/GivingTab";
-import AttendanceTab from "@/components/tabs/AttendanceTab";
-import VolunteersTab from "@/components/tabs/VolunteersTab";
-import EventsTab from "@/components/tabs/EventsTab";
+import AttendanceTab2 from "@/components/tabs/AttendanceTab2";
+import GivingTab2 from "@/components/tabs/GivingTab2";
+import TeamMembersTab from "@/components/tabs/TeamMembersTab";
 import GroupsTab from "@/components/tabs/GroupsTab";
-import VisitorsTab from "@/components/tabs/VisitorsTab";
+import AssimilationTab from "@/components/tabs/AssimilationTab";
+import EventsTab from "@/components/tabs/EventsTab";
 import CampusesTab from "@/components/tabs/CampusesTab";
 import CompareTab from "@/components/tabs/CompareTab";
 import HealthTab from "@/components/tabs/HealthTab";
-import ReportsTab from "@/components/tabs/ReportsTab";
 import WeeklyReportTab from "@/components/tabs/WeeklyReportTab";
 import AnnualReportTab from "@/components/tabs/AnnualReportTab";
+import ReportsTab from "@/components/tabs/ReportsTab";
 import AIAnalystTab from "@/components/tabs/AIAnalystTab";
 import SettingsTab from "@/components/tabs/SettingsTab";
 import LumenLogo from "@/components/LumenLogo";
@@ -30,13 +29,12 @@ import { Loader2 } from "lucide-react";
 
 const TAB_META: Record<TabId, { title: string; subtitle: string }> = {
   dashboard: { title: "Dashboard", subtitle: "Key metrics at a glance across all campuses" },
-  people: { title: "People & Growth", subtitle: "Assimilation funnel, salvations, baptisms, and stewardship" },
-  giving: { title: "Giving", subtitle: "Tithes, offerings, and giving per capita analysis" },
-  attendance: { title: "Attendance", subtitle: "Weekly, monthly, and annual attendance by demographic" },
-  volunteers: { title: "Volunteers", subtitle: "Volunteer counts, ratios, and serving trends" },
-  events: { title: "Events", subtitle: "Key church event performance and year-over-year comparisons" },
+  attendance: { title: "Attendance", subtitle: "Weekly, monthly, and annual attendance by campus and demographic" },
+  giving: { title: "Giving", subtitle: "Tithes, offerings, and giving analysis — weekly, monthly, and yearly" },
+  teamMembers: { title: "Team Members", subtitle: "Volunteer and serving counts by campus — weekly, monthly, and yearly" },
   groups: { title: "Groups", subtitle: "Active groups, members, leaders, attendance, and participation rate" },
-  visitors: { title: "Visitors", subtitle: "First-time guest tracking, conversion rates, and trends" },
+  assimilation: { title: "Assimilation", subtitle: "First-time guests, salvations, baptisms, and stewardship" },
+  events: { title: "Events", subtitle: "Key church event performance and year-over-year comparisons" },
   campuses: { title: "Campuses", subtitle: "Side-by-side campus comparison and performance scorecards" },
   compare: { title: "Compare", subtitle: "Side-by-side event and date comparisons across years" },
   health: { title: "Health Metrics", subtitle: "Volunteer ratios, growth rates, and organizational health" },
@@ -141,13 +139,12 @@ export default function Home() {
           <DashboardHeader title={meta.title} subtitle={meta.subtitle} />
 
           {activeTab === "dashboard" && <OverviewTab />}
-          {activeTab === "people" && <PeopleTab />}
-          {activeTab === "giving" && <GivingTab />}
-          {activeTab === "attendance" && <AttendanceTab />}
-          {activeTab === "volunteers" && <VolunteersTab />}
-          {activeTab === "events" && <EventsTab />}
+          {activeTab === "attendance" && <AttendanceTab2 />}
+          {activeTab === "giving" && <GivingTab2 />}
+          {activeTab === "teamMembers" && <TeamMembersTab />}
           {activeTab === "groups" && <GroupsTab />}
-          {activeTab === "visitors" && <VisitorsTab />}
+          {activeTab === "assimilation" && <AssimilationTab />}
+          {activeTab === "events" && <EventsTab />}
           {activeTab === "campuses" && <CampusesTab />}
           {activeTab === "compare" && <CompareTab />}
           {activeTab === "health" && <HealthTab />}

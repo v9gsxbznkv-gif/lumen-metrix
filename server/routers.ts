@@ -8,6 +8,7 @@ import { reportsRouter } from "./reports/router";
 import { weeklyReportRouter } from "./weeklyReport/router";
 import { groupsRouter } from "./groups/router";
 import { annualReportRouter } from "./annualReport/router";
+import { dataViewsRouter } from "./dataViews/router";
 import { z } from "zod";
 
 // Cookie name for the simple dashboard password session
@@ -73,6 +74,9 @@ export const appRouter = router({
 
   // Annual Report — comprehensive annual data aggregation with YoY comparison
   annualReport: annualReportRouter,
+
+  // Data Views — unified weekly/monthly/yearly aggregation from weekly tables
+  dataViews: dataViewsRouter,
 });
 
 export type AppRouter = typeof appRouter;

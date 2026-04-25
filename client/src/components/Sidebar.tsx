@@ -2,6 +2,10 @@
  * Lumen Metrix — Sidebar Navigation
  * Desktop: fixed sidebar (collapsible)
  * Mobile (<768px): hamburger overlay drawer
+ *
+ * Tab order: Dashboard, Attendance, Giving, Team Members, Groups,
+ *            Assimilation, Events, Campuses, Compare, Health,
+ *            Weekly Report, Annual Report, Reports, AI, Settings
  */
 import { useEffect } from "react";
 import LumenLogo from "./LumenLogo";
@@ -11,7 +15,6 @@ import {
   DollarSign,
   UserCheck,
   CalendarDays,
-  UserPlus,
   Building2,
   FileText,
   Sparkles,
@@ -26,35 +29,35 @@ import {
   Menu,
   X,
   UsersRound,
+  Footprints,
+  HeartHandshake,
 } from "lucide-react";
 
 export type TabId =
   | "dashboard"
-  | "people"
-  | "giving"
   | "attendance"
-  | "volunteers"
-  | "events"
+  | "giving"
+  | "teamMembers"
   | "groups"
-  | "visitors"
+  | "assimilation"
+  | "events"
   | "campuses"
   | "compare"
-  | "reports"
   | "health"
   | "weeklyReport"
   | "annualReport"
+  | "reports"
   | "ai"
   | "settings";
 
 const NAV_ITEMS: { id: TabId; label: string; icon: React.ElementType; section?: string }[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, section: "Overview" },
-  { id: "people", label: "People", icon: Users },
-  { id: "giving", label: "Giving", icon: DollarSign },
   { id: "attendance", label: "Attendance", icon: UserCheck },
-  { id: "volunteers", label: "Volunteers", icon: Activity },
-  { id: "events", label: "Events", icon: CalendarDays },
+  { id: "giving", label: "Giving", icon: DollarSign },
+  { id: "teamMembers", label: "Team Members", icon: HeartHandshake },
   { id: "groups", label: "Groups", icon: UsersRound },
-  { id: "visitors", label: "Visitors", icon: UserPlus, section: "Insights" },
+  { id: "assimilation", label: "Assimilation", icon: Footprints },
+  { id: "events", label: "Events", icon: CalendarDays, section: "Insights" },
   { id: "campuses", label: "Campuses", icon: Building2 },
   { id: "compare", label: "Compare", icon: ArrowLeftRight },
   { id: "health", label: "Health", icon: Activity },
