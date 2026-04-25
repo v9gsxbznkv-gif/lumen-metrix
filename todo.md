@@ -858,3 +858,22 @@
 - [x] FIX 3: Increased stale-job timeout from 10 min → 20 min — full sync legitimately takes 12-15 min
 - [x] 108 tests pass
 - [x] Checkpoint and deploy
+
+## Round 93: Dashboard Shows Nothing — Giving Data Empty + Sync Stuck Again
+- [x] giving_weekly had 0 rows — purged in Round 90 but no sync completed giving phase since
+- [x] Deployed version lacked Round 92 timeout fixes — that's why sync kept stalling
+- [x] Marked stuck job 360014 as failed manually
+- [x] Ran giving sync directly from sandbox with latest code — completed in 275s
+- [x] Chunk 11 (Mar 11-17) hit "stream aborted" → retry succeeded automatically
+- [x] 51 giving_weekly rows + 16 monthly rows now populated
+- [x] Week 15 = $136,908.32, Week 16 = $162,627.64 — match PCO dashboard
+- [x] 305 failed/pending/refunded donations correctly filtered out
+- [x] Need to deploy latest checkpoint so future server-side syncs have timeout protection
+
+## Round 94: Giving Card Shows $160.3K Instead of $162.6K
+- [x] Root cause: "All Campuses" designated giving row ($2,357.74) excluded from total
+- [x] givingIsCombined=false (per-campus rows exist), so total = sum of campus giving only
+- [x] But campusNames excludes "All Campuses", so designated funds (Multiply, Student Camp, etc.) never counted
+- [x] FIX: When per-campus rows exist, total = sum(campus giving) + sum("All Campuses" designated giving)
+- [x] Updated test: totals.giving >= sum(campus values) since designated giving is cross-campus
+- [x] 108 tests pass

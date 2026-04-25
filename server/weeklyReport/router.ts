@@ -400,10 +400,14 @@ async function getWeeklySnapshot(
     .reduce((sum: number, r: any) => sum + r.headcount, 0);
 
   // For totals giving: use the actual combined weekly total if available,
-  // otherwise sum per-campus values (which may be proportionally split)
+  // otherwise sum per-campus values PLUS any "All Campuses" designated giving
+  // (funds like Multiply, Student Camp Scholarship, etc. that aren't campus-specific).
+  const designatedGivingTotal = givRowsDeduped
+    .filter((r: any) => r.campus === "All Campuses")
+    .reduce((sum: number, r: any) => sum + Number(r.total), 0);
   const combinedGivingWeekly = givingIsCombined
     ? combinedGivingTotal
-    : campuses.reduce((s, c) => s + c.giving, 0);
+    : campuses.reduce((s, c) => s + c.giving, 0) + designatedGivingTotal;
 
   const totals: CampusWeeklyMetrics = {
     campus: "All Campuses",
