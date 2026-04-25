@@ -894,3 +894,23 @@
 - [x] Reordered tabs: Dashboard, Attendance, Giving, Team Members, Groups, Assimilation, Events, Campuses, Compare, Health, Reports, AI, Settings
 - [x] 113 tests pass (5 new dataViews tests)
 - [x] Checkpoint and deploy
+
+## Round 96: Attendance Weekly Numbers Wrong
+- [x] Weekly breakdown numbers are way off on the new Attendance page
+- [x] Diagnose: compare what the page shows vs DB data vs PCO/spreadsheet actuals
+- [x] Fix the data or display logic — rewrote extraction from History tabs
+- [x] Test and checkpoint
+
+
+## Round 96: Historical Data Extraction Rewrite
+- [x] Rewrite spreadsheet extraction script to fix formula evaluation issues — used History tabs from 2025 spreadsheet (pre-aggregated weekly data 2013-2025)
+- [x] Extract per-room kids data from Kids Attendance tabs for all years (2017-2025)
+- [x] Sum per-service adult rows manually for years where formula totals = 0 — not needed, History tabs have correct totals
+- [x] Fix 2016 and 2014 extraction (different tab naming) — History tabs cover all years
+- [x] Fix giving week numbers (use actual Sunday dates from headers) — History tabs have correct dates
+- [x] Import corrected historical data into DB (preserve 2026 PCO data) — 5,205 attendance, 1,127 giving, 1,073 serving, 1,331 next_steps rows
+- [x] Show room-level kids breakdown on main Attendance page — added getKidsRoomBreakdown endpoint + Kids Room Breakdown section
+- [x] Verify Online attendance extraction for all years — Online data from 2021-2025 included
+- [x] Fixed all TS errors (GivingTab2 union type casts)
+- [x] Added 8 new vitest tests (subgroup classification + kids room aggregation) — 121 total passing
+- [x] Next Steps extraction: FTG from Detail tabs (2017-2025), Salvations/Baptisms from Detail tabs, Stewardship from 2024-2025

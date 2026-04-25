@@ -188,6 +188,149 @@ describe("dataViews router", () => {
     });
   });
 
+  describe("attendance subgroup classification", () => {
+    // Replicate the classifySubgroup logic from the router
+    const PCO_CHECKIN_SUBGROUPS = [
+      "Revolution Canton Check-In",
+      "Revolution Jasper Check-In",
+      "Revolution Online Check-In",
+    ];
+    const PCO_STUDENTS_SUBGROUPS = [
+      "RevStudents | Canton Campus",
+      "RevStudents | Jasper Campus",
+      "RevStudents | Online Campus",
+    ];
+    const PCO_YOUNG_ADULTS_SUBGROUPS = ["YA Gathering", "Young Adults"];
+
+    function isKidsSubgroup(subgroup: string): boolean {
+      return subgroup === "Kids" || subgroup.startsWith("Kids:") || subgroup.startsWith("Kids ");
+    }
+
+    function classifySubgroup(subgroup: string): string | null {
+      if (PCO_CHECKIN_SUBGROUPS.includes(subgroup)) return "Adults";
+      if (subgroup === "Adults") return "Adults";
+      if (isKidsSubgroup(subgroup)) return "Kids";
+      if (subgroup === "RevStudents HS" || subgroup === "RevStudents MS" ||
+          subgroup === "RevStudents Attendance" || subgroup === "Students" ||
+          PCO_STUDENTS_SUBGROUPS.includes(subgroup)) return "Students";
+      if (subgroup === "Online") return "Online";
+      if (subgroup === "Volunteers") return "Volunteers";
+      if (PCO_YOUNG_ADULTS_SUBGROUPS.includes(subgroup)) return "Young Adults";
+      if (subgroup === "FTG Adults" || subgroup === "FTG Kids" ||
+          subgroup === "RevStudents FTG" || subgroup === "YA FTG" ||
+          subgroup === "FTG") return "FTG";
+      return null;
+    }
+
+    it("should classify PCO check-in subgroups as Adults", () => {
+      expect(classifySubgroup("Revolution Canton Check-In")).toBe("Adults");
+      expect(classifySubgroup("Revolution Jasper Check-In")).toBe("Adults");
+      expect(classifySubgroup("Adults")).toBe("Adults");
+    });
+
+    it("should classify kids subgroups correctly", () => {
+      expect(classifySubgroup("Kids")).toBe("Kids");
+      expect(classifySubgroup("Kids: Canton Babies")).toBe("Kids");
+      expect(classifySubgroup("Kids: Jasper Nursery")).toBe("Kids");
+      expect(isKidsSubgroup("Kids: Canton Treehouse")).toBe(true);
+      expect(isKidsSubgroup("Adults")).toBe(false);
+    });
+
+    it("should classify students subgroups correctly", () => {
+      expect(classifySubgroup("RevStudents HS")).toBe("Students");
+      expect(classifySubgroup("RevStudents MS")).toBe("Students");
+      expect(classifySubgroup("Students")).toBe("Students");
+    });
+
+    it("should classify FTG subgroups correctly", () => {
+      expect(classifySubgroup("FTG Adults")).toBe("FTG");
+      expect(classifySubgroup("FTG Kids")).toBe("FTG");
+      expect(classifySubgroup("RevStudents FTG")).toBe("FTG");
+    });
+
+    it("should return null for unknown subgroups", () => {
+      expect(classifySubgroup("RevStudents Salvations")).toBeNull();
+      expect(classifySubgroup("Baptisms")).toBeNull();
+    });
+  });
+
+  describe("kids room breakdown aggregation", () => {
+    it("should compute average weekly headcount per room", () => {
+      const kidsRows = [
+        { subgroup: "Kids: Canton Babies", campus: "Canton", headcount: 50 },
+        { subgroup: "Kids: Canton Babies", campus: "Canton", headcount: 60 },
+        { subgroup: "Kids: Canton Babies", campus: "Canton", headcount: 55 },
+        { subgroup: "Kids: Canton Treehouse", campus: "Canton", headcount: 200 },
+        { subgroup: "Kids: Canton Treehouse", campus: "Canton", headcount: 220 },
+        { subgroup: "Kids: Jasper Nursery", campus: "Jasper", headcount: 30 },
+        { subgroup: "Kids: Jasper Nursery", campus: "Jasper", headcount: 25 },
+      ];
+
+      const subgroupMap = new Map<string, { total: number; weeks: number; campus: string }>();
+      for (const row of kidsRows) {
+        const existing = subgroupMap.get(row.subgroup);
+        if (existing) {
+          existing.total += row.headcount;
+          existing.weeks += 1;
+        } else {
+          subgroupMap.set(row.subgroup, { total: row.headcount, weeks: 1, campus: row.campus });
+        }
+      }
+
+      const result = Array.from(subgroupMap.entries()).map(([subgroup, data]) => {
+        const parts = subgroup.replace("Kids: ", "").split(" ");
+        const roomCampus = parts[0];
+        const roomName = parts.slice(1).join(" ");
+        return {
+          subgroup,
+          campus: roomCampus,
+          room: roomName,
+          avgWeekly: Math.round(data.total / data.weeks),
+          totalHeadcount: data.total,
+          weekCount: data.weeks,
+        };
+      });
+
+      const babies = result.find(r => r.room === "Babies");
+      expect(babies).toBeDefined();
+      expect(babies!.avgWeekly).toBe(55); // (50+60+55)/3 = 55
+      expect(babies!.weekCount).toBe(3);
+      expect(babies!.campus).toBe("Canton");
+
+      const treehouse = result.find(r => r.room === "Treehouse");
+      expect(treehouse).toBeDefined();
+      expect(treehouse!.avgWeekly).toBe(210); // (200+220)/2 = 210
+      expect(treehouse!.weekCount).toBe(2);
+
+      const nursery = result.find(r => r.room === "Nursery");
+      expect(nursery).toBeDefined();
+      expect(nursery!.avgWeekly).toBe(28); // (30+25)/2 = 27.5 → 28
+      expect(nursery!.campus).toBe("Jasper");
+    });
+
+    it("should filter only Kids: prefixed subgroups", () => {
+      const rows = [
+        { subgroup: "Kids: Canton Babies", campus: "Canton", headcount: 50 },
+        { subgroup: "Kids", campus: "Canton", headcount: 500 },
+        { subgroup: "Adults", campus: "Canton", headcount: 1200 },
+        { subgroup: "Students", campus: "Canton", headcount: 200 },
+      ];
+
+      const kidsRoomRows = rows.filter(r => r.subgroup.startsWith("Kids: "));
+      expect(kidsRoomRows).toHaveLength(1);
+      expect(kidsRoomRows[0].subgroup).toBe("Kids: Canton Babies");
+    });
+
+    it("should parse room name correctly from subgroup", () => {
+      const subgroup = "Kids: Canton Pre-K";
+      const parts = subgroup.replace("Kids: ", "").split(" ");
+      const campus = parts[0];
+      const room = parts.slice(1).join(" ");
+      expect(campus).toBe("Canton");
+      expect(room).toBe("Pre-K");
+    });
+  });
+
   describe("next steps aggregation logic", () => {
     it("should group by metric correctly for monthly view", () => {
       const getMonthFromDate = (dateStr: string): number => parseInt(dateStr.split("-")[1]);

@@ -343,7 +343,7 @@ export default function GivingTab2() {
                   <KpiCard
                     label="Latest Week"
                     value={formatCurrency(kpis.latest.total)}
-                    subtitle={formatDate(kpis.latest.weekStartDate)}
+                    subtitle={formatDate((kpis.latest as any).weekStartDate)}
                     borderColor="#4A7C59"
                     change={kpis.prior ? getYoYChange(kpis.latest.total, kpis.prior.total) : undefined}
                   />
@@ -380,18 +380,18 @@ export default function GivingTab2() {
               {viewMode === "yearly" && kpis.latest && (
                 <>
                   <KpiCard
-                    label={`${kpis.latest.year} Total`}
+                    label={`${(kpis.latest as any).year} Total`}
                     value={formatCurrency(kpis.latest.total)}
-                    subtitle={`${kpis.latest.weekCount} weeks`}
+                    subtitle={`${(kpis.latest as any).weekCount} weeks`}
                     borderColor="#E8913A"
                     change={kpis.prior ? getYoYChange(kpis.latest.total, kpis.prior.total) : undefined}
                   />
                   <KpiCard
                     label="Avg Weekly"
-                    value={formatCurrency(kpis.latest.avgWeekly)}
-                    subtitle={`${kpis.latest.year}`}
+                    value={formatCurrency((kpis.latest as any).avgWeekly)}
+                    subtitle={`${(kpis.latest as any).year}`}
                     borderColor="#4A7FB5"
-                    change={kpis.prior ? getYoYChange(kpis.latest.avgWeekly, kpis.prior.avgWeekly) : undefined}
+                    change={kpis.prior ? getYoYChange((kpis.latest as any).avgWeekly, (kpis.prior as any).avgWeekly) : undefined}
                   />
                 </>
               )}

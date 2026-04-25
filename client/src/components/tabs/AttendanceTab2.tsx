@@ -1,6 +1,13 @@
 /**
  * Attendance Tab — weekly / monthly / yearly views
  * Powered by trpc.dataViews.attendance endpoints
+ *
+ * Backend returns normalized data per week/month/year with fields:
+ *   adults, kids, students, online, volunteers, youngAdults, ftg, total
+ * where total = adults + kids (the main service attendance metric)
+ *
+ * Also includes a Kids Room-Level Breakdown section showing per-room
+ * averages from "Kids: {Campus} {Room}" subgroups in attendance_weekly.
  */
 import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
@@ -26,8 +33,6 @@ import { Loader2 } from "lucide-react";
 import {
   BarChart,
   Bar,
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -37,23 +42,51 @@ import {
   AreaChart,
   Area,
 } from "recharts";
-import {
-  formatNumber,
-  CAMPUS_COLORS,
-  MONTH_NAMES,
-} from "@/lib/data";
+import { formatNumber, MONTH_NAMES } from "@/lib/data";
 
 type ViewMode = "weekly" | "monthly" | "yearly";
 
-const SUBGROUP_COLORS: Record<string, string> = {
-  Adults: "#4A7C59",
-  Kids: "#E8913A",
-  Students: "#4A7FB5",
-  "Young Adults": "#8B6DAF",
-  Online: "#8B6DAF",
-  Volunteers: "#C45B4A",
-  FTG: "#C2703E",
+/** Metric columns to display — order matters */
+const METRICS = [
+  { key: "total", label: "Total", color: "#4A7C59" },
+  { key: "adults", label: "Adults", color: "#5B8A68" },
+  { key: "kids", label: "Kids", color: "#E8913A" },
+  { key: "students", label: "Students", color: "#4A7FB5" },
+  { key: "online", label: "Online", color: "#8B6DAF" },
+  { key: "volunteers", label: "Volunteers", color: "#C45B4A" },
+  { key: "youngAdults", label: "Young Adults", color: "#D4A843" },
+  { key: "ftg", label: "FTG", color: "#C2703E" },
+] as const;
+
+/** Metrics to show on the chart (not total, since it's adults+kids) */
+const CHART_METRICS = METRICS.filter(m => m.key !== "total");
+
+/** Kids room color palette */
+const KIDS_ROOM_COLORS: Record<string, string> = {
+  "Babies": "#F4A261",
+  "Toddlers": "#E76F51",
+  "Pre-K": "#2A9D8F",
+  "Campground": "#264653",
+  "Treehouse": "#E9C46A",
+  "Cove": "#287271",
+  "Reruns": "#8B6DAF",
+  "Nursery": "#F4A261",
+  "Elementary": "#4A7FB5",
 };
+
+/** Section groupings for kids rooms */
+const KIDS_SECTIONS = [
+  {
+    title: "Canton Sunday RevKids",
+    campus: "Canton",
+    rooms: ["Babies", "Toddlers", "Pre-K", "Campground", "Treehouse", "Cove", "Reruns"],
+  },
+  {
+    title: "Jasper Kids",
+    campus: "Jasper",
+    rooms: ["Nursery", "Pre-K", "Treehouse", "Cove", "Reruns"],
+  },
+];
 
 const TT = {
   fontSize: 12,
@@ -63,8 +96,20 @@ const TT = {
   fontFamily: "'Inter'",
 };
 
-// Primary subgroups to show in the main summary
-const PRIMARY_SUBGROUPS = ["Adults", "Kids", "Students", "Young Adults", "Online"];
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00");
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function getYoYChange(current: number, prior: number) {
+  if (prior === 0) return { label: "N/A", positive: true, value: 0 };
+  const pct = ((current - prior) / prior) * 100;
+  return {
+    label: `${pct >= 0 ? "+" : ""}${pct.toFixed(1)}%`,
+    positive: pct >= 0,
+    value: pct,
+  };
+}
 
 export default function AttendanceTab2() {
   const [viewMode, setViewMode] = useState<ViewMode>("weekly");
@@ -74,242 +119,176 @@ export default function AttendanceTab2() {
   const yearsQuery = trpc.dataViews.attendance.getYears.useQuery();
   const years = yearsQuery.data ?? [2026];
 
-  const campusFilter = campus === "all" ? undefined : campus;
-
   const dataQuery = trpc.dataViews.attendance.getData.useQuery({
     viewMode,
-    campus: campusFilter,
+    campus: campus === "all" ? undefined : campus,
     year: viewMode === "yearly" ? undefined : year,
     startYear: viewMode === "yearly" ? Math.min(...years) : undefined,
     endYear: viewMode === "yearly" ? Math.max(...years) : undefined,
   });
 
+  // Kids room breakdown query — uses the selected year (or latest year for yearly view)
+  const kidsYear = viewMode === "yearly" ? Math.max(...years) : year;
+  const kidsRoomQuery = trpc.dataViews.attendance.getKidsRoomBreakdown.useQuery({
+    year: kidsYear,
+    campus: campus === "all" ? undefined : campus,
+  });
+
   const isLoading = dataQuery.isLoading;
   const rawData = dataQuery.data;
 
-  // ─── Weekly View ──────────────────────────────────────────
-  const weeklyTableData = useMemo(() => {
+  // ─── Detect which metrics have data ────────────────────────
+  const activeMetrics = useMemo(() => {
+    if (!rawData) return METRICS;
+    const data = rawData.data as any[];
+    return METRICS.filter(m =>
+      data.some(row => {
+        const val = row[m.key] ?? row[`avgWeekly${m.key.charAt(0).toUpperCase() + m.key.slice(1)}`];
+        return val && val > 0;
+      })
+    );
+  }, [rawData]);
+
+  const activeChartMetrics = useMemo(() => {
+    return CHART_METRICS.filter(m => activeMetrics.some(am => am.key === m.key));
+  }, [activeMetrics]);
+
+  // ─── Weekly Data ──────────────────────────────────────────
+  const weeklyData = useMemo(() => {
     if (!rawData || rawData.viewMode !== "weekly") return [];
-    const rows = rawData.data as any[];
-
-    // Group by weekNumber + weekStartDate, aggregate subgroups
-    const weekMap = new Map<number, {
-      weekNumber: number;
-      weekStartDate: string;
-      subgroups: Record<string, number>;
-      total: number;
-    }>();
-
-    for (const row of rows) {
-      const existing = weekMap.get(row.weekNumber);
-      if (existing) {
-        existing.subgroups[row.subgroup] = (existing.subgroups[row.subgroup] || 0) + row.headcount;
-        existing.total += row.headcount;
-      } else {
-        weekMap.set(row.weekNumber, {
-          weekNumber: row.weekNumber,
-          weekStartDate: row.weekStartDate,
-          subgroups: { [row.subgroup]: row.headcount },
-          total: row.headcount,
-        });
-      }
-    }
-
-    return Array.from(weekMap.values()).sort((a, b) => b.weekNumber - a.weekNumber);
+    return (rawData.data as any[]).slice().sort((a, b) => {
+      if (a.year !== b.year) return b.year - a.year;
+      return b.weekNumber - a.weekNumber;
+    });
   }, [rawData]);
 
-  // ─── Monthly View ─────────────────────────────────────────
-  const monthlyTableData = useMemo(() => {
+  // ─── Monthly Data ─────────────────────────────────────────
+  const monthlyData = useMemo(() => {
     if (!rawData || rawData.viewMode !== "monthly") return [];
-    const rows = rawData.data as any[];
-
-    // Group by month, aggregate subgroups
-    const monthMap = new Map<number, {
-      month: number;
-      subgroups: Record<string, { total: number; avgWeekly: number }>;
-      totalHeadcount: number;
-      avgWeekly: number;
-      weekCount: number;
-    }>();
-
-    for (const row of rows) {
-      const existing = monthMap.get(row.month);
-      if (existing) {
-        existing.subgroups[row.subgroup] = {
-          total: row.totalHeadcount,
-          avgWeekly: row.avgWeekly,
-        };
-        existing.totalHeadcount += row.totalHeadcount;
-        existing.weekCount = Math.max(existing.weekCount, row.weekCount);
-      } else {
-        monthMap.set(row.month, {
-          month: row.month,
-          subgroups: {
-            [row.subgroup]: {
-              total: row.totalHeadcount,
-              avgWeekly: row.avgWeekly,
-            },
-          },
-          totalHeadcount: row.totalHeadcount,
-          avgWeekly: 0,
-          weekCount: row.weekCount,
-        });
-      }
-    }
-
-    // Calculate total avg weekly for each month
-    return Array.from(monthMap.values())
-      .map((m) => ({
-        ...m,
-        avgWeekly: m.weekCount > 0 ? Math.round(m.totalHeadcount / m.weekCount) : 0,
-      }))
-      .sort((a, b) => a.month - b.month);
+    return (rawData.data as any[]).slice().sort((a, b) => a.month - b.month);
   }, [rawData]);
 
-  // ─── Yearly View ──────────────────────────────────────────
-  const yearlyTableData = useMemo(() => {
+  // ─── Yearly Data ──────────────────────────────────────────
+  const yearlyData = useMemo(() => {
     if (!rawData || rawData.viewMode !== "yearly") return [];
-    const rows = rawData.data as any[];
-
-    // Group by year, aggregate subgroups
-    const yearMap = new Map<number, {
-      year: number;
-      subgroups: Record<string, { total: number; avgWeekly: number }>;
-      totalHeadcount: number;
-      avgWeekly: number;
-      weekCount: number;
-    }>();
-
-    for (const row of rows) {
-      const existing = yearMap.get(row.year);
-      if (existing) {
-        existing.subgroups[row.subgroup] = {
-          total: row.totalHeadcount,
-          avgWeekly: row.avgWeekly,
-        };
-        existing.totalHeadcount += row.totalHeadcount;
-        existing.weekCount = Math.max(existing.weekCount, row.weekCount);
-      } else {
-        yearMap.set(row.year, {
-          year: row.year,
-          subgroups: {
-            [row.subgroup]: {
-              total: row.totalHeadcount,
-              avgWeekly: row.avgWeekly,
-            },
-          },
-          totalHeadcount: row.totalHeadcount,
-          avgWeekly: 0,
-          weekCount: row.weekCount,
-        });
-      }
-    }
-
-    return Array.from(yearMap.values())
-      .map((y) => ({
-        ...y,
-        avgWeekly: y.weekCount > 0 ? Math.round(y.totalHeadcount / y.weekCount) : 0,
-      }))
-      .sort((a, b) => b.year - a.year);
+    return (rawData.data as any[]).slice().sort((a, b) => b.year - a.year);
   }, [rawData]);
 
   // ─── KPI Cards ────────────────────────────────────────────
   const kpis = useMemo(() => {
-    if (!rawData) return null;
-
-    if (viewMode === "weekly" && weeklyTableData.length > 0) {
-      const latest = weeklyTableData[0];
-      const prior = weeklyTableData[1];
+    if (viewMode === "weekly" && weeklyData.length > 0) {
+      const latest = weeklyData[0];
+      const prior = weeklyData[1];
       const avgTotal = Math.round(
-        weeklyTableData.reduce((s, w) => s + w.total, 0) / weeklyTableData.length
+        weeklyData.reduce((s, w) => s + w.total, 0) / weeklyData.length
       );
       return {
         latestTotal: latest.total,
         latestDate: latest.weekStartDate,
         avgTotal,
         priorTotal: prior?.total ?? 0,
-        weekCount: weeklyTableData.length,
+        weekCount: weeklyData.length,
       };
     }
-
-    if (viewMode === "yearly" && yearlyTableData.length > 0) {
-      const latest = yearlyTableData[0];
-      const prior = yearlyTableData[1];
+    if (viewMode === "monthly" && monthlyData.length > 0) {
+      const latest = monthlyData[monthlyData.length - 1];
+      const avgTotal = Math.round(
+        monthlyData.reduce((s, m) => s + m.avgWeeklyTotal, 0) / monthlyData.length
+      );
       return {
-        latestTotal: latest.avgWeekly,
+        latestTotal: latest.avgWeeklyTotal,
+        latestDate: `${MONTH_NAMES[latest.month - 1]} ${latest.year}`,
+        avgTotal,
+        priorTotal: monthlyData.length > 1 ? monthlyData[monthlyData.length - 2].avgWeeklyTotal : 0,
+        weekCount: monthlyData.reduce((s, m) => s + m.weekCount, 0),
+      };
+    }
+    if (viewMode === "yearly" && yearlyData.length > 0) {
+      const latest = yearlyData[0];
+      const prior = yearlyData[1];
+      return {
+        latestTotal: latest.avgWeeklyTotal,
         latestDate: String(latest.year),
-        avgTotal: latest.avgWeekly,
-        priorTotal: prior?.avgWeekly ?? 0,
+        avgTotal: latest.avgWeeklyTotal,
+        priorTotal: prior?.avgWeeklyTotal ?? 0,
         weekCount: latest.weekCount,
       };
     }
-
     return null;
-  }, [rawData, viewMode, weeklyTableData, yearlyTableData]);
+  }, [viewMode, weeklyData, monthlyData, yearlyData]);
 
   // ─── Chart Data ───────────────────────────────────────────
   const chartData = useMemo(() => {
     if (viewMode === "weekly") {
-      return weeklyTableData
-        .slice()
-        .reverse()
-        .map((w) => ({
-          label: w.weekStartDate.slice(5), // MM-DD
-          total: w.total,
-          ...Object.fromEntries(
-            PRIMARY_SUBGROUPS.filter((s) => w.subgroups[s]).map((s) => [s, w.subgroups[s]])
-          ),
-        }));
-    }
-
-    if (viewMode === "monthly") {
-      return monthlyTableData.map((m) => ({
-        label: MONTH_NAMES[m.month - 1],
-        total: m.avgWeekly,
-        ...Object.fromEntries(
-          PRIMARY_SUBGROUPS.filter((s) => m.subgroups[s]).map((s) => [s, m.subgroups[s]?.avgWeekly ?? 0])
-        ),
+      return weeklyData.slice().reverse().map(w => ({
+        label: formatDate(w.weekStartDate),
+        total: w.total,
+        adults: w.adults,
+        kids: w.kids,
+        students: w.students,
+        online: w.online,
+        volunteers: w.volunteers,
+        youngAdults: w.youngAdults,
+        ftg: w.ftg,
       }));
     }
-
-    if (viewMode === "yearly") {
-      return yearlyTableData
-        .slice()
-        .reverse()
-        .map((y) => ({
-          label: String(y.year),
-          total: y.avgWeekly,
-          ...Object.fromEntries(
-            PRIMARY_SUBGROUPS.filter((s) => y.subgroups[s]).map((s) => [s, y.subgroups[s]?.avgWeekly ?? 0])
-          ),
-        }));
+    if (viewMode === "monthly") {
+      return monthlyData.map(m => ({
+        label: MONTH_NAMES[m.month - 1],
+        total: m.avgWeeklyTotal,
+        adults: m.avgWeeklyAdults,
+        kids: m.avgWeeklyKids,
+        students: m.avgWeeklyStudents,
+        online: m.avgWeeklyOnline,
+        volunteers: m.avgWeeklyVolunteers,
+        youngAdults: m.youngAdults > 0 ? Math.round(m.youngAdults / m.weekCount) : 0,
+        ftg: m.ftg > 0 ? Math.round(m.ftg / m.weekCount) : 0,
+      }));
     }
-
+    if (viewMode === "yearly") {
+      return yearlyData.slice().reverse().map(y => ({
+        label: String(y.year),
+        total: y.avgWeeklyTotal,
+        adults: y.avgWeeklyAdults,
+        kids: y.avgWeeklyKids,
+        students: y.avgWeeklyStudents,
+        online: y.avgWeeklyOnline,
+        volunteers: y.avgWeeklyVolunteers,
+        youngAdults: y.youngAdults > 0 ? Math.round(y.youngAdults / y.weekCount) : 0,
+        ftg: y.ftg > 0 ? Math.round(y.ftg / y.weekCount) : 0,
+      }));
+    }
     return [];
-  }, [viewMode, weeklyTableData, monthlyTableData, yearlyTableData]);
+  }, [viewMode, weeklyData, monthlyData, yearlyData]);
 
-  // Detect which subgroups are present in the data
-  const activeSubgroups = useMemo(() => {
-    return PRIMARY_SUBGROUPS.filter((s) =>
-      chartData.some((d) => (d as any)[s] > 0)
-    );
-  }, [chartData]);
+  // ─── Kids Room Breakdown ──────────────────────────────────
+  const kidsRoomData = kidsRoomQuery.data ?? [];
+  const kidsRoomSections = useMemo(() => {
+    if (kidsRoomData.length === 0) return [];
 
-  // ─── Format date for display ──────────────────────────────
-  function formatDate(dateStr: string): string {
-    const d = new Date(dateStr + "T00:00:00");
-    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  }
+    // Filter sections based on campus selection
+    const filteredSections = campus === "all" || !campus
+      ? KIDS_SECTIONS
+      : KIDS_SECTIONS.filter(s => s.campus === campus);
 
-  function getYoYChange(current: number, prior: number) {
-    if (prior === 0) return { label: "N/A", positive: true, value: 0 };
-    const pct = ((current - prior) / prior) * 100;
-    return {
-      label: `${pct >= 0 ? "+" : ""}${pct.toFixed(1)}%`,
-      positive: pct >= 0,
-      value: pct,
-    };
-  }
+    return filteredSections.map(section => {
+      const sectionRooms = section.rooms
+        .map(roomName => {
+          const match = kidsRoomData.find(
+            r => r.campus === section.campus && r.room === roomName
+          );
+          return match ? { label: roomName, avg: match.avgWeekly, weeks: match.weekCount } : null;
+        })
+        .filter((r): r is { label: string; avg: number; weeks: number } => r !== null && r.avg > 0);
+
+      return { title: section.title, campus: section.campus, items: sectionRooms };
+    }).filter(s => s.items.length > 0);
+  }, [kidsRoomData, campus]);
+
+  const maxKidsAvg = useMemo(() => {
+    const allAvgs = kidsRoomSections.flatMap(s => s.items.map(i => i.avg));
+    return Math.max(...allAvgs, 1);
+  }, [kidsRoomSections]);
 
   return (
     <div className="space-y-5">
@@ -363,16 +342,16 @@ export default function AttendanceTab2() {
           {kpis && (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <KpiCard
-                label={viewMode === "yearly" ? "Avg Weekly Attendance" : "Latest Week Total"}
+                label={viewMode === "yearly" ? "Avg Weekly Attendance" : viewMode === "monthly" ? "Latest Month Avg" : "Latest Week Total"}
                 value={formatNumber(kpis.latestTotal)}
-                subtitle={viewMode === "yearly" ? `${kpis.latestDate}` : formatDate(kpis.latestDate)}
+                subtitle={viewMode === "yearly" ? kpis.latestDate : viewMode === "monthly" ? kpis.latestDate : formatDate(kpis.latestDate)}
                 borderColor="#E8913A"
                 change={kpis.priorTotal > 0 ? getYoYChange(kpis.latestTotal, kpis.priorTotal) : undefined}
               />
               <KpiCard
                 label={viewMode === "weekly" ? "Season Average" : "Weeks of Data"}
                 value={viewMode === "weekly" ? formatNumber(kpis.avgTotal) : String(kpis.weekCount)}
-                subtitle={viewMode === "weekly" ? `${kpis.weekCount} weeks in ${year}` : viewMode === "yearly" ? "in latest year" : `in ${year}`}
+                subtitle={viewMode === "weekly" ? `Across ${kpis.weekCount} weeks` : "Total weeks in period"}
                 borderColor="#4A7FB5"
               />
               {viewMode === "weekly" && kpis.priorTotal > 0 && (
@@ -402,13 +381,14 @@ export default function AttendanceTab2() {
                     <YAxis tick={{ fontSize: 11, fontFamily: "'DM Mono'" }} tickLine={false} axisLine={false} />
                     <Tooltip contentStyle={TT} />
                     <Legend wrapperStyle={{ fontSize: 12, fontFamily: "'Inter'" }} iconType="circle" iconSize={8} />
-                    {activeSubgroups.map((sg) => (
+                    {activeChartMetrics.map((m, i) => (
                       <Bar
-                        key={sg}
-                        dataKey={sg}
+                        key={m.key}
+                        dataKey={m.key}
+                        name={m.label}
                         stackId="a"
-                        fill={SUBGROUP_COLORS[sg] || "#9CA3AF"}
-                        radius={sg === activeSubgroups[activeSubgroups.length - 1] ? [3, 3, 0, 0] : [0, 0, 0, 0]}
+                        fill={m.color}
+                        radius={i === activeChartMetrics.length - 1 ? [3, 3, 0, 0] : [0, 0, 0, 0]}
                         maxBarSize={40}
                       />
                     ))}
@@ -416,10 +396,10 @@ export default function AttendanceTab2() {
                 ) : (
                   <AreaChart data={chartData}>
                     <defs>
-                      {activeSubgroups.map((sg) => (
-                        <linearGradient key={sg} id={`att2-grad-${sg}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={SUBGROUP_COLORS[sg] || "#9CA3AF"} stopOpacity={0.2} />
-                          <stop offset="95%" stopColor={SUBGROUP_COLORS[sg] || "#9CA3AF"} stopOpacity={0} />
+                      {activeChartMetrics.map((m) => (
+                        <linearGradient key={m.key} id={`att2-grad-${m.key}`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={m.color} stopOpacity={0.2} />
+                          <stop offset="95%" stopColor={m.color} stopOpacity={0} />
                         </linearGradient>
                       ))}
                     </defs>
@@ -428,14 +408,15 @@ export default function AttendanceTab2() {
                     <YAxis tick={{ fontSize: 11, fontFamily: "'DM Mono'" }} tickLine={false} axisLine={false} />
                     <Tooltip contentStyle={TT} />
                     <Legend wrapperStyle={{ fontSize: 12, fontFamily: "'Inter'" }} iconType="circle" iconSize={8} />
-                    {activeSubgroups.map((sg) => (
+                    {activeChartMetrics.map((m) => (
                       <Area
-                        key={sg}
+                        key={m.key}
                         type="monotone"
-                        dataKey={sg}
-                        stroke={SUBGROUP_COLORS[sg] || "#9CA3AF"}
+                        dataKey={m.key}
+                        name={m.label}
+                        stroke={m.color}
                         strokeWidth={2}
-                        fill={`url(#att2-grad-${sg})`}
+                        fill={`url(#att2-grad-${m.key})`}
                         dot={viewMode === "monthly" ? { r: 3 } : false}
                       />
                     ))}
@@ -456,147 +437,216 @@ export default function AttendanceTab2() {
             </div>
 
             {viewMode === "weekly" && (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs">Date</TableHead>
-                    <TableHead className="text-xs text-right">Total</TableHead>
-                    {PRIMARY_SUBGROUPS.filter((s) => weeklyTableData.some((w) => w.subgroups[s])).map((sg) => (
-                      <TableHead key={sg} className="text-xs text-right">{sg}</TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {weeklyTableData.map((w) => (
-                    <TableRow key={w.weekNumber}>
-                      <TableCell className="text-xs font-medium">{formatDate(w.weekStartDate)}</TableCell>
-                      <TableCell className="text-xs text-right font-mono font-semibold">{formatNumber(w.total)}</TableCell>
-                      {PRIMARY_SUBGROUPS.filter((s) => weeklyTableData.some((wk) => wk.subgroups[s])).map((sg) => (
-                        <TableCell key={sg} className="text-xs text-right font-mono">
-                          {w.subgroups[sg] ? formatNumber(w.subgroups[sg]) : "—"}
-                        </TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs">Date</TableHead>
+                      {activeMetrics.map(m => (
+                        <TableHead key={m.key} className="text-xs text-right">{m.label}</TableHead>
                       ))}
                     </TableRow>
-                  ))}
-                </TableBody>
-                {weeklyTableData.length > 0 && (
-                  <TableFooter>
-                    <TableRow>
-                      <TableCell className="text-xs font-semibold">Average</TableCell>
-                      <TableCell className="text-xs text-right font-mono font-semibold">
-                        {formatNumber(Math.round(weeklyTableData.reduce((s, w) => s + w.total, 0) / weeklyTableData.length))}
-                      </TableCell>
-                      {PRIMARY_SUBGROUPS.filter((s) => weeklyTableData.some((wk) => wk.subgroups[s])).map((sg) => {
-                        const vals = weeklyTableData.filter((w) => w.subgroups[sg]).map((w) => w.subgroups[sg]);
-                        const avg = vals.length > 0 ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length) : 0;
-                        return (
-                          <TableCell key={sg} className="text-xs text-right font-mono">
-                            {avg > 0 ? formatNumber(avg) : "—"}
+                  </TableHeader>
+                  <TableBody>
+                    {weeklyData.map((w) => (
+                      <TableRow key={`${w.year}-${w.weekNumber}`}>
+                        <TableCell className="text-xs font-medium">{formatDate(w.weekStartDate)}</TableCell>
+                        {activeMetrics.map(m => (
+                          <TableCell key={m.key} className={`text-xs text-right font-mono ${m.key === "total" ? "font-semibold" : ""}`}>
+                            {w[m.key] > 0 ? formatNumber(w[m.key]) : "—"}
                           </TableCell>
-                        );
-                      })}
-                    </TableRow>
-                  </TableFooter>
-                )}
-              </Table>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                  {weeklyData.length > 0 && (
+                    <TableFooter>
+                      <TableRow>
+                        <TableCell className="text-xs font-semibold">Average</TableCell>
+                        {activeMetrics.map(m => {
+                          const vals = weeklyData.filter(w => w[m.key] > 0).map(w => w[m.key]);
+                          const avg = vals.length > 0 ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length) : 0;
+                          return (
+                            <TableCell key={m.key} className={`text-xs text-right font-mono ${m.key === "total" ? "font-semibold" : ""}`}>
+                              {avg > 0 ? formatNumber(avg) : "—"}
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                    </TableFooter>
+                  )}
+                </Table>
+              </div>
             )}
 
             {viewMode === "monthly" && (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs">Month</TableHead>
-                    <TableHead className="text-xs text-right">Avg Weekly</TableHead>
-                    <TableHead className="text-xs text-right">Total</TableHead>
-                    {PRIMARY_SUBGROUPS.filter((s) => monthlyTableData.some((m) => m.subgroups[s])).map((sg) => (
-                      <TableHead key={sg} className="text-xs text-right">{sg}</TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {monthlyTableData.map((m) => (
-                    <TableRow key={m.month}>
-                      <TableCell className="text-xs font-medium">{MONTH_NAMES[m.month - 1]}</TableCell>
-                      <TableCell className="text-xs text-right font-mono font-semibold">{formatNumber(m.avgWeekly)}</TableCell>
-                      <TableCell className="text-xs text-right font-mono">{formatNumber(m.totalHeadcount)}</TableCell>
-                      {PRIMARY_SUBGROUPS.filter((s) => monthlyTableData.some((mo) => mo.subgroups[s])).map((sg) => (
-                        <TableCell key={sg} className="text-xs text-right font-mono">
-                          {m.subgroups[sg] ? formatNumber(m.subgroups[sg].avgWeekly) : "—"}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-                {monthlyTableData.length > 0 && (
-                  <TableFooter>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell className="text-xs font-semibold">Year Avg</TableCell>
-                      <TableCell className="text-xs text-right font-mono font-semibold">
-                        {formatNumber(Math.round(monthlyTableData.reduce((s, m) => s + m.avgWeekly, 0) / monthlyTableData.length))}
-                      </TableCell>
-                      <TableCell className="text-xs text-right font-mono font-semibold">
-                        {formatNumber(monthlyTableData.reduce((s, m) => s + m.totalHeadcount, 0))}
-                      </TableCell>
-                      {PRIMARY_SUBGROUPS.filter((s) => monthlyTableData.some((mo) => mo.subgroups[s])).map((sg) => {
-                        const vals = monthlyTableData.filter((m) => m.subgroups[sg]).map((m) => m.subgroups[sg]!.avgWeekly);
-                        const avg = vals.length > 0 ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length) : 0;
-                        return (
-                          <TableCell key={sg} className="text-xs text-right font-mono">
-                            {avg > 0 ? formatNumber(avg) : "—"}
-                          </TableCell>
-                        );
-                      })}
+                      <TableHead className="text-xs">Month</TableHead>
+                      <TableHead className="text-xs text-right">Avg Weekly</TableHead>
+                      <TableHead className="text-xs text-right">Total</TableHead>
+                      {activeMetrics.filter(m => m.key !== "total").map(m => (
+                        <TableHead key={m.key} className="text-xs text-right">{m.label}</TableHead>
+                      ))}
+                      <TableHead className="text-xs text-right">Weeks</TableHead>
                     </TableRow>
-                  </TableFooter>
-                )}
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {monthlyData.map((m) => (
+                      <TableRow key={m.month}>
+                        <TableCell className="text-xs font-medium">{MONTH_NAMES[m.month - 1]}</TableCell>
+                        <TableCell className="text-xs text-right font-mono font-semibold">{formatNumber(m.avgWeeklyTotal)}</TableCell>
+                        <TableCell className="text-xs text-right font-mono">{formatNumber(m.total)}</TableCell>
+                        {activeMetrics.filter(am => am.key !== "total").map(am => {
+                          const avgKey = `avgWeekly${am.key.charAt(0).toUpperCase() + am.key.slice(1)}`;
+                          const val = m[avgKey] ?? (m[am.key] > 0 ? Math.round(m[am.key] / m.weekCount) : 0);
+                          return (
+                            <TableCell key={am.key} className="text-xs text-right font-mono">
+                              {val > 0 ? formatNumber(val) : "—"}
+                            </TableCell>
+                          );
+                        })}
+                        <TableCell className="text-xs text-right font-mono">{m.weekCount}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                  {monthlyData.length > 0 && (
+                    <TableFooter>
+                      <TableRow>
+                        <TableCell className="text-xs font-semibold">Year Avg</TableCell>
+                        <TableCell className="text-xs text-right font-mono font-semibold">
+                          {formatNumber(Math.round(monthlyData.reduce((s, m) => s + m.avgWeeklyTotal, 0) / monthlyData.length))}
+                        </TableCell>
+                        <TableCell className="text-xs text-right font-mono font-semibold">
+                          {formatNumber(monthlyData.reduce((s, m) => s + m.total, 0))}
+                        </TableCell>
+                        {activeMetrics.filter(am => am.key !== "total").map(am => {
+                          const avgKey = `avgWeekly${am.key.charAt(0).toUpperCase() + am.key.slice(1)}`;
+                          const vals = monthlyData.filter(m => (m[avgKey] ?? 0) > 0).map(m => m[avgKey] ?? 0);
+                          const avg = vals.length > 0 ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length) : 0;
+                          return (
+                            <TableCell key={am.key} className="text-xs text-right font-mono">
+                              {avg > 0 ? formatNumber(avg) : "—"}
+                            </TableCell>
+                          );
+                        })}
+                        <TableCell className="text-xs text-right font-mono font-semibold">
+                          {monthlyData.reduce((s, m) => s + m.weekCount, 0)}
+                        </TableCell>
+                      </TableRow>
+                    </TableFooter>
+                  )}
+                </Table>
+              </div>
             )}
 
             {viewMode === "yearly" && (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs">Year</TableHead>
-                    <TableHead className="text-xs text-right">Avg Weekly</TableHead>
-                    <TableHead className="text-xs text-right">Weeks</TableHead>
-                    {PRIMARY_SUBGROUPS.filter((s) => yearlyTableData.some((y) => y.subgroups[s])).map((sg) => (
-                      <TableHead key={sg} className="text-xs text-right">{sg}</TableHead>
-                    ))}
-                    <TableHead className="text-xs text-right">YoY</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {yearlyTableData.map((y, i) => {
-                    const prior = yearlyTableData[i + 1];
-                    const change = prior ? getYoYChange(y.avgWeekly, prior.avgWeekly) : null;
-                    return (
-                      <TableRow key={y.year}>
-                        <TableCell className="text-xs font-medium">{y.year}</TableCell>
-                        <TableCell className="text-xs text-right font-mono font-semibold">{formatNumber(y.avgWeekly)}</TableCell>
-                        <TableCell className="text-xs text-right font-mono">{y.weekCount}</TableCell>
-                        {PRIMARY_SUBGROUPS.filter((s) => yearlyTableData.some((yr) => yr.subgroups[s])).map((sg) => (
-                          <TableCell key={sg} className="text-xs text-right font-mono">
-                            {y.subgroups[sg] ? formatNumber(y.subgroups[sg].avgWeekly) : "—"}
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs">Year</TableHead>
+                      <TableHead className="text-xs text-right">Avg Weekly</TableHead>
+                      <TableHead className="text-xs text-right">Weeks</TableHead>
+                      {activeMetrics.filter(m => m.key !== "total").map(m => (
+                        <TableHead key={m.key} className="text-xs text-right">{m.label}</TableHead>
+                      ))}
+                      <TableHead className="text-xs text-right">YoY</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {yearlyData.map((y, i) => {
+                      const prior = yearlyData[i + 1];
+                      const change = prior ? getYoYChange(y.avgWeeklyTotal, prior.avgWeeklyTotal) : null;
+                      return (
+                        <TableRow key={y.year}>
+                          <TableCell className="text-xs font-medium">{y.year}{y.year === new Date().getFullYear() ? " (YTD)" : ""}</TableCell>
+                          <TableCell className="text-xs text-right font-mono font-semibold">{formatNumber(y.avgWeeklyTotal)}</TableCell>
+                          <TableCell className="text-xs text-right font-mono">{y.weekCount}</TableCell>
+                          {activeMetrics.filter(m => m.key !== "total").map(m => {
+                            const avgKey = `avgWeekly${m.key.charAt(0).toUpperCase() + m.key.slice(1)}`;
+                            const val = y[avgKey] ?? (y[m.key] > 0 ? Math.round(y[m.key] / y.weekCount) : 0);
+                            return (
+                              <TableCell key={m.key} className="text-xs text-right font-mono">
+                                {val > 0 ? formatNumber(val) : "—"}
+                              </TableCell>
+                            );
+                          })}
+                          <TableCell className="text-xs text-right">
+                            {change ? (
+                              <span className="font-semibold" style={{ color: change.positive ? "#4A7C59" : "#C45B4A" }}>
+                                {change.label}
+                              </span>
+                            ) : "—"}
                           </TableCell>
-                        ))}
-                        <TableCell className="text-xs text-right">
-                          {change ? (
-                            <span
-                              className="font-semibold"
-                              style={{ color: change.positive ? "#4A7C59" : "#C45B4A" }}
-                            >
-                              {change.label}
-                            </span>
-                          ) : (
-                            "—"
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
             )}
+          </div>
+
+          {/* Kids Room-Level Breakdown */}
+          <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-sm font-semibold" style={{ fontFamily: "'DM Sans'" }}>
+                Kids Room Breakdown — {kidsYear} Avg
+              </h3>
+              {kidsRoomQuery.isLoading && (
+                <Loader2 className="w-4 h-4 animate-spin" style={{ color: "#E8913A" }} />
+              )}
+            </div>
+
+            {kidsRoomSections.length > 0 ? (
+              <div className="space-y-5">
+                {kidsRoomSections.map((section) => (
+                  <div key={section.title}>
+                    <h4 className="text-xs font-semibold text-foreground/70 mb-2.5 uppercase tracking-wide">
+                      {section.title}
+                    </h4>
+                    <div className="space-y-2.5">
+                      {section.items.map((item) => (
+                        <div key={item.label}>
+                          <div className="flex justify-between text-xs mb-1">
+                            <span className="font-medium text-foreground/80">{item.label}</span>
+                            <span className="font-semibold font-mono text-sm" style={{ color: "#4A7C59" }}>
+                              {formatNumber(item.avg)}
+                            </span>
+                          </div>
+                          <div className="h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all duration-500"
+                              style={{
+                                width: `${Math.min(100, (item.avg / maxKidsAvg) * 100)}%`,
+                                backgroundColor: KIDS_ROOM_COLORS[item.label] || "#E8913A",
+                              }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+
+                {/* Total kids across all rooms */}
+                <div className="pt-3 border-t border-border/40">
+                  <div className="flex justify-between text-xs">
+                    <span className="font-semibold text-foreground/70 uppercase tracking-wide">Total Kids (Room Sum)</span>
+                    <span className="font-semibold font-mono text-sm" style={{ color: "#E8913A" }}>
+                      {formatNumber(kidsRoomSections.reduce((s, sec) => s + sec.items.reduce((ss, i) => ss + i.avg, 0), 0))}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : !kidsRoomQuery.isLoading ? (
+              <p className="text-xs text-muted-foreground italic">
+                No room-level kids data available for {kidsYear}. Room-level data is available for 2017–2025 from spreadsheet imports.
+              </p>
+            ) : null}
           </div>
         </>
       )}
