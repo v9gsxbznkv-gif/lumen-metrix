@@ -984,11 +984,10 @@ export async function syncWeeklyGiving(
           recordsProcessed++;
           const receivedAt: string = donation.attributes?.received_at || chunk.from;
           const donationDate = new Date(receivedAt);
-          // Get the Sunday of the week containing this donation date
-          const dow = donationDate.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-          const weekStart = new Date(donationDate);
-          weekStart.setDate(donationDate.getDate() - dow);
-          weekStart.setHours(0, 0, 0, 0);
+          // Use getSunday() which returns the MONDAY of the ISO week (Mon-Sun).
+          // This aligns giving weeks with attendance weeks.
+          // Previously used Sunday rollback which created a 1-day offset.
+          const weekStart = getSunday(donationDate);
           const weekStartStr = formatDate(weekStart);
           const year = weekStart.getFullYear();
           const weekNum = getISOWeekNumber(weekStart);

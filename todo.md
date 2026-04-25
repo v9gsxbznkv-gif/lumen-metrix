@@ -817,4 +817,11 @@
 - [x] FIX: Flipped to "pre-fetch first" strategy. Pre-fetch (done once per event) gets ALL headcounts indexed by event_time ID. Per-period processing now just looks up pre-fetch data by event_time ID (zero API calls). Drill-down only runs as fallback when pre-fetch has no data.
 - [x] Estimated API call reduction: ~200+ per event → ~5-10 per event (just attendance_type headcount pages)
 - [x] TypeScript clean (0 errors) and 108 tests pass
-- [ ] Checkpoint and deploy
+- [x] Checkpoint and deploy
+
+## Round 88: Giving Still Wrong After Re-Sync
+- [x] ROOT CAUSE: Giving sync used Sunday-based week anchor (getDay() rollback to Sunday) while attendance uses Monday-based ISO week (getSunday() which returns Monday). A donation on Mon Apr 13 was assigned to week starting Sun Apr 12, not Mon Apr 13. This split the Mon-Sat donations into the wrong week.
+- [x] FIX: Replaced manual Sunday rollback with getSunday() (Monday anchor) in giving sync donation processing. Now giving and attendance use identical week boundaries (Mon-Sun ISO weeks).
+- [x] Unique index on (year, weekNumber, campus) from Round 86 ensures onDuplicateKeyUpdate will overwrite old Sunday-based rows with correct Monday-based data on next sync.
+- [x] TypeScript clean (0 new errors) and 108 tests pass
+- [x] Checkpoint and deploy — Re-sync required to repopulate giving with correct week alignment
