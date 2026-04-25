@@ -928,6 +928,7 @@ export async function syncWeeklyGiving(
     const fundTotals = new Map<string, number>();
     let skippedDesignations = 0;
     let noDesignationDonations = 0;
+    let skippedNonSucceeded = 0;
 
     // Generate list of weekly chunks
     const chunks: Array<{ from: string; to: string }> = [];
@@ -982,6 +983,15 @@ export async function syncWeeklyGiving(
 
         for (const donation of donations) {
           recordsProcessed++;
+
+          // Only count succeeded donations — PCO's Giving Dashboard excludes
+          // failed/pending/refunded donations, so we must match that behavior.
+          const paymentStatus: string = donation.attributes?.payment_status || '';
+          if (paymentStatus !== 'succeeded') {
+            skippedNonSucceeded++;
+            continue;
+          }
+
           const receivedAt: string = donation.attributes?.received_at || chunk.from;
           // PCO received_at is often date-only ("2026-04-13"). new Date("2026-04-13")
           // parses as UTC midnight, which is Apr 12 8pm ET — wrong day!
@@ -1053,6 +1063,7 @@ export async function syncWeeklyGiving(
     }
 
     console.log(`[Weekly Giving] Processed ${recordsProcessed} donations into ${weeklyAgg.size} weekly campus rows`);
+    console.log(`[Weekly Giving] Skipped non-succeeded donations (failed/pending/refunded): ${skippedNonSucceeded}`);
     console.log(`[Weekly Giving] Skipped designations (not in included): ${skippedDesignations}`);
     console.log(`[Weekly Giving] Donations without designations: ${noDesignationDonations}`);
     // Log per-fund totals

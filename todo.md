@@ -832,4 +832,12 @@
 - [x] DELETED all 135 giving_weekly rows — next sync will repopulate with correct Monday-based week assignments
 - [x] FOUND ADDITIONAL BUG: date-only received_at strings ("2026-04-13") parsed as UTC midnight = Apr 12 8pm ET = wrong day! Fixed by appending T12:00:00Z for date-only strings.
 - [x] TypeScript clean (0 new errors) and 108 tests pass
-- [ ] Checkpoint and deploy — Re-sync required to repopulate all giving data with correct week alignment
+- [x] Checkpoint and deploy — Re-sync required to repopulate all giving data with correct week alignment
+
+## Round 90: Giving Off by $1,313.46 — Failed Donations Included
+- [x] Week 15 (Apr 6-12) DB showed $138,221.78 but PCO Dashboard shows $136,908.32 (over by $1,313.46)
+- [x] ROOT CAUSE: PCO API returns ALL donations including payment_status="failed". PCO's Giving Dashboard only counts "succeeded" donations. 15 failed debit/credit donations totaling $1,313.46 were being counted.
+- [x] FIX: Added payment_status filter to syncWeeklyGiving — only donations with payment_status="succeeded" are now counted. Logs skipped non-succeeded count.
+- [x] Purged all 51 giving_weekly rows and 54 giving_monthly rows so next sync repopulates with correct filter
+- [x] 108 tests pass
+- [x] Checkpoint and deploy — Re-sync required to repopulate giving data with succeeded-only filter
