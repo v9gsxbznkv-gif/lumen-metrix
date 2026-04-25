@@ -619,15 +619,19 @@ export async function syncWeeklyAttendance(
             );
           }
 
-          // OVERALL PER-PERIOD TIMEOUT: If the entire headcount drill-down
-          // for this period takes longer than 90s, skip it and move on.
-          // This prevents a single stalled TCP connection from blocking the entire sync.
-          const periodStartTime = Date.now();
-          const PERIOD_TIMEOUT_MS = 90_000;
+          // -------------------------------------------------------
+          // PRE-FETCH FIRST STRATEGY: Use pre-fetched attendance_type
+          // headcounts as the PRIMARY data source. This avoids hundreds
+          // of per-event_time API calls that cause TCP stalls and timeouts.
+          //
+          // The pre-fetch (done once per event above) already has ALL
+          // headcounts indexed by event_time ID. We just need to know
+          // which event_time IDs belong to this period.
+          // -------------------------------------------------------
+          const categoryTotals = new Map<string, number>();
+          const campusCategoryMap = HEADCOUNT_CATEGORY_MAP[eventName] || HEADCOUNT_CATEGORY_MAP[campus] || {};
 
-          // Get all event_times for this period
-          // Wrapped in Promise.race with 20s timeout — TCP stalls won't throw,
-          // so we need a hard deadline per call.
+          // Get event_times for this period (1 API call — just to get IDs)
           let eventTimesResult;
           try {
             eventTimesResult = await Promise.race([
@@ -644,85 +648,15 @@ export async function syncWeeklyAttendance(
             continue;
           }
 
-          // Accumulate headcounts by category across all service times
-          // category → total headcount
-          const categoryTotals = new Map<string, number>();
-          // RevStudents events have their own headcount category map keyed by event name.
-          // Main check-in events use the campus-level map.
-          const campusCategoryMap = HEADCOUNT_CATEGORY_MAP[eventName] || HEADCOUNT_CATEGORY_MAP[campus] || {};
+          const periodEventTimeIds = new Set(
+            (eventTimesResult.data as any[]).map((et: any) => et.id as string)
+          );
 
-          let periodTimedOut = false;
-          for (const eventTime of eventTimesResult.data) {
-            // Check overall period timeout before each event_time
-            if (Date.now() - periodStartTime > PERIOD_TIMEOUT_MS) {
-              console.warn(`[PCO Weekly Sync] Period ${periodId} exceeded ${PERIOD_TIMEOUT_MS / 1000}s overall timeout — skipping remaining event_times`);
-              periodTimedOut = true;
-              break;
-            }
-
-            const etId = (eventTime as any).id;
-
-            let headcountsResult;
-            try {
-              headcountsResult = await Promise.race([
-                client.paginateAll(
-                  `/check-ins/v2/event_times/${etId}/headcounts`,
-                  { per_page: 25 }
-                ),
-                new Promise<never>((_, reject) =>
-                  setTimeout(() => reject(new Error(`Timeout fetching headcounts for event_time ${etId}`)), 15_000)
-                ),
-              ]);
-            } catch (err: any) {
-              console.warn(`[PCO Weekly Sync] Skipping headcounts for event_time ${etId}: ${err.message}`);
-              continue;
-            }
-
-            for (const hc of headcountsResult.data) {
-              const total: number = (hc as any).attributes?.total || 0;
-              const attTypeId: string | undefined = (hc as any).relationships?.attendance_type?.data?.id;
-              const attTypeName = attTypeId ? await getAttTypeName(client, attTypeId) : null;
-
-              // DEBUG: log every headcount row so we can see what PCO returns
-              if (year >= 2026 && weekNumber >= 15) {
-                console.log(`[PCO Weekly Sync DEBUG] ${eventName} ${weekStartDate} et=${etId}: att_type="${attTypeName || 'null'}" total=${total}`);
-              }
-
-              if (total === 0) continue;
-              if (!attTypeId || !attTypeName) continue;
-
-              const category = campusCategoryMap[attTypeName];
-              if (!category) {
-                console.log(`[PCO Weekly Sync] Unknown attendance_type "${attTypeName}" for ${campus} — skipping`);
-                continue;
-              }
-
-              const existing = categoryTotals.get(category) || 0;
-              categoryTotals.set(category, existing + total);
-            }
-          }
-
-          if (periodTimedOut) {
-            console.warn(`[PCO Weekly Sync] Period ${periodIdx + 1}/${periodsResult.data.length} for ${eventName} timed out — partial data may be missing`);
-          }
-
-          // -------------------------------------------------------
-          // SECOND PASS: use pre-fetched attendance_type headcounts.
-          // For main check-in events (not RevStudents), we pre-fetched all
-          // headcounts per attendance_type before the period loop and indexed
-          // them by event_time ID. Here we look up the pre-fetched data for
-          // the current period's event_time IDs to catch FTG Adults/Kids
-          // headcounts that don't appear in the event_times/{id}/headcounts
-          // endpoint (e.g. entered at the period level in PCO).
-          // -------------------------------------------------------
+          // FIRST: Try to populate ALL categories from pre-fetched data (zero API calls)
           if (attTypeHcByEventTime.size > 0) {
-            const periodEventTimeIds = new Set(
-              (eventTimesResult.data as any[]).map((et: any) => et.id as string)
-            );
             for (const [attTypeName, byEt] of Array.from(attTypeHcByEventTime.entries())) {
               const category = campusCategoryMap[attTypeName];
               if (!category) continue;
-              if (categoryTotals.has(category)) continue; // already have data from event_time route
 
               let periodTotal = 0;
               for (const etId of Array.from(periodEventTimeIds)) {
@@ -730,8 +664,54 @@ export async function syncWeeklyAttendance(
               }
 
               if (periodTotal > 0) {
-                console.log(`[PCO Weekly Sync] ${eventName} ${weekStartDate}: pre-fetched att_type found ${attTypeName}=${periodTotal} (category=${category})`);
                 categoryTotals.set(category, (categoryTotals.get(category) || 0) + periodTotal);
+              }
+            }
+          }
+
+          // FALLBACK: If pre-fetch yielded NO data for this period (e.g. pre-fetch
+          // failed or attendance_types not mapped), drill down per-event_time.
+          // This is the slow path but only runs when pre-fetch is empty.
+          if (categoryTotals.size === 0 && attTypeHcByEventTime.size === 0) {
+            console.log(`[PCO Weekly Sync] No pre-fetch data for ${eventName} period ${periodIdx + 1} — falling back to per-event_time drill-down`);
+            const periodStartTime = Date.now();
+            const PERIOD_TIMEOUT_MS = 60_000;
+
+            for (const eventTime of eventTimesResult.data) {
+              if (Date.now() - periodStartTime > PERIOD_TIMEOUT_MS) {
+                console.warn(`[PCO Weekly Sync] Period ${periodId} exceeded ${PERIOD_TIMEOUT_MS / 1000}s timeout — skipping remaining event_times`);
+                break;
+              }
+
+              const etId = (eventTime as any).id;
+              let headcountsResult;
+              try {
+                headcountsResult = await Promise.race([
+                  client.paginateAll(
+                    `/check-ins/v2/event_times/${etId}/headcounts`,
+                    { per_page: 25 }
+                  ),
+                  new Promise<never>((_, reject) =>
+                    setTimeout(() => reject(new Error(`Timeout fetching headcounts for event_time ${etId}`)), 15_000)
+                  ),
+                ]);
+              } catch (err: any) {
+                console.warn(`[PCO Weekly Sync] Skipping headcounts for event_time ${etId}: ${err.message}`);
+                continue;
+              }
+
+              for (const hc of headcountsResult.data) {
+                const total: number = (hc as any).attributes?.total || 0;
+                const attTypeId: string | undefined = (hc as any).relationships?.attendance_type?.data?.id;
+                const attTypeName = attTypeId ? await getAttTypeName(client, attTypeId) : null;
+                if (total === 0 || !attTypeId || !attTypeName) continue;
+
+                const category = campusCategoryMap[attTypeName];
+                if (!category) {
+                  console.log(`[PCO Weekly Sync] Unknown attendance_type "${attTypeName}" for ${campus} — skipping`);
+                  continue;
+                }
+                categoryTotals.set(category, (categoryTotals.get(category) || 0) + total);
               }
             }
           }

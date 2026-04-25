@@ -810,4 +810,11 @@
 - [x] FIX: Added per-fund logging (fund names, per-campus totals, skipped designations, grand total)
 - [x] FIX: Removed dedup logic from weekly report router (no longer needed)
 - [x] TypeScript clean (0 errors) and 108 tests pass
-- [ ] Checkpoint and deploy — NOTE: Re-sync required after publish to get correct amounts with new logging
+- [x] Checkpoint and deploy — NOTE: Re-sync required after publish to get correct amounts with new logging
+
+## Round 87: Sync Still Failing at 29% — Headcount Fetch Hang
+- [x] ROOT CAUSE: Per-event_time drill-down makes 200+ API calls per event (event_times → headcounts → getAttTypeName). With 210ms rate limit, that's 40+ seconds per event. Cloud Run request timeout kills the sync.
+- [x] FIX: Flipped to "pre-fetch first" strategy. Pre-fetch (done once per event) gets ALL headcounts indexed by event_time ID. Per-period processing now just looks up pre-fetch data by event_time ID (zero API calls). Drill-down only runs as fallback when pre-fetch has no data.
+- [x] Estimated API call reduction: ~200+ per event → ~5-10 per event (just attendance_type headcount pages)
+- [x] TypeScript clean (0 errors) and 108 tests pass
+- [ ] Checkpoint and deploy
