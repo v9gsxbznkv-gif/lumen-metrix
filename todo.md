@@ -799,4 +799,15 @@
 - [x] Young Adults showing 15 instead of 63 — ROOT CAUSE: YA Gathering treated as non-main event, only pulling regular+guest+volunteer counts (0+0+15=15). The actual 63 is a manual headcount entered via attendance_types in PCO. FIX: Added YA Gathering to isMainCheckInEvent + HEADCOUNT_CATEGORY_MAP so it drills into headcounts like Canton/Jasper main events.
 - [x] Added YA FTG mapping ("First Timers", "FTG", "2-FTG" → "YA FTG") and YA Salvations mapping
 - [x] TypeScript clean (0 new errors) and 108 tests pass
-- [ ] Checkpoint and deploy — NOTE: YA fix requires a re-sync to pull the manual headcounts from PCO
+- [x] Checkpoint and deploy — NOTE: YA fix requires a re-sync to pull the manual headcounts from PCO
+
+## Round 86: Giving Still Wrong for Apr 13-19
+- [x] Expected: $162,627.64 (PCO actual: canton-campus=$136,145.22, jasper-campus=$24,124.68, multiply=$1,193.57, student-camp-scholarship=$907.78, give-a-kid-a-chance=$167.28, revkids=$89.11)
+- [x] ROOT CAUSE 1: No unique index on giving_weekly — onDuplicateKeyUpdate never fires, creates 19 duplicate rows. FIX: Added unique index on (year, weekNumber, campus). Cleaned up 175 duplicate rows.
+- [x] ROOT CAUSE 2: Sync amounts wrong — Canton synced $103K (should be $136K), Jasper synced $37K (should be $24K). Will be fixed on next re-sync with per-fund logging to confirm.
+- [x] FIX: Added unique index on (year, weekNumber, campus) via schema migration 0014
+- [x] FIX: Cleaned up 175 existing duplicate rows (kept latest per campus per week)
+- [x] FIX: Added per-fund logging (fund names, per-campus totals, skipped designations, grand total)
+- [x] FIX: Removed dedup logic from weekly report router (no longer needed)
+- [x] TypeScript clean (0 errors) and 108 tests pass
+- [ ] Checkpoint and deploy — NOTE: Re-sync required after publish to get correct amounts with new logging

@@ -407,7 +407,9 @@ export const givingWeekly = mysqlTable("giving_weekly", {
   manualLock: boolean("manualLock").default(false).notNull(), // true = skip during auto-sync
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
+}, (table) => ([
+  uniqueIndex("giving_weekly_year_week_campus_idx").on(table.year, table.weekNumber, table.campus),
+]));
 
 export type GivingWeeklyRow = typeof givingWeekly.$inferSelect;
 export type InsertGivingWeekly = typeof givingWeekly.$inferInsert;

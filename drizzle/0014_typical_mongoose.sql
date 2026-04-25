@@ -1,0 +1,1 @@
+ALTER TABLE `giving_weekly` ADD CONSTRAINT `giving_weekly_year_week_campus_idx` UNIQUE(`year`,`weekNumber`,`campus`);

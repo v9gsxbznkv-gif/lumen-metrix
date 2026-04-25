@@ -929,7 +929,10 @@ export async function syncWeeklyGiving(
           name: fundName,
         });
       }
-      console.log(`[Weekly Giving] Loaded ${fundMap.size} funds from PCO`);
+      console.log(`[Weekly Giving] Loaded ${fundMap.size} funds from PCO:`);
+      for (const [fid, finfo] of Array.from(fundMap.entries())) {
+        console.log(`  Fund id=${fid} name="${finfo.name}" → campus="${finfo.campus}" isGeneral=${finfo.isGeneral}`);
+      }
     } catch (fundErr: any) {
       console.warn(`[Weekly Giving] Failed to fetch funds: ${fundErr.message}. Will attribute all donations to 'All Campuses'.`);
     }
@@ -941,6 +944,10 @@ export async function syncWeeklyGiving(
     // Step 2: Fetch all donations with designations in the date range
     // Process in weekly chunks to avoid TCP hangs from large responses
     const weeklyAgg = new Map<string, { year: number; weekNumber: number; weekStartDate: string; campus: string; total: number; general: number; designated: number; donationCount: number }>();
+    // Per-fund tracking for debugging
+    const fundTotals = new Map<string, number>();
+    let skippedDesignations = 0;
+    let noDesignationDonations = 0;
 
     // Generate list of weekly chunks
     const chunks: Array<{ from: string; to: string }> = [];
@@ -1011,6 +1018,7 @@ export async function syncWeeklyGiving(
 
           if (designationRefs.length === 0) {
             // No designations: use total amount_cents, attribute to All Campuses general
+            noDesignationDonations++;
             const amountCents: number = donation.attributes?.amount_cents || 0;
             const amountDollars = amountCents / 100;
             const campus = "All Campuses";
@@ -1027,9 +1035,11 @@ export async function syncWeeklyGiving(
             // Process each designation
             for (const ref of designationRefs) {
               const desig = designationMap.get(ref.id);
-              if (!desig) continue;
+              if (!desig) { skippedDesignations++; continue; }
               const amountDollars = desig.amountCents / 100;
               const fundInfo = fundMap.get(desig.fundId);
+              const fundName = fundInfo?.name || `unknown-${desig.fundId}`;
+              fundTotals.set(fundName, (fundTotals.get(fundName) || 0) + desig.amountCents);
               const campus = fundInfo?.campus || "All Campuses";
               const isGeneral = fundInfo?.isGeneral ?? true;
               const key = `${weekStartStr}-${campus}`;
@@ -1061,6 +1071,36 @@ export async function syncWeeklyGiving(
     }
 
     console.log(`[Weekly Giving] Processed ${recordsProcessed} donations into ${weeklyAgg.size} weekly campus rows`);
+    console.log(`[Weekly Giving] Skipped designations (not in included): ${skippedDesignations}`);
+    console.log(`[Weekly Giving] Donations without designations: ${noDesignationDonations}`);
+    // Log per-fund totals
+    const sortedFunds = Array.from(fundTotals.entries()).sort((a, b) => b[1] - a[1]);
+    console.log(`[Weekly Giving] Per-fund totals (all time in sync range):`);
+    let grandTotal = 0;
+    for (const [fname, cents] of Array.from(sortedFunds)) {
+      console.log(`  ${fname}: $${(cents / 100).toFixed(2)}`);
+      grandTotal += cents;
+    }
+    console.log(`  GRAND TOTAL: $${(grandTotal / 100).toFixed(2)}`);
+    // Log per-campus totals for the most recent weeks for debugging
+    const recentWeeks = new Map<number, Map<string, number>>();
+    for (const [key, agg] of Array.from(weeklyAgg.entries())) {
+      if (agg.year === new Date().getFullYear()) {
+        if (!recentWeeks.has(agg.weekNumber)) recentWeeks.set(agg.weekNumber, new Map());
+        recentWeeks.get(agg.weekNumber)!.set(agg.campus, agg.total);
+      }
+    }
+    const sortedWeeks = Array.from(recentWeeks.keys()).sort((a, b) => b - a).slice(0, 3);
+    for (const wk of sortedWeeks) {
+      const campuses = recentWeeks.get(wk)!;
+      let wkTotal = 0;
+      const parts: string[] = [];
+      for (const [campus, total] of Array.from(campuses.entries())) {
+        parts.push(`${campus}=$${total.toFixed(2)}`);
+        wkTotal += total;
+      }
+      console.log(`[Weekly Giving] Week ${wk}: ${parts.join(', ')} | TOTAL=$${wkTotal.toFixed(2)}`);
+    }
 
     if (onProgress) {
       await onProgress(82, `Writing ${weeklyAgg.size} weekly giving rows to database...`, recordsProcessed);

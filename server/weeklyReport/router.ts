@@ -228,19 +228,9 @@ async function getWeeklySnapshot(
   }
   const nsRows = nsRowsFallback;
 
-  // Deduplicate giving rows: multiple syncs can append rows for the same campus+week.
-  // Keep only the latest row per campus (highest id = most recent sync).
-  const givRowsDeduped: typeof givRows = [];
-  const givByCampus = new Map<string, any>();
-  for (const r of givRows) {
-    const existing = givByCampus.get(r.campus);
-    if (!existing || r.id > existing.id) {
-      givByCampus.set(r.campus, r);
-    }
-  }
-  for (const r of Array.from(givByCampus.values())) {
-    givRowsDeduped.push(r);
-  }
+  // Unique index on (year, weekNumber, campus) prevents duplicates.
+  // Each campus has exactly one row per week.
+  const givRowsDeduped = givRows;
 
   // Check if weekly giving is only available as combined (no per-campus weekly split)
   const givingWeeklyIsCombined = givRowsDeduped.length > 0 &&
