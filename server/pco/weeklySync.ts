@@ -537,10 +537,14 @@ export async function syncWeeklyAttendance(
 
       let periodsResult;
       try {
-        periodsResult = await client.paginateAll(
+        const periodsPromise = client.paginateAll(
           `/check-ins/v2/events/${eventId}/event_periods`,
           periodParams
         );
+        const periodsTimeout = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error(`Timeout fetching event_periods for ${eventName} after 90s`)), 90_000)
+        );
+        periodsResult = await Promise.race([periodsPromise, periodsTimeout]);
       } catch (err: any) {
         console.warn(`[PCO Weekly Sync] Skipping event ${eventName}: ${err.message}`);
         continue;
@@ -1352,7 +1356,10 @@ export async function syncVolunteersFromServices(
     console.log(`[Volunteer Sync] Fetching service types...`);
     let serviceTypes: any[] = [];
     try {
-      const stResult = await client.paginateAll("/services/v2/service_types", {}, 10);
+      const stResult = await Promise.race([
+        client.paginateAll("/services/v2/service_types", {}, 10),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Timeout fetching service_types after 30s')), 30_000)),
+      ]);
       serviceTypes = stResult.data;
       console.log(`[Volunteer Sync] Found ${serviceTypes.length} service types`);
     } catch (err: any) {
@@ -1387,16 +1394,25 @@ export async function syncVolunteersFromServices(
       console.log(`[Volunteer Sync] Fetching plans for "${stName}" (${campus})...`);
 
       // Fetch plans in date range using filter parameters
-      const plansResult = await client.paginateAll(
-        `/services/v2/service_types/${st.id}/plans`,
-        {
-          filter: "after,before",
-          after: fromDate,
-          before: toDate,
-          order: "sort_date",
-        },
-        50 // max 50 pages = 5000 plans
-      );
+      let plansResult;
+      try {
+        plansResult = await Promise.race([
+          client.paginateAll(
+            `/services/v2/service_types/${st.id}/plans`,
+            {
+              filter: "after,before",
+              after: fromDate,
+              before: toDate,
+              order: "sort_date",
+            },
+            50 // max 50 pages = 5000 plans
+          ),
+          new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`Timeout fetching plans for ${stName} after 60s`)), 60_000)),
+        ]);
+      } catch (planErr: any) {
+        console.warn(`[Volunteer Sync] Skipping service type "${stName}": ${planErr.message}`);
+        continue;
+      }
 
       console.log(`[Volunteer Sync] Found ${plansResult.data.length} plans for "${stName}"`);
 

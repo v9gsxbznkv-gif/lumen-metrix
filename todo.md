@@ -849,3 +849,12 @@
 - [x] Also report progress on every chunk (not just every 4th) for better UI feedback
 - [x] 108 tests pass
 - [x] Checkpoint and deploy
+
+## Round 92: Full Sync Still Failing — Attendance Stall at 48%
+- [x] Latest failure: 48% on "YA Gathering" event periods (5/5) — attendance sync, not giving
+- [x] Root cause: event_periods paginateAll had NO timeout wrapper (unlike event_times/headcounts which had 20s)
+- [x] FIX 1: Added 90s timeout to event_periods paginateAll — if it stalls, event is skipped and sync continues
+- [x] FIX 2: Added 30s/60s timeouts to volunteer sync (service_types + plans paginateAll calls)
+- [x] FIX 3: Increased stale-job timeout from 10 min → 20 min — full sync legitimately takes 12-15 min
+- [x] 108 tests pass
+- [x] Checkpoint and deploy
