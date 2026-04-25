@@ -947,16 +947,18 @@ export async function syncWeeklyGiving(
 
     console.log(`[Weekly Giving] Processing ${chunks.length} weekly chunks...`);
 
+    const CHUNK_TIMEOUT_MS = 60_000; // 60s per chunk — prevents TCP stalls from hanging the whole sync
+
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
       const pct = Math.round(10 + (i / chunks.length) * 70);
 
-      if (onProgress && i % 4 === 0) {
+      if (onProgress) {
         await onProgress(pct, `Fetching donations ${chunk.from} → ${chunk.to} (${i + 1}/${chunks.length})...`, recordsProcessed);
       }
 
       try {
-        const donationsResp = await client.paginateAll(
+        const chunkPromise = client.paginateAll(
           "/giving/v2/donations",
           {
             include: "designations",
@@ -966,6 +968,10 @@ export async function syncWeeklyGiving(
           },
           50 // max 50 pages per chunk (5000 donations per week is more than enough)
         );
+        const chunkTimeout = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error(`Chunk ${chunk.from}→${chunk.to} timed out after ${CHUNK_TIMEOUT_MS / 1000}s`)), CHUNK_TIMEOUT_MS)
+        );
+        const donationsResp = await Promise.race([chunkPromise, chunkTimeout]);
 
         const donations = donationsResp.data as any[];
         const included = donationsResp.included as any[];
@@ -1057,7 +1063,80 @@ export async function syncWeeklyGiving(
           }
         }
       } catch (chunkErr: any) {
-        console.warn(`[Weekly Giving] Failed to fetch chunk ${chunk.from}→${chunk.to}: ${chunkErr.message}`);
+        console.warn(`[Weekly Giving] Chunk ${chunk.from}→${chunk.to} failed: ${chunkErr.message}`);
+        // Retry once on timeout before giving up on this chunk
+        if (chunkErr.message.includes('timed out') || chunkErr.message.includes('abort') || chunkErr.message.includes('ECONNRESET')) {
+          console.log(`[Weekly Giving] Retrying chunk ${chunk.from}→${chunk.to} after 3s...`);
+          await new Promise(r => setTimeout(r, 3000));
+          try {
+            const retryPromise = client.paginateAll(
+              "/giving/v2/donations",
+              {
+                include: "designations",
+                "where[received_at][gte]": chunk.from,
+                "where[received_at][lte]": chunk.to,
+                per_page: 100,
+              },
+              50
+            );
+            const retryTimeout = new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error(`Retry chunk ${chunk.from}→${chunk.to} timed out`)), CHUNK_TIMEOUT_MS)
+            );
+            const retryResp = await Promise.race([retryPromise, retryTimeout]);
+            const donations = retryResp.data as any[];
+            const included = retryResp.included as any[];
+            const designationMap = new Map<string, { fundId: string; amountCents: number }>();
+            for (const inc of included) {
+              if (inc.type === "Designation") {
+                designationMap.set(inc.id, {
+                  fundId: inc.relationships?.fund?.data?.id || "",
+                  amountCents: inc.attributes?.amount_cents || 0,
+                });
+              }
+            }
+            for (const donation of donations) {
+              recordsProcessed++;
+              const paymentStatus: string = donation.attributes?.payment_status || '';
+              if (paymentStatus !== 'succeeded') { skippedNonSucceeded++; continue; }
+              const receivedAt: string = donation.attributes?.received_at || chunk.from;
+              const dateStr = receivedAt.includes('T') ? receivedAt : `${receivedAt}T12:00:00Z`;
+              const donationDate = new Date(dateStr);
+              const weekStart = getSunday(donationDate);
+              const weekStartStr = formatDate(weekStart);
+              const year = weekStart.getFullYear();
+              const weekNum = getISOWeekNumber(weekStart);
+              const designationRefs = donation.relationships?.designations?.data || [];
+              if (designationRefs.length === 0) {
+                noDesignationDonations++;
+                const amountCents: number = donation.attributes?.amount_cents || 0;
+                const amountDollars = amountCents / 100;
+                const campus = "All Campuses";
+                const key = `${weekStartStr}-${campus}`;
+                const existing = weeklyAgg.get(key);
+                if (existing) { existing.total += amountDollars; existing.general += amountDollars; existing.donationCount++; }
+                else { weeklyAgg.set(key, { year, weekNumber: weekNum, weekStartDate: weekStartStr, campus, total: amountDollars, general: amountDollars, designated: 0, donationCount: 1 }); }
+              } else {
+                for (const ref of designationRefs) {
+                  const desig = designationMap.get(ref.id);
+                  if (!desig) { skippedDesignations++; continue; }
+                  const amountDollars = desig.amountCents / 100;
+                  const fundInfo = fundMap.get(desig.fundId);
+                  const fundName = fundInfo?.name || `unknown-${desig.fundId}`;
+                  fundTotals.set(fundName, (fundTotals.get(fundName) || 0) + desig.amountCents);
+                  const campus = fundInfo?.campus || "All Campuses";
+                  const isGeneral = fundInfo?.isGeneral ?? true;
+                  const key = `${weekStartStr}-${campus}`;
+                  const existing = weeklyAgg.get(key);
+                  if (existing) { existing.total += amountDollars; if (isGeneral) existing.general += amountDollars; else existing.designated += amountDollars; existing.donationCount++; }
+                  else { weeklyAgg.set(key, { year, weekNumber: weekNum, weekStartDate: weekStartStr, campus, total: amountDollars, general: isGeneral ? amountDollars : 0, designated: isGeneral ? 0 : amountDollars, donationCount: 1 }); }
+                }
+              }
+            }
+            console.log(`[Weekly Giving] Retry succeeded for chunk ${chunk.from}→${chunk.to}: ${donations.length} donations`);
+          } catch (retryErr: any) {
+            console.warn(`[Weekly Giving] Retry also failed for chunk ${chunk.from}→${chunk.to}: ${retryErr.message}. Skipping this chunk.`);
+          }
+        }
         // Continue with next chunk rather than failing the whole sync
       }
     }

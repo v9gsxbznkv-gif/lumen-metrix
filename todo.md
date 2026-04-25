@@ -841,3 +841,11 @@
 - [x] Purged all 51 giving_weekly rows and 54 giving_monthly rows so next sync repopulates with correct filter
 - [x] 108 tests pass
 - [x] Checkpoint and deploy — Re-sync required to repopulate giving data with succeeded-only filter
+
+## Round 91: Giving Sync Timeout at 43%
+- [x] Full sync fails at 43% — giving sync stalls on chunk 9/17 (Feb 26 → Mar 4), Cloud Run restarts mid-sync
+- [x] Root cause: paginateAll on giving API hangs on a TCP stall, no per-chunk timeout protection
+- [x] FIX: Added 60s per-chunk Promise.race timeout + automatic retry with 3s backoff. If both attempts fail, chunk is skipped and sync continues.
+- [x] Also report progress on every chunk (not just every 4th) for better UI feedback
+- [x] 108 tests pass
+- [x] Checkpoint and deploy
