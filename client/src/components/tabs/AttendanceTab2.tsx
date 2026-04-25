@@ -61,32 +61,18 @@ const METRICS = [
 /** Metrics to show on the chart (not total, since it's adults+kids) */
 const CHART_METRICS = METRICS.filter(m => m.key !== "total");
 
-/** Kids room color palette */
-const KIDS_ROOM_COLORS: Record<string, string> = {
-  "Babies": "#F4A261",
-  "Toddlers": "#E76F51",
-  "Pre-K": "#2A9D8F",
-  "Campground": "#264653",
-  "Treehouse": "#E9C46A",
-  "Cove": "#287271",
-  "Reruns": "#8B6DAF",
-  "Nursery": "#F4A261",
-  "Elementary": "#4A7FB5",
-};
-
-/** Section groupings for kids rooms */
-const KIDS_SECTIONS = [
-  {
-    title: "Canton Sunday RevKids",
-    campus: "Canton",
-    rooms: ["Babies", "Toddlers", "Pre-K", "Campground", "Treehouse", "Cove", "Reruns"],
-  },
-  {
-    title: "Jasper Kids",
-    campus: "Jasper",
-    rooms: ["Nursery", "Pre-K", "Treehouse", "Cove", "Reruns"],
-  },
+/** Color palette for breakdown bars — cycles through for dynamic rooms */
+const BAR_COLORS = [
+  "#F4A261", "#E76F51", "#2A9D8F", "#264653", "#E9C46A",
+  "#287271", "#8B6DAF", "#4A7FB5", "#C2703E", "#5B8A68",
+  "#D4A843", "#C45B4A", "#6A8D73", "#B5838D", "#3D5A80",
 ];
+
+/** Student level colors */
+const STUDENT_COLORS: Record<string, string> = {
+  "MS": "#4A7FB5",
+  "HS": "#E76F51",
+};
 
 const TT = {
   fontSize: 12,
@@ -148,6 +134,24 @@ export default function AttendanceTab2() {
   const kidsYear = (primaryKidsRoomQuery.data?.length ?? 0) > 0 ? primaryKidsYear : 2025;
   const kidsRoomLoading = primaryKidsRoomQuery.isLoading || (needsFallback && fallbackKidsRoomQuery.isLoading);
   const kidsIsFallback = needsFallback && (fallbackKidsRoomQuery.data?.length ?? 0) > 0;
+
+  // Students breakdown — same fallback logic
+  const primaryStudentsYear = viewMode === "yearly" ? Math.max(...years) : year;
+  const primaryStudentsQuery = trpc.dataViews.attendance.getStudentsBreakdown.useQuery({
+    year: primaryStudentsYear,
+    campus: campus === "all" ? undefined : campus,
+  });
+  const studentsNeedsFallback = !primaryStudentsQuery.isLoading && !primaryStudentsQuery.data?.hasBreakdown && primaryStudentsYear !== 2025;
+  const fallbackStudentsQuery = trpc.dataViews.attendance.getStudentsBreakdown.useQuery(
+    { year: 2025, campus: campus === "all" ? undefined : campus },
+    { enabled: studentsNeedsFallback }
+  );
+  const studentsData = primaryStudentsQuery.data?.hasBreakdown
+    ? primaryStudentsQuery.data
+    : fallbackStudentsQuery.data;
+  const studentsYear = primaryStudentsQuery.data?.hasBreakdown ? primaryStudentsYear : 2025;
+  const studentsLoading = primaryStudentsQuery.isLoading || (studentsNeedsFallback && fallbackStudentsQuery.isLoading);
+  const studentsIsFallback = studentsNeedsFallback && fallbackStudentsQuery.data?.hasBreakdown;
 
   const isLoading = dataQuery.isLoading;
   const rawData = dataQuery.data;
@@ -276,34 +280,61 @@ export default function AttendanceTab2() {
     return [];
   }, [viewMode, weeklyData, monthlyData, yearlyData]);
 
-  // ─── Kids Room Breakdown ──────────────────────────────────
+  // ─── Kids Room Breakdown (dynamic from API) ──────────────
   const kidsRoomData = kidsRoomQueryData ?? [];
   const kidsRoomSections = useMemo(() => {
     if (kidsRoomData.length === 0) return [];
 
-    // Filter sections based on campus selection
-    const filteredSections = campus === "all" || !campus
-      ? KIDS_SECTIONS
-      : KIDS_SECTIONS.filter(s => s.campus === campus);
+    // Group by campus dynamically
+    const campusMap = new Map<string, { label: string; avg: number; weeks: number }[]>();
+    for (const r of kidsRoomData) {
+      if (r.avgWeekly <= 0) continue;
+      const items = campusMap.get(r.campus) ?? [];
+      items.push({ label: r.room, avg: r.avgWeekly, weeks: r.weekCount });
+      campusMap.set(r.campus, items);
+    }
 
-    return filteredSections.map(section => {
-      const sectionRooms = section.rooms
-        .map(roomName => {
-          const match = kidsRoomData.find(
-            r => r.campus === section.campus && r.room === roomName
-          );
-          return match ? { label: roomName, avg: match.avgWeekly, weeks: match.weekCount } : null;
-        })
-        .filter((r): r is { label: string; avg: number; weeks: number } => r !== null && r.avg > 0);
+    // Sort rooms within each campus by avg descending
+    const sections = Array.from(campusMap.entries())
+      .map(([camp, items]) => ({
+        title: `${camp} Kids`,
+        campus: camp,
+        items: items.sort((a, b) => b.avg - a.avg),
+      }))
+      .sort((a, b) => a.campus.localeCompare(b.campus));
 
-      return { title: section.title, campus: section.campus, items: sectionRooms };
-    }).filter(s => s.items.length > 0);
-  }, [kidsRoomData, campus]);
+    return sections;
+  }, [kidsRoomData]);
 
   const maxKidsAvg = useMemo(() => {
     const allAvgs = kidsRoomSections.flatMap(s => s.items.map(i => i.avg));
     return Math.max(...allAvgs, 1);
   }, [kidsRoomSections]);
+
+  // ─── Students Breakdown ───────────────────────────────────
+  const studentsSections = useMemo(() => {
+    if (!studentsData?.hasBreakdown) return [];
+    // Group by campus
+    const campusMap = new Map<string, { level: string; avg: number; weeks: number }[]>();
+    for (const b of studentsData.breakdown) {
+      const items = campusMap.get(b.campus) ?? [];
+      items.push({ level: b.level, avg: b.avgWeekly, weeks: b.weekCount });
+      campusMap.set(b.campus, items);
+    }
+    return Array.from(campusMap.entries())
+      .map(([camp, items]) => ({
+        title: `${camp} Students`,
+        campus: camp,
+        items: items.sort((a, b) => b.avg - a.avg),
+        aggregate: studentsData.aggregates.find(a => a.campus === camp),
+      }))
+      .sort((a, b) => a.campus.localeCompare(b.campus));
+  }, [studentsData]);
+
+  const maxStudentAvg = useMemo(() => {
+    const allAvgs = studentsSections.flatMap(s => s.items.map(i => i.avg));
+    return Math.max(...allAvgs, 1);
+  }, [studentsSections]);
 
   return (
     <div className="space-y-5">
@@ -631,7 +662,7 @@ export default function AttendanceTab2() {
                       {section.title}
                     </h4>
                     <div className="space-y-2.5">
-                      {section.items.map((item) => (
+                      {section.items.map((item, idx) => (
                         <div key={item.label}>
                           <div className="flex justify-between text-xs mb-1">
                             <span className="font-medium text-foreground/80">{item.label}</span>
@@ -644,7 +675,7 @@ export default function AttendanceTab2() {
                               className="h-full rounded-full transition-all duration-500"
                               style={{
                                 width: `${Math.min(100, (item.avg / maxKidsAvg) * 100)}%`,
-                                backgroundColor: KIDS_ROOM_COLORS[item.label] || "#E8913A",
+                                backgroundColor: BAR_COLORS[idx % BAR_COLORS.length],
                               }}
                             />
                           </div>
@@ -667,6 +698,84 @@ export default function AttendanceTab2() {
             ) : !kidsRoomLoading ? (
               <p className="text-xs text-muted-foreground italic">
                 No room-level kids data available. Room-level data is available for 2017–2025 from spreadsheet imports.
+              </p>
+            ) : null}
+          </div>
+
+          {/* Students Breakdown */}
+          <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <div>
+                <h3 className="text-sm font-semibold" style={{ fontFamily: "'DM Sans'" }}>
+                  Students Breakdown — {studentsYear} Avg
+                </h3>
+                {studentsIsFallback && (
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    Showing {studentsYear} data (no MS/HS breakdown for {primaryStudentsYear} yet)
+                  </p>
+                )}
+              </div>
+              {studentsLoading && (
+                <Loader2 className="w-4 h-4 animate-spin" style={{ color: "#4A7FB5" }} />
+              )}
+            </div>
+
+            {studentsSections.length > 0 ? (
+              <div className="space-y-5">
+                {studentsSections.map((section) => (
+                  <div key={section.title}>
+                    <h4 className="text-xs font-semibold text-foreground/70 mb-2.5 uppercase tracking-wide">
+                      {section.title}
+                    </h4>
+                    <div className="space-y-2.5">
+                      {section.items.map((item) => (
+                        <div key={item.level}>
+                          <div className="flex justify-between text-xs mb-1">
+                            <span className="font-medium text-foreground/80">
+                              {item.level === "MS" ? "Middle School" : item.level === "HS" ? "High School" : item.level}
+                            </span>
+                            <span className="font-semibold font-mono text-sm" style={{ color: "#4A7C59" }}>
+                              {formatNumber(item.avg)}
+                            </span>
+                          </div>
+                          <div className="h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all duration-500"
+                              style={{
+                                width: `${Math.min(100, (item.avg / maxStudentAvg) * 100)}%`,
+                                backgroundColor: STUDENT_COLORS[item.level] || "#4A7FB5",
+                              }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {section.aggregate && (
+                      <div className="mt-2 pt-2 border-t border-border/30">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">Aggregate Total</span>
+                          <span className="font-semibold font-mono text-sm" style={{ color: "#4A7FB5" }}>
+                            {formatNumber(section.aggregate.avgWeekly)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {/* Total students across all campuses */}
+                <div className="pt-3 border-t border-border/40">
+                  <div className="flex justify-between text-xs">
+                    <span className="font-semibold text-foreground/70 uppercase tracking-wide">Total Students (MS + HS)</span>
+                    <span className="font-semibold font-mono text-sm" style={{ color: "#4A7FB5" }}>
+                      {formatNumber(studentsSections.reduce((s, sec) => s + sec.items.reduce((ss, i) => ss + i.avg, 0), 0))}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : !studentsLoading ? (
+              <p className="text-xs text-muted-foreground italic">
+                No MS/HS breakdown available for this year. Breakdown data is available for 2017–2025 from spreadsheet imports.
               </p>
             ) : null}
           </div>

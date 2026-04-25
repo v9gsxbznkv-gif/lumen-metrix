@@ -465,6 +465,94 @@ const attendanceRouter = router({
 
       return result;
     }),
+
+  /**
+   * Students breakdown — returns average weekly headcount
+   * for each "Students: {Campus} {Level}" subgroup (MS/HS) for a given year.
+   * Falls back to aggregate "Students" when MS/HS split is not available.
+   */
+  getStudentsBreakdown: publicProcedure
+    .input(z.object({
+      year: z.number(),
+      campus: z.string().optional(),
+    }))
+    .query(async ({ input }) => {
+      const { year, campus } = input;
+      const d = await db();
+
+      const conditions: any[] = [
+        eq(attendanceWeekly.year, year),
+      ];
+      if (campus && campus !== "all") {
+        conditions.push(eq(attendanceWeekly.campus, campus));
+      }
+
+      const rows = await d
+        .select()
+        .from(attendanceWeekly)
+        .where(and(...conditions))
+        .orderBy(asc(attendanceWeekly.weekNumber));
+
+      // Filter to "Students: *" subgroups (MS/HS breakdown)
+      const studentRows = rows.filter(r => r.subgroup.startsWith("Students: "));
+
+      // Also get aggregate "Students" rows for comparison
+      const aggStudentRows = rows.filter(r => r.subgroup === "Students" || r.subgroup === "RevStudents Attendance");
+
+      // Group breakdown rows by subgroup
+      const subgroupMap = new Map<string, { total: number; weeks: number; campus: string }>();
+      for (const row of studentRows) {
+        const existing = subgroupMap.get(row.subgroup);
+        if (existing) {
+          existing.total += row.headcount;
+          existing.weeks += 1;
+        } else {
+          subgroupMap.set(row.subgroup, { total: row.headcount, weeks: 1, campus: row.campus });
+        }
+      }
+
+      const breakdown = Array.from(subgroupMap.entries()).map(([subgroup, data]) => {
+        // Parse level from "Students: Canton MS" → campus="Canton", level="MS"
+        const parts = subgroup.replace("Students: ", "").split(" ");
+        const levelCampus = parts[0];
+        const level = parts.slice(1).join(" ");
+        return {
+          subgroup,
+          campus: levelCampus,
+          level,
+          avgWeekly: Math.round(data.total / data.weeks),
+          totalHeadcount: data.total,
+          weekCount: data.weeks,
+        };
+      });
+
+      // Group aggregate rows by campus
+      const aggMap = new Map<string, { total: number; weeks: number }>();
+      for (const row of aggStudentRows) {
+        const existing = aggMap.get(row.campus);
+        if (existing) {
+          existing.total += row.headcount;
+          existing.weeks += 1;
+        } else {
+          aggMap.set(row.campus, { total: row.headcount, weeks: 1 });
+        }
+      }
+
+      const aggregates = Array.from(aggMap.entries()).map(([camp, data]) => ({
+        campus: camp,
+        avgWeekly: Math.round(data.total / data.weeks),
+        totalHeadcount: data.total,
+        weekCount: data.weeks,
+      }));
+
+      // Sort breakdown by campus then level
+      breakdown.sort((a, b) => {
+        if (a.campus !== b.campus) return a.campus.localeCompare(b.campus);
+        return a.level.localeCompare(b.level);
+      });
+
+      return { breakdown, aggregates, hasBreakdown: breakdown.length > 0 };
+    }),
 });
 
 // ============================================================

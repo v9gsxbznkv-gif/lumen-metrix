@@ -928,3 +928,19 @@
 - [x] Diagnose why kids room breakdown is not rendering — section was rendering but defaulted to 2026 which has no room-level data
 - [x] Fix the issue — added auto-fallback to 2025 when selected year has no room data, with note explaining the fallback
 - [x] Verify and checkpoint — confirmed Canton 7 rooms + Jasper 2 rooms showing correctly with progress bars
+
+## Round 99: Missing Jasper and Students Data
+- [x] Audit DB for missing Jasper attendance data across all years — data was present, issue was display-side
+- [x] Audit DB for missing Students attendance data across all years — data was present, no MS/HS breakdown existed
+- [x] Compare against spreadsheet History tabs to identify gaps — found Jasper Kids tabs with 15 rooms, Student tabs with MS/HS split
+- [x] Fix extraction and re-import missing data — extracted 3,678 Jasper kids room rows + 1,121 student MS/HS rows
+- [x] Verify on dashboard and checkpoint
+
+## Round 100: Students Breakdown + Jasper Kids Rooms Expansion
+- [x] Audit DB for student subgroup data (RevStudents MS, RevStudents HS) across years
+- [x] Audit spreadsheets for Jasper kids room-level data beyond Nursery and Pre-K — found 15 rooms (Babies, Toddlers, Twos, Pre-K, K-2nd, 3rd-4th, Kindergarten, 1st-5th Grade, Nursery/Pre-K/Elem Reruns)
+- [x] Add backend endpoint for students breakdown (MS vs HS per campus) — getStudentsBreakdown endpoint
+- [x] Extract additional Jasper kids room data from spreadsheets — 3,678 rows imported
+- [x] Update AttendanceTab2 with Students Breakdown section (MS vs HS) — shows Canton MS 193, HS 136; Jasper HS 35, MS 32
+- [x] Expand Jasper kids rooms in the Kids Room Breakdown section — dynamic grouping, 7 Jasper rooms now showing
+- [x] Test and checkpoint — 133 tests passing, 0 TS errors
