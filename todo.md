@@ -784,4 +784,12 @@
 - [x] Baptisms showing — — ROOT CAUSE: no baptism headcount category in PCO + no monthly fallback. FIX: added next_steps_monthly fallback (current/previous month).
 - [x] Totals row hardcoded groups=0, salvations=0, baptisms=0 — FIX: now sums from campus data.
 - [x] TypeScript clean (0 errors) and 108 tests pass
+- [x] Checkpoint and deploy
+
+## Round 84: Weekly Report — Wrong Giving/Groups/Young Adults + Missing Online
+- [x] Giving inflated — ROOT CAUSE: duplicate rows in giving_weekly from multiple syncs (Canton had 3 rows: $51K, $98K, $46K summed to $196K). FIX: dedup by keeping only highest-id row per campus per week. Correct: Canton $46,200, Jasper $11,876, total ~$58,460.
+- [x] Groups — shows 889 (Canton 689 + Jasper 200 from March groups_monthly.avgAttendance). This is correct data from spreadsheet import. Need Chad to confirm expected metric.
+- [x] Young Adults — shows 15 from "YA Gathering" under "Other" campus. This is actual PCO headcount. Need Chad to confirm expected number.
+- [x] Online metric added — Canton has "Online" subgroup with headcount=554 for week 16. Added to CampusWeeklyMetrics type, all 3 snapshot functions (weekly/monthly/YTD), and frontend METRIC_CONFIG.
+- [x] TypeScript clean (0 new errors, pre-existing scheduler/weeklySync errors unchanged) and 108 tests pass
 - [ ] Checkpoint and deploy

@@ -31,6 +31,7 @@ import { invokeLLM } from "../_core/llm";
 interface CampusWeeklyMetrics {
   campus: string;
   attendance: number;      // Main Check-In headcount only
+  online: number;          // Online viewers (from Canton manual headcount "Online" subgroup)
   revKids: number;         // Sum of Kids:* subgroups
   revStudents: number;     // RevStudents combined (legacy fallback)
   revStudentsHS: number;   // RevStudents High School (from PCO custom headcount "HS Total")
@@ -226,13 +227,27 @@ async function getWeeklySnapshot(
   }
   const nsRows = nsRowsFallback;
 
+  // Deduplicate giving rows: multiple syncs can append rows for the same campus+week.
+  // Keep only the latest row per campus (highest id = most recent sync).
+  const givRowsDeduped: typeof givRows = [];
+  const givByCampus = new Map<string, any>();
+  for (const r of givRows) {
+    const existing = givByCampus.get(r.campus);
+    if (!existing || r.id > existing.id) {
+      givByCampus.set(r.campus, r);
+    }
+  }
+  for (const r of Array.from(givByCampus.values())) {
+    givRowsDeduped.push(r);
+  }
+
   // Check if weekly giving is only available as combined (no per-campus weekly split)
-  const givingWeeklyIsCombined = givRows.length > 0 &&
-    givRows.every((r: any) => r.campus === "All Campuses");
+  const givingWeeklyIsCombined = givRowsDeduped.length > 0 &&
+    givRowsDeduped.every((r: any) => r.campus === "All Campuses");
   const givingIsCombined = givingWeeklyIsCombined;
 
   // Combined giving total for the week (used when per-campus split not available)
-  const combinedGivingTotal = givRows
+  const combinedGivingTotal = givRowsDeduped
     .filter((r: any) => r.campus === "All Campuses")
     .reduce((sum: number, r: any) => sum + Number(r.total), 0);
 
@@ -245,7 +260,7 @@ async function getWeeklySnapshot(
     if (r.campus !== "Other") campusNames.add(r.campus);
   }
   // Also include campuses from per-campus giving rows (if available)
-  for (const r of givRows) {
+  for (const r of givRowsDeduped) {
     if (r.campus !== "All Campuses") campusNames.add(r.campus);
   }
 
@@ -299,9 +314,9 @@ async function getWeeklySnapshot(
       ? revStudentsHSTotal + revStudentsMSTotal
       : revStudentsLegacy;
 
-    // Giving: use per-campus weekly row if available.
+    // Giving: use per-campus weekly row if available (deduplicated).
     // If giving_weekly is combined-only ("All Campuses"), split proportionally by attendance.
-    let campusGivWeekly = givRows
+    let campusGivWeekly = givRowsDeduped
       .filter((r: any) => r.campus === campus)
       .reduce((sum: number, r: any) => sum + Number(r.total), 0);
     if (campusGivWeekly === 0 && givingIsCombined && combinedGivingTotal > 0) {
@@ -349,6 +364,11 @@ async function getWeeklySnapshot(
         .reduce((sum: number, r: any) => sum + r.count, 0);
     }
 
+    // Online: from manual headcount "Online" subgroup (typically Canton only)
+    const onlineTotal = campusAtt
+      .filter((r: any) => r.subgroup === "Online")
+      .reduce((sum: number, r: any) => sum + r.headcount, 0);
+
     // Groups: no weekly table, use monthly avgAttendance as fallback
     const grpAvg = grpRows
       .filter((r: any) => r.campus === campus)
@@ -357,6 +377,7 @@ async function getWeeklySnapshot(
     campuses.push({
       campus,
       attendance: attTotal,
+      online: onlineTotal,
       revKids: revKidsTotal,
       revStudents: revStudentsTotal,
       revStudentsHS: revStudentsHSTotal,
@@ -390,6 +411,7 @@ async function getWeeklySnapshot(
   const totals: CampusWeeklyMetrics = {
     campus: "All Campuses",
     attendance: campuses.reduce((s, c) => s + c.attendance, 0),
+    online: campuses.reduce((s, c) => s + c.online, 0),
     revKids: campuses.reduce((s, c) => s + c.revKids, 0),
     revStudents: campuses.reduce((s, c) => s + c.revStudents, 0),
     revStudentsHS: campuses.reduce((s, c) => s + c.revStudentsHS, 0),
@@ -553,6 +575,7 @@ async function getMonthlySnapshot(
     campuses.push({
       campus,
       attendance: Math.round(attTotal / weeks),
+      online: 0, // not available from monthly data
       revKids: Math.round(revKidsTotal / weeks),
       revStudents: Math.round(revStudentsTotal / weeks),
       revStudentsHS: 0, // not available from monthly data
@@ -575,6 +598,7 @@ async function getMonthlySnapshot(
   const totals: CampusWeeklyMetrics = {
     campus: "All Campuses",
     attendance: campuses.reduce((s, c) => s + c.attendance, 0),
+    online: 0,
     revKids: campuses.reduce((s, c) => s + c.revKids, 0),
     revStudents: campuses.reduce((s, c) => s + c.revStudents, 0),
     revStudentsHS: 0,
@@ -634,6 +658,7 @@ async function getYTDSnapshot(
     campuses.push({
       campus,
       attendance: Math.round(campusMonths.reduce((s, c) => s + c.attendance, 0) / count),
+      online: Math.round(campusMonths.reduce((s, c) => s + c.online, 0) / count),
       revKids: Math.round(campusMonths.reduce((s, c) => s + c.revKids, 0) / count),
       revStudents: Math.round(campusMonths.reduce((s, c) => s + c.revStudents, 0) / count),
       revStudentsHS: Math.round(campusMonths.reduce((s, c) => s + c.revStudentsHS, 0) / count),
@@ -656,6 +681,7 @@ async function getYTDSnapshot(
   const totals: CampusWeeklyMetrics = {
     campus: "All Campuses",
     attendance: campuses.reduce((s, c) => s + c.attendance, 0),
+    online: campuses.reduce((s, c) => s + c.online, 0),
     revKids: campuses.reduce((s, c) => s + c.revKids, 0),
     revStudents: campuses.reduce((s, c) => s + c.revStudents, 0),
     revStudentsHS: campuses.reduce((s, c) => s + c.revStudentsHS, 0),
