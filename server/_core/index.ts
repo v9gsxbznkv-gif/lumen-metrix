@@ -93,6 +93,7 @@ async function startServer() {
   //   4. Mark job as completed (progress 100%)
   // This avoids the TiDB idle-drop hang that kills the shared pool after a long PCO fetch.
   app.post("/api/sync/flush", async (req, res) => {
+    const { clearJobTracking } = await import("../pco/jobManager");
     const { jobId } = req.body as { jobId?: string };
     if (!jobId) {
       return res.status(400).json({ ok: false, error: "jobId is required" });
@@ -283,10 +284,16 @@ async function startServer() {
         })
         .where(eq(syncJobs.jobId, jobId));
 
+      // Clear the in-memory watchdog tracking so it doesn't overwrite
+      // the completed status with "failed/stalled" 15 minutes later
+      clearJobTracking(jobId);
+
       console.log(`[Flush] Job ${jobId} fully complete: ${rowsWritten} attendance + ${givingBatch.length} giving rows`);
       return res.json({ ok: true, rowsWritten, givingRows: givingBatch.length });
     } catch (err: any) {
       console.error(`[Flush] Error for job ${jobId}:`, err.message);
+      // Clear watchdog tracking even on failure (the DB update below marks it failed)
+      clearJobTracking(jobId);
       // Try to mark job as failed on the fresh connection
       try {
         if (conn) {

@@ -293,14 +293,14 @@ export const pcoRouter = router({
       const job = await getJob(input.jobId);
       if (!job) return null;
 
-      // If the job has been "running" for more than 20 minutes, it likely
+      // If the job has been "running" for more than 30 minutes, it likely
       // stalled due to a container restart (in-memory watchdog was wiped).
       // Auto-mark it as failed so the UI doesn't stay stuck.
-      // Note: Full sync legitimately takes 12-15 min with 5 events + 17 giving chunks.
+      // Note: Full sync with room-level kids data takes 15-25 min with 5 events + location_event_times + 17 giving chunks.
       if (job.status === "running") {
         const ageMs = Date.now() - job.startedAt.getTime();
-        const TWENTY_MINUTES_MS = 20 * 60 * 1000;
-        if (ageMs > TWENTY_MINUTES_MS) {
+        const THIRTY_MINUTES_MS = 30 * 60 * 1000;
+        if (ageMs > THIRTY_MINUTES_MS) {
           await updateJob(input.jobId, {
             status: "failed",
             error: "Sync timed out — the server may have restarted mid-sync. Please try again.",

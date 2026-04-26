@@ -951,3 +951,13 @@
 - [x] Update getStudentsBreakdown endpoint to recognize PCO naming ("RevStudents MS" → Middle School, "RevStudents HS" → High School)
 - [x] Students Breakdown now shows 2026 data: Canton MS 233, HS 155; Jasper HS 37, MS 33
 - [x] Test and checkpoint — 133 tests passing, 0 TS errors
+
+## Round 102: Fix PCO Sync Failure
+- [x] Check sync_logs in DB for error messages from failed sync
+- [x] Check server logs for runtime errors during sync
+- [x] Identify root cause: (1) flush endpoint not clearing watchdog → stalled at 100%, (2) 20-min timeout too short for room-level kids data
+- [x] Fix: added clearJobTracking() to flush endpoint, increased watchdog from 15→20 min, polling timeout from 20→30 min
+- [x] TS errors are stale watcher artifacts — tsc --noEmit passes clean with 0 errors
+- [x] All 133 tests pass
+- [ ] Verify 2026 room-level kids data populates (requires PCO re-auth on deployed app)
+- [ ] Deploy

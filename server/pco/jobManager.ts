@@ -23,7 +23,7 @@ export interface SyncJob {
 }
 
 /** How long a job can go without a progress update before being marked as stalled */
-const STALL_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes — full sync can take 10+ minutes
+const STALL_TIMEOUT_MS = 20 * 60 * 1000; // 20 minutes — full sync with room-level kids data can take 15+ minutes
 
 /** In-memory map of jobId → last progress update timestamp */
 const lastProgressUpdate = new Map<string, number>();
@@ -109,6 +109,16 @@ export async function updateJob(
   } catch (e) {
     console.error("[JobManager] Failed to update job:", e);
   }
+}
+
+/**
+ * Clear the in-memory watchdog tracking for a job.
+ * Called by the flush endpoint after it marks the job completed in the DB
+ * directly (bypassing updateJob), to prevent the watchdog from
+ * overwriting the completed status with "failed/stalled".
+ */
+export function clearJobTracking(jobId: string): void {
+  lastProgressUpdate.delete(jobId);
 }
 
 export async function getJob(jobId: string): Promise<SyncJob | null> {
