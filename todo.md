@@ -944,3 +944,10 @@
 - [x] Update AttendanceTab2 with Students Breakdown section (MS vs HS) — shows Canton MS 193, HS 136; Jasper HS 35, MS 32
 - [x] Expand Jasper kids rooms in the Kids Room Breakdown section — dynamic grouping, 7 Jasper rooms now showing
 - [x] Test and checkpoint — 133 tests passing, 0 TS errors
+
+## Round 101: Fix Kids Room and Students Breakdown to Show 2026 Data
+- [x] Check what 2026 PCO subgroup names exist in DB for kids rooms and students — RevStudents MS/HS exist, no room-level Kids: rows for 2026
+- [x] Kids rooms: 2026 has no room-level data yet (PCO sync hasn't run with new code), fallback to 2025 is correct
+- [x] Update getStudentsBreakdown endpoint to recognize PCO naming ("RevStudents MS" → Middle School, "RevStudents HS" → High School)
+- [x] Students Breakdown now shows 2026 data: Canton MS 233, HS 155; Jasper HS 37, MS 33
+- [x] Test and checkpoint — 133 tests passing, 0 TS errors

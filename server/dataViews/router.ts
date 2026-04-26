@@ -493,33 +493,51 @@ const attendanceRouter = router({
         .where(and(...conditions))
         .orderBy(asc(attendanceWeekly.weekNumber));
 
-      // Filter to "Students: *" subgroups (MS/HS breakdown)
-      const studentRows = rows.filter(r => r.subgroup.startsWith("Students: "));
+      // Filter to "Students: *" subgroups (spreadsheet format) AND
+      // "RevStudents MS"/"RevStudents HS" (PCO format)
+      const studentRows = rows.filter(r =>
+        r.subgroup.startsWith("Students: ") ||
+        r.subgroup === "RevStudents MS" ||
+        r.subgroup === "RevStudents HS"
+      );
 
       // Also get aggregate "Students" rows for comparison
       const aggStudentRows = rows.filter(r => r.subgroup === "Students" || r.subgroup === "RevStudents Attendance");
 
-      // Group breakdown rows by subgroup
-      const subgroupMap = new Map<string, { total: number; weeks: number; campus: string }>();
+      // Normalize subgroup names to a consistent key: "{campus}|{level}"
+      // "Students: Canton MS" → "Canton|Middle School"
+      // "RevStudents MS" (campus=Canton) → "Canton|Middle School"
+      // "RevStudents HS" (campus=Jasper) → "Jasper|High School"
+      function normalizeStudentKey(subgroup: string, campus: string): { campus: string; level: string } {
+        if (subgroup === "RevStudents MS") return { campus, level: "Middle School" };
+        if (subgroup === "RevStudents HS") return { campus, level: "High School" };
+        // Spreadsheet format: "Students: Canton MS" or "Students: Canton Middle School"
+        const parts = subgroup.replace("Students: ", "").split(" ");
+        const levelCampus = parts[0];
+        const rawLevel = parts.slice(1).join(" ");
+        const level = rawLevel === "MS" ? "Middle School" : rawLevel === "HS" ? "High School" : rawLevel;
+        return { campus: levelCampus, level };
+      }
+
+      // Group breakdown rows by normalized key
+      const subgroupMap = new Map<string, { total: number; weeks: number; campus: string; level: string }>();
       for (const row of studentRows) {
-        const existing = subgroupMap.get(row.subgroup);
+        const norm = normalizeStudentKey(row.subgroup, row.campus);
+        const key = `${norm.campus}|${norm.level}`;
+        const existing = subgroupMap.get(key);
         if (existing) {
           existing.total += row.headcount;
           existing.weeks += 1;
         } else {
-          subgroupMap.set(row.subgroup, { total: row.headcount, weeks: 1, campus: row.campus });
+          subgroupMap.set(key, { total: row.headcount, weeks: 1, campus: norm.campus, level: norm.level });
         }
       }
 
-      const breakdown = Array.from(subgroupMap.entries()).map(([subgroup, data]) => {
-        // Parse level from "Students: Canton MS" → campus="Canton", level="MS"
-        const parts = subgroup.replace("Students: ", "").split(" ");
-        const levelCampus = parts[0];
-        const level = parts.slice(1).join(" ");
+      const breakdown = Array.from(subgroupMap.entries()).map(([key, data]) => {
         return {
-          subgroup,
-          campus: levelCampus,
-          level,
+          subgroup: `Students: ${data.campus} ${data.level}`,
+          campus: data.campus,
+          level: data.level,
           avgWeekly: Math.round(data.total / data.weeks),
           totalHeadcount: data.total,
           weekCount: data.weeks,
