@@ -992,4 +992,4 @@
 - [x] Updated getISOWeek in client/src/lib/churchCalendar.ts
 - [x] Cleared all 2026 attendance_weekly and giving_weekly data (will be repopulated by manual sync)
 - [x] tsc clean, 133 tests pass
-- [ ] Deploy
+- [x] Deployed
