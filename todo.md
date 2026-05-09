@@ -959,5 +959,6 @@
 - [x] Fix: added clearJobTracking() to flush endpoint, increased watchdog from 15→20 min, polling timeout from 20→30 min
 - [x] TS errors are stale watcher artifacts — tsc --noEmit passes clean with 0 errors
 - [x] All 133 tests pass
-- [ ] Verify 2026 room-level kids data populates (requires PCO re-auth on deployed app)
-- [ ] Deploy
+- [ ] Verify 2026 room-level kids data populates (requires full sync after deploy)
+- [x] Cleared orphaned running job from DB
+- [ ] Deploy with fixes
