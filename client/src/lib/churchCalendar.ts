@@ -182,13 +182,34 @@ export const CHURCH_EVENTS: ChurchEvent[] = [
   },
 ];
 
-/** Get the ISO week number for a given date */
+/**
+ * Revolution Church week numbering:
+ *   Week 1: Jan 1 → first Sunday of the year
+ *   Week 2+: Monday → Sunday (standard 7-day weeks)
+ */
 export function getISOWeek(date: Date): number {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
+
+  const year = d.getFullYear();
+  const jan1 = new Date(year, 0, 1, 0, 0, 0, 0);
+  const jan1Day = jan1.getDay();
+
+  let firstSunday: Date;
+  if (jan1Day === 0) {
+    firstSunday = new Date(jan1);
+  } else {
+    firstSunday = new Date(year, 0, 1 + (7 - jan1Day), 0, 0, 0, 0);
+  }
+
+  if (d.getTime() <= firstSunday.getTime()) {
+    return 1;
+  }
+
+  const week2Start = new Date(firstSunday);
+  week2Start.setDate(firstSunday.getDate() + 1);
+
+  const daysSinceWeek2 = Math.floor((d.getTime() - week2Start.getTime()) / 86400000);
+  return 2 + Math.floor(daysSinceWeek2 / 7);
 }
 
 /** Get the month (1-12) for a date */

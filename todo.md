@@ -982,4 +982,14 @@
 - [x] Fix: increased pre-fetch timeout from 20s to 90s so it can paginate all 826 headcount records
 - [x] Root cause: pre-fetch had old 2022 event_time IDs, recent periods have 2026 IDs, no match, but fallback never triggered because pre-fetch map was non-empty
 - [x] tsc clean, 133 tests pass
+- [x] Deploy (bundled with Round 106)
+
+## Round 106: Fix Week Numbering (Week 1 = Jan 1 - first Sunday, then Mon-Sun)
+- [x] Audit: current logic was ISO 8601 (week 1 starts Dec 29 Mon, stored as year=2025)
+- [x] Fix: Week 1 = Jan 1 → first Sunday (Jan 4); Week 2+ = Mon→Sun; year = calendar year
+- [x] Updated getWeekStart + getISOWeekNumber in weeklySync.ts
+- [x] Updated getISOWeekNumber in weeklyReport/router.ts
+- [x] Updated getISOWeek in client/src/lib/churchCalendar.ts
+- [x] Cleared all 2026 attendance_weekly and giving_weekly data (will be repopulated by manual sync)
+- [x] tsc clean, 133 tests pass
 - [ ] Deploy

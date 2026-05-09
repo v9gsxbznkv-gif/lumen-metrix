@@ -820,12 +820,38 @@ function offsetWeekDate(weekStartDate: string, offsetWeeks: number): string {
   return `${y}-${m}-${day}`;
 }
 
+/**
+ * Revolution Church week numbering:
+ *   Week 1: Jan 1 → first Sunday of the year
+ *   Week 2+: Monday → Sunday (standard 7-day weeks)
+ */
 function getISOWeekNumber(dateStr: string): number {
   const d = new Date(dateStr + "T00:00:00");
-  const dayNum = d.getDay() || 7;
-  d.setDate(d.getDate() + 4 - dayNum);
-  const yearStart = new Date(d.getFullYear(), 0, 1);
-  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  d.setHours(0, 0, 0, 0);
+
+  const year = d.getFullYear();
+  const jan1 = new Date(year, 0, 1, 0, 0, 0, 0);
+  const jan1Day = jan1.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+
+  // First Sunday of the year
+  let firstSunday: Date;
+  if (jan1Day === 0) {
+    firstSunday = new Date(jan1);
+  } else {
+    firstSunday = new Date(year, 0, 1 + (7 - jan1Day), 0, 0, 0, 0);
+  }
+
+  // If date is within Jan 1 → first Sunday: week 1
+  if (d.getTime() <= firstSunday.getTime()) {
+    return 1;
+  }
+
+  // Week 2 starts the Monday after firstSunday
+  const week2Start = new Date(firstSunday);
+  week2Start.setDate(firstSunday.getDate() + 1);
+
+  const daysSinceWeek2 = Math.floor((d.getTime() - week2Start.getTime()) / 86400000);
+  return 2 + Math.floor(daysSinceWeek2 / 7);
 }
 
 // ─── Router ─────────────────────────────────────────────────────────────────

@@ -69,12 +69,19 @@ async function createFreshDb(): Promise<{ db: ReturnType<typeof drizzle>; end: (
 // ============================================================
 
 /**
- * Get the Monday that anchors the week for a given event timestamp.
- * Weeks run Monday–Sunday. PCO stores event times in UTC; Revolution services
- * run on Sundays and Wednesdays in Eastern Time, so we convert to ET first
- * to avoid off-by-one day errors.
+ * Get the week-start date for a given event timestamp.
+ *
+ * Week definition (Revolution Church year):
+ *   Week 1: Jan 1 → first Sunday of the year (short week)
+ *   Week 2+: Monday → Sunday (standard 7-day weeks)
+ *
+ * PCO stores event times in UTC; Revolution services run on Sundays and
+ * Wednesdays in Eastern Time, so we convert to ET first to avoid off-by-one
+ * day errors.
+ *
+ * Returns: a Date representing the week-start (Jan 1 for week 1, Monday for weeks 2+)
  */
-function getSunday(date: Date): Date {
+function getWeekStart(date: Date): Date {
   // Convert UTC timestamp to Eastern Time wall-clock date
   const etParts = new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/New_York',
@@ -87,11 +94,34 @@ function getSunday(date: Date): Date {
   const etDay = parseInt(etParts.find(p => p.type === 'day')!.value);
   // Build a local midnight date using ET wall-clock values
   const d = new Date(etYear, etMonth, etDay, 0, 0, 0, 0);
+
+  // Find the first Sunday of the year (end of week 1)
+  const jan1 = new Date(etYear, 0, 1, 0, 0, 0, 0);
+  const jan1Day = jan1.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  const firstSunday = new Date(jan1);
+  if (jan1Day === 0) {
+    // Jan 1 is already Sunday — week 1 is just Jan 1
+    // (no-op, firstSunday = Jan 1)
+  } else {
+    // First Sunday = Jan 1 + (7 - jan1Day) days
+    firstSunday.setDate(1 + (7 - jan1Day));
+  }
+
+  // If date is within Jan 1 → first Sunday: it's week 1, start = Jan 1
+  if (d.getTime() <= firstSunday.getTime()) {
+    return jan1;
+  }
+
+  // Otherwise: standard Mon-Sun weeks starting the Monday after firstSunday
   const day = d.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-  // Roll back to Monday: if Sunday (0) go back 6 days, otherwise go back (day-1) days
   const daysToMonday = day === 0 ? 6 : day - 1;
   d.setDate(d.getDate() - daysToMonday);
   return d;
+}
+
+/** Legacy alias — many call sites use this name */
+function getSunday(date: Date): Date {
+  return getWeekStart(date);
 }
 
 function formatDate(date: Date): string {
@@ -101,12 +131,41 @@ function formatDate(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
+/**
+ * Get the week number for a given date using Revolution Church year rules:
+ *   Week 1: Jan 1 → first Sunday of the year
+ *   Week 2: first Monday after first Sunday → following Sunday
+ *   etc.
+ *
+ * The year is always the calendar year (not ISO week-year).
+ */
 function getISOWeekNumber(date: Date): number {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() + 4 - (d.getDay() || 7));
-  const yearStart = new Date(d.getFullYear(), 0, 1);
-  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+
+  const year = d.getFullYear();
+  const jan1 = new Date(year, 0, 1, 0, 0, 0, 0);
+  const jan1Day = jan1.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+
+  // First Sunday of the year
+  let firstSunday: Date;
+  if (jan1Day === 0) {
+    firstSunday = new Date(jan1);
+  } else {
+    firstSunday = new Date(year, 0, 1 + (7 - jan1Day), 0, 0, 0, 0);
+  }
+
+  // If date is within Jan 1 → first Sunday: week 1
+  if (d.getTime() <= firstSunday.getTime()) {
+    return 1;
+  }
+
+  // Week 2 starts the Monday after firstSunday
+  const week2Start = new Date(firstSunday);
+  week2Start.setDate(firstSunday.getDate() + 1); // Monday after first Sunday
+
+  const daysSinceWeek2 = Math.floor((d.getTime() - week2Start.getTime()) / 86400000);
+  return 2 + Math.floor(daysSinceWeek2 / 7);
 }
 
 function mapEventToCampus(eventName: string): string {
