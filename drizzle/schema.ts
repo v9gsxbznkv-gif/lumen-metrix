@@ -95,7 +95,9 @@ export const attendanceMonthly = mysqlTable("attendance_monthly", {
   total: int("total").default(0).notNull(),
   avgWeekly: int("avgWeekly").default(0).notNull(),
   source: varchar("source", { length: 32 }).default("spreadsheet").notNull(),
-});
+}, (table) => ([
+  uniqueIndex("att_monthly_ymcs").on(table.year, table.month, table.campus, table.subgroup),
+]));
 
 export type AttendanceMonthlyRow = typeof attendanceMonthly.$inferSelect;
 export type InsertAttendanceMonthly = typeof attendanceMonthly.$inferInsert;
@@ -127,7 +129,9 @@ export const givingMonthly = mysqlTable("giving_monthly", {
   subgroup: varchar("subgroup", { length: 64 }).notNull(), // 'Tithes and Offerings', 'Designated', etc.
   total: decimal("total", { precision: 12, scale: 2 }).default("0").notNull(),
   source: varchar("source", { length: 32 }).default("spreadsheet").notNull(),
-});
+}, (table) => ([
+  uniqueIndex("giv_monthly_ymcs").on(table.year, table.month, table.campus, table.subgroup),
+]));
 
 export type GivingMonthlyRow = typeof givingMonthly.$inferSelect;
 export type InsertGivingMonthly = typeof givingMonthly.$inferInsert;

@@ -263,42 +263,48 @@ export async function syncGiving(
       recordsCreated++;
     }
 
-    // Write aggregated monthly giving to database
+    // Write aggregated monthly giving to database using batch upsert
+    const batchRows: Array<{ year: number; month: number; campus: string; subgroup: string; total: string; source: string }> = [];
     for (const [key, totals] of Object.entries(monthlyTotals)) {
       const [yearStr, monthStr, campus] = key.split("-");
       const year = parseInt(yearStr);
       const month = parseInt(monthStr);
 
-      try {
-        await db.insert(givingMonthly).values({
+      batchRows.push({
+        year,
+        month,
+        campus,
+        subgroup: "Tithes and Offerings",
+        total: String(totals.general),
+        source: "pco",
+      });
+
+      if (totals.designated > 0) {
+        batchRows.push({
           year,
           month,
           campus,
-          subgroup: "Tithes and Offerings",
-          total: String(totals.general),
+          subgroup: "Designated",
+          total: String(totals.designated),
           source: "pco",
         });
-      } catch (dupError: any) {
-        if (dupError.code !== "ER_DUP_ENTRY") {
-          console.warn(`[PCO Sync] Giving insert warning:`, dupError.message);
-        }
       }
+    }
 
-      if (totals.designated > 0) {
-        try {
-          await db.insert(givingMonthly).values({
-            year,
-            month,
-            campus,
-            subgroup: "Designated",
-            total: String(totals.designated),
-            source: "pco",
+    if (batchRows.length > 0) {
+      try {
+        await db
+          .insert(givingMonthly)
+          .values(batchRows)
+          .onDuplicateKeyUpdate({
+            set: {
+              total: sql`VALUES(total)`,
+              source: sql`VALUES(source)`,
+            },
           });
-        } catch (dupError: any) {
-          if (dupError.code !== "ER_DUP_ENTRY") {
-            console.warn(`[PCO Sync] Giving designated insert warning:`, dupError.message);
-          }
-        }
+        recordsCreated = batchRows.length;
+      } catch (writeErr: any) {
+        console.warn(`[PCO Sync] giving_monthly write failed: ${writeErr.message}`);
       }
     }
 

@@ -113,6 +113,13 @@
       "when": 1777148925275,
       "tag": "0015_bouncy_sentinels",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "5",
+      "when": 1778366505332,
+      "tag": "0016_normal_moonstone",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,2 @@
+ALTER TABLE `attendance_monthly` ADD CONSTRAINT `att_monthly_ymcs` UNIQUE(`year`,`month`,`campus`,`subgroup`);--> statement-breakpoint
+ALTER TABLE `giving_monthly` ADD CONSTRAINT `giv_monthly_ymcs` UNIQUE(`year`,`month`,`campus`,`subgroup`);

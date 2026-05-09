@@ -1005,4 +1005,15 @@
 - [x] Data exists in attendance_weekly: Volunteers, FTG Adults/Kids, RevStudents FTG/Salvations, YA FTG/Salvations
 - [x] Fix: added populateServingAndNextSteps() that copies from attendance_weekly into serving_weekly and next_steps_weekly after each sync
 - [x] tsc clean, 133 tests pass
+- [x] Deployed
+
+## Round 109: Fix Data Discrepancies Between Weekly Report and Giving/Attendance Pages
+- [x] Audit: giving_monthly has 6-7 duplicate rows per month/campus/subgroup
+- [x] Audit: attendance_monthly has up to 74 duplicate rows per month/campus/subgroup
+- [x] Root cause: monthly aggregation code INSERTs instead of UPSERTs, so every sync adds more duplicates
+- [x] Root cause was missing unique constraint — onDuplicateKeyUpdate had nothing to match
+- [x] Added unique indexes att_monthly_ymcs and giv_monthly_ymcs on (year, month, campus, subgroup)
+- [x] Cleaned all duplicate rows from both tables (attendance_monthly: 3166, giving_monthly: 464)
+- [x] Fixed syncGiving in sync.ts to use batch upsert instead of individual inserts
+- [x] Schema pushed via pnpm db:push, 133 tests pass, tsc clean
 - [ ] Deploy
