@@ -36,7 +36,7 @@ import { eq, and, gte, lte, sql } from "drizzle-orm";
 import mysql from "mysql2";
 import { drizzle } from "drizzle-orm/mysql2";
 import { PcoClient } from "./client";
-import { attendanceWeekly, givingWeekly, givingMonthly, syncJobs } from "../../drizzle/schema";
+import { attendanceWeekly, givingWeekly, givingMonthly, syncJobs, servingWeekly, nextStepsWeekly } from "../../drizzle/schema";
 import { getDb } from "../db";
 import type { SyncResult } from "./sync";
 import { notifyOwner } from "../_core/notification";
@@ -1700,6 +1700,128 @@ export async function syncVolunteersFromServices(
 }
 
 // ============================================================
+// Populate serving_weekly and next_steps_weekly from attendance_weekly
+// ============================================================
+
+/**
+ * After attendance sync completes, copy relevant subgroups into the
+ * dedicated serving_weekly and next_steps_weekly tables so those
+ * dashboard pages have 2026+ data.
+ *
+ * Mapping:
+ *   attendance_weekly "Volunteers" → serving_weekly.total
+ *   attendance_weekly "FTG Adults" + "FTG Kids" → next_steps_weekly metric "FTG" (summed per campus)
+ *   attendance_weekly "RevStudents FTG" + "YA FTG" → also added to "FTG" (campus = Canton/Jasper/Other)
+ *   attendance_weekly "RevStudents Salvations" + "YA Salvations" → next_steps_weekly metric "Salvations"
+ */
+async function populateServingAndNextSteps(): Promise<void> {
+  const { db: freshDb, end } = await createFreshDb();
+  try {
+    // ── Serving (Volunteers) ──
+    const volRows = await freshDb
+      .select()
+      .from(attendanceWeekly)
+      .where(and(
+        eq(attendanceWeekly.subgroup, "Volunteers"),
+        eq(attendanceWeekly.source, "pco_services"),
+      ));
+
+    if (volRows.length > 0) {
+      const CHUNK = 50;
+      for (let i = 0; i < volRows.length; i += CHUNK) {
+        const chunk = volRows.slice(i, i + CHUNK);
+        const values = chunk.map(r => ({
+          year: r.year,
+          weekNumber: r.weekNumber,
+          weekStartDate: r.weekStartDate,
+          campus: r.campus,
+          total: r.headcount,
+          source: "pco" as const,
+        }));
+        await freshDb.insert(servingWeekly).values(values)
+          .onDuplicateKeyUpdate({
+            set: {
+              total: sql`VALUES(total)`,
+              source: sql`VALUES(source)`,
+            },
+          });
+      }
+      console.log(`[populateServing] Wrote ${volRows.length} serving_weekly rows`);
+    }
+
+    // ── Next Steps (FTG, Salvations) ──
+    // Subgroups that map to FTG metric
+    const ftgSubgroups = ["FTG Adults", "FTG Kids", "RevStudents FTG", "YA FTG"];
+    // Subgroups that map to Salvations metric
+    const salvSubgroups = ["RevStudents Salvations", "YA Salvations"];
+
+    const nextStepsRows = await freshDb
+      .select()
+      .from(attendanceWeekly)
+      .where(sql`${attendanceWeekly.subgroup} IN (${sql.join([
+        ...ftgSubgroups.map(s => sql`${s}`),
+        ...salvSubgroups.map(s => sql`${s}`),
+      ], sql`, `)})`);
+
+    // Aggregate by year/week/campus/metric
+    const nsMap = new Map<string, { year: number; weekNumber: number; weekStartDate: string; campus: string; metric: string; count: number }>();
+    for (const row of nextStepsRows) {
+      let metric: string;
+      let campus = row.campus;
+      if (ftgSubgroups.includes(row.subgroup)) {
+        metric = "FTG";
+        // Map "Other" campus (YA) to the appropriate campus or keep as-is
+      } else if (salvSubgroups.includes(row.subgroup)) {
+        metric = "Salvations";
+      } else {
+        continue;
+      }
+      const key = `${row.year}-${row.weekNumber}-${campus}-${metric}`;
+      const existing = nsMap.get(key);
+      if (existing) {
+        existing.count += row.headcount;
+      } else {
+        nsMap.set(key, {
+          year: row.year,
+          weekNumber: row.weekNumber,
+          weekStartDate: row.weekStartDate,
+          campus,
+          metric,
+          count: row.headcount,
+        });
+      }
+    }
+
+    const nsValues = Array.from(nsMap.values());
+    if (nsValues.length > 0) {
+      const CHUNK = 50;
+      for (let i = 0; i < nsValues.length; i += CHUNK) {
+        const chunk = nsValues.slice(i, i + CHUNK);
+        const values = chunk.map(r => ({
+          year: r.year,
+          weekNumber: r.weekNumber,
+          weekStartDate: r.weekStartDate,
+          campus: r.campus,
+          metric: r.metric,
+          count: r.count,
+          source: "pco" as const,
+        }));
+        await freshDb.insert(nextStepsWeekly).values(values)
+          .onDuplicateKeyUpdate({
+            set: {
+              count: sql`VALUES(count)`,
+              source: sql`VALUES(source)`,
+            },
+          });
+      }
+      console.log(`[populateNextSteps] Wrote ${nsValues.length} next_steps_weekly rows`);
+    }
+  } finally {
+    await end();
+  }
+}
+
+// ============================================================
 // Combined Weekly Sync (attendance + giving + volunteers)
 // ============================================================
 
@@ -1717,6 +1839,14 @@ export async function syncAllWeekly(
     attendance = await syncWeeklyAttendance(client, dateFrom, dateTo, onProgress, jobId);
     giving = await syncWeeklyGiving(client, dateFrom, dateTo, onProgress);
     volunteers = await syncVolunteersFromServices(client, dateFrom, dateTo, onProgress);
+
+    // Populate serving_weekly and next_steps_weekly from attendance_weekly
+    try {
+      await populateServingAndNextSteps();
+    } catch (err: any) {
+      console.error('[syncAllWeekly] populateServingAndNextSteps failed:', err.message);
+      // Non-fatal — the main sync data is already written
+    }
   } catch (err: any) {
     // Hard failure — notify owner and rethrow
     try {
