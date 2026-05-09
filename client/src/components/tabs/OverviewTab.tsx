@@ -1,8 +1,7 @@
 /*
  * Lumen Metrix — Overview Tab
  * KPIs, attendance trend, giving trend, campus comparison
- * Data: v3 flat structure from raw campus tabs
- * Partial-year-aware: compares Q1 2026 vs Q1 2025 (not full year)
+ * ALL data now computed from weekly tables (single source of truth from PCO)
  */
 import { useMemo } from "react";
 import { useData } from "@/contexts/DataContext";
@@ -11,14 +10,17 @@ import {
   formatCurrency,
   formatNumber,
   getYoYChange,
-  isPartialYear,
-  getMaxMonth,
-  getAttendanceForMonths,
-  getGivingForMonths,
-  getNextStepsForMonths,
-  getPartialYoYChange,
+  getGivingFromWeekly,
+  getGivingFromWeeklyRange,
+  getAvgAttendanceFromWeekly,
+  getAvgAttendanceFromWeeklyRange,
+  getNextStepsFromWeekly,
+  getNextStepsFromWeeklyRange,
+  getNextStepsWithFallback,
+  getNextStepsWithFallbackRange,
+  getMaxWeek,
+  getWeeklyYoYChange,
   CAMPUS_COLORS,
-  MONTH_NAMES,
 } from "@/lib/data";
 import {
   AreaChart,
@@ -42,56 +44,6 @@ const TOOLTIP_STYLE = {
   fontFamily: "'Inter', sans-serif",
 };
 
-// Helper: get subgroup attendance avg_weekly for a year/campus
-function getSubgroupAttendance(
-  data: { year: number; campus: string; subgroup: string; avg_weekly: number }[],
-  year: number,
-  campus: string,
-  subgroup: string
-): number {
-  if (campus === "All Campuses") {
-    return data
-      .filter((r) => r.year === year && r.subgroup === subgroup && r.campus !== "All Campuses")
-      .reduce((s, r) => s + r.avg_weekly, 0);
-  }
-  return (
-    data.find(
-      (r) => r.year === year && r.campus === campus && r.subgroup === subgroup
-    )?.avg_weekly ?? 0
-  );
-}
-
-// Helper: get attendance avg_weekly for a year/campus from the flat array
-function getAttendance(
-  data: { year: number; campus: string; subgroup: string; avg_weekly: number }[],
-  year: number,
-  campus: string
-): number {
-  if (campus === "All Campuses") {
-    const all = data.find(
-      (r) => r.year === year && r.campus === "All Campuses" && r.subgroup === "Total"
-    );
-    return all?.avg_weekly ?? 0;
-  }
-  const c = data.find(
-    (r) => r.year === year && r.campus === campus && r.subgroup === "Total"
-  );
-  return c?.avg_weekly ?? 0;
-}
-
-// Helper: get giving total for a year/campus
-function getGiving(
-  data: { year: number; campus: string; total: number }[],
-  year: number,
-  campus: string
-): number {
-  if (campus === "All Campuses") {
-    const all = data.find((r) => r.year === year && r.campus === "All Campuses");
-    return all?.total ?? 0;
-  }
-  return data.find((r) => r.year === year && r.campus === campus)?.total ?? 0;
-}
-
 export default function OverviewTab() {
   const { data, filters } = useData();
 
@@ -102,195 +54,161 @@ export default function OverviewTab() {
     );
   }, [data, filters]);
 
-  // Attendance trend
+  // Attendance trend — from weekly data
   const attendanceTrend = useMemo(() => {
     if (!data) return [];
     return filteredYears.map((year) => {
       const row: Record<string, number | string> = { year };
       if (filters.campus === "All Campuses") {
-        row["All Campuses"] = getAttendance(data.attendance, year, "All Campuses");
+        row["All Campuses"] = Math.round(getAvgAttendanceFromWeekly(data, year, "All Campuses", "Total"));
       } else {
-        row[filters.campus] = getAttendance(data.attendance, year, filters.campus);
+        row[filters.campus] = Math.round(getAvgAttendanceFromWeekly(data, year, filters.campus, "Total"));
       }
       return row;
     });
   }, [data, filters, filteredYears]);
 
-  // Campus comparison
+  // Campus comparison — from weekly data
   const campusComparison = useMemo(() => {
     if (!data) return [];
     return filteredYears.map((year) => {
       const row: Record<string, number | string> = { year };
-      ["Canton", "Jasper", "Online"].forEach((c) => {
-        row[c] = getAttendance(data.attendance, year, c);
+      ["Canton", "Jasper"].forEach((c) => {
+        row[c] = Math.round(getAvgAttendanceFromWeekly(data, year, c, "Total"));
       });
       return row;
     });
   }, [data, filteredYears]);
 
-  // Giving trend
+  // Giving trend — from weekly data
   const givingTrend = useMemo(() => {
     if (!data) return [];
     return filteredYears.map((year) => {
       const row: Record<string, number | string> = { year };
-      row.total = getGiving(data.giving, year, filters.campus);
+      row.total = getGivingFromWeekly(data, year, filters.campus);
       return row;
     });
   }, [data, filters, filteredYears]);
 
-  // KPIs with partial-year-aware comparisons
+  // KPIs — ALL from weekly data
   const kpis = useMemo(() => {
     if (!data) return null;
     const latestYear = filteredYears[filteredYears.length - 1] ?? 2026;
     const priorYear = latestYear - 1;
-    const partial = isPartialYear(data, latestYear);
-    const maxMonth = getMaxMonth(data, latestYear);
-    const compMonths = Array.from({ length: maxMonth }, (_, i) => i + 1);
-    const monthLabel = partial ? `Jan–${MONTH_NAMES[maxMonth - 1]}` : "";
+    const maxWeek = getMaxWeek(data, latestYear);
+    const maxWeekFull = 52; // a full year
+    const partial = maxWeek < 50; // if less than ~50 weeks, it's a partial year
 
-    const att = (y: number) => getAttendance(data.attendance, y, filters.campus);
-    const giv = (y: number) => getGiving(data.giving, y, filters.campus);
+    const campus = filters.campus;
 
-    const getGpc = (y: number) => {
-      const match = data.computed.giving_per_capita.find(
-        (r) =>
-          r.year === y &&
-          r.campus === (filters.campus === "All Campuses" ? "All Campuses" : filters.campus)
-      );
-      return match?.giving_per_capita ?? 0;
-    };
+    // --- Core KPIs from weekly ---
+    const attendance = Math.round(getAvgAttendanceFromWeekly(data, latestYear, campus, "Total"));
+    const giving = getGivingFromWeekly(data, latestYear, campus);
 
-    const getNs = (y: number, metric: string) => {
-      if (filters.campus === "All Campuses") {
-        return data.next_steps
-          .filter((n) => n.year === y && n.campus === "All Campuses" && n.metric === metric)
-          .reduce((s, n) => s + n.total, 0);
-      }
-      return (
-        data.next_steps.find(
-          (n) => n.year === y && n.campus === filters.campus && n.metric === metric
-        )?.total ?? 0
-      );
-    };
+    // GPC: total giving / avg attendance (annualized if partial)
+    const avgAtt = getAvgAttendanceFromWeekly(data, latestYear, campus, "Total");
+    const gpc = avgAtt > 0 ? giving / avgAtt : 0;
 
-    // Partial-year-aware YoY comparisons
+    // Next steps from weekly
+    const ftg = getNextStepsFromWeekly(data, latestYear, campus, "FTG");
+    const salvations = getNextStepsFromWeekly(data, latestYear, campus, "Salvations");
+    const baptisms = getNextStepsWithFallback(data, latestYear, campus, "Baptisms");
+
+    // Subgroup attendance from weekly
+    const kids = Math.round(getAvgAttendanceFromWeekly(data, latestYear, campus, "Kids"));
+    const students = Math.round(getAvgAttendanceFromWeekly(data, latestYear, campus, "Students"));
+    const youngAdults = Math.round(getAvgAttendanceFromWeekly(data, latestYear, campus, "Young Adults"));
+
+    // --- YoY changes (week-based for partial years) ---
     const attChange = partial
-      ? getPartialYoYChange(data, latestYear, priorYear, (y, m) =>
-          getAttendanceForMonths(data, y, filters.campus, m).avgWeekly
+      ? getWeeklyYoYChange(data, latestYear, priorYear, (y, mw) =>
+          getAvgAttendanceFromWeeklyRange(data, y, campus, "Total", mw)
         )
-      : getYoYChange(att(latestYear), att(priorYear));
+      : getYoYChange(attendance, Math.round(getAvgAttendanceFromWeekly(data, priorYear, campus, "Total")));
 
     const givChange = partial
-      ? getPartialYoYChange(data, latestYear, priorYear, (y, m) =>
-          getGivingForMonths(data, y, filters.campus, m)
+      ? getWeeklyYoYChange(data, latestYear, priorYear, (y, mw) =>
+          getGivingFromWeeklyRange(data, y, campus, mw)
         )
-      : getYoYChange(giv(latestYear), giv(priorYear));
+      : getYoYChange(giving, getGivingFromWeekly(data, priorYear, campus));
 
-    const ftgChange = partial
-      ? getPartialYoYChange(data, latestYear, priorYear, (y, m) =>
-          getNextStepsForMonths(data, y, filters.campus, "FTG", m)
-        )
-      : getYoYChange(getNs(latestYear, "FTG"), getNs(priorYear, "FTG"));
-
-    const salvChange = partial
-      ? getPartialYoYChange(data, latestYear, priorYear, (y, m) =>
-          getNextStepsForMonths(data, y, filters.campus, "Salvations", m)
-        )
-      : getYoYChange(getNs(latestYear, "Salvations"), getNs(priorYear, "Salvations"));
-
-    const bapChange = partial
-      ? getPartialYoYChange(data, latestYear, priorYear, (y, m) =>
-          getNextStepsForMonths(data, y, filters.campus, "Baptisms", m)
-        )
-      : getYoYChange(getNs(latestYear, "Baptisms"), getNs(priorYear, "Baptisms"));
-
-    // GPC for partial year: use monthly giving / avg attendance for same months
     const gpcChange = partial
       ? (() => {
-          const currGiv = getGivingForMonths(data, latestYear, filters.campus, compMonths);
-          const prevGiv = getGivingForMonths(data, priorYear, filters.campus, compMonths);
-          const currAtt = getAttendanceForMonths(data, latestYear, filters.campus, compMonths).avgWeekly;
-          const prevAtt = getAttendanceForMonths(data, priorYear, filters.campus, compMonths).avgWeekly;
+          const currGiv = getGivingFromWeeklyRange(data, latestYear, campus, maxWeek);
+          const prevGiv = getGivingFromWeeklyRange(data, priorYear, campus, maxWeek);
+          const currAtt = getAvgAttendanceFromWeeklyRange(data, latestYear, campus, "Total", maxWeek);
+          const prevAtt = getAvgAttendanceFromWeeklyRange(data, priorYear, campus, "Total", maxWeek);
           const currGpc = currAtt > 0 ? currGiv / currAtt : 0;
           const prevGpc = prevAtt > 0 ? prevGiv / prevAtt : 0;
           return getYoYChange(currGpc, prevGpc);
         })()
-      : getYoYChange(getGpc(latestYear), getGpc(priorYear));
+      : (() => {
+          const prevAtt = getAvgAttendanceFromWeekly(data, priorYear, campus, "Total");
+          const prevGiv = getGivingFromWeekly(data, priorYear, campus);
+          const prevGpc = prevAtt > 0 ? prevGiv / prevAtt : 0;
+          return getYoYChange(gpc, prevGpc);
+        })();
 
-    // Kids, Students, and Young Adults subgroup data
-    const kidsAtt = (y: number) => getSubgroupAttendance(data.attendance, y, filters.campus, "Kids");
-    const studentsAtt = (y: number) => getSubgroupAttendance(data.attendance, y, filters.campus, "Students");
-    const yaAtt = (y: number) => getSubgroupAttendance(data.attendance, y, filters.campus, "Young Adults");
+    const ftgChange = partial
+      ? getWeeklyYoYChange(data, latestYear, priorYear, (y, mw) =>
+          getNextStepsFromWeeklyRange(data, y, campus, "FTG", mw)
+        )
+      : getYoYChange(ftg, getNextStepsFromWeekly(data, priorYear, campus, "FTG"));
+
+    const salvChange = partial
+      ? getWeeklyYoYChange(data, latestYear, priorYear, (y, mw) =>
+          getNextStepsFromWeeklyRange(data, y, campus, "Salvations", mw)
+        )
+      : getYoYChange(salvations, getNextStepsFromWeekly(data, priorYear, campus, "Salvations"));
+
+    const bapChange = partial
+      ? getWeeklyYoYChange(data, latestYear, priorYear, (y, mw) =>
+          getNextStepsWithFallbackRange(data, y, campus, "Baptisms", mw)
+        )
+      : getYoYChange(baptisms, getNextStepsWithFallback(data, priorYear, campus, "Baptisms"));
 
     const kidsChange = partial
-      ? (() => {
-          const getKidsMonthly = (y: number, months: number[]) => {
-            const rows = data.attendance_monthly.filter(
-              (m) =>
-                m.year === y &&
-                months.includes(m.month) &&
-                m.subgroup === "Kids" &&
-                (filters.campus === "All Campuses" ? m.campus !== "All Campuses" : m.campus === filters.campus)
-            );
-            return rows.reduce((s, m) => s + m.avg_weekly, 0) / (rows.length || 1);
-          };
-          return getYoYChange(getKidsMonthly(latestYear, compMonths), getKidsMonthly(priorYear, compMonths));
-        })()
-      : getYoYChange(kidsAtt(latestYear), kidsAtt(priorYear));
+      ? getWeeklyYoYChange(data, latestYear, priorYear, (y, mw) =>
+          getAvgAttendanceFromWeeklyRange(data, y, campus, "Kids", mw)
+        )
+      : getYoYChange(kids, Math.round(getAvgAttendanceFromWeekly(data, priorYear, campus, "Kids")));
 
     const studentsChange = partial
-      ? (() => {
-          const getStudentsMonthly = (y: number, months: number[]) => {
-            const rows = data.attendance_monthly.filter(
-              (m) =>
-                m.year === y &&
-                months.includes(m.month) &&
-                m.subgroup === "Students" &&
-                (filters.campus === "All Campuses" ? m.campus !== "All Campuses" : m.campus === filters.campus)
-            );
-            return rows.reduce((s, m) => s + m.avg_weekly, 0) / (rows.length || 1);
-          };
-          return getYoYChange(getStudentsMonthly(latestYear, compMonths), getStudentsMonthly(priorYear, compMonths));
-        })()
-      : getYoYChange(studentsAtt(latestYear), studentsAtt(priorYear));
+      ? getWeeklyYoYChange(data, latestYear, priorYear, (y, mw) =>
+          getAvgAttendanceFromWeeklyRange(data, y, campus, "Students", mw)
+        )
+      : getYoYChange(students, Math.round(getAvgAttendanceFromWeekly(data, priorYear, campus, "Students")));
 
     const yaChange = partial
-      ? (() => {
-          const getYAMonthly = (y: number, months: number[]) => {
-            const rows = data.attendance_monthly.filter(
-              (m) =>
-                m.year === y &&
-                months.includes(m.month) &&
-                (m.subgroup === "Young Adults" || m.subgroup === "YA Gathering") &&
-                (filters.campus === "All Campuses" ? m.campus !== "All Campuses" : m.campus === filters.campus)
-            );
-            return rows.reduce((s, m) => s + m.avg_weekly, 0) / (rows.length || 1);
-          };
-          return getYoYChange(getYAMonthly(latestYear, compMonths), getYAMonthly(priorYear, compMonths));
-        })()
-      : getYoYChange(yaAtt(latestYear), yaAtt(priorYear));
+      ? getWeeklyYoYChange(data, latestYear, priorYear, (y, mw) =>
+          getAvgAttendanceFromWeeklyRange(data, y, campus, "Young Adults", mw)
+        )
+      : getYoYChange(youngAdults, Math.round(getAvgAttendanceFromWeekly(data, priorYear, campus, "Young Adults")));
+
+    // Week label for partial year
+    const weekLabel = partial ? `Weeks 1–${maxWeek}` : "";
 
     return {
       year: latestYear,
       partial,
-      monthLabel,
-      attendance: att(latestYear),
+      weekLabel,
+      attendance,
       attendanceChange: attChange,
-      giving: giv(latestYear),
+      giving,
       givingChange: givChange,
-      gpc: getGpc(latestYear),
+      gpc,
       gpcChange,
-      ftg: getNs(latestYear, "FTG"),
+      ftg,
       ftgChange,
-      salvations: getNs(latestYear, "Salvations"),
+      salvations,
       salvationsChange: salvChange,
-      baptisms: getNs(latestYear, "Baptisms"),
+      baptisms,
       baptismsChange: bapChange,
-      kids: kidsAtt(latestYear),
+      kids,
       kidsChange,
-      students: studentsAtt(latestYear),
+      students,
       studentsChange,
-      youngAdults: yaAtt(latestYear),
+      youngAdults,
       youngAdultsChange: yaChange,
     };
   }, [data, filters, filteredYears]);
@@ -302,7 +220,7 @@ export default function OverviewTab() {
 
   const ytdLabel = kpis.partial ? `${kpis.year} YTD` : `${kpis.year}`;
   const vsLabel = kpis.partial
-    ? `vs ${kpis.monthLabel} ${kpis.year - 1}`
+    ? `vs ${kpis.weekLabel} ${kpis.year - 1}`
     : "vs prior year";
 
   return (
@@ -386,7 +304,7 @@ export default function OverviewTab() {
       {/* Partial year notice */}
       {kpis.partial && (
         <div className="px-4 py-2.5 rounded-lg border border-[#D4A843]/30 bg-[#D4A843]/5 text-xs text-[#8B6914]">
-          <strong>{kpis.year} is a partial year</strong> ({kpis.monthLabel}). YoY comparisons use the same months from {kpis.year - 1} for an apples-to-apples comparison. Annual totals in charts reflect YTD only.
+          <strong>{kpis.year} is a partial year</strong> ({kpis.weekLabel}). YoY comparisons use the same weeks from {kpis.year - 1} for an apples-to-apples comparison. Annual totals in charts reflect YTD only.
         </div>
       )}
 
@@ -527,12 +445,6 @@ export default function OverviewTab() {
               <Bar
                 dataKey="Jasper"
                 fill={CAMPUS_COLORS.Jasper}
-                radius={[3, 3, 0, 0]}
-                maxBarSize={24}
-              />
-              <Bar
-                dataKey="Online"
-                fill={CAMPUS_COLORS.Online}
                 radius={[3, 3, 0, 0]}
                 maxBarSize={24}
               />

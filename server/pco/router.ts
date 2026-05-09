@@ -27,6 +27,8 @@ import {
   pcoEvents,
   pcoPeople,
   eventOverrides,
+  nextStepsWeekly,
+  servingWeekly,
 } from "../../drizzle/schema";
 import {
   getPcoAuthorizeUrl,
@@ -363,6 +365,8 @@ export const pcoRouter = router({
       servingRows,
       servingMonthlyRows,
       eventOverrideRows,
+      nextStepsWeeklyRows,
+      servingWeeklyRows,
     ] = await Promise.all([
       db.select().from(attendance).where(sourceFilter(attendance)),
       db.select().from(attendanceMonthly).where(sourceFilter(attendanceMonthly)),
@@ -381,6 +385,8 @@ export const pcoRouter = router({
         and(eq(servingMonthly.source, "spreadsheet"), ne(servingMonthly.campus, "All Campuses"))
       ),
       db.select().from(eventOverrides),
+      db.select().from(nextStepsWeekly),
+      db.select().from(servingWeekly),
     ]);
 
     // Extract unique years from ALL tables so that years with partial data
@@ -479,6 +485,21 @@ export const pcoRouter = router({
         salvations: r.salvations,
         baptisms: r.baptisms,
         notes: r.notes,
+      })),
+      next_steps_weekly: nextStepsWeeklyRows.map((r) => ({
+        year: r.year,
+        weekNumber: r.weekNumber,
+        weekStartDate: r.weekStartDate,
+        campus: r.campus,
+        metric: r.metric,
+        count: r.count,
+      })),
+      serving_weekly: servingWeeklyRows.map((r) => ({
+        year: r.year,
+        weekNumber: r.weekNumber,
+        weekStartDate: r.weekStartDate,
+        campus: r.campus,
+        total: r.total,
       })),
       years,
       campuses,

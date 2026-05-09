@@ -1016,4 +1016,19 @@
 - [x] Cleaned all duplicate rows from both tables (attendance_monthly: 3166, giving_monthly: 464)
 - [x] Fixed syncGiving in sync.ts to use batch upsert instead of individual inserts
 - [x] Schema pushed via pnpm db:push, 133 tests pass, tsc clean
+- [x] Deployed (6b0ca509)
+
+## Round 110: Dashboard Overview Rewired to Weekly Data
+- [x] Root cause: Overview read from stale `giving` table ($2.3M) while Giving page read from `giving_weekly` ($3.5M)
+- [x] Rewired ALL Dashboard Overview KPIs from weekly tables (single source of truth from PCO)
+- [x] Giving KPI + chart: from giving_weekly ($3.5M matches Giving page)
+- [x] Attendance KPI + chart: from attendance_weekly (Adults+Kids = 3,047)
+- [x] GPC: from giving_weekly / attendance_weekly
+- [x] Next steps: FTG+Salvations from weekly, Baptisms fallback to next_steps_monthly (103)
+- [x] Kids (635), Students (453), Young Adults (68): from attendance_weekly
+- [x] Fixed Students double-counting in data.ts AND dataViews/router.ts (RevStudents Attendance vs HS+MS)
+- [x] givingTrend chart: from giving_weekly
+- [x] campusComparison chart: from attendance_weekly
+- [x] Added next_steps_weekly and serving_weekly to API response
+- [x] 133 tests pass, tsc clean
 - [ ] Deploy

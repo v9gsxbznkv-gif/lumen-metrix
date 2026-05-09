@@ -148,9 +148,25 @@ function normalizeAttendanceRows(rows: any[]): NormalizedWeek[] {
     volunteers: number; youngAdults: number; ftg: number;
   }>();
 
+  // First pass: detect which week+campus combos have HS or MS data
+  // to avoid double-counting with "RevStudents Attendance" (which is HS+MS combined)
+  const hasHsMsSet = new Set<string>();
+  for (const row of rows) {
+    if (row.subgroup === "RevStudents HS" || row.subgroup === "RevStudents MS") {
+      const campus = row.campus === "Other" ? "Other" : row.campus;
+      hasHsMsSet.add(`${row.weekStartDate}-${campus}`);
+    }
+  }
+
   for (const row of rows) {
     const category = classifySubgroup(row.subgroup);
     if (!category) continue; // skip unrecognized
+
+    // Skip "RevStudents Attendance" when HS+MS exist for the same week+campus
+    if (row.subgroup === "RevStudents Attendance") {
+      const campus = row.campus === "Other" ? "Other" : row.campus;
+      if (hasHsMsSet.has(`${row.weekStartDate}-${campus}`)) continue;
+    }
 
     // Map "Other" campus (YA Gathering) to a virtual campus
     const campus = row.campus === "Other" ? "Other" : row.campus;

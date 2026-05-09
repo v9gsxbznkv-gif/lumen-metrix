@@ -92,6 +92,23 @@ interface RawGivingWeekly {
   donationCount: number;
 }
 
+interface RawNextStepsWeekly {
+  year: number;
+  weekNumber: number;
+  weekStartDate: string;
+  campus: string;
+  metric: string;
+  count: number;
+}
+
+interface RawServingWeekly {
+  year: number;
+  weekNumber: number;
+  weekStartDate: string;
+  campus: string;
+  total: number;
+}
+
 interface RawDashboard {
   attendance: RawAttendance[];
   giving: RawGiving[];
@@ -106,6 +123,8 @@ interface RawDashboard {
   attendance_weekly?: RawAttendanceWeekly[];
   giving_weekly?: RawGivingWeekly[];
   event_overrides?: EventOverride[];
+  next_steps_weekly?: RawNextStepsWeekly[];
+  serving_weekly?: RawServingWeekly[];
 }
 
 // ============================================================
@@ -214,6 +233,23 @@ export interface GivingWeekly {
   donationCount: number;
 }
 
+export interface NextStepsWeekly {
+  year: number;
+  weekNumber: number;
+  weekStartDate: string;
+  campus: string;
+  metric: string;
+  count: number;
+}
+
+export interface ServingWeekly {
+  year: number;
+  weekNumber: number;
+  weekStartDate: string;
+  campus: string;
+  total: number;
+}
+
 export interface EventOverride {
   eventName: string;
   year: number;
@@ -237,6 +273,8 @@ export interface DashboardData {
   serving: ServingAnnual[];
   serving_monthly: ServingMonthly[];
   event_overrides: EventOverride[];
+  next_steps_weekly: NextStepsWeekly[];
+  serving_weekly: ServingWeekly[];
   computed: {
     giving_per_capita: GivingPerCapita[];
     volunteer_ratio: VolunteerRatio[];
@@ -399,6 +437,8 @@ function transformRawData(raw: RawDashboard): DashboardData {
     serving: raw.serving,
     serving_monthly: raw.serving_monthly,
     event_overrides: raw.event_overrides || [],
+    next_steps_weekly: raw.next_steps_weekly || [],
+    serving_weekly: raw.serving_weekly || [],
     computed: {
       giving_per_capita: gpc,
       volunteer_ratio: vr,
@@ -747,4 +787,347 @@ export function getPartialYoYChange(
     label: `${change >= 0 ? "+" : ""}${change.toFixed(1)}%`,
     positive: change >= 0,
   };
+}
+
+
+// ============================================================
+// Weekly-data helper functions
+// These compute from the raw weekly tables (single source of truth from PCO)
+// ============================================================
+
+/**
+ * Get total giving from giving_weekly for a year/campus.
+ * Sums all campuses for "All Campuses" (excluding the "All Campuses" designated row to avoid double-counting).
+ */
+export function getGivingFromWeekly(
+  data: DashboardData,
+  year: number,
+  campus: string
+): number {
+  let total = 0;
+  for (const r of data.giving_weekly) {
+    if (r.year !== year) continue;
+    if (campus === "All Campuses") {
+      // Sum all rows (Canton + Jasper + "All Campuses" designated)
+      total += r.total;
+    } else if (r.campus === campus) {
+      total += r.total;
+    }
+  }
+  return total;
+}
+
+/**
+ * Get average weekly attendance from attendance_weekly for a year/campus/subgroup.
+ * For "Total" subgroup, uses "Revolution Canton Check-In" + Jasper equivalent.
+ */
+export function getAvgAttendanceFromWeekly(
+  data: DashboardData,
+  year: number,
+  campus: string,
+  subgroup: string
+): number {
+  // Filter relevant rows
+  const rows = data.attendance_weekly.filter((r) => {
+    if (r.year !== year) return false;
+    if (campus !== "All Campuses" && r.campus !== campus) return false;
+    if (subgroup === "Total") {
+      // Total = Adults (main check-in) + Kids (aggregate only)
+      return r.subgroup === "Revolution Canton Check-In" ||
+             r.subgroup === "Revolution Jasper Check-In" ||
+             r.subgroup === "Revolution Church Jasper" ||
+             r.subgroup === "Kids";
+    }
+    if (subgroup === "Adults") {
+      return r.subgroup === "Revolution Canton Check-In" ||
+             r.subgroup === "Revolution Jasper Check-In" ||
+             r.subgroup === "Revolution Church Jasper" ||
+             r.subgroup === "Adults";
+    }
+    if (subgroup === "Kids") return r.subgroup === "Kids";
+    if (subgroup === "Students") {
+      // Include all student subgroups — dedup handled below
+      return r.subgroup === "RevStudents Attendance" ||
+             r.subgroup === "RevStudents HS" ||
+             r.subgroup === "RevStudents MS" ||
+             r.subgroup === "Students" ||
+             r.subgroup === "RevStudents | Canton Campus" ||
+             r.subgroup === "RevStudents | Jasper Campus";
+    }
+    if (subgroup === "Young Adults" || subgroup === "YA Gathering") {
+      return r.subgroup === "YA Gathering" || r.subgroup === "Young Adults";
+    }
+    if (subgroup === "Volunteers") return r.subgroup === "Volunteers";
+    return r.subgroup === subgroup;
+  });
+
+  if (rows.length === 0) return 0;
+
+  // For Students: deduplicate RevStudents Attendance vs HS+MS per week
+  // If both HS+MS and Attendance exist for the same week+campus, skip Attendance
+  let filteredRows = rows;
+  if (subgroup === "Students") {
+    // Check which week+campus combos have HS or MS data
+    const hasHsMsSet = new Set<string>();
+    for (const r of rows) {
+      if (r.subgroup === "RevStudents HS" || r.subgroup === "RevStudents MS") {
+        hasHsMsSet.add(`${r.weekNumber}-${r.campus}`);
+      }
+    }
+    filteredRows = rows.filter((r) => {
+      if (r.subgroup === "RevStudents Attendance" && hasHsMsSet.has(`${r.weekNumber}-${r.campus}`)) {
+        return false; // Skip Attendance when HS+MS exists for same week+campus
+      }
+      return true;
+    });
+  }
+
+  // Group by weekNumber, sum headcounts per week, then average across weeks
+  const weekMap = new Map<number, number>();
+  for (const r of filteredRows) {
+    weekMap.set(r.weekNumber, (weekMap.get(r.weekNumber) || 0) + r.headcount);
+  }
+  const weekTotals = Array.from(weekMap.values());
+  return weekTotals.reduce((s, v) => s + v, 0) / weekTotals.length;
+}
+
+/**
+ * Get total next steps from next_steps_weekly for a year/campus/metric.
+ */
+export function getNextStepsFromWeekly(
+  data: DashboardData,
+  year: number,
+  campus: string,
+  metric: string
+): number {
+  let total = 0;
+  for (const r of data.next_steps_weekly) {
+    if (r.year !== year || r.metric !== metric) continue;
+    if (campus === "All Campuses" || r.campus === campus) {
+      total += r.count;
+    }
+  }
+  return total;
+}
+
+/**
+ * Get average weekly serving count from serving_weekly for a year/campus.
+ */
+export function getAvgServingFromWeekly(
+  data: DashboardData,
+  year: number,
+  campus: string
+): number {
+  const rows = data.serving_weekly.filter((r) => {
+    if (r.year !== year) return false;
+    if (campus === "All Campuses") return true;
+    return r.campus === campus;
+  });
+  if (rows.length === 0) return 0;
+
+  // Group by weekNumber, sum across campuses per week, then average
+  const weekMap = new Map<number, number>();
+  for (const r of rows) {
+    weekMap.set(r.weekNumber, (weekMap.get(r.weekNumber) || 0) + r.total);
+  }
+  const weekTotals = Array.from(weekMap.values());
+  return weekTotals.reduce((s, v) => s + v, 0) / weekTotals.length;
+}
+
+/**
+ * Get max week number for a year from any weekly table.
+ */
+export function getMaxWeek(data: DashboardData, year: number): number {
+  let maxWeek = 0;
+  for (const r of data.attendance_weekly) {
+    if (r.year === year && r.weekNumber > maxWeek) maxWeek = r.weekNumber;
+  }
+  for (const r of data.giving_weekly) {
+    if (r.year === year && r.weekNumber > maxWeek) maxWeek = r.weekNumber;
+  }
+  return maxWeek;
+}
+
+/**
+ * Week-based partial-year YoY comparison.
+ * Compares weeks 1..maxWeek of latestYear vs same weeks of priorYear.
+ */
+export function getWeeklyYoYChange(
+  data: DashboardData,
+  latestYear: number,
+  priorYear: number,
+  getter: (year: number, maxWeek: number) => number
+): { value: number; label: string; positive: boolean } {
+  const maxWeek = getMaxWeek(data, latestYear);
+  const current = getter(latestYear, maxWeek);
+  const previous = getter(priorYear, maxWeek);
+  if (!previous || previous === 0) return { value: 0, label: "N/A", positive: true };
+  const change = ((current - previous) / previous) * 100;
+  return {
+    value: change,
+    label: `${change >= 0 ? "+" : ""}${change.toFixed(1)}%`,
+    positive: change >= 0,
+  };
+}
+
+/**
+ * Get giving from weekly data for weeks 1..maxWeek of a year/campus.
+ */
+export function getGivingFromWeeklyRange(
+  data: DashboardData,
+  year: number,
+  campus: string,
+  maxWeek: number
+): number {
+  let total = 0;
+  for (const r of data.giving_weekly) {
+    if (r.year !== year || r.weekNumber > maxWeek) continue;
+    if (campus === "All Campuses") {
+      total += r.total;
+    } else if (r.campus === campus) {
+      total += r.total;
+    }
+  }
+  return total;
+}
+
+/**
+ * Get avg weekly attendance from weekly data for weeks 1..maxWeek.
+ */
+export function getAvgAttendanceFromWeeklyRange(
+  data: DashboardData,
+  year: number,
+  campus: string,
+  subgroup: string,
+  maxWeek: number
+): number {
+  const rows = data.attendance_weekly.filter((r) => {
+    if (r.year !== year || r.weekNumber > maxWeek) return false;
+    if (campus !== "All Campuses" && r.campus !== campus) return false;
+    if (subgroup === "Total") {
+      return r.subgroup === "Revolution Canton Check-In" ||
+             r.subgroup === "Revolution Jasper Check-In" ||
+             r.subgroup === "Revolution Church Jasper" ||
+             r.subgroup === "Kids";
+    }
+    if (subgroup === "Adults") {
+      return r.subgroup === "Revolution Canton Check-In" ||
+             r.subgroup === "Revolution Jasper Check-In" ||
+             r.subgroup === "Revolution Church Jasper" ||
+             r.subgroup === "Adults";
+    }
+    if (subgroup === "Kids") return r.subgroup === "Kids";
+    if (subgroup === "Students") {
+      return r.subgroup === "RevStudents Attendance" ||
+             r.subgroup === "RevStudents HS" ||
+             r.subgroup === "RevStudents MS" ||
+             r.subgroup === "Students" ||
+             r.subgroup === "RevStudents | Canton Campus" ||
+             r.subgroup === "RevStudents | Jasper Campus";
+    }
+    if (subgroup === "Young Adults" || subgroup === "YA Gathering") {
+      return r.subgroup === "YA Gathering" || r.subgroup === "Young Adults";
+    }
+    if (subgroup === "Volunteers") return r.subgroup === "Volunteers";
+    return r.subgroup === subgroup;
+  });
+
+  if (rows.length === 0) return 0;
+
+  // For Students: deduplicate RevStudents Attendance vs HS+MS per week
+  let filteredRows = rows;
+  if (subgroup === "Students") {
+    const hasHsMsSet = new Set<string>();
+    for (const r of rows) {
+      if (r.subgroup === "RevStudents HS" || r.subgroup === "RevStudents MS") {
+        hasHsMsSet.add(`${r.weekNumber}-${r.campus}`);
+      }
+    }
+    filteredRows = rows.filter((r) => {
+      if (r.subgroup === "RevStudents Attendance" && hasHsMsSet.has(`${r.weekNumber}-${r.campus}`)) {
+        return false;
+      }
+      return true;
+    });
+  }
+
+  const weekMap = new Map<number, number>();
+  for (const r of filteredRows) {
+    weekMap.set(r.weekNumber, (weekMap.get(r.weekNumber) || 0) + r.headcount);
+  }
+  const weekTotals = Array.from(weekMap.values());
+  return weekTotals.reduce((s, v) => s + v, 0) / weekTotals.length;
+}
+
+/**
+ * Get total next steps from weekly data for weeks 1..maxWeek.
+ */
+export function getNextStepsFromWeeklyRange(
+  data: DashboardData,
+  year: number,
+  campus: string,
+  metric: string,
+  maxWeek: number
+): number {
+  let total = 0;
+  for (const r of data.next_steps_weekly) {
+    if (r.year !== year || r.weekNumber > maxWeek || r.metric !== metric) continue;
+    if (campus === "All Campuses" || r.campus === campus) {
+      total += r.count;
+    }
+  }
+  return total;
+}
+
+/**
+ * Get next steps total with fallback to monthly table.
+ * next_steps_weekly only has FTG and Salvations — Baptisms come from next_steps_monthly.
+ */
+export function getNextStepsWithFallback(
+  data: DashboardData,
+  year: number,
+  campus: string,
+  metric: string
+): number {
+  // Try weekly first
+  const weeklyTotal = getNextStepsFromWeekly(data, year, campus, metric);
+  if (weeklyTotal > 0) return weeklyTotal;
+
+  // Fall back to monthly
+  let total = 0;
+  for (const r of data.next_steps_monthly) {
+    if (r.year !== year || r.metric !== metric) continue;
+    if (campus === "All Campuses" || r.campus === campus) {
+      total += r.count;
+    }
+  }
+  return total;
+}
+
+/**
+ * Get next steps total with fallback for a week range (partial year YoY).
+ * For metrics not in weekly (e.g. Baptisms), falls back to monthly data
+ * using month-range matching: months 1..ceil(maxWeek/4.33).
+ */
+export function getNextStepsWithFallbackRange(
+  data: DashboardData,
+  year: number,
+  campus: string,
+  metric: string,
+  maxWeek: number
+): number {
+  // Try weekly first
+  const weeklyTotal = getNextStepsFromWeeklyRange(data, year, campus, metric, maxWeek);
+  if (weeklyTotal > 0) return weeklyTotal;
+
+  // Fall back to monthly — approximate weeks to months
+  const maxMonth = Math.ceil(maxWeek / 4.33);
+  let total = 0;
+  for (const r of data.next_steps_monthly) {
+    if (r.year !== year || r.metric !== metric || r.month > maxMonth) continue;
+    if (campus === "All Campuses" || r.campus === campus) {
+      total += r.count;
+    }
+  }
+  return total;
 }
