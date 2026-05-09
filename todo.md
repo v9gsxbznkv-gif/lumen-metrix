@@ -973,4 +973,13 @@
 - [x] Diagnose: no cookie-parser middleware — req.cookies was always undefined, so check always returned false
 - [x] Fix: use parseCookieHeader(req.headers.cookie) to manually parse cookies (same pattern as OAuth SDK)
 - [x] 133 tests pass, tsc clean
+- [x] Deploy — deployed successfully
+
+## Round 105: Weekly Report Still Not Updating
+- [x] Diagnosed: DB has only volunteer data for weeks 17-19; attendance sync processed only 5 event_periods
+- [x] Chad confirmed: PCO headcount data IS entered through May 3 (week 18)
+- [x] Fix: changed fallback condition from `categoryTotals === 0 && attTypeHcByEventTime === 0` to just `categoryTotals === 0` — now falls back to per-event_time drill-down when pre-fetch has no match for a specific period
+- [x] Fix: increased pre-fetch timeout from 20s to 90s so it can paginate all 826 headcount records
+- [x] Root cause: pre-fetch had old 2022 event_time IDs, recent periods have 2026 IDs, no match, but fallback never triggered because pre-fetch map was non-empty
+- [x] tsc clean, 133 tests pass
 - [ ] Deploy

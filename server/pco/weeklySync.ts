@@ -574,7 +574,7 @@ export async function syncWeeklyAttendance(
                 { per_page: 100 }
               ),
               new Promise<never>((_, reject) =>
-                setTimeout(() => reject(new Error(`Timeout pre-fetching headcounts for ${attType.name}`)), 20_000)
+                setTimeout(() => reject(new Error(`Timeout pre-fetching headcounts for ${attType.name}`)), 90_000)
               ),
             ]);
             const byEt = new Map<string, number>();
@@ -673,11 +673,12 @@ export async function syncWeeklyAttendance(
             }
           }
 
-          // FALLBACK: If pre-fetch yielded NO data for this period (e.g. pre-fetch
-          // failed or attendance_types not mapped), drill down per-event_time.
-          // This is the slow path but only runs when pre-fetch is empty.
-          if (categoryTotals.size === 0 && attTypeHcByEventTime.size === 0) {
-            console.log(`[PCO Weekly Sync] No pre-fetch data for ${eventName} period ${periodIdx + 1} — falling back to per-event_time drill-down`);
+          // FALLBACK: If pre-fetch yielded NO data for THIS SPECIFIC period,
+          // drill down per-event_time. This handles the case where the pre-fetch
+          // has data (from older weeks) but none of its event_time IDs match
+          // the current period's event_times (common for recent weeks).
+          if (categoryTotals.size === 0) {
+            console.log(`[PCO Weekly Sync] No pre-fetch match for ${eventName} period ${periodIdx + 1} (${weekStartDate}) — falling back to per-event_time drill-down`);
             const periodStartTime = Date.now();
             const PERIOD_TIMEOUT_MS = 60_000;
 
