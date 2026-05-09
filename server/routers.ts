@@ -1,4 +1,5 @@
 import { COOKIE_NAME } from "@shared/const";
+import { parse as parseCookieHeader } from "cookie";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { ENV } from "./_core/env";
 import { systemRouter } from "./_core/systemRouter";
@@ -31,7 +32,9 @@ export const appRouter = router({
   dashboardAuth: router({
     // Check if the visitor already has a valid password session
     check: publicProcedure.query(({ ctx }) => {
-      const token = (ctx.req as any).cookies?.[DASH_COOKIE];
+      const cookieHeader = ctx.req.headers.cookie;
+      const cookies = cookieHeader ? parseCookieHeader(cookieHeader) : {};
+      const token = cookies[DASH_COOKIE];
       const isAuthenticated = token === "authenticated";
       return { isAuthenticated };
     }),

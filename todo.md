@@ -967,4 +967,10 @@
 - [x] Fix syncWeeklyAttendance to write directly to DB when called without jobId (scheduler path)
 - [x] Verify scheduler path produces attendance data, not just giving/volunteers (direct DB write added)
 - [x] tsc --noEmit: 0 errors, 133 tests pass
+- [x] Deploy — deployed successfully
+
+## Round 104: Fix Session Persistence (Re-login on Every Refresh)
+- [x] Diagnose: no cookie-parser middleware — req.cookies was always undefined, so check always returned false
+- [x] Fix: use parseCookieHeader(req.headers.cookie) to manually parse cookies (same pattern as OAuth SDK)
+- [x] 133 tests pass, tsc clean
 - [ ] Deploy

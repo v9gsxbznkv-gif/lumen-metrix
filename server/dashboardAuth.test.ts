@@ -14,11 +14,16 @@ function createContext(cookies: CookieRecord = {}): {
   const setCookies: Record<string, { value: string; options: Record<string, unknown> }> = {};
   const clearedCookies: string[] = [];
 
+  // Build a cookie header string from the cookies record (matches how production code parses)
+  const cookieHeader = Object.entries(cookies)
+    .map(([k, v]) => `${k}=${v}`)
+    .join("; ") || undefined;
+
   const ctx: TrpcContext = {
     user: null,
     req: {
       protocol: "https",
-      headers: {},
+      headers: { cookie: cookieHeader },
       cookies,
     } as unknown as TrpcContext["req"],
     res: {
