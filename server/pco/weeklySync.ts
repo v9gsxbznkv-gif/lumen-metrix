@@ -877,16 +877,18 @@ export async function syncWeeklyAttendance(
       await onProgress(56, `Fetched ${weeklyMap.size} weekly attendance rows from PCO — queuing DB write...`, recordsProcessed);
     }
 
-    // Step 2: Store rows as JSON blob in sync_jobs.rawData.
-    // The actual DB write to attendance_weekly happens in a SEPARATE HTTP request (POST /api/sync/flush)
-    // so it gets a brand-new DB connection — avoiding the TiDB idle-connection drop that occurs
-    // after a 2-5 minute PCO API fetch.
+    // Step 2: Write attendance rows to the database.
+    // Two paths:
+    //   A) If jobId exists (manual sync via UI): store as rawData blob for the flush endpoint
+    //      to write with a fresh connection (avoids TiDB idle-connection drop).
+    //   B) If no jobId (scheduler/cron path): write directly to DB using a fresh connection.
     const rows = Array.from(weeklyMap.values());
-    recordsCreated = rows.length; // will be confirmed by flush endpoint
-    console.log(`[PCO Weekly Sync] Storing ${rows.length} rows in rawData blob for flush...`);
+    recordsCreated = rows.length;
+    console.log(`[PCO Weekly Sync] ${rows.length} attendance rows ready to write...`);
 
-    // Store the raw rows in the job's rawData field (small write to existing row — always fast)
     if (jobId) {
+      // Path A: Store blob for flush endpoint
+      console.log(`[PCO Weekly Sync] Storing rawData blob for flush (job ${jobId})...`);
       try {
         const db = await getDb();
         if (db) {
@@ -898,6 +900,61 @@ export async function syncWeeklyAttendance(
         }
       } catch (blobErr: any) {
         console.warn(`[PCO Weekly Sync] Failed to store rawData blob: ${blobErr.message}`);
+      }
+    } else {
+      // Path B: Direct DB write (scheduler path — no flush endpoint involved)
+      console.log(`[PCO Weekly Sync] Writing ${rows.length} rows directly to DB (scheduler path)...`);
+      const { db: freshDb, end: endConn } = await createFreshDb();
+      try {
+        // Fetch locked rows to skip them
+        const lockedRows = await freshDb
+          .select({ year: attendanceWeekly.year, weekNumber: attendanceWeekly.weekNumber, campus: attendanceWeekly.campus, subgroup: attendanceWeekly.subgroup })
+          .from(attendanceWeekly)
+          .where(eq(attendanceWeekly.manualLock, true));
+        const lockedSet = new Set(
+          lockedRows.map((r) => `${r.year}|${r.weekNumber}|${r.campus}|${r.subgroup}`)
+        );
+        const rowsToWrite = rows.filter(
+          (r: any) => !lockedSet.has(`${r.year}|${r.weekNumber}|${r.campus}|${r.subgroup}`)
+        );
+        console.log(`[PCO Weekly Sync] ${lockedRows.length} locked rows skipped, writing ${rowsToWrite.length} rows...`);
+
+        const CHUNK = 50;
+        let written = 0;
+        for (let i = 0; i < rowsToWrite.length; i += CHUNK) {
+          const chunk = rowsToWrite.slice(i, i + CHUNK);
+          if (!chunk.length) continue;
+          await freshDb
+            .insert(attendanceWeekly)
+            .values(chunk.map((r: any) => ({
+              year: r.year,
+              weekNumber: r.weekNumber,
+              weekStartDate: r.weekStartDate,
+              campus: r.campus,
+              subgroup: r.subgroup,
+              headcount: r.headcount,
+              regularCount: r.regularCount ?? 0,
+              guestCount: r.guestCount ?? 0,
+              volunteerCount: r.volunteerCount ?? 0,
+              source: "pco",
+            })))
+            .onDuplicateKeyUpdate({
+              set: {
+                headcount: sql`VALUES(headcount)`,
+                regularCount: sql`VALUES(regularCount)`,
+                guestCount: sql`VALUES(guestCount)`,
+                volunteerCount: sql`VALUES(volunteerCount)`,
+                source: sql`VALUES(source)`,
+              },
+            });
+          written += chunk.length;
+        }
+        recordsCreated = written;
+        console.log(`[PCO Weekly Sync] Direct DB write complete: ${written} rows`);
+      } catch (writeErr: any) {
+        console.error(`[PCO Weekly Sync] Direct DB write failed: ${writeErr.message}`);
+      } finally {
+        await endConn();
       }
     }
 

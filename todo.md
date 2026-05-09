@@ -961,4 +961,10 @@
 - [x] All 133 tests pass
 - [ ] Verify 2026 room-level kids data populates (requires full sync after deploy)
 - [x] Cleared orphaned running job from DB
-- [ ] Deploy with fixes
+- [x] Deploy with fixes — deployed to churchdash-emzmxpmc.manus.space
+
+## Round 103: Fix Automatic Weekly Sync (Stuck on Week 16)
+- [x] Fix syncWeeklyAttendance to write directly to DB when called without jobId (scheduler path)
+- [x] Verify scheduler path produces attendance data, not just giving/volunteers (direct DB write added)
+- [x] tsc --noEmit: 0 errors, 133 tests pass
+- [ ] Deploy
