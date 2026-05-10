@@ -1032,3 +1032,15 @@
 - [x] Added next_steps_weekly and serving_weekly to API response
 - [x] 133 tests pass, tsc clean
 - [ ] Deploy
+
+## Round 111: Historical Attendance/Giving Too Low on Dashboard
+- [x] Root cause: weekly tables DO have all years (2013+), but subgroup names differ (old: "Adults"/"Students", new: "Revolution Canton Check-In"/"RevStudents HS")
+- [x] Fixed subgroup matching to handle BOTH naming conventions across all years
+- [x] Added dedup for Adults (old "Adults" vs new "Revolution * Check-In" overlap in 2025)
+- [x] Added dedup for Students (old "Students" aggregate vs detail rows)
+- [x] Removed WEEKLY_CUTOFF_YEAR — all data now from weekly tables consistently
+- [x] Next steps: weekly first, annual fallback only for years without weekly data (pre-2017)
+- [x] Serving: weekly for all years (2013+)
+- [x] GPC corrected from -73.7% to +7.1%, Attendance YoY from +312% to +1.0%
+- [x] 133 tests pass, tsc clean
+- [ ] Deploy

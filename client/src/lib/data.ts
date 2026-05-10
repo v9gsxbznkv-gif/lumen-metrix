@@ -797,7 +797,7 @@ export function getPartialYoYChange(
 
 /**
  * Get total giving from giving_weekly for a year/campus.
- * Sums all campuses for "All Campuses" (excluding the "All Campuses" designated row to avoid double-counting).
+ * Weekly data exists for all years (2013+ from spreadsheets, 2025+ from PCO).
  */
 export function getGivingFromWeekly(
   data: DashboardData,
@@ -808,7 +808,6 @@ export function getGivingFromWeekly(
   for (const r of data.giving_weekly) {
     if (r.year !== year) continue;
     if (campus === "All Campuses") {
-      // Sum all rows (Canton + Jasper + "All Campuses" designated)
       total += r.total;
     } else if (r.campus === campus) {
       total += r.total;
@@ -819,7 +818,8 @@ export function getGivingFromWeekly(
 
 /**
  * Get average weekly attendance from attendance_weekly for a year/campus/subgroup.
- * For "Total" subgroup, uses "Revolution Canton Check-In" + Jasper equivalent.
+ * Handles both old spreadsheet names (Adults, Students) and new PCO names
+ * (Revolution Canton Check-In, RevStudents HS, etc.) across all years.
  */
 export function getAvgAttendanceFromWeekly(
   data: DashboardData,
@@ -827,30 +827,34 @@ export function getAvgAttendanceFromWeekly(
   campus: string,
   subgroup: string
 ): number {
-  // Filter relevant rows
+  // Filter relevant rows — match BOTH old spreadsheet and new PCO subgroup names
   const rows = data.attendance_weekly.filter((r) => {
     if (r.year !== year) return false;
     if (campus !== "All Campuses" && r.campus !== campus) return false;
     if (subgroup === "Total") {
-      // Total = Adults (main check-in) + Kids (aggregate only)
-      return r.subgroup === "Revolution Canton Check-In" ||
+      // Total = Adults + Kids (aggregate only, not Kids: detail rows)
+      // Old name: "Adults" (2013-2025), New name: "Revolution Canton/Jasper Check-In" (2025+)
+      return r.subgroup === "Adults" ||
+             r.subgroup === "Revolution Canton Check-In" ||
              r.subgroup === "Revolution Jasper Check-In" ||
              r.subgroup === "Revolution Church Jasper" ||
              r.subgroup === "Kids";
     }
     if (subgroup === "Adults") {
-      return r.subgroup === "Revolution Canton Check-In" ||
+      return r.subgroup === "Adults" ||
+             r.subgroup === "Revolution Canton Check-In" ||
              r.subgroup === "Revolution Jasper Check-In" ||
-             r.subgroup === "Revolution Church Jasper" ||
-             r.subgroup === "Adults";
+             r.subgroup === "Revolution Church Jasper";
     }
     if (subgroup === "Kids") return r.subgroup === "Kids";
     if (subgroup === "Students") {
-      // Include all student subgroups — dedup handled below
-      return r.subgroup === "RevStudents Attendance" ||
+      // Old: "Students" (aggregate, 2013-2025)
+      // New: "RevStudents Attendance/HS/MS" (2026+)
+      // Also campus-level: "Students: Canton HS", etc.
+      return r.subgroup === "Students" ||
+             r.subgroup === "RevStudents Attendance" ||
              r.subgroup === "RevStudents HS" ||
              r.subgroup === "RevStudents MS" ||
-             r.subgroup === "Students" ||
              r.subgroup === "RevStudents | Canton Campus" ||
              r.subgroup === "RevStudents | Jasper Campus";
     }
@@ -863,23 +867,44 @@ export function getAvgAttendanceFromWeekly(
 
   if (rows.length === 0) return 0;
 
-  // For Students: deduplicate RevStudents Attendance vs HS+MS per week
-  // If both HS+MS and Attendance exist for the same week+campus, skip Attendance
+  // For Students: deduplicate aggregate vs detail per week
+  // If both HS+MS and "Students"/"RevStudents Attendance" exist for the same week+campus, skip the aggregate
   let filteredRows = rows;
   if (subgroup === "Students") {
-    // Check which week+campus combos have HS or MS data
-    const hasHsMsSet = new Set<string>();
+    const hasDetailSet = new Set<string>();
     for (const r of rows) {
-      if (r.subgroup === "RevStudents HS" || r.subgroup === "RevStudents MS") {
-        hasHsMsSet.add(`${r.weekNumber}-${r.campus}`);
+      if (r.subgroup === "RevStudents HS" || r.subgroup === "RevStudents MS" ||
+          r.subgroup === "Students: Canton HS" || r.subgroup === "Students: Canton MS" ||
+          r.subgroup === "Students: Jasper HS" || r.subgroup === "Students: Jasper MS") {
+        hasDetailSet.add(`${r.weekNumber}-${r.campus}`);
       }
     }
     filteredRows = rows.filter((r) => {
-      if (r.subgroup === "RevStudents Attendance" && hasHsMsSet.has(`${r.weekNumber}-${r.campus}`)) {
-        return false; // Skip Attendance when HS+MS exists for same week+campus
+      if ((r.subgroup === "RevStudents Attendance" || r.subgroup === "Students") &&
+          hasDetailSet.has(`${r.weekNumber}-${r.campus}`)) {
+        return false; // Skip aggregate when detail rows exist
       }
       return true;
     });
+  }
+
+  // For Total/Adults: deduplicate old "Adults" vs new "Revolution * Check-In" per week
+  if (subgroup === "Total" || subgroup === "Adults") {
+    const hasCheckInSet = new Set<string>();
+    for (const r of filteredRows) {
+      if (r.subgroup === "Revolution Canton Check-In" || r.subgroup === "Revolution Jasper Check-In" ||
+          r.subgroup === "Revolution Church Jasper") {
+        hasCheckInSet.add(`${r.weekNumber}-${r.campus}`);
+      }
+    }
+    if (hasCheckInSet.size > 0) {
+      filteredRows = filteredRows.filter((r) => {
+        if (r.subgroup === "Adults" && hasCheckInSet.has(`${r.weekNumber}-${r.campus}`)) {
+          return false; // Skip old "Adults" when new check-in rows exist
+        }
+        return true;
+      });
+    }
   }
 
   // Group by weekNumber, sum headcounts per week, then average across weeks
@@ -892,7 +917,9 @@ export function getAvgAttendanceFromWeekly(
 }
 
 /**
- * Get total next steps from next_steps_weekly for a year/campus/metric.
+ * Get total next steps for a year/campus/metric.
+ * Tries weekly data first. Falls back to annual `next_steps` table
+ * if no weekly data exists for that year (e.g., pre-2017 for some metrics).
  */
 export function getNextStepsFromWeekly(
   data: DashboardData,
@@ -900,18 +927,43 @@ export function getNextStepsFromWeekly(
   campus: string,
   metric: string
 ): number {
+  // Try weekly data first
   let total = 0;
+  let hasWeeklyData = false;
   for (const r of data.next_steps_weekly) {
     if (r.year !== year || r.metric !== metric) continue;
     if (campus === "All Campuses" || r.campus === campus) {
       total += r.count;
+      hasWeeklyData = true;
     }
   }
-  return total;
+  if (hasWeeklyData) return total;
+
+  // Fall back to annual next_steps table
+  for (const r of data.next_steps) {
+    if (r.year !== year || r.metric !== metric) continue;
+    if (campus === "All Campuses") {
+      if (r.campus === "All Campuses") return r.total;
+    } else if (r.campus === campus) {
+      return r.total;
+    }
+  }
+  // If no All Campuses row, sum individual campuses
+  if (campus === "All Campuses") {
+    let sum = 0;
+    for (const r of data.next_steps) {
+      if (r.year === year && r.metric === metric && r.campus !== "All Campuses") {
+        sum += r.total;
+      }
+    }
+    return sum;
+  }
+  return 0;
 }
 
 /**
  * Get average weekly serving count from serving_weekly for a year/campus.
+ * Weekly data exists for all years (2013+ from spreadsheets).
  */
 export function getAvgServingFromWeekly(
   data: DashboardData,
@@ -971,7 +1023,7 @@ export function getWeeklyYoYChange(
 }
 
 /**
- * Get giving from weekly data for weeks 1..maxWeek of a year/campus.
+ * Get giving from giving_weekly for weeks 1..maxWeek of a year/campus.
  */
 export function getGivingFromWeeklyRange(
   data: DashboardData,
@@ -992,7 +1044,8 @@ export function getGivingFromWeeklyRange(
 }
 
 /**
- * Get avg weekly attendance from weekly data for weeks 1..maxWeek.
+ * Get avg weekly attendance from attendance_weekly for weeks 1..maxWeek.
+ * Uses same subgroup matching as getAvgAttendanceFromWeekly (both old and new names).
  */
 export function getAvgAttendanceFromWeeklyRange(
   data: DashboardData,
@@ -1005,23 +1058,24 @@ export function getAvgAttendanceFromWeeklyRange(
     if (r.year !== year || r.weekNumber > maxWeek) return false;
     if (campus !== "All Campuses" && r.campus !== campus) return false;
     if (subgroup === "Total") {
-      return r.subgroup === "Revolution Canton Check-In" ||
+      return r.subgroup === "Adults" ||
+             r.subgroup === "Revolution Canton Check-In" ||
              r.subgroup === "Revolution Jasper Check-In" ||
              r.subgroup === "Revolution Church Jasper" ||
              r.subgroup === "Kids";
     }
     if (subgroup === "Adults") {
-      return r.subgroup === "Revolution Canton Check-In" ||
+      return r.subgroup === "Adults" ||
+             r.subgroup === "Revolution Canton Check-In" ||
              r.subgroup === "Revolution Jasper Check-In" ||
-             r.subgroup === "Revolution Church Jasper" ||
-             r.subgroup === "Adults";
+             r.subgroup === "Revolution Church Jasper";
     }
     if (subgroup === "Kids") return r.subgroup === "Kids";
     if (subgroup === "Students") {
-      return r.subgroup === "RevStudents Attendance" ||
+      return r.subgroup === "Students" ||
+             r.subgroup === "RevStudents Attendance" ||
              r.subgroup === "RevStudents HS" ||
              r.subgroup === "RevStudents MS" ||
-             r.subgroup === "Students" ||
              r.subgroup === "RevStudents | Canton Campus" ||
              r.subgroup === "RevStudents | Jasper Campus";
     }
@@ -1034,21 +1088,43 @@ export function getAvgAttendanceFromWeeklyRange(
 
   if (rows.length === 0) return 0;
 
-  // For Students: deduplicate RevStudents Attendance vs HS+MS per week
+  // Deduplicate Students: skip aggregate when detail rows exist
   let filteredRows = rows;
   if (subgroup === "Students") {
-    const hasHsMsSet = new Set<string>();
+    const hasDetailSet = new Set<string>();
     for (const r of rows) {
-      if (r.subgroup === "RevStudents HS" || r.subgroup === "RevStudents MS") {
-        hasHsMsSet.add(`${r.weekNumber}-${r.campus}`);
+      if (r.subgroup === "RevStudents HS" || r.subgroup === "RevStudents MS" ||
+          r.subgroup === "Students: Canton HS" || r.subgroup === "Students: Canton MS" ||
+          r.subgroup === "Students: Jasper HS" || r.subgroup === "Students: Jasper MS") {
+        hasDetailSet.add(`${r.weekNumber}-${r.campus}`);
       }
     }
     filteredRows = rows.filter((r) => {
-      if (r.subgroup === "RevStudents Attendance" && hasHsMsSet.has(`${r.weekNumber}-${r.campus}`)) {
+      if ((r.subgroup === "RevStudents Attendance" || r.subgroup === "Students") &&
+          hasDetailSet.has(`${r.weekNumber}-${r.campus}`)) {
         return false;
       }
       return true;
     });
+  }
+
+  // Deduplicate Adults: skip old "Adults" when new check-in rows exist
+  if (subgroup === "Total" || subgroup === "Adults") {
+    const hasCheckInSet = new Set<string>();
+    for (const r of filteredRows) {
+      if (r.subgroup === "Revolution Canton Check-In" || r.subgroup === "Revolution Jasper Check-In" ||
+          r.subgroup === "Revolution Church Jasper") {
+        hasCheckInSet.add(`${r.weekNumber}-${r.campus}`);
+      }
+    }
+    if (hasCheckInSet.size > 0) {
+      filteredRows = filteredRows.filter((r) => {
+        if (r.subgroup === "Adults" && hasCheckInSet.has(`${r.weekNumber}-${r.campus}`)) {
+          return false;
+        }
+        return true;
+      });
+    }
   }
 
   const weekMap = new Map<number, number>();
