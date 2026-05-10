@@ -38,6 +38,14 @@ async function startServer() {
   } catch (err) {
     console.warn("[Server] Could not start auto-sync scheduler:", err);
   }
+
+  // Start proactive token refresh (every 90 min to keep PCO connection alive)
+  try {
+    const { startProactiveTokenRefresh } = await import("../pco/client");
+    startProactiveTokenRefresh();
+  } catch (err) {
+    console.warn("[Server] Could not start proactive token refresh:", err);
+  }
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));

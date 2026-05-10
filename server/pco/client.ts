@@ -91,6 +91,7 @@ export async function exchangeCodeForTokens(
 
 /**
  * Refresh an expired access token.
+ * Retries up to 3 times with exponential backoff to handle transient failures.
  */
 export async function refreshAccessToken(
   refreshToken: string
@@ -99,18 +100,39 @@ export async function refreshAccessToken(
   refreshToken: string;
   expiresIn: number;
 }> {
-  const response = await axios.post(PCO_TOKEN_URL, {
-    grant_type: "refresh_token",
-    refresh_token: refreshToken,
-    client_id: ENV.pcoAppId,
-    client_secret: ENV.pcoSecret,
-  });
+  const MAX_REFRESH_RETRIES = 3;
+  let lastError: any = null;
 
-  return {
-    accessToken: response.data.access_token,
-    refreshToken: response.data.refresh_token || refreshToken,
-    expiresIn: response.data.expires_in || 7200,
-  };
+  for (let attempt = 0; attempt < MAX_REFRESH_RETRIES; attempt++) {
+    try {
+      const response = await axios.post(PCO_TOKEN_URL, {
+        grant_type: "refresh_token",
+        refresh_token: refreshToken,
+        client_id: ENV.pcoAppId,
+        client_secret: ENV.pcoSecret,
+      });
+
+      return {
+        accessToken: response.data.access_token,
+        refreshToken: response.data.refresh_token || refreshToken,
+        expiresIn: response.data.expires_in || 7200,
+      };
+    } catch (err: any) {
+      lastError = err;
+      const status = err?.response?.status;
+      // If PCO returns 400/401/403, the refresh token itself is invalid — don't retry
+      if (status && status >= 400 && status < 500) {
+        console.error(`[PCO] Refresh token rejected by PCO (HTTP ${status}). Re-authorization required.`);
+        break;
+      }
+      // Transient error — retry with backoff
+      const backoffMs = Math.min(2 ** attempt * 2000, 10000);
+      console.warn(`[PCO] Token refresh attempt ${attempt + 1}/${MAX_REFRESH_RETRIES} failed: ${err.message}. Retrying in ${backoffMs}ms...`);
+      await new Promise((r) => setTimeout(r, backoffMs));
+    }
+  }
+
+  throw lastError || new Error("Token refresh failed after retries");
 }
 
 // ============================================================
@@ -161,6 +183,7 @@ export async function storeTokens(tokens: {
 
 /**
  * Get a valid access token, refreshing if expired.
+ * Now includes retry logic and notifies owner on permanent failure.
  */
 export async function getValidAccessToken(): Promise<string | null> {
   const db = await getDb();
@@ -174,7 +197,7 @@ export async function getValidAccessToken(): Promise<string | null> {
   // Check if token is expired (with 5-minute buffer)
   const bufferMs = 5 * 60 * 1000;
   if (token.expiresAt && new Date(token.expiresAt).getTime() - bufferMs < Date.now()) {
-    console.log("[PCO] Access token expired, refreshing...");
+    console.log("[PCO] Access token expired or expiring soon, refreshing...");
     try {
       const refreshed = await refreshAccessToken(token.refreshToken);
       await storeTokens({
@@ -182,10 +205,18 @@ export async function getValidAccessToken(): Promise<string | null> {
         refreshToken: refreshed.refreshToken,
         expiresIn: refreshed.expiresIn,
       });
-      console.log("[PCO] Token refreshed successfully");
+      console.log("[PCO] Token refreshed successfully, new expiry:", new Date(Date.now() + refreshed.expiresIn * 1000).toISOString());
       return refreshed.accessToken;
     } catch (err: any) {
-      console.error("[PCO] Token refresh failed:", err.message);
+      console.error("[PCO] Token refresh permanently failed:", err.message);
+      // Notify owner that PCO connection is broken
+      try {
+        const { notifyOwner } = await import("../_core/notification");
+        await notifyOwner({
+          title: "⚠️ Planning Center Disconnected",
+          content: `The PCO OAuth token could not be refreshed automatically. Error: ${err.message}. Please reconnect in Settings > Planning Center.`,
+        });
+      } catch (_) { /* notification is best-effort */ }
       return null;
     }
   }
@@ -204,6 +235,7 @@ export async function deleteTokens(): Promise<void> {
 
 /**
  * Get stored token info (for UI display).
+ * If the token is expired, attempts a refresh before reporting status.
  */
 export async function getTokenInfo(): Promise<{
   connected: boolean;
@@ -217,11 +249,32 @@ export async function getTokenInfo(): Promise<{
   const rows = await db.select().from(pcoTokens).limit(1);
   if (rows.length === 0) return { connected: false };
 
+  const token = rows[0];
+
+  // If token is expired, try to refresh it before reporting status
+  const bufferMs = 5 * 60 * 1000;
+  if (token.expiresAt && new Date(token.expiresAt).getTime() - bufferMs < Date.now()) {
+    console.log("[PCO] Token expired during status check, attempting refresh...");
+    const refreshedToken = await getValidAccessToken();
+    if (!refreshedToken) {
+      return { connected: false, organizationName: token.organizationName || undefined };
+    }
+    // Re-read the updated token
+    const updatedRows = await db.select().from(pcoTokens).limit(1);
+    if (updatedRows.length === 0) return { connected: false };
+    return {
+      connected: true,
+      organizationName: updatedRows[0].organizationName || undefined,
+      expiresAt: updatedRows[0].expiresAt || undefined,
+      scope: updatedRows[0].scope || undefined,
+    };
+  }
+
   return {
     connected: true,
-    organizationName: rows[0].organizationName || undefined,
-    expiresAt: rows[0].expiresAt || undefined,
-    scope: rows[0].scope || undefined,
+    organizationName: token.organizationName || undefined,
+    expiresAt: token.expiresAt || undefined,
+    scope: token.scope || undefined,
   };
 }
 
@@ -432,4 +485,65 @@ export async function createAuthenticatedPcoClient(): Promise<PcoClient | null> 
   }
   console.log(`[PCO] Got token: ${token.substring(0, 20)}...`);
   return new PcoClient(token);
+}
+
+// ============================================================
+// Proactive Token Refresh (Background Job)
+// ============================================================
+
+let tokenRefreshInterval: ReturnType<typeof setInterval> | null = null;
+
+/**
+ * Start a background interval that proactively refreshes the PCO token
+ * every 90 minutes. This prevents the token from expiring between syncs
+ * or when the dashboard isn't actively being used.
+ *
+ * PCO access tokens expire every 2 hours (7200s). By refreshing every 90 min,
+ * we ensure the token is always fresh and the connection never drops.
+ */
+export function startProactiveTokenRefresh(): void {
+  if (tokenRefreshInterval) {
+    console.log("[PCO] Proactive token refresh already running");
+    return;
+  }
+
+  const REFRESH_INTERVAL_MS = 90 * 60 * 1000; // 90 minutes
+
+  // Do an immediate refresh on startup (in case token expired while server was down)
+  setTimeout(async () => {
+    console.log("[PCO] Running startup token refresh check...");
+    const token = await getValidAccessToken();
+    if (token) {
+      console.log("[PCO] Startup token refresh: connection active");
+    } else {
+      console.warn("[PCO] Startup token refresh: no valid token (may need manual reconnect)");
+    }
+  }, 5000); // 5 second delay to let DB connect first
+
+  tokenRefreshInterval = setInterval(async () => {
+    try {
+      console.log("[PCO] Proactive token refresh running...");
+      const token = await getValidAccessToken();
+      if (token) {
+        console.log("[PCO] Proactive refresh: token is valid");
+      } else {
+        console.warn("[PCO] Proactive refresh: token refresh failed");
+      }
+    } catch (err: any) {
+      console.error("[PCO] Proactive refresh error:", err.message);
+    }
+  }, REFRESH_INTERVAL_MS);
+
+  console.log(`[PCO] Proactive token refresh started (every 90 minutes)`);
+}
+
+/**
+ * Stop the proactive token refresh background job.
+ */
+export function stopProactiveTokenRefresh(): void {
+  if (tokenRefreshInterval) {
+    clearInterval(tokenRefreshInterval);
+    tokenRefreshInterval = null;
+    console.log("[PCO] Proactive token refresh stopped");
+  }
 }

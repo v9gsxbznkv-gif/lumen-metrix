@@ -1233,4 +1233,14 @@
 - [x] Added clickable "pending geocode" link that auto-loops geocoding in batches of 50
 - [x] Geocoding is now resumable — if it errors, click again to continue where it left off
 - [x] 151 tests pass
+- [x] Deploy
+
+## Round 135: Fix PCO Auto-Reconnect (Token Refresh)
+- [x] Diagnose: token only refreshed on-demand; if refresh failed (transient error or server hibernation), returned null with no retry/notification
+- [x] Fix: Added retry logic (3 attempts with exponential backoff) to refreshAccessToken
+- [x] Fix: Added proactive background refresh every 90 min (well before 2-hour expiry)
+- [x] Fix: getTokenInfo now attempts refresh before reporting disconnected status
+- [x] Fix: Owner gets notification when refresh permanently fails (so you know immediately)
+- [x] Fix: Startup token refresh on server boot (catches expired tokens from hibernation)
+- [x] 151 tests pass
 - [ ] Deploy
