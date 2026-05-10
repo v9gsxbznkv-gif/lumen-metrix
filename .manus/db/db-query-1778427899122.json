@@ -1,0 +1,14 @@
+{
+  "query": "SELECT street, COUNT(*) as cnt FROM pco_people WHERE status = 'active' AND latitude IS NOT NULL GROUP BY street ORDER BY cnt DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT street, COUNT(*) as cnt FROM pco_people WHERE status = 'active' AND latitude IS NOT NULL GROUP BY street ORDER BY cnt DESC LIMIT 5;",
+  "rows": [
+    {
+      "street": "NULL",
+      "cnt": "2230"
+    }
+  ],
+  "messages": [],
+  "stdout": "street\tcnt\nNULL\t2230\n",
+  "stderr": "",
+  "execution_time_ms": 267
+}

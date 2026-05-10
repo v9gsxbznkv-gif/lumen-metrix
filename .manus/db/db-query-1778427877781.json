@@ -1,0 +1,80 @@
+{
+  "query": "SELECT ROUND(latitude, 4) as lat, ROUND(longitude, 4) as lng, city, zip, COUNT(*) as cnt\nFROM pco_people WHERE status = 'active' AND latitude IS NOT NULL\nGROUP BY lat, lng, city, zip\nORDER BY cnt DESC\nLIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT ROUND(latitude, 4) as lat, ROUND(longitude, 4) as lng, city, zip, COUNT(*) as cnt\nFROM pco_people WHERE status = 'active' AND latitude IS NOT NULL\nGROUP BY lat, lng, city, zip\nORDER BY cnt DESC\nLIMIT 10;",
+  "rows": [
+    {
+      "lat": "34.2264",
+      "lng": "-84.4173",
+      "city": "Canton",
+      "zip": "30115",
+      "cnt": "706"
+    },
+    {
+      "lat": "34.2368",
+      "lng": "-84.4908",
+      "city": "Canton",
+      "zip": "30114",
+      "cnt": "279"
+    },
+    {
+      "lat": "34.3373",
+      "lng": "-84.378",
+      "city": "Ball Ground",
+      "zip": "30107",
+      "cnt": "242"
+    },
+    {
+      "lat": "34.4696",
+      "lng": "-84.429",
+      "city": "Jasper",
+      "zip": "30143",
+      "cnt": "109"
+    },
+    {
+      "lat": "34.1281",
+      "lng": "-84.4488",
+      "city": "Woodstock ",
+      "zip": "30188",
+      "cnt": "78"
+    },
+    {
+      "lat": "34.1337",
+      "lng": "-84.5746",
+      "city": "Woodstock",
+      "zip": "30189",
+      "cnt": "30"
+    },
+    {
+      "lat": "34.1763",
+      "lng": "-84.2911",
+      "city": "Alpharetta",
+      "zip": "30004",
+      "cnt": "28"
+    },
+    {
+      "lat": "34.3165",
+      "lng": "-84.5522",
+      "city": "Waleska",
+      "zip": "30183",
+      "cnt": "23"
+    },
+    {
+      "lat": "34.5093",
+      "lng": "-84.5049",
+      "city": "Talking Rock",
+      "zip": "30175",
+      "cnt": "15"
+    },
+    {
+      "lat": "34.174",
+      "lng": "-84.5013",
+      "city": "Holly Springs",
+      "zip": "30115",
+      "cnt": "14"
+    }
+  ],
+  "messages": [],
+  "stdout": "lat\tlng\tcity\tzip\tcnt\n34.2264\t-84.4173\tCanton\t30115\t706\n34.2368\t-84.4908\tCanton\t30114\t279\n34.3373\t-84.378\tBall Ground\t30107\t242\n34.4696\t-84.429\tJasper\t30143\t109\n34.1281\t-84.4488\tWoodstock \t30188\t78\n34.1337\t-84.5746\tWoodstock\t30189\t30\n34.1763\t-84.2911\tAlpharetta\t30004\t28\n34.3165\t-84.5522\tWaleska\t30183\t23\n34.5093\t-84.5049\tTalking Rock\t30175\t15\n34.174\t-84.5013\tHolly Springs\t30115\t14\n",
+  "stderr": "",
+  "execution_time_ms": 285
+}

@@ -1,0 +1,15 @@
+{
+  "query": "SELECT \n  SUM(CASE WHEN zip IS NULL THEN 1 ELSE 0 END) as zip_is_null,\n  SUM(CASE WHEN zip = 'NULL' THEN 1 ELSE 0 END) as zip_is_string_null,\n  SUM(CASE WHEN zip = '' THEN 1 ELSE 0 END) as zip_is_empty\nFROM pco_people WHERE status = 'active' AND latitude IS NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT \n  SUM(CASE WHEN zip IS NULL THEN 1 ELSE 0 END) as zip_is_null,\n  SUM(CASE WHEN zip = 'NULL' THEN 1 ELSE 0 END) as zip_is_string_null,\n  SUM(CASE WHEN zip = '' THEN 1 ELSE 0 END) as zip_is_empty\nFROM pco_people WHERE status = 'active' AND latitude IS NULL;",
+  "rows": [
+    {
+      "zip_is_null": "1285",
+      "zip_is_string_null": "0",
+      "zip_is_empty": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "zip_is_null\tzip_is_string_null\tzip_is_empty\n1285\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 260
+}

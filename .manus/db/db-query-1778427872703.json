@@ -1,0 +1,14 @@
+{
+  "query": "SELECT COUNT(DISTINCT CONCAT(ROUND(latitude, 4), ',', ROUND(longitude, 4))) as distinct_locations,\n  COUNT(*) as total_geocoded\nFROM pco_people WHERE status = 'active' AND latitude IS NOT NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT COUNT(DISTINCT CONCAT(ROUND(latitude, 4), ',', ROUND(longitude, 4))) as distinct_locations,\n  COUNT(*) as total_geocoded\nFROM pco_people WHERE status = 'active' AND latitude IS NOT NULL;",
+  "rows": [
+    {
+      "distinct_locations": "56",
+      "total_geocoded": "2230"
+    }
+  ],
+  "messages": [],
+  "stdout": "distinct_locations\ttotal_geocoded\n56\t2230\n",
+  "stderr": "",
+  "execution_time_ms": 270
+}

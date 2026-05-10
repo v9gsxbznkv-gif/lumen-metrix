@@ -1,0 +1,16 @@
+{
+  "query": "SELECT \n  SUM(CASE WHEN street IS NULL THEN 1 ELSE 0 END) as street_is_null,\n  SUM(CASE WHEN street = 'NULL' THEN 1 ELSE 0 END) as street_is_string_null,\n  SUM(CASE WHEN street = '' THEN 1 ELSE 0 END) as street_is_empty,\n  SUM(CASE WHEN street IS NOT NULL AND street != 'NULL' AND street != '' THEN 1 ELSE 0 END) as street_has_value\nFROM pco_people WHERE status = 'active' AND latitude IS NOT NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT \n  SUM(CASE WHEN street IS NULL THEN 1 ELSE 0 END) as street_is_null,\n  SUM(CASE WHEN street = 'NULL' THEN 1 ELSE 0 END) as street_is_string_null,\n  SUM(CASE WHEN street = '' THEN 1 ELSE 0 END) as street_is_empty,\n  SUM(CASE WHEN street IS NOT NULL AND street != 'NULL' AND street != '' THEN 1 ELSE 0 END) as street_has_value\nFROM pco_people WHERE status = 'active' AND latitude IS NOT NULL;",
+  "rows": [
+    {
+      "street_is_null": "2230",
+      "street_is_string_null": "0",
+      "street_is_empty": "0",
+      "street_has_value": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "street_is_null\tstreet_is_string_null\tstreet_is_empty\tstreet_has_value\n2230\t0\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 268
+}

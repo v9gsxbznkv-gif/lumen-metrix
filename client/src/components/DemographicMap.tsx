@@ -64,9 +64,12 @@ interface JitteredPoint {
 
 /**
  * Apply deterministic jitter to points that share the same lat/lng.
- * Each person gets a unique, stable offset so dots at the same address
- * fan out in a small circle rather than stacking on top of each other.
- * Points with unique positions are left unchanged.
+ * Radius scales with group size:
+ * - 2-5 people (household): tiny offset (~20m)
+ * - 6-50 people (apartment/street): moderate scatter (~200m)
+ * - 50-200 people (neighborhood): ~1km scatter
+ * - 200+ people (zip centroid): ~3-5km scatter (fills the zip code area)
+ * Uses golden angle distribution for even spacing without spiral artifacts.
  */
 function jitterPoints(
   points: Array<{ lat: number; lng: number; campus: string; city: string; zip: string }>
@@ -81,23 +84,44 @@ function jitterPoints(
   }
 
   const result: JitteredPoint[] = new Array(points.length);
+  // Golden angle in radians for even distribution
+  const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
   for (const [groupKey, group] of Array.from(groups)) {
     if (group.length === 1) {
-      // Single person at this address — no jitter needed
+      // Single person — no jitter needed
       result[group[0].idx] = { ...group[0].point };
     } else {
-      // Multiple people at same address — tiny offset so they don't perfectly stack
       const count = group.length;
-      // Very small radius: 0.00015-0.0003 degrees ≈ 15-30 meters
-      // Just enough to see individual dots when zoomed in, invisible at city zoom
-      const baseRadius = 0.00012 + Math.min(count, 15) * 0.000012;
+      // Scale radius based on group size (in degrees)
+      // 1 degree ≈ 111km, so 0.01 ≈ 1.1km, 0.03 ≈ 3.3km
+      let maxRadius: number;
+      if (count <= 5) {
+        maxRadius = 0.0002; // ~22m (household)
+      } else if (count <= 20) {
+        maxRadius = 0.002; // ~220m (street/complex)
+      } else if (count <= 50) {
+        maxRadius = 0.005; // ~550m (neighborhood)
+      } else if (count <= 150) {
+        maxRadius = 0.015; // ~1.7km (large neighborhood)
+      } else if (count <= 400) {
+        maxRadius = 0.025; // ~2.8km (small town area)
+      } else {
+        maxRadius = 0.035; // ~3.9km (zip code area)
+      }
+
       for (let i = 0; i < count; i++) {
         const seed = `${groupKey}-${i}`;
-        const angle = (i / count) * 2 * Math.PI + seededRandom(seed + "-a") * 0.3;
-        const radiusFactor = 0.7 + seededRandom(seed + "-r") * 0.6;
-        const jitterLat = group[i].point.lat + baseRadius * Math.cos(angle) * radiusFactor;
-        const jitterLng = group[i].point.lng + baseRadius * Math.sin(angle) * radiusFactor;
+        // Sunflower/golden angle distribution: even fill without spiral artifacts
+        const angle = i * GOLDEN_ANGLE + seededRandom(seed + "-a") * 0.5;
+        // Square root distribution for uniform area fill (not clustered at center)
+        const normalizedR = Math.sqrt((i + 0.5) / count);
+        // Add some randomness to radius so it doesn't look too perfect
+        const rJitter = 0.8 + seededRandom(seed + "-r") * 0.4;
+        const r = maxRadius * normalizedR * rJitter;
+
+        const jitterLat = group[i].point.lat + r * Math.cos(angle);
+        const jitterLng = group[i].point.lng + r * Math.sin(angle);
         result[group[i].idx] = {
           ...group[i].point,
           lat: jitterLat,

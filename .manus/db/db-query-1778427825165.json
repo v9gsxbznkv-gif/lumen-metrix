@@ -1,0 +1,45 @@
+{
+  "query": "SELECT street, city, zip, latitude, longitude FROM pco_people WHERE latitude IS NOT NULL LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT street, city, zip, latitude, longitude FROM pco_people WHERE latitude IS NOT NULL LIMIT 5;",
+  "rows": [
+    {
+      "street": "NULL",
+      "city": "Canton",
+      "zip": "30115",
+      "latitude": "34.2264431",
+      "longitude": "-84.41726659999999"
+    },
+    {
+      "street": "NULL",
+      "city": "Canton",
+      "zip": "30115-6053",
+      "latitude": "34.2264431",
+      "longitude": "-84.41726659999999"
+    },
+    {
+      "street": "NULL",
+      "city": "Canton",
+      "zip": "30114",
+      "latitude": "34.2367621",
+      "longitude": "-84.4907621"
+    },
+    {
+      "street": "NULL",
+      "city": "Canton",
+      "zip": "30115",
+      "latitude": "34.2264431",
+      "longitude": "-84.41726659999999"
+    },
+    {
+      "street": "NULL",
+      "city": "Canton",
+      "zip": "30114",
+      "latitude": "34.2367621",
+      "longitude": "-84.4907621"
+    }
+  ],
+  "messages": [],
+  "stdout": "street\tcity\tzip\tlatitude\tlongitude\nNULL\tCanton\t30115\t34.2264431\t-84.41726659999999\nNULL\tCanton\t30115-6053\t34.2264431\t-84.41726659999999\nNULL\tCanton\t30114\t34.2367621\t-84.4907621\nNULL\tCanton\t30115\t34.2264431\t-84.41726659999999\nNULL\tCanton\t30114\t34.2367621\t-84.4907621\n",
+  "stderr": "",
+  "execution_time_ms": 264
+}
