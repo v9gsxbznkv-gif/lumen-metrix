@@ -14,15 +14,15 @@ import { getValidAccessToken } from "../pco/client";
 const CAMPUS_LOCATIONS = [
   {
     name: "Canton",
-    address: "1430 Reinhardt College Pkwy, Canton, GA 30114",
-    lat: 34.2368,
-    lng: -84.4908,
+    address: "125 Union Hill Trail, Canton, GA 30115",
+    lat: 34.236065,
+    lng: -84.4125308,
   },
   {
     name: "Jasper",
-    address: "100 Stegall Dr, Jasper, GA 30143",
-    lat: 34.4676,
-    lng: -84.4293,
+    address: "689 North Main St, Jasper, GA 30143",
+    lat: 34.4731533,
+    lng: -84.4390925,
   },
 ];
 

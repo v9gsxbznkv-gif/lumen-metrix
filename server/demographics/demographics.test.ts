@@ -34,10 +34,10 @@ describe("Demographics Router", () => {
     it("campus coordinates should be in north Georgia area", () => {
       // Canton: ~34.24, -84.49
       // Jasper: ~34.47, -84.43
-      const cantonLat = 34.2368;
-      const cantonLng = -84.4908;
-      const jasperLat = 34.4676;
-      const jasperLng = -84.4293;
+      const cantonLat = 34.236065;
+      const cantonLng = -84.4125308;
+      const jasperLat = 34.4731533;
+      const jasperLng = -84.4390925;
 
       // Both should be in north Georgia
       expect(cantonLat).toBeGreaterThan(34);

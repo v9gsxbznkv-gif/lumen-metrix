@@ -1111,4 +1111,10 @@
 - [x] Add map to CampusesTab (between charts and share table)
 - [ ] User triggers address sync + geocoding via "Sync Addresses" button
 - [x] 151 tests pass (11 new demographics tests)
+- [x] Deployed (b6c73aaf)
+
+## Round 120: Fix Campus Addresses on Demographic Map
+- [x] Update Canton coordinates to 125 Union Hill Trail, Canton, GA 30115 (34.236065, -84.4125308)
+- [x] Update Jasper coordinates to 689 North Main St, Jasper, GA 30143 (34.4731533, -84.4390925)
+- [x] 151 tests pass
 - [ ] Deploy
