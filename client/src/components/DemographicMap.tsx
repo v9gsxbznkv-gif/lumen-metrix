@@ -1,19 +1,20 @@
 /**
  * DemographicMap — Google Maps showing campus locations + member dots
- * Uses the MapView component with AdvancedMarkerElement for pins.
- * Groups nearby points into clusters with count badges at zoomed-out levels,
- * and jitters individual dots when zoomed in.
+ * Features:
+ * - Campus filter toggles (show/hide Canton, Jasper, Unassigned)
+ * - Drive-time radius overlays (15/30 min approximate circles)
+ * - Cluster badges at zoomed-out levels, jittered dots when zoomed in
  */
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState, useCallback, useEffect, useMemo } from "react";
 import { MapView } from "@/components/Map";
 import { trpc } from "@/lib/trpc";
 import { CAMPUS_COLORS } from "@/lib/data";
 import { Button } from "@/components/ui/button";
-import { Loader2, MapPin, RefreshCw, Users, Building2 } from "lucide-react";
+import { Loader2, MapPin, RefreshCw, Users, Building2, Clock } from "lucide-react";
 
 // Dot colors matching CAMPUS_COLORS from the dashboard
 const CAMPUS_DOT_COLORS: Record<string, string> = {
-  Canton: CAMPUS_COLORS["Canton"] || "#C4813A",
+  Canton: CAMPUS_COLORS["Canton"] || "#C2703E",
   Jasper: CAMPUS_COLORS["Jasper"] || "#4A7FB5",
   Online: CAMPUS_COLORS["Online"] || "#8B6DAF",
   Unknown: "#9CA3AF",
@@ -24,15 +25,26 @@ const CAMPUS_PIN_COLORS: Record<string, string> = {
   Jasper: CAMPUS_DOT_COLORS.Jasper,
 };
 
+// Approximate drive-time radii in meters (rural GA, ~50mph avg)
+// 15 min ≈ 12 miles ≈ 19,300m; 30 min ≈ 24 miles ≈ 38,600m
+const DRIVE_TIME_RADII = {
+  "15 min": 19_300,
+  "30 min": 38_600,
+};
+
+// Campus coordinates (must match server/demographics/router.ts)
+const CAMPUS_COORDS: Record<string, { lat: number; lng: number }> = {
+  Canton: { lat: 34.236065, lng: -84.4125308 },
+  Jasper: { lat: 34.4731533, lng: -84.4390925 },
+};
+
 /**
  * Group points that share the same lat/lng (rounded to 4 decimals)
- * into clusters with a count. Then jitter individual points within
- * each cluster so they spread out visually.
+ * into clusters with a count, then jitter individual points.
  */
 function clusterAndJitter(
   points: Array<{ lat: number; lng: number; campus: string; city: string; zip: string }>
 ) {
-  // Group by rounded coordinates
   const groups = new Map<string, typeof points>();
   for (const p of points) {
     const key = `${p.lat.toFixed(4)},${p.lng.toFixed(4)}`;
@@ -40,7 +52,6 @@ function clusterAndJitter(
     groups.get(key)!.push(p);
   }
 
-  // For each group, jitter points in a circle around the centroid
   const jittered: Array<{
     lat: number;
     lng: number;
@@ -57,14 +68,8 @@ function clusterAndJitter(
     const count = group.length;
 
     if (count === 1) {
-      // Single point — no jitter needed
-      jittered.push({
-        ...group[0],
-        clusterSize: 1,
-        isClusterCenter: false,
-      });
+      jittered.push({ ...group[0], clusterSize: 1, isClusterCenter: false });
     } else {
-      // Add a cluster center marker with the count
       jittered.push({
         lat: centerLat,
         lng: centerLng,
@@ -75,8 +80,6 @@ function clusterAndJitter(
         isClusterCenter: true,
       });
 
-      // Jitter individual dots in concentric rings around center
-      // Radius ~0.006 degrees ≈ ~0.4 miles
       const baseRadius = 0.006;
       const maxRings = Math.ceil(count / 12);
 
@@ -85,8 +88,6 @@ function clusterAndJitter(
         const posInRing = i % 12;
         const ringRadius = baseRadius * (ring + 1) / maxRings * (maxRings > 1 ? maxRings : 1);
         const angle = (posInRing / 12) * 2 * Math.PI + (ring * 0.3);
-
-        // Add some randomness to avoid perfect circles
         const jitterLat = centerLat + ringRadius * Math.cos(angle) * (0.8 + Math.random() * 0.4);
         const jitterLng = centerLng + ringRadius * Math.sin(angle) * (0.8 + Math.random() * 0.4);
 
@@ -123,12 +124,21 @@ function getMajorityCampus(group: Array<{ campus: string }>): string {
 export default function DemographicMap() {
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
+  const circlesRef = useRef<google.maps.Circle[]>([]);
   const [syncing, setSyncing] = useState(false);
   const [backfilling, setBackfilling] = useState(false);
   const [syncMessage, setSyncMessage] = useState("");
 
+  // Campus filter state
+  const [visibleCampuses, setVisibleCampuses] = useState<Set<string>>(
+    () => new Set(["Canton", "Jasper", "Unknown"])
+  );
+
+  // Drive-time overlay state
+  const [showDriveTime, setShowDriveTime] = useState<"off" | "15 min" | "30 min">("off");
+
   // Fetch map data
-  const { data: mapData, isLoading, refetch: refetchMapData } = trpc.demographics.getMapPoints.useQuery();
+  const { data: mapData, refetch: refetchMapData } = trpc.demographics.getMapPoints.useQuery();
   const { data: campuses } = trpc.demographics.getCampuses.useQuery();
   const { data: syncStatus, refetch: refetchStatus } = trpc.demographics.getSyncStatus.useQuery();
 
@@ -142,6 +152,34 @@ export default function DemographicMap() {
   const totalPoints = mapData?.points?.length ?? 0;
   const needsBackfill = totalPoints > 0 && unknownCount > totalPoints * 0.5;
 
+  // Filter points by visible campuses
+  const filteredPoints = useMemo(() => {
+    if (!mapData?.points) return [];
+    return mapData.points.filter((p) => visibleCampuses.has(p.campus || "Unknown"));
+  }, [mapData?.points, visibleCampuses]);
+
+  // Campus counts (from full data, not filtered)
+  const campusCounts = useMemo(() => {
+    if (!mapData?.points) return {} as Record<string, number>;
+    return mapData.points.reduce((acc, p) => {
+      const c = p.campus || "Unknown";
+      acc[c] = (acc[c] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+  }, [mapData?.points]);
+
+  const toggleCampus = useCallback((campus: string) => {
+    setVisibleCampuses((prev) => {
+      const next = new Set(prev);
+      if (next.has(campus)) {
+        next.delete(campus);
+      } else {
+        next.add(campus);
+      }
+      return next;
+    });
+  }, []);
+
   const handleSync = useCallback(async () => {
     setSyncing(true);
     setSyncMessage("Syncing addresses from PCO...");
@@ -151,7 +189,6 @@ export default function DemographicMap() {
         `Addresses: ${addrResult.synced} synced, ${addrResult.noAddress} no address. Geocoding...`
       );
 
-      // Geocode in batches of 100 until none remaining
       let totalGeocoded = 0;
       let totalFailed = 0;
       let remaining = Infinity;
@@ -163,20 +200,11 @@ export default function DemographicMap() {
         totalGeocoded += geoResult.geocoded;
         totalFailed += geoResult.failed;
         remaining = geoResult.remaining;
-
-        setSyncMessage(
-          `Geocoding batch ${batchNum}... ${totalGeocoded} done, ${remaining} remaining`
-        );
-
-        // Refresh map after each batch so dots appear progressively
+        setSyncMessage(`Geocoding batch ${batchNum}... ${totalGeocoded} done, ${remaining} remaining`);
         await refetchMapData();
       }
 
-      setSyncMessage(
-        `Done! ${totalGeocoded} geocoded, ${totalFailed} failed.`
-      );
-
-      // Final refresh
+      setSyncMessage(`Done! ${totalGeocoded} geocoded, ${totalFailed} failed.`);
       await refetchMapData();
       await refetchStatus();
     } catch (err: any) {
@@ -194,7 +222,6 @@ export default function DemographicMap() {
       setSyncMessage(
         `Campus backfill complete: ${result.withCampus} of ${result.totalPeople} people have a campus, ${result.updated} records updated.`
       );
-      // Refresh map to show colored dots
       await refetchMapData();
     } catch (err: any) {
       setSyncMessage(`Error: ${err.message}`);
@@ -203,6 +230,36 @@ export default function DemographicMap() {
     }
   }, [backfillCampus, refetchMapData]);
 
+  // Render drive-time circles
+  const renderCircles = useCallback((map: google.maps.Map) => {
+    // Clear existing circles
+    for (const c of circlesRef.current) {
+      c.setMap(null);
+    }
+    circlesRef.current = [];
+
+    if (showDriveTime === "off") return;
+
+    const radius = DRIVE_TIME_RADII[showDriveTime];
+
+    for (const [campusName, coords] of Object.entries(CAMPUS_COORDS)) {
+      const color = CAMPUS_DOT_COLORS[campusName] || "#999";
+      const circle = new google.maps.Circle({
+        map,
+        center: coords,
+        radius,
+        fillColor: color,
+        fillOpacity: 0.08,
+        strokeColor: color,
+        strokeOpacity: 0.5,
+        strokeWeight: 2,
+        clickable: false,
+      });
+      circlesRef.current.push(circle);
+    }
+  }, [showDriveTime]);
+
+  // Render markers (filtered by visible campuses)
   const renderMarkers = useCallback(
     (map: google.maps.Map) => {
       // Clear existing markers
@@ -211,9 +268,9 @@ export default function DemographicMap() {
       }
       markersRef.current = [];
 
-      if (!mapData?.points || !campuses) return;
+      if (!campuses) return;
 
-      // Add campus location pins (larger, with label)
+      // Add campus location pins (always visible)
       for (const campus of campuses) {
         const pinEl = document.createElement("div");
         pinEl.innerHTML = `
@@ -253,12 +310,11 @@ export default function DemographicMap() {
         markersRef.current.push(marker);
       }
 
-      // Cluster and jitter points
-      const processed = clusterAndJitter(mapData.points);
+      // Cluster and jitter filtered points
+      const processed = clusterAndJitter(filteredPoints);
 
       for (const point of processed) {
         if (point.isClusterCenter) {
-          // Render cluster badge (circle with count)
           const color = CAMPUS_DOT_COLORS[point.campus] || CAMPUS_DOT_COLORS.Unknown;
           const size = Math.min(60, Math.max(32, 20 + Math.log2(point.clusterSize) * 8));
           const fontSize = size > 40 ? 13 : 11;
@@ -290,7 +346,6 @@ export default function DemographicMap() {
           });
           markersRef.current.push(marker);
         } else {
-          // Individual dot
           const color = CAMPUS_DOT_COLORS[point.campus] || CAMPUS_DOT_COLORS.Unknown;
           const dotEl = document.createElement("div");
           dotEl.style.cssText = `
@@ -315,45 +370,43 @@ export default function DemographicMap() {
         }
       }
     },
-    [mapData, campuses]
+    [filteredPoints, campuses]
   );
 
   const handleMapReady = useCallback(
     (map: google.maps.Map) => {
       mapRef.current = map;
       renderMarkers(map);
+      renderCircles(map);
     },
-    [renderMarkers]
+    [renderMarkers, renderCircles]
   );
 
-  // Re-render markers whenever mapData changes (e.g. after geocoding batches)
+  // Re-render markers when filter or data changes
   useEffect(() => {
     if (mapRef.current) {
       renderMarkers(mapRef.current);
     }
-  }, [mapData, campuses, renderMarkers]);
+  }, [filteredPoints, campuses, renderMarkers]);
+
+  // Re-render circles when drive-time selection changes
+  useEffect(() => {
+    if (mapRef.current) {
+      renderCircles(mapRef.current);
+    }
+  }, [showDriveTime, renderCircles]);
 
   const hasData = mapData && mapData.points.length > 0;
 
-  // Count by campus for the legend
-  const campusCounts = hasData
-    ? mapData.points.reduce((acc, p) => {
-        const c = p.campus || "Unknown";
-        acc[c] = (acc[c] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>)
-    : {};
-
   return (
     <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="section-title text-card-foreground">
-            Congregation Map
-          </h3>
+          <h3 className="section-title text-card-foreground">Congregation Map</h3>
           <p className="text-[11px] text-muted-foreground mt-0.5">
             {hasData
-              ? `${mapData.points.length} members mapped of ${mapData.stats.total} active`
+              ? `${filteredPoints.length} of ${mapData.points.length} members shown (${mapData.stats.total} active)`
               : "Sync addresses from PCO to populate the map"}
           </p>
         </div>
@@ -414,32 +467,65 @@ export default function DemographicMap() {
         </div>
       )}
 
-      {/* Legend with counts */}
-      <div className="flex flex-wrap gap-4 mb-3">
-        {Object.entries(CAMPUS_DOT_COLORS)
-          .filter(([k]) => k !== "Unknown")
-          .map(([name, color]) => (
-            <div key={name} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <div
-                className="w-2.5 h-2.5 rounded-full"
-                style={{ background: color }}
-              />
-              {name}
-              {campusCounts[name] ? (
-                <span className="stat-value text-[10px] text-card-foreground">{campusCounts[name]}</span>
-              ) : null}
-            </div>
+      {/* Controls row: Campus filters + Drive-time toggle */}
+      <div className="flex flex-wrap items-center gap-3 mb-3">
+        {/* Campus filter toggles */}
+        <div className="flex items-center gap-1.5">
+          <span className="text-[11px] text-muted-foreground font-medium mr-1">Show:</span>
+          {Object.entries(CAMPUS_DOT_COLORS)
+            .filter(([k]) => k !== "Online")
+            .map(([name, color]) => {
+              const isActive = visibleCampuses.has(name);
+              const count = campusCounts[name] || 0;
+              return (
+                <button
+                  key={name}
+                  onClick={() => toggleCampus(name)}
+                  className={`
+                    inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium
+                    border transition-all duration-150 cursor-pointer
+                    ${isActive
+                      ? "border-border bg-card shadow-sm text-card-foreground"
+                      : "border-transparent bg-muted/40 text-muted-foreground opacity-50"
+                    }
+                  `}
+                >
+                  <div
+                    className="w-2.5 h-2.5 rounded-full shrink-0"
+                    style={{ background: isActive ? color : "#D1D5DB" }}
+                  />
+                  {name === "Unknown" ? "Unassigned" : name}
+                  {count > 0 && (
+                    <span className="text-[10px] text-muted-foreground">{count}</span>
+                  )}
+                </button>
+              );
+            })}
+        </div>
+
+        {/* Divider */}
+        <div className="w-px h-5 bg-border/60" />
+
+        {/* Drive-time radius toggle */}
+        <div className="flex items-center gap-1.5">
+          <Clock className="w-3 h-3 text-muted-foreground" />
+          <span className="text-[11px] text-muted-foreground font-medium mr-1">Drive:</span>
+          {(["off", "15 min", "30 min"] as const).map((option) => (
+            <button
+              key={option}
+              onClick={() => setShowDriveTime(option)}
+              className={`
+                px-2 py-1 rounded-md text-[11px] font-medium border transition-all duration-150 cursor-pointer
+                ${showDriveTime === option
+                  ? "border-border bg-card shadow-sm text-card-foreground"
+                  : "border-transparent bg-muted/40 text-muted-foreground"
+                }
+              `}
+            >
+              {option === "off" ? "Off" : option}
+            </button>
           ))}
-        {(campusCounts["Unknown"] ?? 0) > 0 && (
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <div
-              className="w-2.5 h-2.5 rounded-full"
-              style={{ background: CAMPUS_DOT_COLORS.Unknown }}
-            />
-            Unassigned
-            <span className="stat-value text-[10px] text-card-foreground">{campusCounts["Unknown"]}</span>
-          </div>
-        )}
+        </div>
       </div>
 
       {/* Map */}

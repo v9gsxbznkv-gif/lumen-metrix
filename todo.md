@@ -1212,3 +1212,9 @@
 - [x] Updated DemographicMap to use CAMPUS_COLORS from data.ts, show counts in legend, show "Assign Campuses" button when >50% unknown
 - [x] 151 tests pass
 - [x] Deploy
+
+## Round 132: Map Campus Filters + Drive-Time Radius Overlays
+- [x] Add campus filter toggles (show/hide Canton, Jasper, Unassigned dots independently)
+- [x] Add drive-time radius overlays (15/30-min circles around each campus)
+- [x] 151 tests pass
+- [ ] Deploy
