@@ -1,0 +1,15 @@
+{
+  "query": "SELECT COUNT(*) as total, COUNT(campus) as with_campus, COUNT(DISTINCT campus) as campus_count FROM pco_people;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT COUNT(*) as total, COUNT(campus) as with_campus, COUNT(DISTINCT campus) as campus_count FROM pco_people;",
+  "rows": [
+    {
+      "total": "10000",
+      "with_campus": "0",
+      "campus_count": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\twith_campus\tcampus_count\n10000\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 295
+}

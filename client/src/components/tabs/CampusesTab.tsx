@@ -13,6 +13,7 @@ import {
   MONTH_NAMES, getAttendanceForMonths, getGivingForMonths, getNextStepsForMonths,
 } from "@/lib/data";
 import { Building2, Users, DollarSign, UserPlus, Heart, TrendingUp, TrendingDown } from "lucide-react";
+import DemographicMap from "@/components/DemographicMap";
 
 export default function CampusesTab() {
   const { data, filters } = useData();
@@ -229,6 +230,9 @@ export default function CampusesTab() {
           </ResponsiveContainer>
         </div>
       </div>
+
+      {/* Demographic Map */}
+      <DemographicMap />
 
       {/* Campus Share Table */}
       <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">

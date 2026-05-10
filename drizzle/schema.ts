@@ -9,6 +9,7 @@ import {
   boolean,
   json,
   bigint,
+  double,
   uniqueIndex,
 } from "drizzle-orm/mysql-core";
 
@@ -285,6 +286,15 @@ export const pcoPeople = mysqlTable("pco_people", {
   campus: varchar("campus", { length: 64 }),
   membershipType: varchar("membershipType", { length: 64 }), // 'member', 'regular_attender', 'visitor', etc.
   status: varchar("status", { length: 64 }),
+  // Address fields (synced from PCO People /addresses sub-resource)
+  street: varchar("street", { length: 255 }),
+  city: varchar("city", { length: 128 }),
+  state: varchar("state", { length: 64 }),
+  zip: varchar("zip", { length: 20 }),
+  // Geocoded coordinates (from Google Maps Geocoding API)
+  latitude: double("latitude"),
+  longitude: double("longitude"),
+  geocodedAt: timestamp("geocodedAt"),
   lastSyncedAt: timestamp("lastSyncedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

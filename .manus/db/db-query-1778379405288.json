@@ -1,0 +1,18 @@
+{
+  "query": "SELECT status, COUNT(*) as cnt FROM pco_people GROUP BY status;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT status, COUNT(*) as cnt FROM pco_people GROUP BY status;",
+  "rows": [
+    {
+      "status": "inactive",
+      "cnt": "8827"
+    },
+    {
+      "status": "active",
+      "cnt": "1173"
+    }
+  ],
+  "messages": [],
+  "stdout": "status\tcnt\ninactive\t8827\nactive\t1173\n",
+  "stderr": "",
+  "execution_time_ms": 270
+}

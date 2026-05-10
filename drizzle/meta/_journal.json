@@ -120,6 +120,13 @@
       "when": 1778366505332,
       "tag": "0016_normal_moonstone",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "5",
+      "when": 1778379578300,
+      "tag": "0017_daffy_molecule_man",
+      "breakpoints": true
     }
   ]
 }

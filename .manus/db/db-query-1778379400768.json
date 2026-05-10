@@ -1,0 +1,90 @@
+{
+  "query": "SELECT pcoId, firstName, lastName, campus, membershipType, status FROM pco_people LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT pcoId, firstName, lastName, campus, membershipType, status FROM pco_people LIMIT 10;",
+  "rows": [
+    {
+      "pcoId": "74411",
+      "firstName": "Adam",
+      "lastName": "Ellis",
+      "campus": "NULL",
+      "membershipType": "Steward",
+      "status": "inactive"
+    },
+    {
+      "pcoId": "81504",
+      "firstName": "Samm",
+      "lastName": "Darden",
+      "campus": "NULL",
+      "membershipType": "NULL",
+      "status": "inactive"
+    },
+    {
+      "pcoId": "97567",
+      "firstName": "Mark",
+      "lastName": "Sheldon",
+      "campus": "NULL",
+      "membershipType": "Steward",
+      "status": "inactive"
+    },
+    {
+      "pcoId": "97583",
+      "firstName": "Ricky",
+      "lastName": "Merrefield",
+      "campus": "NULL",
+      "membershipType": "Steward",
+      "status": "inactive"
+    },
+    {
+      "pcoId": "97603",
+      "firstName": "Dave",
+      "lastName": "Ridarick",
+      "campus": "NULL",
+      "membershipType": "Attendee",
+      "status": "inactive"
+    },
+    {
+      "pcoId": "97607",
+      "firstName": "John",
+      "lastName": "Johnson",
+      "campus": "NULL",
+      "membershipType": "Steward",
+      "status": "inactive"
+    },
+    {
+      "pcoId": "97609",
+      "firstName": "Chris",
+      "lastName": "Hotz",
+      "campus": "NULL",
+      "membershipType": "Steward",
+      "status": "inactive"
+    },
+    {
+      "pcoId": "97613",
+      "firstName": "Jennie",
+      "lastName": "Smith",
+      "campus": "NULL",
+      "membershipType": "Steward",
+      "status": "inactive"
+    },
+    {
+      "pcoId": "97615",
+      "firstName": "Amy",
+      "lastName": "Smerk",
+      "campus": "NULL",
+      "membershipType": "Steward",
+      "status": "inactive"
+    },
+    {
+      "pcoId": "97617",
+      "firstName": "Jeffrey",
+      "lastName": "Barrett",
+      "campus": "NULL",
+      "membershipType": "Steward",
+      "status": "inactive"
+    }
+  ],
+  "messages": [],
+  "stdout": "pcoId\tfirstName\tlastName\tcampus\tmembershipType\tstatus\n74411\tAdam\tEllis\tNULL\tSteward\tinactive\n81504\tSamm\tDarden\tNULL\tNULL\tinactive\n97567\tMark\tSheldon\tNULL\tSteward\tinactive\n97583\tRicky\tMerrefield\tNULL\tSteward\tinactive\n97603\tDave\tRidarick\tNULL\tAttendee\tinactive\n97607\tJohn\tJohnson\tNULL\tSteward\tinactive\n97609\tChris\tHotz\tNULL\tSteward\tinactive\n97613\tJennie\tSmith\tNULL\tSteward\tinactive\n97615\tAmy\tSmerk\tNULL\tSteward\tinactive\n97617\tJeffrey\tBarrett\tNULL\tSteward\tinactive\n",
+  "stderr": "",
+  "execution_time_ms": 271
+}

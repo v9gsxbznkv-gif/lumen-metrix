@@ -1099,4 +1099,16 @@
 - [x] Per Capita KPI subtitle: "Natl avg: $30/wk" (all view modes)
 - [x] Renamed "Latest Week" → "Current Week" ($226K, Apr 27) — skips partial May 4 week
 - [x] 140 tests pass
+- [x] Deployed (5540251f)
+
+## Round 119: Demographic Map on Campuses Page
+- [x] Assessed: 1,173 active people, no addresses synced yet, need PCO addresses sub-resource
+- [x] Add address columns (street, city, state, zip, lat, lng, geocodedAt) to pco_people schema + migrate
+- [x] Build syncAddresses mutation: fetches /addresses sub-resource for active people only
+- [x] Build geocodeAddresses mutation: Google Maps Geocoding via Manus proxy
+- [x] Create getMapPoints + getSyncStatus tRPC endpoints (no PII exposed)
+- [x] Build DemographicMap component (Google Maps with campus pins + colored member dots)
+- [x] Add map to CampusesTab (between charts and share table)
+- [ ] User triggers address sync + geocoding via "Sync Addresses" button
+- [x] 151 tests pass (11 new demographics tests)
 - [ ] Deploy
