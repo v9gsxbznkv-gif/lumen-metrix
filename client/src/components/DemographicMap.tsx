@@ -39,18 +39,32 @@ const CAMPUS_COORDS: Record<string, { lat: number; lng: number }> = {
 };
 
 /**
- * Deterministic pseudo-random based on a seed string.
- * Returns a value between 0 and 1.
+ * MurmurHash3 32-bit finalizer. Produces well-distributed output
+ * even for sequential inputs like "key-0", "key-1", "key-2".
  */
-function seededRandom(seed: string): number {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) {
-    const char = seed.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
+function murmurhash3(str: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    let k = str.charCodeAt(i);
+    k = Math.imul(k, 0xcc9e2d51);
+    k = (k << 15) | (k >>> 17);
+    k = Math.imul(k, 0x1b873593);
+    h ^= k;
+    h = (h << 13) | (h >>> 19);
+    h = Math.imul(h, 5) + 0xe6546b64;
   }
-  // Normalize to 0-1
-  return (Math.abs(hash) % 10000) / 10000;
+  h ^= str.length;
+  h ^= h >>> 16;
+  h = Math.imul(h, 0x85ebca6b);
+  h ^= h >>> 13;
+  h = Math.imul(h, 0xc2b2ae35);
+  h ^= h >>> 16;
+  return h >>> 0;
+}
+
+/** Deterministic float in [0, 1) from a seed string. */
+function seededRandom(seed: string): number {
+  return murmurhash3(seed) / 0x100000000;
 }
 
 interface JitteredPoint {
@@ -62,10 +76,9 @@ interface JitteredPoint {
 }
 
 /**
- * Apply deterministic jitter to points that share the same lat/lng.
- * Each person gets a unique, stable offset so dots at the same address
- * fan out in a small circle rather than stacking on top of each other.
- * Points with unique positions are left unchanged.
+ * Apply deterministic jitter using independent x/y offsets (NOT polar coords).
+ * MurmurHash3 ensures no correlation between sequential seeds.
+ * Spread scales with group size so zip-centroid clusters fill the area naturally.
  */
 function jitterPoints(
   points: Array<{ lat: number; lng: number; campus: string; city: string; zip: string }>
@@ -83,23 +96,22 @@ function jitterPoints(
 
   for (const [groupKey, group] of Array.from(groups)) {
     if (group.length === 1) {
-      // Single person at this address — no jitter needed
       result[group[0].idx] = { ...group[0].point };
     } else {
-      // Multiple people at same address — fan out in a circle
       const count = group.length;
-      // Radius scales slightly with group size but stays small (~0.001 to 0.003 degrees)
-      const baseRadius = 0.0008 + Math.min(count, 20) * 0.0001;
+      // Spread scales with group size (in degrees, 1 degree ≈ 111km)
+      // Same spread as original: ~0.001 to 0.003 degrees
+      const spread = 0.0008 + Math.min(count, 20) * 0.0001;
+
       for (let i = 0; i < count; i++) {
-        const seed = `${groupKey}-${i}`;
-        const angle = (i / count) * 2 * Math.PI + seededRandom(seed + "-a") * 0.3;
-        const radiusFactor = 0.7 + seededRandom(seed + "-r") * 0.6;
-        const jitterLat = group[i].point.lat + baseRadius * Math.cos(angle) * radiusFactor;
-        const jitterLng = group[i].point.lng + baseRadius * Math.sin(angle) * radiusFactor;
+        // Two independent hashes for x and y — completely different salt strings
+        const dx = (seededRandom(`${groupKey}|X|${i}`) * 2 - 1) * spread;
+        const dy = (seededRandom(`${groupKey}|Y|${i}`) * 2 - 1) * spread;
+
         result[group[i].idx] = {
           ...group[i].point,
-          lat: jitterLat,
-          lng: jitterLng,
+          lat: group[i].point.lat + dx,
+          lng: group[i].point.lng + dy,
         };
       }
     }
@@ -366,14 +378,13 @@ export default function DemographicMap() {
         const color = CAMPUS_DOT_COLORS[campus] || CAMPUS_DOT_COLORS.Unknown;
         const dotEl = document.createElement("div");
         dotEl.style.cssText = `
-          width: 10px;
-          height: 10px;
+          width: 6px;
+          height: 6px;
           border-radius: 50%;
           background: ${color};
-          border: 1.5px solid rgba(255,255,255,0.85);
-          opacity: 0.8;
+          border: 0.5px solid rgba(255,255,255,0.6);
+          opacity: 0.7;
           cursor: pointer;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.25);
         `;
         dotEl.title = `${campus} — ${point.city || point.zip}`;
 
