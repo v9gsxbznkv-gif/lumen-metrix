@@ -1,0 +1,11 @@
+{
+  "query": "SELECT status, COUNT(*) as cnt FROM pco_people GROUP BY status; SELECT COUNT(*) as with_address FROM pco_people WHERE address IS NOT NULL AND address != ''; SELECT COUNT(*) as geocoded FROM pco_people WHERE latitude IS NOT NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT status, COUNT(*) as cnt FROM pco_people GROUP BY status; SELECT COUNT(*) as with_address FROM pco_people WHERE address IS NOT NULL AND address != ''; SELECT COUNT(*) as geocoded FROM pco_people WHERE latitude IS NOT NULL;",
+  "returncode": 1,
+  "logs": [
+    "status\tcnt",
+    "inactive\t8827",
+    "active\t1173",
+    "ERROR 1054 (42S22) at line 1: Unknown column 'address' in 'where clause'"
+  ]
+}

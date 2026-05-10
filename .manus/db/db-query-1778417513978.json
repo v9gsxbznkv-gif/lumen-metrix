@@ -1,0 +1,25 @@
+{
+  "query": "SELECT status, COUNT(*) as cnt FROM pco_people GROUP BY status ORDER BY cnt DESC; SELECT COUNT(*) as with_street FROM pco_people WHERE street IS NOT NULL AND street != ''; SELECT COUNT(*) as geocoded FROM pco_people WHERE latitude IS NOT NULL; SELECT COUNT(*) as total FROM pco_people;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT status, COUNT(*) as cnt FROM pco_people GROUP BY status ORDER BY cnt DESC; SELECT COUNT(*) as with_street FROM pco_people WHERE street IS NOT NULL AND street != ''; SELECT COUNT(*) as geocoded FROM pco_people WHERE latitude IS NOT NULL; SELECT COUNT(*) as total FROM pco_people;",
+  "rows": [
+    {
+      "status": "inactive",
+      "cnt": "8827"
+    },
+    {
+      "status": "active",
+      "cnt": "1173"
+    }
+  ],
+  "messages": [
+    "with_street",
+    "0",
+    "geocoded",
+    "1103",
+    "total",
+    "10000"
+  ],
+  "stdout": "status\tcnt\ninactive\t8827\nactive\t1173\nwith_street\n0\ngeocoded\n1103\ntotal\n10000\n",
+  "stderr": "",
+  "execution_time_ms": 305
+}

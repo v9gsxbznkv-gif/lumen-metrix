@@ -182,11 +182,11 @@ export default function DemographicMap() {
 
   const handleSync = useCallback(async () => {
     setSyncing(true);
-    setSyncMessage("Syncing addresses from PCO...");
+    setSyncMessage("Pulling all active people with addresses from PCO (this may take 1-2 min)...");
     try {
       const addrResult = await syncAddresses.mutateAsync();
       setSyncMessage(
-        `Addresses: ${addrResult.synced} synced, ${addrResult.noAddress} no address. Geocoding...`
+        `Synced ${addrResult.total} people: ${addrResult.synced} with addresses, ${addrResult.noAddress} without. Geocoding...`
       );
 
       let totalGeocoded = 0;

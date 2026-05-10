@@ -570,21 +570,45 @@ export async function syncPeople(client: PcoClient): Promise<SyncResult> {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
-    console.log("[PCO Sync] Starting people sync...");
+    console.log("[PCO Sync] Starting people sync (active only, with addresses)...");
 
-    const PEOPLE_TIMEOUT_MS = 90_000;
-    const peopleResult = await Promise.race([
-      client.paginateAll("/people/v2/people", { per_page: 100, include: "primary_campus" }),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error(`Timeout fetching people after ${PEOPLE_TIMEOUT_MS}ms`)), PEOPLE_TIMEOUT_MS)
-      ),
-    ]);
-    console.log(`[PCO Sync] Got ${peopleResult.data.length} people, ${peopleResult.included.length} included resources`);
+    // Filter to active people only and include addresses + campus in one sweep
+    // PCO filter syntax: where[status]=active
+    const peopleResult = await client.paginateAll(
+      "/people/v2/people",
+      {
+        per_page: 100,
+        include: "primary_campus,addresses",
+        "where[status]": "active",
+      },
+      200 // up to 20,000 active people
+    );
+    console.log(`[PCO Sync] Got ${peopleResult.data.length} active people, ${peopleResult.included.length} included resources`);
 
-    // Build lookup map for included campus resources
-    const includedMap: Record<string, any> = {};
+    // Build lookup maps for included campus and address resources
+    const campusMap: Record<string, any> = {};
+    const addressMap: Record<string, any[]> = {}; // personId -> addresses[]
     for (const inc of peopleResult.included) {
-      includedMap[`${inc.type}-${inc.id}`] = inc;
+      if (inc.type === "Campus") {
+        campusMap[`Campus-${inc.id}`] = inc;
+      } else if (inc.type === "Address") {
+        // Addresses are linked via relationships on the person
+        // We'll map them by the person's ID below
+      }
+    }
+
+    // Build address lookup from each person's relationships
+    for (const person of peopleResult.data) {
+      const addrRefs = (person as any).relationships?.addresses?.data;
+      if (addrRefs && Array.isArray(addrRefs)) {
+        const personId = String(person.id);
+        addressMap[personId] = addrRefs.map((ref: any) => {
+          const found = peopleResult.included.find(
+            (inc: any) => inc.type === "Address" && inc.id === ref.id
+          );
+          return found;
+        }).filter(Boolean);
+      }
     }
 
     for (const person of peopleResult.data) {
@@ -595,9 +619,16 @@ export async function syncPeople(client: PcoClient): Promise<SyncResult> {
       // Resolve primary_campus from included resources
       const campusRef = (person as any).relationships?.primary_campus?.data;
       const campusObj = campusRef
-        ? includedMap[`Campus-${campusRef.id}`]
+        ? campusMap[`Campus-${campusRef.id}`]
         : null;
       const campusName = campusObj?.attributes?.name || null;
+
+      // Resolve primary address from included resources
+      const personAddresses = addressMap[pcoId] || [];
+      const primaryAddr = personAddresses.find(
+        (a: any) => a.attributes?.primary === true
+      ) || personAddresses[0];
+      const addrAttrs = primaryAddr?.attributes || null;
 
       const existing = await db
         .select()
@@ -605,30 +636,30 @@ export async function syncPeople(client: PcoClient): Promise<SyncResult> {
         .where(eq(pcoPeople.pcoId, pcoId))
         .limit(1);
 
+      const personData = {
+        firstName: attrs.first_name || null,
+        lastName: attrs.last_name || null,
+        email: attrs.primary_contact_email || null,
+        campus: campusName,
+        membershipType: attrs.membership || null,
+        status: attrs.status || null,
+        street: addrAttrs?.street || null,
+        city: addrAttrs?.city || null,
+        state: addrAttrs?.state || null,
+        zip: addrAttrs?.zip || null,
+        lastSyncedAt: new Date(),
+      };
+
       if (existing.length > 0) {
         await db
           .update(pcoPeople)
-          .set({
-            firstName: attrs.first_name || null,
-            lastName: attrs.last_name || null,
-            email: attrs.primary_contact_email || null,
-            campus: campusName,
-            membershipType: attrs.membership || null,
-            status: attrs.status || null,
-            lastSyncedAt: new Date(),
-          })
+          .set(personData)
           .where(eq(pcoPeople.pcoId, pcoId));
         recordsUpdated++;
       } else {
         await db.insert(pcoPeople).values({
           pcoId,
-          firstName: attrs.first_name || null,
-          lastName: attrs.last_name || null,
-          email: attrs.primary_contact_email || null,
-          campus: campusName,
-          membershipType: attrs.membership || null,
-          status: attrs.status || null,
-          lastSyncedAt: new Date(),
+          ...personData,
         });
         recordsCreated++;
       }

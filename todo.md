@@ -1217,4 +1217,12 @@
 - [x] Add campus filter toggles (show/hide Canton, Jasper, Unassigned dots independently)
 - [x] Add drive-time radius overlays (15/30-min circles around each campus)
 - [x] 151 tests pass
-- [ ] Deploy
+- [x] Deploy
+
+## Round 133: Fix Demographics Sync — Pull ALL Active People
+- [x] Diagnose: sync pulled ALL people (active+inactive) with 90s timeout, hit 10K cap; only 1,173 active; addresses fetched one-by-one never completed
+- [x] Fix: syncPeople now filters where[status]=active, includes addresses+campus in one paginated sweep, maxPages=200
+- [x] Fix: syncAddresses now delegates to syncPeople (bulk) instead of 4000+ individual API calls
+- [x] Fix: removed 90s timeout, addresses come in same response as people
+- [x] 151 tests pass
+- [ ] Deploy (with Round 132 campus filters + drive-time overlays)

@@ -107,9 +107,9 @@ export const demographicsRouter = router({
   }),
 
   /**
-   * Sync addresses from PCO for active people.
-   * Fetches /people/v2/people/{id}/addresses for each active person
-   * who doesn't have an address yet.
+   * Sync all active people with addresses from PCO in bulk.
+   * Uses the people sync (which now includes addresses + campus in one paginated sweep).
+   * Much faster than fetching addresses one-by-one.
    */
   syncAddresses: publicProcedure.mutation(async () => {
     const db = await getDb();
@@ -120,60 +120,41 @@ export const demographicsRouter = router({
 
     const client = new PcoClient(accessToken);
 
-    // Get active people without addresses
-    const people = await db
-      .select({ id: pcoPeople.id, pcoId: pcoPeople.pcoId })
+    // Import and run the people sync which now pulls addresses in bulk
+    const { syncPeople } = await import("../pco/sync");
+    const result = await syncPeople(client);
+
+    if (result.status === "failed") {
+      throw new Error(`People sync failed: ${result.errorMessage}`);
+    }
+
+    // Count how many now have addresses
+    const [withAddr] = await db
+      .select({ count: sql<number>`COUNT(*)` })
       .from(pcoPeople)
       .where(
         and(
           eq(pcoPeople.status, "active"),
-          isNull(pcoPeople.zip) // no address synced yet
+          isNotNull(pcoPeople.zip),
+          sql`${pcoPeople.zip} != ''`
+        )
+      );
+    const [noAddr] = await db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(pcoPeople)
+      .where(
+        and(
+          eq(pcoPeople.status, "active"),
+          sql`(${pcoPeople.zip} IS NULL OR ${pcoPeople.zip} = '')`
         )
       );
 
-    let synced = 0;
-    let noAddress = 0;
-    let errors = 0;
-
-    for (const person of people) {
-      try {
-        const result = await client.get<any>(
-          `/people/v2/people/${person.pcoId}/addresses`
-        );
-
-        const addresses = Array.isArray(result.data) ? result.data : [];
-        // Pick primary address, or first one
-        const primary = addresses.find(
-          (a: any) => a.attributes?.primary === true
-        ) || addresses[0];
-
-        if (primary?.attributes) {
-          const attrs = primary.attributes;
-          await db
-            .update(pcoPeople)
-            .set({
-              street: attrs.street || null,
-              city: attrs.city || null,
-              state: attrs.state || null,
-              zip: attrs.zip || null,
-            })
-            .where(eq(pcoPeople.id, person.id));
-          synced++;
-        } else {
-          // Mark as checked (set zip to empty string so we don't re-fetch)
-          await db
-            .update(pcoPeople)
-            .set({ zip: "" })
-            .where(eq(pcoPeople.id, person.id));
-          noAddress++;
-        }
-      } catch (err: any) {
-        console.warn(`[Demographics] Failed to fetch address for PCO person ${person.pcoId}: ${err.message}`);
-        errors++;
-      }
-    }
-
-    return { synced, noAddress, errors, total: people.length };
+    return {
+      synced: Number(withAddr?.count || 0),
+      noAddress: Number(noAddr?.count || 0),
+      errors: 0,
+      total: result.recordsProcessed,
+    };
   }),
 
   /**
