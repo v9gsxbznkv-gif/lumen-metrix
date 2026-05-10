@@ -26,6 +26,17 @@ const CAMPUS_LOCATIONS = [
   },
 ];
 
+/**
+ * Normalize PCO campus names to match dashboard CAMPUS_COLORS keys.
+ * PCO stores "Canton Campus", "Jasper Campus" but dashboard uses "Canton", "Jasper".
+ */
+function normalizeCampusName(raw: string | null | undefined): string {
+  if (!raw) return "Unknown";
+  // Strip trailing " Campus" suffix
+  const normalized = raw.replace(/\s+Campus$/i, "");
+  return normalized || "Unknown";
+}
+
 export const demographicsRouter = router({
   /**
    * Get campus locations (static, no DB needed)
@@ -83,7 +94,7 @@ export const demographicsRouter = router({
       points: rows.map((r) => ({
         lat: r.latitude!,
         lng: r.longitude!,
-        campus: r.campus || "Unknown",
+        campus: normalizeCampusName(r.campus),
         city: r.city || "",
         zip: r.zip || "",
       })),

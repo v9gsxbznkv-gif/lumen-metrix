@@ -1211,4 +1211,4 @@
 - [x] Add backfill endpoint (demographics.backfillCampus) that re-fetches campus from PCO
 - [x] Updated DemographicMap to use CAMPUS_COLORS from data.ts, show counts in legend, show "Assign Campuses" button when >50% unknown
 - [x] 151 tests pass
-- [ ] Deploy
+- [x] Deploy

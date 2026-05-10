@@ -1,0 +1,22 @@
+{
+  "query": "SELECT campus, COUNT(*) as cnt FROM pco_people WHERE status = 'active' GROUP BY campus ORDER BY cnt DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT campus, COUNT(*) as cnt FROM pco_people WHERE status = 'active' GROUP BY campus ORDER BY cnt DESC LIMIT 10;",
+  "rows": [
+    {
+      "campus": "Canton Campus",
+      "cnt": "1036"
+    },
+    {
+      "campus": "Jasper Campus",
+      "cnt": "98"
+    },
+    {
+      "campus": "NULL",
+      "cnt": "39"
+    }
+  ],
+  "messages": [],
+  "stdout": "campus\tcnt\nCanton Campus\t1036\nJasper Campus\t98\nNULL\t39\n",
+  "stderr": "",
+  "execution_time_ms": 267
+}
