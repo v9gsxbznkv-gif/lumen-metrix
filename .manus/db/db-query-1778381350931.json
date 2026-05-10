@@ -1,0 +1,90 @@
+{
+  "query": "SELECT city, state, zip, latitude, longitude, campus FROM pco_people WHERE status = 'active' AND latitude IS NOT NULL AND latitude != 0 LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT city, state, zip, latitude, longitude, campus FROM pco_people WHERE status = 'active' AND latitude IS NOT NULL AND latitude != 0 LIMIT 10;",
+  "rows": [
+    {
+      "city": "Canton",
+      "state": "GA ",
+      "zip": "30115",
+      "latitude": "34.2264431",
+      "longitude": "-84.41726659999999",
+      "campus": "NULL"
+    },
+    {
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30115-6053",
+      "latitude": "34.2264431",
+      "longitude": "-84.41726659999999",
+      "campus": "NULL"
+    },
+    {
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30114",
+      "latitude": "34.2367621",
+      "longitude": "-84.4907621",
+      "campus": "NULL"
+    },
+    {
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30115",
+      "latitude": "34.2264431",
+      "longitude": "-84.41726659999999",
+      "campus": "NULL"
+    },
+    {
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30114",
+      "latitude": "34.2367621",
+      "longitude": "-84.4907621",
+      "campus": "NULL"
+    },
+    {
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30114",
+      "latitude": "34.2367621",
+      "longitude": "-84.4907621",
+      "campus": "NULL"
+    },
+    {
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30114",
+      "latitude": "34.2367621",
+      "longitude": "-84.4907621",
+      "campus": "NULL"
+    },
+    {
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30115",
+      "latitude": "34.2264431",
+      "longitude": "-84.41726659999999",
+      "campus": "NULL"
+    },
+    {
+      "city": "Ball Ground",
+      "state": "GA",
+      "zip": "30107",
+      "latitude": "34.3372664",
+      "longitude": "-84.3779515",
+      "campus": "NULL"
+    },
+    {
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30115",
+      "latitude": "34.2264431",
+      "longitude": "-84.41726659999999",
+      "campus": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "city\tstate\tzip\tlatitude\tlongitude\tcampus\nCanton\tGA \t30115\t34.2264431\t-84.41726659999999\tNULL\nCanton\tGA\t30115-6053\t34.2264431\t-84.41726659999999\tNULL\nCanton\tGA\t30114\t34.2367621\t-84.4907621\tNULL\nCanton\tGA\t30115\t34.2264431\t-84.41726659999999\tNULL\nCanton\tGA\t30114\t34.2367621\t-84.4907621\tNULL\nCanton\tGA\t30114\t34.2367621\t-84.4907621\tNULL\nCanton\tGA\t30114\t34.2367621\t-84.4907621\tNULL\nCanton\tGA\t30115\t34.2264431\t-84.41726659999999\tNULL\nBall Ground\tGA\t30107\t34.3372664\t-84.3779515\tNULL\nCanton\tGA\t30115\t34.2264431\t-84.41726659999999\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 259
+}

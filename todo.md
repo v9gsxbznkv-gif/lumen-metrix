@@ -1127,4 +1127,9 @@
 - [x] Filter lat=0/lng=0 from map points query
 - [x] Add useEffect to re-render markers when mapData changes (progressive loading)
 - [x] 151 tests pass
+- [x] Deployed (52f5019e)
+
+## Round 122: Increase People Dot Visibility on Map
+- [x] Increased dots from 8px to 14px with 2px white border and drop shadow
+- [x] 151 tests pass
 - [ ] Deploy

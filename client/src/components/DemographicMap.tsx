@@ -135,13 +135,14 @@ export default function DemographicMap() {
         const color = CAMPUS_DOT_COLORS[point.campus] || CAMPUS_DOT_COLORS.Unknown;
         const dotEl = document.createElement("div");
         dotEl.style.cssText = `
-          width: 8px;
-          height: 8px;
+          width: 14px;
+          height: 14px;
           border-radius: 50%;
           background: ${color};
-          border: 1px solid rgba(255,255,255,0.6);
-          opacity: 0.75;
+          border: 2px solid rgba(255,255,255,0.9);
+          opacity: 0.85;
           cursor: pointer;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.3);
         `;
 
         const marker = new google.maps.marker.AdvancedMarkerElement({

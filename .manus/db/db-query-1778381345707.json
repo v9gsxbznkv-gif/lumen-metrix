@@ -1,0 +1,17 @@
+{
+  "query": "SELECT \n  COUNT(*) as total_active,\n  SUM(CASE WHEN latitude IS NOT NULL AND latitude != 0 THEN 1 ELSE 0 END) as geocoded_valid,\n  SUM(CASE WHEN latitude = 0 THEN 1 ELSE 0 END) as geocoded_failed,\n  SUM(CASE WHEN latitude IS NULL AND zip IS NOT NULL AND zip != '' THEN 1 ELSE 0 END) as pending_geocode,\n  SUM(CASE WHEN zip IS NULL OR zip = '' THEN 1 ELSE 0 END) as no_address\nFROM pco_people \nWHERE status = 'active';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT \n  COUNT(*) as total_active,\n  SUM(CASE WHEN latitude IS NOT NULL AND latitude != 0 THEN 1 ELSE 0 END) as geocoded_valid,\n  SUM(CASE WHEN latitude = 0 THEN 1 ELSE 0 END) as geocoded_failed,\n  SUM(CASE WHEN latitude IS NULL AND zip IS NOT NULL AND zip != '' THEN 1 ELSE 0 END) as pending_geocode,\n  SUM(CASE WHEN zip IS NULL OR zip = '' THEN 1 ELSE 0 END) as no_address\nFROM pco_people \nWHERE status = 'active';",
+  "rows": [
+    {
+      "total_active": "1173",
+      "geocoded_valid": "737",
+      "geocoded_failed": "0",
+      "pending_geocode": "366",
+      "no_address": "70"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_active\tgeocoded_valid\tgeocoded_failed\tpending_geocode\tno_address\n1173\t737\t0\t366\t70\n",
+  "stderr": "",
+  "execution_time_ms": 275
+}
