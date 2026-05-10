@@ -1091,4 +1091,12 @@
 - [x] Add Per Capita YoY weekly line chart to GivingTab2 (2026 vs 2025)
 - [x] Added `getPerCapita` tRPC endpoint to dataViews.giving router
 - [x] 140 tests pass (7 new per capita tests)
+- [x] Deployed (487c82ad)
+
+## Round 118: National Benchmark Data on Per Capita Giving + Current Week Fix
+- [x] Research: National avg $30/person/week (Christian Standard 2025, combined attendance)
+- [x] Red dashed ReferenceLine at $30 on Per Capita YoY chart with "Natl Avg $30" label
+- [x] Per Capita KPI subtitle: "Natl avg: $30/wk" (all view modes)
+- [x] Renamed "Latest Week" → "Current Week" ($226K, Apr 27) — skips partial May 4 week
+- [x] 140 tests pass
 - [ ] Deploy

@@ -37,7 +37,11 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  ReferenceLine,
 } from "recharts";
+
+// National benchmark: $30/person/week (Christian Standard Church Report 2025, combined attendance)
+const NATIONAL_AVG_GPC = 30;
 import {
   formatCurrency,
   CAMPUS_COLORS,
@@ -237,11 +241,21 @@ export default function GivingTab2() {
     if (!rawData) return null;
 
     if (viewMode === "weekly" && weeklyTableData.length > 0) {
-      const latest = weeklyTableData[0];
-      const prior = weeklyTableData[1];
+      // "Current Week" = last full week (skip partial/incomplete latest week)
+      // A week is considered partial if its total is less than 30% of the season average
       const ytdTotal = weeklyTableData.reduce((s, w) => s + w.total, 0);
       const avgWeekly = ytdTotal / weeklyTableData.length;
-      return { latest, prior, ytdTotal, avgWeekly, weekCount: weeklyTableData.length };
+      const threshold = avgWeekly * 0.3;
+
+      // Find the first week from the top (most recent) that exceeds threshold
+      let currentWeekIdx = 0;
+      if (weeklyTableData[0].total < threshold && weeklyTableData.length > 1) {
+        currentWeekIdx = 1;
+      }
+      const currentWeek = weeklyTableData[currentWeekIdx];
+      const priorWeek = weeklyTableData[currentWeekIdx + 1];
+
+      return { latest: currentWeek, prior: priorWeek, ytdTotal, avgWeekly, weekCount: weeklyTableData.length };
     }
 
     if (viewMode === "yearly" && yearlyTableData.length > 0) {
@@ -395,11 +409,12 @@ export default function GivingTab2() {
               {viewMode === "weekly" && kpis.latest && (
                 <>
                   <KpiCard
-                    label="Latest Week"
+                    label="Current Week"
                     value={formatCurrency(kpis.latest.total)}
                     subtitle={formatDate((kpis.latest as any).weekStartDate)}
                     borderColor="#4A7C59"
                     change={kpis.prior ? getYoYChange(kpis.latest.total, kpis.prior.total) : undefined}
+                    changeLabel="vs prior week"
                   />
                   <KpiCard
                     label={`${year} YTD`}
@@ -417,7 +432,7 @@ export default function GivingTab2() {
                     <KpiCard
                       label="Per Capita"
                       value={`$${Math.round(perCapitaKpi.avgGpc)}`}
-                      subtitle="Per person per week"
+                      subtitle={`Natl avg: $${NATIONAL_AVG_GPC}/wk`}
                       borderColor="#8B5CF6"
                       change={perCapitaKpi.change ?? undefined}
                       changeLabel={`vs same weeks ${year - 1}`}
@@ -443,7 +458,7 @@ export default function GivingTab2() {
                     <KpiCard
                       label="Per Capita"
                       value={`$${Math.round(perCapitaKpi.avgGpc)}`}
-                      subtitle="Per person per week"
+                      subtitle={`Natl avg: $${NATIONAL_AVG_GPC}/wk`}
                       borderColor="#8B5CF6"
                       change={perCapitaKpi.change ?? undefined}
                       changeLabel={`vs same weeks ${year - 1}`}
@@ -471,7 +486,7 @@ export default function GivingTab2() {
                     <KpiCard
                       label="Per Capita"
                       value={`$${Math.round(perCapitaKpi.avgGpc)}`}
-                      subtitle="Per person per week"
+                      subtitle={`Natl avg: $${NATIONAL_AVG_GPC}/wk`}
                       borderColor="#8B5CF6"
                       change={perCapitaKpi.change ?? undefined}
                       changeLabel={`vs same weeks ${year - 1}`}
@@ -509,6 +524,19 @@ export default function GivingTab2() {
                     formatter={(v: number, name: string) => [`$${v.toFixed(2)}`, name]}
                   />
                   <Legend wrapperStyle={{ fontSize: 12, fontFamily: "'Inter'" }} iconType="circle" iconSize={8} />
+                  <ReferenceLine
+                    y={NATIONAL_AVG_GPC}
+                    stroke="#DC2626"
+                    strokeDasharray="6 4"
+                    strokeWidth={1.5}
+                    label={{
+                      value: `Natl Avg $${NATIONAL_AVG_GPC}`,
+                      position: "insideTopRight",
+                      fill: "#DC2626",
+                      fontSize: 10,
+                      fontFamily: "'Inter'",
+                    }}
+                  />
                   <Line
                     type="monotone"
                     dataKey="current"
