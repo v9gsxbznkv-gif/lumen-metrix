@@ -161,6 +161,8 @@ export default function DemographicMap() {
   const fetchAddressBatch = trpc.demographics.fetchAddressBatch.useMutation();
   const geocodeAddresses = trpc.demographics.geocodeAddresses.useMutation();
   const backfillCampus = trpc.demographics.backfillCampus.useMutation();
+  const debugAddressFetch = trpc.demographics.debugAddressFetch.useMutation();
+  const [debugResult, setDebugResult] = useState<string>("");
 
   // Check if most dots are "Unknown" campus — suggest backfill
   const unknownCount = mapData?.points?.filter((p) => !p.campus || p.campus === "Unknown").length ?? 0;
@@ -467,6 +469,23 @@ export default function DemographicMap() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              setDebugResult("Fetching raw PCO address data...");
+              try {
+                const result = await debugAddressFetch.mutateAsync();
+                setDebugResult(JSON.stringify(result, null, 2));
+              } catch (err: any) {
+                setDebugResult(`Error: ${err.message}`);
+              }
+            }}
+            disabled={debugAddressFetch.isPending}
+            className="text-xs border-red-300 text-red-600"
+          >
+            {debugAddressFetch.isPending ? "Checking..." : "Debug Addresses"}
+          </Button>
           {needsBackfill && (
             <Button
               variant="outline"
@@ -503,6 +522,16 @@ export default function DemographicMap() {
       {syncMessage && (
         <div className="px-3 py-2 rounded-md text-xs font-medium mb-3 bg-muted/50 text-muted-foreground">
           {syncMessage}
+        </div>
+      )}
+
+      {debugResult && (
+        <div className="mb-3 border border-red-200 rounded-md bg-red-50 p-3 max-h-80 overflow-auto">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-xs font-bold text-red-700">PCO Address Debug Output</span>
+            <button onClick={() => setDebugResult("")} className="text-xs text-red-500 underline">Close</button>
+          </div>
+          <pre className="text-[10px] text-red-900 whitespace-pre-wrap break-all">{debugResult}</pre>
         </div>
       )}
 
