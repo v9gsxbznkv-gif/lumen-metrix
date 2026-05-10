@@ -100,20 +100,20 @@ function jitterPoints(
     } else {
       const count = group.length;
       // Spread scales with group size (in degrees, 1 degree ≈ 111km)
-      // Small groups (household): tight. Large groups (zip centroid): wide natural scatter.
+      // Small groups stay tight, large zip-centroid groups fill the surrounding area
       let spread: number;
       if (count <= 5) {
-        spread = 0.0003; // ~33m (household)
+        spread = 0.001; // ~110m (household)
       } else if (count <= 20) {
-        spread = 0.003; // ~330m (street/complex)
+        spread = 0.008; // ~890m
       } else if (count <= 50) {
-        spread = 0.008; // ~890m (neighborhood)
+        spread = 0.02; // ~2.2km
       } else if (count <= 150) {
-        spread = 0.02; // ~2.2km (large neighborhood)
+        spread = 0.04; // ~4.4km
       } else if (count <= 400) {
-        spread = 0.035; // ~3.9km (town area)
+        spread = 0.07; // ~7.8km
       } else {
-        spread = 0.045; // ~5km (zip code area)
+        spread = 0.09; // ~10km — fills the zip code area naturally
       }
 
       for (let i = 0; i < count; i++) {
@@ -391,12 +391,12 @@ export default function DemographicMap() {
         const color = CAMPUS_DOT_COLORS[campus] || CAMPUS_DOT_COLORS.Unknown;
         const dotEl = document.createElement("div");
         dotEl.style.cssText = `
-          width: 6px;
-          height: 6px;
+          width: 8px;
+          height: 8px;
           border-radius: 50%;
           background: ${color};
-          border: 0.5px solid rgba(255,255,255,0.6);
-          opacity: 0.7;
+          border: 1px solid rgba(255,255,255,0.7);
+          opacity: 0.75;
           cursor: pointer;
         `;
         dotEl.title = `${campus} — ${point.city || point.zip}`;
