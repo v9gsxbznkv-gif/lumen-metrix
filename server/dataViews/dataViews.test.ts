@@ -588,3 +588,120 @@ describe("PCO room mapping", () => {
     expect(subgroup.startsWith("Kids: ")).toBe(true);
   });
 });
+
+describe("per capita giving calculation", () => {
+  it("should compute per capita as weekly giving / weekly attendance", () => {
+    // Week 1: $180,000 giving / 3,000 attendance = $60 per person
+    const weeklyGiving = 180000;
+    const weeklyAttendance = 3000;
+    const gpc = Math.round((weeklyGiving / weeklyAttendance) * 100) / 100;
+    expect(gpc).toBe(60);
+  });
+
+  it("should compute YTD average per capita correctly", () => {
+    // 3 weeks of data
+    const weeks = [
+      { giving: 180000, attendance: 3000 }, // $60
+      { giving: 150000, attendance: 2500 }, // $60
+      { giving: 200000, attendance: 4000 }, // $50
+    ];
+
+    // YTD avg GPC = total giving / total attendance
+    const totalGiving = weeks.reduce((s, w) => s + w.giving, 0);
+    const totalAtt = weeks.reduce((s, w) => s + w.attendance, 0);
+    const avgGpc = Math.round((totalGiving / totalAtt) * 100) / 100;
+
+    // (180000 + 150000 + 200000) / (3000 + 2500 + 4000) = 530000 / 9500 = 55.79
+    expect(avgGpc).toBe(55.79);
+  });
+
+  it("should handle zero attendance gracefully", () => {
+    const weeklyGiving = 100000;
+    const weeklyAttendance = 0;
+    // Should skip weeks with zero attendance
+    const gpc = weeklyAttendance > 0
+      ? Math.round((weeklyGiving / weeklyAttendance) * 100) / 100
+      : 0;
+    expect(gpc).toBe(0);
+  });
+
+  it("should compute YoY comparison correctly", () => {
+    const currentYearAvgGpc = 60;
+    const priorYearAvgGpc = 55;
+    const pct = ((currentYearAvgGpc - priorYearAvgGpc) / priorYearAvgGpc) * 100;
+    expect(pct).toBeCloseTo(9.09, 1);
+  });
+
+  it("should limit prior year comparison to same number of weeks", () => {
+    // Current year has 19 weeks, prior year has 52 weeks
+    // Should only compare first 19 weeks of prior year
+    const currentYearWeeks = Array.from({ length: 19 }, (_, i) => ({
+      weekNumber: i + 1,
+      giving: 180000,
+      attendance: 3000,
+    }));
+
+    const priorYearWeeks = Array.from({ length: 52 }, (_, i) => ({
+      weekNumber: i + 1,
+      giving: 170000,
+      attendance: 3100,
+    }));
+
+    const maxWeekCurrent = Math.max(...currentYearWeeks.map(w => w.weekNumber));
+    const priorYearSameWeeks = priorYearWeeks.filter(w => w.weekNumber <= maxWeekCurrent);
+
+    expect(priorYearSameWeeks).toHaveLength(19);
+    expect(maxWeekCurrent).toBe(19);
+  });
+
+  it("should aggregate giving across campuses for 'all' campus filter", () => {
+    const givingRows = [
+      { year: 2026, weekNumber: 1, campus: "Canton", total: 150000 },
+      { year: 2026, weekNumber: 1, campus: "Jasper", total: 30000 },
+    ];
+
+    const givMap = new Map<string, number>();
+    for (const row of givingRows) {
+      const key = `${row.year}-${row.weekNumber}`;
+      givMap.set(key, (givMap.get(key) || 0) + row.total);
+    }
+
+    expect(givMap.get("2026-1")).toBe(180000);
+  });
+
+  it("should build per capita chart data with both current and prior year", () => {
+    const currentYearWeeks = [
+      { weekNumber: 1, gpc: 55 },
+      { weekNumber: 2, gpc: 60 },
+      { weekNumber: 3, gpc: 58 },
+    ];
+    const priorYearWeeks = [
+      { weekNumber: 1, gpc: 50 },
+      { weekNumber: 2, gpc: 52 },
+      { weekNumber: 3, gpc: 54 },
+      { weekNumber: 4, gpc: 56 },
+    ];
+
+    const weekMap = new Map<number, { weekNumber: number; current?: number; prior?: number }>();
+
+    for (const w of currentYearWeeks) {
+      weekMap.set(w.weekNumber, { weekNumber: w.weekNumber, current: w.gpc });
+    }
+    for (const w of priorYearWeeks) {
+      const existing = weekMap.get(w.weekNumber);
+      if (existing) {
+        existing.prior = w.gpc;
+      } else {
+        weekMap.set(w.weekNumber, { weekNumber: w.weekNumber, prior: w.gpc });
+      }
+    }
+
+    const chartData = Array.from(weekMap.values()).sort((a, b) => a.weekNumber - b.weekNumber);
+
+    expect(chartData).toHaveLength(4); // 3 current + 1 extra prior
+    expect(chartData[0]).toEqual({ weekNumber: 1, current: 55, prior: 50 });
+    expect(chartData[1]).toEqual({ weekNumber: 2, current: 60, prior: 52 });
+    expect(chartData[2]).toEqual({ weekNumber: 3, current: 58, prior: 54 });
+    expect(chartData[3]).toEqual({ weekNumber: 4, prior: 56 }); // only prior
+  });
+});

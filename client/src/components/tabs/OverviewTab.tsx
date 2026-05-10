@@ -20,6 +20,8 @@ import {
   getNextStepsWithFallbackRange,
   getMaxWeek,
   getWeeklyYoYChange,
+  getWeeklyGivingPerCapita,
+  getWeeklyGivingPerCapitaRange,
   CAMPUS_COLORS,
 } from "@/lib/data";
 import {
@@ -105,9 +107,8 @@ export default function OverviewTab() {
     const attendance = Math.round(getAvgAttendanceFromWeekly(data, latestYear, campus, "Total"));
     const giving = getGivingFromWeekly(data, latestYear, campus);
 
-    // GPC: total giving / avg attendance (annualized if partial)
-    const avgAtt = getAvgAttendanceFromWeekly(data, latestYear, campus, "Total");
-    const gpc = avgAtt > 0 ? giving / avgAtt : 0;
+    // GPC: per person per week (avg weekly giving / avg weekly attendance)
+    const gpc = getWeeklyGivingPerCapita(data, latestYear, campus);
 
     // Next steps from weekly
     const ftg = getNextStepsFromWeekly(data, latestYear, campus, "FTG");
@@ -134,18 +135,12 @@ export default function OverviewTab() {
 
     const gpcChange = partial
       ? (() => {
-          const currGiv = getGivingFromWeeklyRange(data, latestYear, campus, maxWeek);
-          const prevGiv = getGivingFromWeeklyRange(data, priorYear, campus, maxWeek);
-          const currAtt = getAvgAttendanceFromWeeklyRange(data, latestYear, campus, "Total", maxWeek);
-          const prevAtt = getAvgAttendanceFromWeeklyRange(data, priorYear, campus, "Total", maxWeek);
-          const currGpc = currAtt > 0 ? currGiv / currAtt : 0;
-          const prevGpc = prevAtt > 0 ? prevGiv / prevAtt : 0;
+          const currGpc = getWeeklyGivingPerCapitaRange(data, latestYear, campus, maxWeek);
+          const prevGpc = getWeeklyGivingPerCapitaRange(data, priorYear, campus, maxWeek);
           return getYoYChange(currGpc, prevGpc);
         })()
       : (() => {
-          const prevAtt = getAvgAttendanceFromWeekly(data, priorYear, campus, "Total");
-          const prevGiv = getGivingFromWeekly(data, priorYear, campus);
-          const prevGpc = prevAtt > 0 ? prevGiv / prevAtt : 0;
+          const prevGpc = getWeeklyGivingPerCapita(data, priorYear, campus);
           return getYoYChange(gpc, prevGpc);
         })();
 
@@ -245,9 +240,9 @@ export default function OverviewTab() {
         />
         <KpiCard
           label="Giving Per Capita"
-          value={formatCurrency(kpis.gpc)}
+          value={`$${Math.round(kpis.gpc)}`}
           change={{ ...kpis.gpcChange, label: `${kpis.gpcChange.label} ${vsLabel}` }}
-          subtitle={kpis.partial ? `${ytdLabel} per attendee` : "Annual per attendee"}
+          subtitle="Per person per week"
           icon={<DollarSign className="w-5 h-5" />}
         />
         <KpiCard

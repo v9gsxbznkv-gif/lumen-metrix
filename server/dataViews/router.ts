@@ -738,6 +738,122 @@ const givingRouter = router({
       .orderBy(asc(givingWeekly.campus));
     return result.map(r => r.campus);
   }),
+
+  /**
+   * Per capita giving — weekly giving / weekly attendance per week.
+   * Returns per-week time series for two years (current + prior) for YoY chart.
+   * Also returns the YTD average per capita for each year.
+   */
+  getPerCapita: publicProcedure
+    .input(z.object({
+      year: z.number(),
+      campus: z.string().optional(),
+    }))
+    .query(async ({ input }) => {
+      const { year, campus } = input;
+      const d = await db();
+      const priorYear = year - 1;
+
+      // Fetch giving for both years
+      const givingRows = await d
+        .select()
+        .from(givingWeekly)
+        .where(
+          and(
+            gte(givingWeekly.year, priorYear),
+            lte(givingWeekly.year, year),
+            ...(campus && campus !== "all" ? [eq(givingWeekly.campus, campus)] : [])
+          )
+        )
+        .orderBy(asc(givingWeekly.year), asc(givingWeekly.weekNumber));
+
+      // Fetch attendance for both years
+      const attRows = await d
+        .select()
+        .from(attendanceWeekly)
+        .where(
+          and(
+            gte(attendanceWeekly.year, priorYear),
+            lte(attendanceWeekly.year, year)
+          )
+        )
+        .orderBy(asc(attendanceWeekly.year), asc(attendanceWeekly.weekNumber));
+
+      // Normalize attendance
+      const normalizedAtt = normalizeAttendanceRows(attRows);
+      const filteredAtt = filterByCampus(normalizedAtt, campus);
+
+      // Build attendance lookup: year-weekNumber -> total
+      const attMap = new Map<string, number>();
+      for (const w of filteredAtt) {
+        const key = `${w.year}-${w.weekNumber}`;
+        attMap.set(key, (attMap.get(key) || 0) + w.total);
+      }
+
+      // Build giving per week (aggregate across campuses if "all")
+      const givMap = new Map<string, { total: number; weekStartDate: string; year: number; weekNumber: number }>();
+      for (const row of givingRows) {
+        const parsed = parseFloat(row.total as any) || 0;
+        const key = `${row.year}-${row.weekNumber}`;
+        const existing = givMap.get(key);
+        if (existing) {
+          existing.total += parsed;
+        } else {
+          givMap.set(key, {
+            total: parsed,
+            weekStartDate: row.weekStartDate,
+            year: row.year,
+            weekNumber: row.weekNumber,
+          });
+        }
+      }
+
+      // Compute per capita per week
+      const currentYear: { weekNumber: number; weekStartDate: string; giving: number; attendance: number; gpc: number }[] = [];
+      const priorYearData: { weekNumber: number; weekStartDate: string; giving: number; attendance: number; gpc: number }[] = [];
+
+      for (const [key, giv] of givMap) {
+        const att = attMap.get(key) || 0;
+        if (att === 0) continue;
+        const gpc = Math.round((giv.total / att) * 100) / 100;
+        const entry = {
+          weekNumber: giv.weekNumber,
+          weekStartDate: giv.weekStartDate,
+          giving: Math.round(giv.total * 100) / 100,
+          attendance: att,
+          gpc,
+        };
+        if (giv.year === year) {
+          currentYear.push(entry);
+        } else {
+          priorYearData.push(entry);
+        }
+      }
+
+      currentYear.sort((a, b) => a.weekNumber - b.weekNumber);
+      priorYearData.sort((a, b) => a.weekNumber - b.weekNumber);
+
+      // Compute YTD averages
+      const avgGpc = (arr: typeof currentYear) => {
+        if (arr.length === 0) return 0;
+        const totalGiving = arr.reduce((s, w) => s + w.giving, 0);
+        const totalAtt = arr.reduce((s, w) => s + w.attendance, 0);
+        return totalAtt > 0 ? Math.round((totalGiving / totalAtt) * 100) / 100 : 0;
+      };
+
+      // For YoY comparison, limit prior year to same number of weeks
+      const maxWeekCurrent = currentYear.length > 0 ? Math.max(...currentYear.map(w => w.weekNumber)) : 0;
+      const priorYearSameWeeks = priorYearData.filter(w => w.weekNumber <= maxWeekCurrent);
+
+      return {
+        year,
+        priorYear,
+        currentYearAvgGpc: avgGpc(currentYear),
+        priorYearAvgGpc: avgGpc(priorYearSameWeeks),
+        currentYearWeeks: currentYear,
+        priorYearWeeks: priorYearData,
+      };
+    }),
 });
 
 // ============================================================

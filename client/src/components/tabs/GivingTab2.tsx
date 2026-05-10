@@ -1,6 +1,7 @@
 /**
  * Giving Tab — weekly / monthly / yearly views
  * Powered by trpc.dataViews.giving endpoints
+ * Includes Per Capita KPI + YoY weekly chart
  */
 import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
@@ -28,6 +29,8 @@ import {
   Bar,
   AreaChart,
   Area,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -90,6 +93,12 @@ export default function GivingTab2() {
     year: viewMode === "yearly" ? undefined : year,
     startYear: viewMode === "yearly" ? Math.min(...years) : undefined,
     endYear: viewMode === "yearly" ? Math.max(...years) : undefined,
+  });
+
+  // Per capita data (always fetched for the selected year)
+  const perCapitaQuery = trpc.dataViews.giving.getPerCapita.useQuery({
+    year,
+    campus: campusFilter,
   });
 
   const isLoading = dataQuery.isLoading;
@@ -250,6 +259,51 @@ export default function GivingTab2() {
     return null;
   }, [rawData, viewMode, weeklyTableData, yearlyTableData, monthlyTableData]);
 
+  // ─── Per Capita KPI ───────────────────────────────────────
+  const perCapitaKpi = useMemo(() => {
+    const pc = perCapitaQuery.data;
+    if (!pc) return null;
+    const change = pc.priorYearAvgGpc > 0
+      ? getYoYChange(pc.currentYearAvgGpc, pc.priorYearAvgGpc)
+      : null;
+    return {
+      avgGpc: pc.currentYearAvgGpc,
+      change,
+    };
+  }, [perCapitaQuery.data]);
+
+  // ─── Per Capita YoY Chart Data ────────────────────────────
+  const perCapitaChartData = useMemo(() => {
+    const pc = perCapitaQuery.data;
+    if (!pc) return [];
+
+    // Build a map of weekNumber -> { current, prior }
+    const weekMap = new Map<number, { weekNumber: number; label: string; current?: number; prior?: number }>();
+
+    for (const w of pc.currentYearWeeks) {
+      weekMap.set(w.weekNumber, {
+        weekNumber: w.weekNumber,
+        label: `Wk ${w.weekNumber}`,
+        current: w.gpc,
+      });
+    }
+
+    for (const w of pc.priorYearWeeks) {
+      const existing = weekMap.get(w.weekNumber);
+      if (existing) {
+        existing.prior = w.gpc;
+      } else {
+        weekMap.set(w.weekNumber, {
+          weekNumber: w.weekNumber,
+          label: `Wk ${w.weekNumber}`,
+          prior: w.gpc,
+        });
+      }
+    }
+
+    return Array.from(weekMap.values()).sort((a, b) => a.weekNumber - b.weekNumber);
+  }, [perCapitaQuery.data]);
+
   // ─── Chart Data ───────────────────────────────────────────
   const chartData = useMemo(() => {
     if (viewMode === "weekly") {
@@ -337,7 +391,7 @@ export default function GivingTab2() {
         <>
           {/* KPI Cards */}
           {kpis && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {viewMode === "weekly" && kpis.latest && (
                 <>
                   <KpiCard
@@ -359,6 +413,16 @@ export default function GivingTab2() {
                     subtitle={`${year} average`}
                     borderColor="#4A7FB5"
                   />
+                  {perCapitaKpi && (
+                    <KpiCard
+                      label="Per Capita"
+                      value={`$${Math.round(perCapitaKpi.avgGpc)}`}
+                      subtitle="Per person per week"
+                      borderColor="#8B5CF6"
+                      change={perCapitaKpi.change ?? undefined}
+                      changeLabel={`vs same weeks ${year - 1}`}
+                    />
+                  )}
                 </>
               )}
               {viewMode === "monthly" && (
@@ -375,6 +439,16 @@ export default function GivingTab2() {
                     subtitle={`${year} average`}
                     borderColor="#4A7FB5"
                   />
+                  {perCapitaKpi && (
+                    <KpiCard
+                      label="Per Capita"
+                      value={`$${Math.round(perCapitaKpi.avgGpc)}`}
+                      subtitle="Per person per week"
+                      borderColor="#8B5CF6"
+                      change={perCapitaKpi.change ?? undefined}
+                      changeLabel={`vs same weeks ${year - 1}`}
+                    />
+                  )}
                 </>
               )}
               {viewMode === "yearly" && kpis.latest && (
@@ -393,12 +467,73 @@ export default function GivingTab2() {
                     borderColor="#4A7FB5"
                     change={kpis.prior ? getYoYChange((kpis.latest as any).avgWeekly, (kpis.prior as any).avgWeekly) : undefined}
                   />
+                  {perCapitaKpi && (
+                    <KpiCard
+                      label="Per Capita"
+                      value={`$${Math.round(perCapitaKpi.avgGpc)}`}
+                      subtitle="Per person per week"
+                      borderColor="#8B5CF6"
+                      change={perCapitaKpi.change ?? undefined}
+                      changeLabel={`vs same weeks ${year - 1}`}
+                    />
+                  )}
                 </>
               )}
             </div>
           )}
 
-          {/* Chart */}
+          {/* Per Capita YoY Chart */}
+          {perCapitaChartData.length > 0 && (
+            <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+              <h3 className="text-sm font-semibold mb-3" style={{ fontFamily: "'DM Sans'" }}>
+                Per Capita — {year} vs {year - 1}
+              </h3>
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={perCapitaChartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E8E5DE" />
+                  <XAxis
+                    dataKey="label"
+                    tick={{ fontSize: 10, fontFamily: "'Inter'" }}
+                    tickLine={false}
+                    axisLine={false}
+                    interval={Math.max(0, Math.floor(perCapitaChartData.length / 14))}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fontFamily: "'DM Mono'" }}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(v) => `$${v}`}
+                  />
+                  <Tooltip
+                    contentStyle={TT}
+                    formatter={(v: number, name: string) => [`$${v.toFixed(2)}`, name]}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 12, fontFamily: "'Inter'" }} iconType="circle" iconSize={8} />
+                  <Line
+                    type="monotone"
+                    dataKey="current"
+                    name={String(year)}
+                    stroke="#8B5CF6"
+                    strokeWidth={2}
+                    dot={{ r: 2.5 }}
+                    connectNulls
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="prior"
+                    name={String(year - 1)}
+                    stroke="#D1D5DB"
+                    strokeWidth={1.5}
+                    strokeDasharray="4 3"
+                    dot={false}
+                    connectNulls
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {/* Giving Chart */}
           {chartData.length > 0 && (
             <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
               <h3 className="text-sm font-semibold mb-3" style={{ fontFamily: "'DM Sans'" }}>

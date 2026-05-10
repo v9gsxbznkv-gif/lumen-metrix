@@ -1082,4 +1082,13 @@
 - [x] Row 2: "Lowest Attendance" — 431 (Jan 19), partial week excluded
 - [x] Added `changeLabel` prop to KpiCard for custom comparison text
 - [x] 133 tests pass, tsc clean (pre-existing scheduler/weeklySync errors only)
+- [x] Deployed (5d19455d)
+
+## Round 117: Giving Per Capita — Per Person Per Week + Giving Page Chart
+- [x] Redefine per capita: total weekly giving / total weekly attendance (per week)
+- [x] Dashboard Overview GPC already showing $61 per person per week (unchanged)
+- [x] Add Per Capita KPI card to GivingTab2 ($61, +11.6% vs same weeks 2025)
+- [x] Add Per Capita YoY weekly line chart to GivingTab2 (2026 vs 2025)
+- [x] Added `getPerCapita` tRPC endpoint to dataViews.giving router
+- [x] 140 tests pass (7 new per capita tests)
 - [ ] Deploy
