@@ -770,6 +770,21 @@ function SendReportDialog({
   const { data } = useData();
   const [email, setEmail] = useState(defaultEmail);
 
+  // DB-backed queries for accurate summary
+  const campusParam = report.campus === "All Campuses" ? undefined : report.campus;
+  const { data: dbAttData } = trpc.dataViews.attendance.getData.useQuery({
+    viewMode: "yearly", campus: campusParam, startYear: report.yearStart, endYear: report.yearEnd,
+  });
+  const { data: dbGivData } = trpc.dataViews.giving.getData.useQuery({
+    viewMode: "yearly", campus: campusParam, startYear: report.yearStart, endYear: report.yearEnd,
+  });
+  const { data: dbNsData } = trpc.dataViews.nextSteps.getData.useQuery({
+    viewMode: "yearly", startYear: report.yearStart, endYear: report.yearEnd, campus: campusParam ?? "all",
+  });
+  const { data: dbGpcData } = trpc.dataViews.giving.getPerCapita.useQuery({
+    year: report.yearEnd, campus: campusParam,
+  });
+
   // Build a text summary of the report data
   const summary = useMemo(() => {
     if (!data) return "";
@@ -781,6 +796,10 @@ function SendReportDialog({
     const campus = report.campus;
 
     const getAtt = (y: number) => {
+      if (dbAttData?.data) {
+        const row = (dbAttData.data as any[]).find((r: any) => r.year === y);
+        if (row) return row.avgWeeklyTotal ?? 0;
+      }
       const t = data.attendance;
       if (campus === "All Campuses") {
         return t.find((r) => r.year === y && r.campus === "All Campuses" && r.subgroup === "Total")?.avg_weekly ?? 0;
@@ -789,6 +808,10 @@ function SendReportDialog({
     };
 
     const getGiving = (y: number) => {
+      if (dbGivData?.data) {
+        const row = (dbGivData.data as any[]).find((r: any) => r.year === y);
+        if (row) return row.total ?? 0;
+      }
       if (campus === "All Campuses") {
         return data.giving.find((r) => r.year === y && r.campus === "All Campuses")?.total ?? 0;
       }
@@ -796,6 +819,10 @@ function SendReportDialog({
     };
 
     const getNS = (y: number, metric: string) => {
+      if (dbNsData?.data) {
+        const rows = (dbNsData.data as any[]).filter((r: any) => r.year === y && r.metric === metric);
+        if (rows.length > 0) return rows.reduce((s: number, r: any) => s + (r.count ?? 0), 0);
+      }
       if (campus === "All Campuses") return data.next_steps.filter((n) => n.year === y && n.metric === metric && n.campus === "All Campuses").reduce((s, n) => s + n.total, 0);
       return data.next_steps.find((n) => n.year === y && n.campus === campus && n.metric === metric)?.total ?? 0;
     };
@@ -833,10 +860,7 @@ function SendReportDialog({
       const currAtt = getAtt(latestYear);
       const prevAtt = getAtt(latestYear - 1);
       const attGrowth = prevAtt > 0 ? ((currAtt - prevAtt) / prevAtt) * 100 : 0;
-      const gpcMatch = data.computed.giving_per_capita.find(
-        (g) => g.year === latestYear && g.campus === (campus === "All Campuses" ? "All Campuses" : campus)
-      );
-      const gpcVal = gpcMatch?.giving_per_capita ?? 0;
+      const gpcVal = dbGpcData ? dbGpcData.currentYearAvgGpc : 0;
       const volMatch = data.computed.volunteer_ratio.find(
         (v) => v.year === latestYear && v.campus === (campus === "All Campuses" ? "All Campuses" : campus)
       );
@@ -844,13 +868,13 @@ function SendReportDialog({
 
       lines.push("--- HEALTH SCORECARD ---");
       lines.push(`Attendance Growth: ${attGrowth >= 0 ? "+" : ""}${attGrowth.toFixed(1)}%`);
-      lines.push(`Giving Per Capita: ${formatCurrency(gpcVal)}`);
+      lines.push(`Giving Per Capita: $${Math.round(gpcVal)}/wk`);
       lines.push(`Volunteer Ratio: ${volRatio.toFixed(1)}%`);
       lines.push("");
     }
 
     return lines.join("\n");
-  }, [data, report]);
+  }, [data, report, dbAttData, dbGivData, dbNsData, dbGpcData]);
 
   return (
     <div className="space-y-5">
@@ -919,6 +943,33 @@ function SendReportDialog({
 
 function ReportPreview({ report, onClose }: { report: ReportConfig; onClose: () => void }) {
   const { data } = useData();
+
+  // ── DB-backed queries for accurate 2026 data ──
+  const campusParam = report.campus === "All Campuses" ? undefined : report.campus;
+  const { data: dbAttData } = trpc.dataViews.attendance.getData.useQuery({
+    viewMode: "yearly",
+    campus: campusParam,
+    startYear: report.yearStart,
+    endYear: report.yearEnd,
+  });
+  const { data: dbGivData } = trpc.dataViews.giving.getData.useQuery({
+    viewMode: "yearly",
+    campus: campusParam,
+    startYear: report.yearStart,
+    endYear: report.yearEnd,
+  });
+  const { data: dbNsData } = trpc.dataViews.nextSteps.getData.useQuery({
+    viewMode: "yearly",
+    startYear: report.yearStart,
+    endYear: report.yearEnd,
+    campus: campusParam ?? "all",
+  });
+  const latestYearGuess = report.yearEnd;
+  const { data: dbGpcData } = trpc.dataViews.giving.getPerCapita.useQuery({
+    year: latestYearGuess,
+    campus: campusParam,
+  });
+
   if (!data) return null;
 
   const filteredYears = data.meta.years.filter(
@@ -932,8 +983,13 @@ function ReportPreview({ report, onClose }: { report: ReportConfig; onClose: () 
 
   const TT = { fontSize: 12, borderRadius: 8, border: "1px solid #E8E5DE", boxShadow: "0 4px 12px rgba(0,0,0,0.06)", fontFamily: "'Inter'" };
 
-  // Compute metrics
-  const getAtt = (y: number) => {
+  // ── DB-backed metric helpers (override legacy CDN) ──
+  const getAtt = (y: number): number => {
+    if (dbAttData?.data) {
+      const row = (dbAttData.data as any[]).find((r: any) => r.year === y);
+      if (row) return row.avgWeeklyTotal ?? 0;
+    }
+    // Fallback to legacy
     const t = data.attendance;
     if (campus === "All Campuses") {
       return t.find((r) => r.year === y && r.campus === "All Campuses" && r.subgroup === "Total")?.avg_weekly ?? 0;
@@ -941,20 +997,43 @@ function ReportPreview({ report, onClose }: { report: ReportConfig; onClose: () 
     return t.find((r) => r.year === y && r.campus === campus && r.subgroup === "Total")?.avg_weekly ?? 0;
   };
 
-  const getGiving = (y: number) => {
+  const getGiving = (y: number): number => {
+    if (dbGivData?.data) {
+      const row = (dbGivData.data as any[]).find((r: any) => r.year === y);
+      if (row) return row.total ?? 0;
+    }
+    // Fallback to legacy
     if (campus === "All Campuses") {
       return data.giving.find((r) => r.year === y && r.campus === "All Campuses")?.total ?? 0;
     }
     return data.giving.find((r) => r.year === y && r.campus === campus)?.total ?? 0;
   };
 
-  const getGpc = (y: number) => {
-    const g = data.computed.giving_per_capita;
-    const match = campus === "All Campuses" ? g.find((r) => r.year === y && r.campus === "All Campuses") : g.find((r) => r.year === y && r.campus === campus);
-    return match?.giving_per_capita ?? 0;
+  const getGpc = (y: number): number => {
+    // Per-person-per-week from DB for current and prior year
+    if (dbGpcData && y === latestYear) {
+      return dbGpcData.currentYearAvgGpc ?? 0;
+    }
+    if (dbGpcData && y === latestYear - 1) {
+      return dbGpcData.priorYearAvgGpc ?? 0;
+    }
+    // Fallback for older years: total giving / avg weekly attendance / 52 weeks
+    // This gives per-person-per-week from annual totals
+    const att = getAtt(y);
+    const giv = getGiving(y);
+    if (att > 0) {
+      // For completed years: total giving / (avg weekly attendance * 52 weeks)
+      return giv / (att * 52);
+    }
+    return 0;
   };
 
-  const getNS = (y: number, metric: string) => {
+  const getNS = (y: number, metric: string): number => {
+    if (dbNsData?.data) {
+      const rows = (dbNsData.data as any[]).filter((r: any) => r.year === y && r.metric === metric);
+      if (rows.length > 0) return rows.reduce((s: number, r: any) => s + (r.count ?? 0), 0);
+    }
+    // Fallback to legacy
     if (campus === "All Campuses") return data.next_steps.filter((n) => n.year === y && n.metric === metric && n.campus === "All Campuses").reduce((s, n) => s + n.total, 0);
     return data.next_steps.find((n) => n.year === y && n.campus === campus && n.metric === metric)?.total ?? 0;
   };
@@ -1169,7 +1248,8 @@ function ReportPreview({ report, onClose }: { report: ReportConfig; onClose: () 
             }
             const attGrowth = prevAttAvg > 0 ? ((currAttAvg - prevAttAvg) / prevAttAvg) * 100 : 0;
 
-            const gpcVal = getGpc(latestYear);
+            // Per capita from DB (per person per week)
+            const gpcVal = dbGpcData ? dbGpcData.currentYearAvgGpc : 0;
 
             // Volunteer ratio from computed data
             const volMatch = data.computed.volunteer_ratio.find(
@@ -1177,36 +1257,18 @@ function ReportPreview({ report, onClose }: { report: ReportConfig; onClose: () 
             );
             const volRatio = volMatch ? volMatch.pct * 100 : 0;
 
-            // FTG rate — partial-year-aware
-            const INDIVIDUAL_CAMPUSES = ["Canton", "Jasper", "Online"];
-            const ftgMonthly = data.next_steps_monthly.filter(
-              (n) =>
-                n.year === latestYear &&
-                n.metric === "FTG" &&
-                (campus === "All Campuses" ? INDIVIDUAL_CAMPUSES.includes(n.campus) : n.campus === campus)
-            );
-            let ftg: number;
-            if (ftgMonthly.length > 0) {
-              const compMonths = Array.from({ length: maxMonth }, (_, i) => i + 1);
-              ftg = ftgMonthly.filter((n) => compMonths.includes(n.month)).reduce((s, n) => s + n.count, 0);
-            } else {
-              ftg = data.next_steps
-                .filter(
-                  (n) =>
-                    n.year === latestYear &&
-                    n.metric === "FTG" &&
-                    (campus === "All Campuses" ? INDIVIDUAL_CAMPUSES.includes(n.campus) : n.campus === campus)
-                )
-                .reduce((s, n) => s + n.total, 0);
-            }
-            const weeks = partial ? Math.round(maxMonth * 4.33) : 52;
-            const ftgPerWeek = ftg / weeks;
+            // FTG from DB
+            const ftg = getNS(latestYear, "FTG");
+            // Get actual week count from DB attendance data
+            const dbAttYearRow = dbAttData?.data ? (dbAttData.data as any[]).find((r: any) => r.year === latestYear) : null;
+            const weeks = dbAttYearRow?.weekCount ?? (partial ? Math.round(maxMonth * 4.33) : 52);
+            const ftgPerWeek = ftg / Math.max(weeks, 1);
             const ftgPct = currAttAvg > 0 ? (ftgPerWeek / currAttAvg) * 100 : 0;
 
             const scores = [
               { metric: "Attendance Growth", value: `${attGrowth >= 0 ? "+" : ""}${attGrowth.toFixed(1)}%`, status: attGrowth > 5 ? "Excellent" : attGrowth > 0 ? "Good" : "Watch" },
               { metric: "Volunteer Ratio", value: `${volRatio.toFixed(1)}%`, status: volRatio > 20 ? "Excellent" : volRatio > 15 ? "Good" : volRatio > 10 ? "Caution" : "Watch" },
-              { metric: "Giving Per Capita", value: formatCurrency(gpcVal), status: gpcVal > 3000 ? "Excellent" : gpcVal > 2000 ? "Good" : "Watch" },
+              { metric: "Giving Per Capita", value: `$${Math.round(gpcVal)}/wk`, status: gpcVal > 60 ? "Excellent" : gpcVal > 40 ? "Good" : gpcVal > 30 ? "Caution" : "Watch" },
               { metric: "FTG Rate", value: `${ftgPct.toFixed(1)}%`, status: ftgPct > 5 ? "Excellent" : ftgPct > 3 ? "Good" : ftgPct > 1 ? "Caution" : "Watch" },
             ];
 

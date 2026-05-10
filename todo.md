@@ -1163,4 +1163,14 @@
 - [x] Health tab now calls `trpc.dataViews.giving.getPerCapita` (same source as Giving page)
 - [x] Both pages now show $61/wk consistently
 - [x] 151 tests pass
+- [x] Deployed (18a09e24)
+
+## Round 127: Fix Reports Tab Data — Wrong Avg Weekly Attd, Giving, Per Capita, Assimilation
+- [x] Root cause: ReportPreview + SendReportDialog both used legacy CDN pipeline
+- [x] Added DB-backed tRPC queries (attendance, giving, nextSteps, perCapita) to both components
+- [x] getAtt/getGiving/getNS now prefer DB data with legacy fallback for older years
+- [x] getGpc uses DB per-person-per-week for current+prior year, computed from yearly totals for older years
+- [x] Health Scorecard GPC: $61/wk with weekly thresholds (>$60 Excellent)
+- [x] Fixed SendReportDialog email summary to use same DB data
+- [x] 151 tests pass
 - [ ] Deploy
