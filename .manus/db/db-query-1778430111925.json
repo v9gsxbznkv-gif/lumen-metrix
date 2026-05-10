@@ -1,0 +1,13 @@
+{
+  "query": "SHOW TABLES LIKE '%token%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SHOW TABLES LIKE '%token%';",
+  "rows": [
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm (%token%)": "pco_tokens"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_EmzMXpmCwkQz2biKeRL4cm (%token%)\npco_tokens\n",
+  "stderr": "",
+  "execution_time_ms": 254
+}

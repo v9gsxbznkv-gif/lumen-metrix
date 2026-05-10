@@ -1,0 +1,80 @@
+{
+  "query": "SELECT street, city, state, zip, pcoId \nFROM pco_people \nWHERE status = 'active' AND zip IS NOT NULL AND zip != '' AND latitude IS NOT NULL AND latitude != 0\nORDER BY RAND()\nLIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT street, city, state, zip, pcoId \nFROM pco_people \nWHERE status = 'active' AND zip IS NOT NULL AND zip != '' AND latitude IS NOT NULL AND latitude != 0\nORDER BY RAND()\nLIMIT 10;",
+  "rows": [
+    {
+      "street": "NULL",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30115-6498",
+      "pcoId": "6808464"
+    },
+    {
+      "street": "NULL",
+      "city": "Woodstock",
+      "state": "GA",
+      "zip": "30189",
+      "pcoId": "7257048"
+    },
+    {
+      "street": "NULL",
+      "city": "Woodstock",
+      "state": "GA",
+      "zip": "30189",
+      "pcoId": "6817342"
+    },
+    {
+      "street": "NULL",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30115-6020",
+      "pcoId": "20299962"
+    },
+    {
+      "street": "NULL",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30115",
+      "pcoId": "6807224"
+    },
+    {
+      "street": "NULL",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30114",
+      "pcoId": "20948999"
+    },
+    {
+      "street": "NULL",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30115",
+      "pcoId": "30105187"
+    },
+    {
+      "street": "NULL",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30115",
+      "pcoId": "7914326"
+    },
+    {
+      "street": "NULL",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30115-1802",
+      "pcoId": "6814286"
+    },
+    {
+      "street": "NULL",
+      "city": "Cartersville",
+      "state": "GA",
+      "zip": "30121-7356",
+      "pcoId": "6809766"
+    }
+  ],
+  "messages": [],
+  "stdout": "street\tcity\tstate\tzip\tpcoId\nNULL\tCanton\tGA\t30115-6498\t6808464\nNULL\tWoodstock\tGA\t30189\t7257048\nNULL\tWoodstock\tGA\t30189\t6817342\nNULL\tCanton\tGA\t30115-6020\t20299962\nNULL\tCanton\tGA\t30115\t6807224\nNULL\tCanton\tGA\t30114\t20948999\nNULL\tCanton\tGA\t30115\t30105187\nNULL\tCanton\tGA\t30115\t7914326\nNULL\tCanton\tGA\t30115-1802\t6814286\nNULL\tCartersville\tGA\t30121-7356\t6809766\n",
+  "stderr": "",
+  "execution_time_ms": 276
+}

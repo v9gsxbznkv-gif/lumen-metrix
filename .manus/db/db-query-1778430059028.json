@@ -1,0 +1,22 @@
+{
+  "query": "\nSELECT \n  CASE \n    WHEN street IS NOT NULL AND street != '' THEN 'has_street'\n    ELSE 'no_street'\n  END as street_status,\n  CASE \n    WHEN zip IS NOT NULL AND zip != '' THEN 'has_zip'\n    ELSE 'no_zip'\n  END as zip_status,\n  CASE \n    WHEN latitude IS NOT NULL THEN 'geocoded'\n    ELSE 'not_geocoded'\n  END as geo_status,\n  COUNT(*) as cnt\nFROM pco_people \nWHERE status = 'active'\nGROUP BY street_status, zip_status, geo_status\nORDER BY cnt DESC;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute \nSELECT \n  CASE \n    WHEN street IS NOT NULL AND street != '' THEN 'has_street'\n    ELSE 'no_street'\n  END as street_status,\n  CASE \n    WHEN zip IS NOT NULL AND zip != '' THEN 'has_zip'\n    ELSE 'no_zip'\n  END as zip_status,\n  CASE \n    WHEN latitude IS NOT NULL THEN 'geocoded'\n    ELSE 'not_geocoded'\n  END as geo_status,\n  COUNT(*) as cnt\nFROM pco_people \nWHERE status = 'active'\nGROUP BY street_status, zip_status, geo_status\nORDER BY cnt DESC;\n",
+  "rows": [
+    {
+      "street_status": "no_street",
+      "zip_status": "has_zip",
+      "geo_status": "geocoded",
+      "cnt": "2230"
+    },
+    {
+      "street_status": "no_street",
+      "zip_status": "no_zip",
+      "geo_status": "not_geocoded",
+      "cnt": "1285"
+    }
+  ],
+  "messages": [],
+  "stdout": "street_status\tzip_status\tgeo_status\tcnt\nno_street\thas_zip\tgeocoded\t2230\nno_street\tno_zip\tnot_geocoded\t1285\n",
+  "stderr": "",
+  "execution_time_ms": 277
+}

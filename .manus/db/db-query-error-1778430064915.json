@@ -1,0 +1,8 @@
+{
+  "query": "\nSELECT pco_id, street, city, state, zip, latitude, longitude \nFROM pco_people \nWHERE status = 'active' AND latitude IS NOT NULL \nLIMIT 10;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute \nSELECT pco_id, street, city, state, zip, latitude, longitude \nFROM pco_people \nWHERE status = 'active' AND latitude IS NOT NULL \nLIMIT 10;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 2: Unknown column 'pco_id' in 'field list'"
+  ]
+}

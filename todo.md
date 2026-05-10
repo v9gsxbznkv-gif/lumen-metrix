@@ -1253,3 +1253,8 @@
 
 ## Round 136 Final: Remove All Clustering from Map
 - [x] Remove all clustering from DemographicMap — show every person as individual colored dot with deterministic jitter
+
+## Fix PCO Address Fetch for Real Street-Level Geocoding
+- [ ] Investigate why PCO address fetch returns no street addresses
+- [ ] Fix address fetch to pull actual street addresses from PCO API
+- [ ] Re-geocode people with street-level addresses for accurate map pins

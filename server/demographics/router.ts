@@ -412,6 +412,68 @@ export const demographicsRouter = router({
   }),
 
   /**
+   * DIAGNOSTIC: Fetch raw address data from PCO for a few sample people.
+   * Returns the raw PCO API response so we can see exactly what fields are returned.
+   */
+  debugAddressFetch: publicProcedure.mutation(async () => {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+
+    const accessToken = await getValidAccessToken();
+    if (!accessToken) throw new Error("PCO not connected");
+
+    const client = new PcoClient(accessToken);
+
+    // Get 5 random people who have zip but no street
+    const people = await db
+      .select({ id: pcoPeople.id, pcoId: pcoPeople.pcoId, firstName: pcoPeople.firstName, lastName: pcoPeople.lastName })
+      .from(pcoPeople)
+      .where(
+        and(
+          eq(pcoPeople.status, "active"),
+          isNotNull(pcoPeople.zip),
+          sql`${pcoPeople.zip} != ''`,
+          sql`(${pcoPeople.street} IS NULL OR ${pcoPeople.street} = 'NULL')`
+        )
+      )
+      .limit(5);
+
+    const results: any[] = [];
+
+    for (const person of people) {
+      try {
+        // Method 1: Direct address endpoint
+        const addrResult = await client.get<any>(
+          `/people/v2/people/${person.pcoId}/addresses`
+        );
+
+        // Method 2: Try fetching the person with include=addresses
+        const personWithAddr = await client.get<any>(
+          `/people/v2/people/${person.pcoId}`,
+          { include: "addresses" }
+        );
+
+        results.push({
+          personId: person.pcoId,
+          name: `${person.firstName} ${person.lastName}`,
+          method1_directAddresses: addrResult,
+          method2_includeAddresses: {
+            included: (personWithAddr as any).included || [],
+          },
+        });
+      } catch (err: any) {
+        results.push({
+          personId: person.pcoId,
+          name: `${person.firstName} ${person.lastName}`,
+          error: err.message,
+        });
+      }
+    }
+
+    return { sampleCount: people.length, results };
+  }),
+
+  /**
    * Get sync status — how many people have addresses, how many are geocoded
    */
   getSyncStatus: publicProcedure.query(async () => {

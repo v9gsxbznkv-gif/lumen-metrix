@@ -1,0 +1,100 @@
+{
+  "query": "\nSELECT pcoId, street, city, state, zip, latitude, longitude \nFROM pco_people \nWHERE status = 'active' AND latitude IS NOT NULL \nLIMIT 10;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute \nSELECT pcoId, street, city, state, zip, latitude, longitude \nFROM pco_people \nWHERE status = 'active' AND latitude IS NOT NULL \nLIMIT 10;\n",
+  "rows": [
+    {
+      "pcoId": "124354",
+      "street": "NULL",
+      "city": "Canton",
+      "state": "GA ",
+      "zip": "30115",
+      "latitude": "34.2264431",
+      "longitude": "-84.41726659999999"
+    },
+    {
+      "pcoId": "124778",
+      "street": "NULL",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30115-6053",
+      "latitude": "34.2264431",
+      "longitude": "-84.41726659999999"
+    },
+    {
+      "pcoId": "124804",
+      "street": "NULL",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30114",
+      "latitude": "34.2367621",
+      "longitude": "-84.4907621"
+    },
+    {
+      "pcoId": "124808",
+      "street": "NULL",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30115",
+      "latitude": "34.2264431",
+      "longitude": "-84.41726659999999"
+    },
+    {
+      "pcoId": "131686",
+      "street": "NULL",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30114",
+      "latitude": "34.2367621",
+      "longitude": "-84.4907621"
+    },
+    {
+      "pcoId": "131690",
+      "street": "NULL",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30114",
+      "latitude": "34.2367621",
+      "longitude": "-84.4907621"
+    },
+    {
+      "pcoId": "147582",
+      "street": "NULL",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30114",
+      "latitude": "34.2367621",
+      "longitude": "-84.4907621"
+    },
+    {
+      "pcoId": "198550",
+      "street": "NULL",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30115",
+      "latitude": "34.2264431",
+      "longitude": "-84.41726659999999"
+    },
+    {
+      "pcoId": "250962",
+      "street": "NULL",
+      "city": "Ball Ground",
+      "state": "GA",
+      "zip": "30107",
+      "latitude": "34.3372664",
+      "longitude": "-84.3779515"
+    },
+    {
+      "pcoId": "278761",
+      "street": "NULL",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30115",
+      "latitude": "34.2264431",
+      "longitude": "-84.41726659999999"
+    }
+  ],
+  "messages": [],
+  "stdout": "pcoId\tstreet\tcity\tstate\tzip\tlatitude\tlongitude\n124354\tNULL\tCanton\tGA \t30115\t34.2264431\t-84.41726659999999\n124778\tNULL\tCanton\tGA\t30115-6053\t34.2264431\t-84.41726659999999\n124804\tNULL\tCanton\tGA\t30114\t34.2367621\t-84.4907621\n124808\tNULL\tCanton\tGA\t30115\t34.2264431\t-84.41726659999999\n131686\tNULL\tCanton\tGA\t30114\t34.2367621\t-84.4907621\n131690\tNULL\tCanton\tGA\t30114\t34.2367621\t-84.4907621\n147582\tNULL\tCanton\tGA\t30114\t34.2367621\t-84.4907621\n198550\tNULL\tCanton\tGA\t30115\t34.2264431\t-84.41726659999999\n250962\tNULL\tBall Ground\tGA\t30107\t34.3372664\t-84.3779515\n278761\tNULL\tCanton\tGA\t30115\t34.2264431\t-84.41726659999999\n",
+  "stderr": "",
+  "execution_time_ms": 263
+}
