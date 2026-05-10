@@ -1,0 +1,52 @@
+{
+  "query": "SELECT membershipType, COUNT(*) as total, SUM(CASE WHEN latitude IS NOT NULL AND latitude != 0 THEN 1 ELSE 0 END) as geocoded, SUM(CASE WHEN zip IS NOT NULL AND zip != '' THEN 1 ELSE 0 END) as has_address FROM pco_people WHERE status = 'active' GROUP BY membershipType ORDER BY total DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT membershipType, COUNT(*) as total, SUM(CASE WHEN latitude IS NOT NULL AND latitude != 0 THEN 1 ELSE 0 END) as geocoded, SUM(CASE WHEN zip IS NOT NULL AND zip != '' THEN 1 ELSE 0 END) as has_address FROM pco_people WHERE status = 'active' GROUP BY membershipType ORDER BY total DESC;",
+  "rows": [
+    {
+      "membershipType": "Attendee",
+      "total": "775",
+      "geocoded": "724",
+      "has_address": "724"
+    },
+    {
+      "membershipType": "Steward",
+      "total": "342",
+      "geocoded": "327",
+      "has_address": "327"
+    },
+    {
+      "membershipType": "Staff",
+      "total": "16",
+      "geocoded": "16",
+      "has_address": "16"
+    },
+    {
+      "membershipType": "Child of Staff",
+      "total": "16",
+      "geocoded": "15",
+      "has_address": "15"
+    },
+    {
+      "membershipType": "Spouse of Staff",
+      "total": "9",
+      "geocoded": "9",
+      "has_address": "9"
+    },
+    {
+      "membershipType": "Non Attending Parent of a Student",
+      "total": "8",
+      "geocoded": "8",
+      "has_address": "8"
+    },
+    {
+      "membershipType": "NULL",
+      "total": "7",
+      "geocoded": "4",
+      "has_address": "4"
+    }
+  ],
+  "messages": [],
+  "stdout": "membershipType\ttotal\tgeocoded\thas_address\nAttendee\t775\t724\t724\nSteward\t342\t327\t327\nStaff\t16\t16\t16\nChild of Staff\t16\t15\t15\nSpouse of Staff\t9\t9\t9\nNon Attending Parent of a Student\t8\t8\t8\nNULL\t7\t4\t4\n",
+  "stderr": "",
+  "execution_time_ms": 267
+}

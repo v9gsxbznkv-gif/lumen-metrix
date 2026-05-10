@@ -1,0 +1,50 @@
+{
+  "query": "SELECT membershipType, COUNT(*) as total FROM pco_people WHERE status = 'inactive' GROUP BY membershipType ORDER BY total DESC LIMIT 15;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT membershipType, COUNT(*) as total FROM pco_people WHERE status = 'inactive' GROUP BY membershipType ORDER BY total DESC LIMIT 15;",
+  "rows": [
+    {
+      "membershipType": "NULL",
+      "total": "3946"
+    },
+    {
+      "membershipType": "Attendee",
+      "total": "3923"
+    },
+    {
+      "membershipType": "Steward",
+      "total": "931"
+    },
+    {
+      "membershipType": "Non Attending Parent of a Student",
+      "total": "15"
+    },
+    {
+      "membershipType": "Foster Child",
+      "total": "5"
+    },
+    {
+      "membershipType": "Benevolence Applicant",
+      "total": "3"
+    },
+    {
+      "membershipType": "ESL Adult/Child",
+      "total": "1"
+    },
+    {
+      "membershipType": "Child of Staff",
+      "total": "1"
+    },
+    {
+      "membershipType": "Staff",
+      "total": "1"
+    },
+    {
+      "membershipType": "Spouse of Staff",
+      "total": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "membershipType\ttotal\nNULL\t3946\nAttendee\t3923\nSteward\t931\nNon Attending Parent of a Student\t15\nFoster Child\t5\nBenevolence Applicant\t3\nESL Adult/Child\t1\nChild of Staff\t1\nStaff\t1\nSpouse of Staff\t1\n",
+  "stderr": "",
+  "execution_time_ms": 277
+}

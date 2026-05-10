@@ -1140,4 +1140,12 @@
 - [x] Cluster badges: colored circles with count (e.g. "247" in Canton), sized by log of count
 - [x] Individual dots jittered in concentric rings around centroid (~0.4mi radius)
 - [x] 151 tests pass
+- [x] Deployed (06df0914)
+
+## Round 124: Fix Monthly Avg Showing 222 (Partial Week) on Attendance Page
+- [x] Root cause: May 2026 has only 1 partial week (222) and was selected as "latest month"
+- [x] Skip partial current month (weekCount <= 1 in current calendar month), show prior full month
+- [x] Renamed label "Latest Month Avg" → "Current Month" for consistency
+- [x] Yearly avg now excludes partial month from calculation
+- [x] 151 tests pass
 - [ ] Deploy

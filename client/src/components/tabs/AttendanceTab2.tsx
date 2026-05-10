@@ -247,16 +247,34 @@ export default function AttendanceTab2() {
       };
     }
     if (viewMode === "monthly" && monthlyData.length > 0) {
-      const latest = monthlyData[monthlyData.length - 1];
+      // Skip partial current month: if the latest month is the current calendar month
+      // and has only 1 week, it's likely a partial week — show the prior full month instead
+      const now = new Date();
+      const currentCalMonth = now.getMonth() + 1; // 1-indexed
+      const currentCalYear = now.getFullYear();
+      let latestIdx = monthlyData.length - 1;
+      const lastMonth = monthlyData[latestIdx];
+      if (
+        lastMonth.month === currentCalMonth &&
+        lastMonth.year === currentCalYear &&
+        lastMonth.weekCount <= 1 &&
+        monthlyData.length > 1
+      ) {
+        latestIdx = monthlyData.length - 2;
+      }
+      const latest = monthlyData[latestIdx];
+      // Compute yearly average from all full months (exclude partial current month)
+      const fullMonths = monthlyData.slice(0, latestIdx + 1);
       const avgTotal = Math.round(
-        monthlyData.reduce((s, m) => s + m.avgWeeklyTotal, 0) / monthlyData.length
+        fullMonths.reduce((s, m) => s + m.avgWeeklyTotal, 0) / fullMonths.length
       );
+      const priorMonth = latestIdx > 0 ? monthlyData[latestIdx - 1] : null;
       return {
         currentWeekTotal: latest.avgWeeklyTotal,
         currentWeekDate: `${MONTH_NAMES[latest.month - 1]} ${latest.year}`,
         avgTotal,
-        priorAvg: monthlyData.length > 1 ? monthlyData[monthlyData.length - 2].avgWeeklyTotal : 0,
-        weekCount: monthlyData.reduce((s, m) => s + m.weekCount, 0),
+        priorAvg: priorMonth ? priorMonth.avgWeeklyTotal : 0,
+        weekCount: fullMonths.reduce((s, m) => s + m.weekCount, 0),
         highest: null,
         lowest: null,
       };
@@ -430,7 +448,7 @@ export default function AttendanceTab2() {
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <KpiCard
-                  label={viewMode === "yearly" ? "Avg Weekly Attendance" : viewMode === "monthly" ? "Latest Month Avg" : "Current Week"}
+                  label={viewMode === "yearly" ? "Avg Weekly Attendance" : viewMode === "monthly" ? "Current Month" : "Current Week"}
                   value={formatNumber(kpis.currentWeekTotal)}
                   subtitle={viewMode === "yearly" ? kpis.currentWeekDate : viewMode === "monthly" ? kpis.currentWeekDate : formatDate(kpis.currentWeekDate)}
                   borderColor="#E8913A"
