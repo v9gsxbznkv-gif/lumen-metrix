@@ -85,7 +85,25 @@ function clusterAndJitter(
 
     if (count === 1) {
       jittered.push({ ...group[0], clusterSize: 1, isClusterCenter: false });
+    } else if (count <= 4) {
+      // Small group: jitter individual dots (no cluster badge)
+      const baseRadius = 0.003;
+      for (let i = 0; i < group.length; i++) {
+        const angle = (i / count) * 2 * Math.PI;
+        const seed = `${groupKey}-${i}`;
+        const jitterFactor = 0.8 + seededRandom(seed) * 0.4;
+        const jitterLat = centerLat + baseRadius * Math.cos(angle) * jitterFactor;
+        const jitterLng = centerLng + baseRadius * Math.sin(angle) * jitterFactor;
+        jittered.push({
+          ...group[i],
+          lat: jitterLat,
+          lng: jitterLng,
+          clusterSize: 0,
+          isClusterCenter: false,
+        });
+      }
     } else {
+      // Large group: show ONLY the cluster badge (no individual dots)
       jittered.push({
         lat: centerLat,
         lng: centerLng,
@@ -95,29 +113,6 @@ function clusterAndJitter(
         clusterSize: count,
         isClusterCenter: true,
       });
-
-      const baseRadius = 0.006;
-      const maxRings = Math.ceil(count / 12);
-
-      for (let i = 0; i < group.length; i++) {
-        const ring = Math.floor(i / 12);
-        const posInRing = i % 12;
-        const ringRadius = baseRadius * (ring + 1) / maxRings * (maxRings > 1 ? maxRings : 1);
-        const angle = (posInRing / 12) * 2 * Math.PI + (ring * 0.3);
-        // Deterministic jitter based on group position + index
-        const seed = `${groupKey}-${i}`;
-        const jitterFactor = 0.8 + seededRandom(seed) * 0.4;
-        const jitterLat = centerLat + ringRadius * Math.cos(angle) * jitterFactor;
-        const jitterLng = centerLng + ringRadius * Math.sin(angle) * jitterFactor;
-
-        jittered.push({
-          ...group[i],
-          lat: jitterLat,
-          lng: jitterLng,
-          clusterSize: 0,
-          isClusterCenter: false,
-        });
-      }
     }
   }
 

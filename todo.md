@@ -1249,4 +1249,4 @@
 - [ ] Fix missing people (2,822 synced vs 4,251 in PCO Active Households list) — pending user decision on list-based sync
 - [x] Fix dots changing position when toggling campus filters — replaced Math.random() with deterministic seeded jitter, toggle marker visibility instead of re-rendering
 - [x] 151 tests pass
-- [ ] Deploy
+- [x] Deploy
