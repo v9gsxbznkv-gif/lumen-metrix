@@ -22,11 +22,19 @@ const CAMPUSES = ["Canton", "Jasper", "Online"] as const;
 const CURRENT_YEAR = 2026;
 const PRIOR_YEAR = 2025;
 
+/* Shared tooltip style matching other tabs (light theme) */
+const TT = {
+  fontSize: 12,
+  borderRadius: 8,
+  border: "1px solid #E8E5DE",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+  fontFamily: "'Inter'",
+};
+
 export default function CampusesTab() {
   const { data, filters } = useData();
 
   // ── DB-backed queries: attendance per campus (yearly) ──
-  // For Online, we query "all" and extract the online field from the response
   const attCantonQ = trpc.dataViews.attendance.getData.useQuery({
     viewMode: "yearly", campus: "Canton", startYear: PRIOR_YEAR, endYear: CURRENT_YEAR,
   });
@@ -120,7 +128,6 @@ export default function CampusesTab() {
         const attPrior = allPriorRow?.avgWeeklyOnline ?? 0;
         const attChange = attPrior > 0 ? ((attNow - attPrior) / attPrior * 100) : 0;
 
-        // Online has no separate giving, serving, or next steps data
         return {
           campus: c,
           attNow,
@@ -142,17 +149,14 @@ export default function CampusesTab() {
       const attNow = attRow?.avgWeeklyTotal ?? 0;
       const attPrior = attPriorRow?.avgWeeklyTotal ?? 0;
 
-      // Giving: total from yearly aggregation
       const givRow = getYearRow(givQueries[c].data, CURRENT_YEAR);
       const givPriorRow = getYearRow(givQueries[c].data, PRIOR_YEAR);
       const givNow = givRow?.total ?? 0;
       const givPrior = givPriorRow?.total ?? 0;
 
-      // Per capita ($/wk) from getPerCapita endpoint
       const gpcQ = gpcQueries[c];
       const gpc = gpcQ ? (gpcQ.data?.currentYearAvgGpc ?? 0) : 0;
 
-      // Next steps: FTG and Salvations from weekly DB
       const nsQ = nsQueries[c];
       const ftgNow = getNsCount(nsQ.data, CURRENT_YEAR, "FTG");
       const salvNow = getNsCount(nsQ.data, CURRENT_YEAR, "Salvations");
@@ -160,11 +164,9 @@ export default function CampusesTab() {
       // Baptisms: NOT in weekly table for 2026 — fall back to annual next_steps via legacy helper
       const baptNow = getNextStepsFromWeekly(data, CURRENT_YEAR, c, "Baptisms");
 
-      // Serving: avgWeekly from yearly aggregation
       const servRow = getYearRow(servQueries[c].data, CURRENT_YEAR);
       const volNow = servRow?.avgWeekly ?? 0;
 
-      // YoY changes
       const attChange = attPrior > 0 ? ((attNow - attPrior) / attPrior * 100) : 0;
       const givChange = givPrior > 0 ? ((givNow - givPrior) / givPrior * 100) : 0;
 
@@ -184,7 +186,6 @@ export default function CampusesTab() {
     const { yearStart, yearEnd } = filters;
     const allYears = new Set<number>();
 
-    // Canton
     const cantonMap = new Map<number, number>();
     if (attCantonAllQ.data?.data) {
       for (const row of attCantonAllQ.data.data as any[]) {
@@ -195,7 +196,6 @@ export default function CampusesTab() {
       }
     }
 
-    // Jasper
     const jasperMap = new Map<number, number>();
     if (attJasperAllQ.data?.data) {
       for (const row of attJasperAllQ.data.data as any[]) {
@@ -206,7 +206,6 @@ export default function CampusesTab() {
       }
     }
 
-    // Online (from all-campus query, use avgWeeklyOnline)
     const onlineMap = new Map<number, number>();
     if (attAllYearsQ.data?.data) {
       for (const row of attAllYearsQ.data.data as any[]) {
@@ -260,15 +259,6 @@ export default function CampusesTab() {
     });
   }, [scorecards]);
 
-  const ChangeIndicator = ({ value }: { value: number }) => (
-    <div className="flex items-center gap-1">
-      {value > 0 ? <TrendingUp className="w-3 h-3 text-emerald-500" /> : value < 0 ? <TrendingDown className="w-3 h-3 text-red-400" /> : null}
-      <span className={`text-[10px] font-medium ${value >= 0 ? "text-emerald-500" : "text-red-400"}`}>
-        {value >= 0 ? "+" : ""}{value.toFixed(1)}%
-      </span>
-    </div>
-  );
-
   if (isLoading || !data) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -279,86 +269,64 @@ export default function CampusesTab() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="px-3 py-2 rounded-md text-xs font-medium" style={{ background: "rgba(232,145,58,0.08)", color: "#E8913A" }}>
-        {CURRENT_YEAR} YTD — all metrics from DB pipeline for consistency
-      </div>
-
+    <div className="space-y-5">
       {/* Campus Scorecards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-5">
         {scorecards.map((sc) => (
           <div
             key={sc.campus}
-            className="bg-card rounded-lg border-2 p-4 sm:p-5"
-            style={{ borderColor: `${CAMPUS_COLORS[sc.campus]}40` }}
+            className="bg-card rounded-lg p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] border border-border/60 transition-all hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+            style={{ borderLeft: `3px solid ${CAMPUS_COLORS[sc.campus]}` }}
           >
             <div className="flex items-center gap-2 mb-4">
-              <Building2 className="w-5 h-5" style={{ color: CAMPUS_COLORS[sc.campus] }} />
-              <h3 className="text-base font-bold" style={{ fontFamily: "'DM Sans', sans-serif" }}>{sc.campus}</h3>
+              <Building2 className="w-4 h-4" style={{ color: CAMPUS_COLORS[sc.campus] }} />
+              <h3 className="section-title text-card-foreground">{sc.campus}</h3>
             </div>
 
             <div className="space-y-3">
+              {/* Attendance */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Users className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">Avg Weekly</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-sm font-bold" style={{ fontFamily: "'DM Mono', monospace" }}>{formatNumber(sc.attNow)}</span>
-                  <ChangeIndicator value={sc.attChange} />
+                <span className="micro-label text-muted-foreground">Avg Weekly</span>
+                <div className="text-right flex items-center gap-2">
+                  <span className="stat-value text-lg text-card-foreground">{formatNumber(sc.attNow)}</span>
+                  <ChangeChip value={sc.attChange} />
                 </div>
               </div>
 
               {!sc.isOnline && (
                 <>
+                  {/* Giving */}
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="w-3.5 h-3.5 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">Total Giving</span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-sm font-bold" style={{ fontFamily: "'DM Mono', monospace" }}>{formatCurrency(sc.givNow)}</span>
-                      <ChangeIndicator value={sc.givChange} />
+                    <span className="micro-label text-muted-foreground">Total Giving</span>
+                    <div className="text-right flex items-center gap-2">
+                      <span className="stat-value text-lg text-card-foreground">{formatCurrency(sc.givNow)}</span>
+                      <ChangeChip value={sc.givChange} />
                     </div>
                   </div>
 
+                  {/* Per Capita */}
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="w-3.5 h-3.5 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">Per Capita ($/wk)</span>
-                    </div>
-                    <span className="text-sm font-bold" style={{ fontFamily: "'DM Mono', monospace", color: "#E8913A" }}>
+                    <span className="micro-label text-muted-foreground">Per Capita ($/wk)</span>
+                    <span className="stat-value text-lg" style={{ color: "#E8913A" }}>
                       {sc.gpc > 0 ? `$${sc.gpc.toFixed(0)}` : "—"}
                     </span>
                   </div>
 
-                  <div className="h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <div>
-                      <p className="text-[9px] text-muted-foreground uppercase tracking-wider">FTG</p>
-                      <p className="text-sm font-bold" style={{ fontFamily: "'DM Mono', monospace" }}>{formatNumber(sc.ftgNow)}</p>
-                    </div>
-                    <div>
-                      <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Salvations</p>
-                      <p className="text-sm font-bold" style={{ fontFamily: "'DM Mono', monospace" }}>{formatNumber(sc.salvNow)}</p>
-                    </div>
-                    <div>
-                      <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Baptisms</p>
-                      <p className="text-sm font-bold" style={{ fontFamily: "'DM Mono', monospace" }}>{formatNumber(sc.baptNow)}</p>
-                    </div>
-                    <div>
-                      <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Volunteers</p>
-                      <p className="text-sm font-bold" style={{ fontFamily: "'DM Mono', monospace" }}>{formatNumber(sc.volNow)}</p>
+                  <div className="border-t border-border/40 pt-3 mt-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <MetricCell label="FTG" value={formatNumber(sc.ftgNow)} />
+                      <MetricCell label="Salvations" value={formatNumber(sc.salvNow)} />
+                      <MetricCell label="Baptisms" value={formatNumber(sc.baptNow)} />
+                      <MetricCell label="Volunteers" value={formatNumber(sc.volNow)} />
                     </div>
                   </div>
                 </>
               )}
 
               {sc.isOnline && (
-                <div className="text-[10px] text-muted-foreground mt-2">
-                  Giving, volunteers, and next steps are attributed to physical campuses in PCO
-                </div>
+                <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
+                  Giving, volunteers, and next steps are attributed to physical campuses in PCO.
+                </p>
               )}
             </div>
           </div>
@@ -366,16 +334,18 @@ export default function CampusesTab() {
       </div>
 
       {/* Attendance Comparison + Radar */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
-        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
-          <h3 className="text-sm font-semibold mb-3 sm:mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Avg Weekly Attendance by Campus</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-5">
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <h3 className="section-title text-card-foreground mb-3 sm:mb-4">
+            Avg Weekly Attendance by Campus
+          </h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={campusYearData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-              <XAxis dataKey="year" tick={{ fontSize: 11, fill: "#9CA3AF" }} />
-              <YAxis tick={{ fontSize: 11, fill: "#9CA3AF" }} />
-              <Tooltip contentStyle={{ background: "#1C1917", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 12 }} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E8E5DE" />
+              <XAxis dataKey="year" tick={{ fontSize: 11, fontFamily: "'Inter'" }} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 11, fontFamily: "'DM Mono'" }} tickLine={false} axisLine={false} />
+              <Tooltip contentStyle={TT} />
+              <Legend wrapperStyle={{ fontSize: 12, fontFamily: "'Inter'" }} iconType="circle" iconSize={8} />
               {CAMPUSES.map((c) => (
                 <Bar key={c} dataKey={c} fill={CAMPUS_COLORS[c]} radius={[3, 3, 0, 0]} />
               ))}
@@ -383,18 +353,20 @@ export default function CampusesTab() {
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
-          <h3 className="text-sm font-semibold mb-3 sm:mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Campus Comparison Radar — {CURRENT_YEAR}</h3>
+        <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <h3 className="section-title text-card-foreground mb-3 sm:mb-4">
+            Campus Comparison Radar — {CURRENT_YEAR}
+          </h3>
           <ResponsiveContainer width="100%" height={220}>
             <RadarChart data={radarData}>
-              <PolarGrid stroke="rgba(255,255,255,0.1)" />
-              <PolarAngleAxis dataKey="metric" tick={{ fontSize: 11, fill: "#9CA3AF" }} />
-              <PolarRadiusAxis tick={{ fontSize: 9, fill: "#6B7280" }} domain={[0, 100]} />
+              <PolarGrid stroke="#E8E5DE" />
+              <PolarAngleAxis dataKey="metric" tick={{ fontSize: 11, fontFamily: "'Inter'", fill: "#6B7280" }} />
+              <PolarRadiusAxis tick={{ fontSize: 9, fill: "#9CA3AF" }} domain={[0, 100]} />
               {["Canton", "Jasper"].map((c) => (
                 <Radar key={c} name={c} dataKey={c} stroke={CAMPUS_COLORS[c]} fill={CAMPUS_COLORS[c]} fillOpacity={0.15} strokeWidth={2} />
               ))}
-              <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Tooltip contentStyle={{ background: "#1C1917", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 12 }} />
+              <Legend wrapperStyle={{ fontSize: 12, fontFamily: "'Inter'" }} iconType="circle" iconSize={8} />
+              <Tooltip contentStyle={TT} />
             </RadarChart>
           </ResponsiveContainer>
         </div>
@@ -404,17 +376,17 @@ export default function CampusesTab() {
       <DemographicMap />
 
       {/* Campus Share Table */}
-      <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
-        <h3 className="text-sm font-semibold mb-3 sm:mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>Campus Share — {CURRENT_YEAR}</h3>
-        <div className="overflow-x-auto">
+      <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <h3 className="section-title text-card-foreground mb-3 sm:mb-4">Campus Share — {CURRENT_YEAR}</h3>
+        <div className="table-scroll">
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-border/40">
-                <th className="text-left py-2 text-muted-foreground font-medium">Metric</th>
+                <th className="text-left py-2 micro-label text-muted-foreground">Metric</th>
                 {CAMPUSES.map((c) => (
-                  <th key={c} className="text-right py-2 font-medium" style={{ color: CAMPUS_COLORS[c] }}>{c}</th>
+                  <th key={c} className="text-right py-2 micro-label" style={{ color: CAMPUS_COLORS[c] }}>{c}</th>
                 ))}
-                <th className="text-right py-2 text-muted-foreground font-medium">Total</th>
+                <th className="text-right py-2 micro-label text-muted-foreground">Total</th>
               </tr>
             </thead>
             <tbody>
@@ -428,24 +400,23 @@ export default function CampusesTab() {
                 { label: "Avg Weekly Volunteers", values: scorecards.map((sc) => sc.volNow), fmt: formatNumber, skipOnline: true },
               ].map((row) => {
                 const isPerCapita = row.label === "Per Capita ($/wk)";
-                // For per capita, show weighted avg instead of sum
                 const physicalValues = row.values.filter((_, i) => !scorecards[i]?.isOnline);
                 const totalVal = isPerCapita
                   ? (gpcAllQ.data?.currentYearAvgGpc ?? 0)
                   : physicalValues.reduce((s, v) => s + v, 0);
                 return (
-                  <tr key={row.label} className="border-b border-border/20">
-                    <td className="py-2.5 font-medium">{row.label}</td>
+                  <tr key={row.label} className="border-b border-border/20 hover:bg-muted/30 transition-colors">
+                    <td className="py-2.5 font-medium text-card-foreground">{row.label}</td>
                     {row.values.map((v, i) => {
                       const isOnlineCol = scorecards[i]?.isOnline;
                       const showDash = isOnlineCol && (row as any).skipOnline;
                       return (
-                        <td key={CAMPUSES[i]} className="text-right py-2.5" style={{ fontFamily: "'DM Mono', monospace" }}>
+                        <td key={CAMPUSES[i]} className="text-right py-2.5 stat-value text-card-foreground">
                           {showDash ? "—" : row.fmt(v)}
                         </td>
                       );
                     })}
-                    <td className="text-right py-2.5 font-bold" style={{ fontFamily: "'DM Mono', monospace", color: "#E8913A" }}>
+                    <td className="text-right py-2.5 stat-value font-semibold" style={{ color: "#E8913A" }}>
                       {isPerCapita ? (totalVal > 0 ? `$${totalVal.toFixed(0)}` : "—") : row.fmt(totalVal)}
                     </td>
                   </tr>
@@ -455,6 +426,31 @@ export default function CampusesTab() {
           </table>
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ── Sub-components ── */
+
+function ChangeChip({ value }: { value: number }) {
+  if (value === 0) return null;
+  const positive = value > 0;
+  return (
+    <span
+      className="inline-flex items-center gap-0.5 text-[10px] font-semibold"
+      style={{ color: positive ? "#4A7C59" : "#C45B4A" }}
+    >
+      {positive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+      {positive ? "+" : ""}{value.toFixed(1)}%
+    </span>
+  );
+}
+
+function MetricCell({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="micro-label text-muted-foreground mb-0.5">{label}</p>
+      <p className="stat-value text-base text-card-foreground">{value}</p>
     </div>
   );
 }

@@ -1192,3 +1192,14 @@
 - [x] Fix: Campus Share table shows dashes for Online on metrics not tracked separately
 - [x] 151 tests pass
 - [x] Deploy
+
+## Round 130: Fix Campuses Tab Styling Mismatch
+- [x] Match fonts and lettering style to other tabs (Attendance, Giving, etc.)
+- [x] Replaced inline fontFamily styles with shared .section-title, .stat-value, .micro-label classes
+- [x] Switched from dark-theme tooltip/grid colors to light-theme (#E8E5DE, Inter font)
+- [x] Changed card borders from border-2 to standard border border-border/60 with left accent + shadow
+- [x] Changed ChangeIndicator colors from emerald/red to dashboard palette (#4A7C59/#C45B4A)
+- [x] Added .table-scroll wrapper and hover states on table rows
+- [x] Chart axes now use Inter on X-axis, DM Mono on Y-axis (matching all other tabs)
+- [x] 151 tests pass
+- [x] Deploy with Round 129 fixes
