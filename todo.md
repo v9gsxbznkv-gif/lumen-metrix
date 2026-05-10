@@ -1044,3 +1044,9 @@
 - [x] GPC corrected from -73.7% to +7.1%, Attendance YoY from +312% to +1.0%
 - [x] 133 tests pass, tsc clean
 - [ ] Deploy
+
+## Round 112: Assimilation Page — Restore Old Next Steps Content
+- [x] Swapped AssimilationTab import to use NextStepsTab (has complete data: FTG, Salvations, Baptisms, Stewardship)
+- [x] Sidebar already labeled "Assimilation", header shows "Assimilation" with correct subtitle
+- [x] Verified: FTG 593, Salvations 24, Baptisms 103, New Stewards 35, funnel + charts working
+- [ ] Deploy

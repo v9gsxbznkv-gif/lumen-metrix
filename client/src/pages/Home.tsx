@@ -13,7 +13,7 @@ import AttendanceTab2 from "@/components/tabs/AttendanceTab2";
 import GivingTab2 from "@/components/tabs/GivingTab2";
 import TeamMembersTab from "@/components/tabs/TeamMembersTab";
 import GroupsTab from "@/components/tabs/GroupsTab";
-import AssimilationTab from "@/components/tabs/AssimilationTab";
+import NextStepsTab from "@/components/tabs/NextStepsTab";
 import EventsTab from "@/components/tabs/EventsTab";
 import CampusesTab from "@/components/tabs/CampusesTab";
 import CompareTab from "@/components/tabs/CompareTab";
@@ -143,7 +143,7 @@ export default function Home() {
           {activeTab === "giving" && <GivingTab2 />}
           {activeTab === "teamMembers" && <TeamMembersTab />}
           {activeTab === "groups" && <GroupsTab />}
-          {activeTab === "assimilation" && <AssimilationTab />}
+          {activeTab === "assimilation" && <NextStepsTab />}
           {activeTab === "events" && <EventsTab />}
           {activeTab === "campuses" && <CampusesTab />}
           {activeTab === "compare" && <CompareTab />}
