@@ -1,0 +1,8 @@
+{
+  "query": "SELECT COUNT(*) as total, COUNT(CASE WHEN status = 'active' THEN 1 END) as active_count, COUNT(CASE WHEN lat IS NOT NULL THEN 1 END) as geocoded, COUNT(CASE WHEN street IS NOT NULL AND street != '' THEN 1 END) as has_address FROM pco_people;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT COUNT(*) as total, COUNT(CASE WHEN status = 'active' THEN 1 END) as active_count, COUNT(CASE WHEN lat IS NOT NULL THEN 1 END) as geocoded, COUNT(CASE WHEN street IS NOT NULL AND street != '' THEN 1 END) as has_address FROM pco_people;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'lat' in ''"
+  ]
+}

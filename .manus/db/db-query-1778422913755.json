@@ -1,0 +1,25 @@
+{
+  "query": "SELECT campus, COUNT(*) as total, COUNT(CASE WHEN latitude IS NOT NULL THEN 1 END) as geocoded FROM pco_people WHERE status = 'active' GROUP BY campus ORDER BY total DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT campus, COUNT(*) as total, COUNT(CASE WHEN latitude IS NOT NULL THEN 1 END) as geocoded FROM pco_people WHERE status = 'active' GROUP BY campus ORDER BY total DESC;",
+  "rows": [
+    {
+      "campus": "Canton Campus",
+      "total": "2433",
+      "geocoded": "1935"
+    },
+    {
+      "campus": "Jasper Campus",
+      "total": "294",
+      "geocoded": "231"
+    },
+    {
+      "campus": "NULL",
+      "total": "95",
+      "geocoded": "64"
+    }
+  ],
+  "messages": [],
+  "stdout": "campus\ttotal\tgeocoded\nCanton Campus\t2433\t1935\nJasper Campus\t294\t231\nNULL\t95\t64\n",
+  "stderr": "",
+  "execution_time_ms": 270
+}

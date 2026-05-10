@@ -1,0 +1,46 @@
+{
+  "query": "SELECT membershipType, COUNT(*) as cnt FROM pco_people WHERE status = 'active' GROUP BY membershipType ORDER BY cnt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT membershipType, COUNT(*) as cnt FROM pco_people WHERE status = 'active' GROUP BY membershipType ORDER BY cnt DESC;",
+  "rows": [
+    {
+      "membershipType": "Attendee",
+      "cnt": "2147"
+    },
+    {
+      "membershipType": "Steward",
+      "cnt": "586"
+    },
+    {
+      "membershipType": "Child of Staff",
+      "cnt": "25"
+    },
+    {
+      "membershipType": "Staff",
+      "cnt": "22"
+    },
+    {
+      "membershipType": "Non Attending Parent of a Student",
+      "cnt": "16"
+    },
+    {
+      "membershipType": "Spouse of Staff",
+      "cnt": "16"
+    },
+    {
+      "membershipType": "Foster Child",
+      "cnt": "4"
+    },
+    {
+      "membershipType": "NULL",
+      "cnt": "4"
+    },
+    {
+      "membershipType": "Outreach Event TM",
+      "cnt": "2"
+    }
+  ],
+  "messages": [],
+  "stdout": "membershipType\tcnt\nAttendee\t2147\nSteward\t586\nChild of Staff\t25\nStaff\t22\nNon Attending Parent of a Student\t16\nSpouse of Staff\t16\nFoster Child\t4\nNULL\t4\nOutreach Event TM\t2\n",
+  "stderr": "",
+  "execution_time_ms": 268
+}

@@ -1,0 +1,16 @@
+{
+  "query": "SELECT COUNT(*) as total, COUNT(CASE WHEN status = 'active' THEN 1 END) as active_count, COUNT(CASE WHEN latitude IS NOT NULL THEN 1 END) as geocoded, COUNT(CASE WHEN street IS NOT NULL AND street != '' THEN 1 END) as has_address FROM pco_people;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT COUNT(*) as total, COUNT(CASE WHEN status = 'active' THEN 1 END) as active_count, COUNT(CASE WHEN latitude IS NOT NULL THEN 1 END) as geocoded, COUNT(CASE WHEN street IS NOT NULL AND street != '' THEN 1 END) as has_address FROM pco_people;",
+  "rows": [
+    {
+      "total": "11638",
+      "active_count": "2822",
+      "geocoded": "2230",
+      "has_address": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\tactive_count\tgeocoded\thas_address\n11638\t2822\t2230\t0\n",
+  "stderr": "",
+  "execution_time_ms": 270
+}

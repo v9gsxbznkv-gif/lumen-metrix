@@ -3,7 +3,7 @@
  * Features:
  * - Campus filter toggles (show/hide Canton, Jasper, Unassigned)
  * - Drive-time radius overlays (15/30 min approximate circles)
- * - Cluster badges at zoomed-out levels, jittered dots when zoomed in
+ * - Deterministic clustering + jitter (dots don't move when toggling filters)
  */
 import { useRef, useState, useCallback, useEffect, useMemo } from "react";
 import { MapView } from "@/components/Map";
@@ -26,25 +26,49 @@ const CAMPUS_PIN_COLORS: Record<string, string> = {
 };
 
 // Approximate drive-time radii in meters (rural GA, ~50mph avg)
-// 15 min ≈ 12 miles ≈ 19,300m; 30 min ≈ 24 miles ≈ 38,600m
 const DRIVE_TIME_RADII = {
   "15 min": 19_300,
   "30 min": 38_600,
 };
 
-// Campus coordinates (must match server/demographics/router.ts)
+// Campus coordinates
 const CAMPUS_COORDS: Record<string, { lat: number; lng: number }> = {
   Canton: { lat: 34.236065, lng: -84.4125308 },
   Jasper: { lat: 34.4731533, lng: -84.4390925 },
 };
 
 /**
+ * Deterministic pseudo-random based on a seed string.
+ * Returns a value between 0 and 1.
+ */
+function seededRandom(seed: string): number {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    const char = seed.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  // Normalize to 0-1
+  return (Math.abs(hash) % 10000) / 10000;
+}
+
+interface ProcessedPoint {
+  lat: number;
+  lng: number;
+  campus: string;
+  city: string;
+  zip: string;
+  clusterSize: number;
+  isClusterCenter: boolean;
+}
+
+/**
  * Group points that share the same lat/lng (rounded to 4 decimals)
- * into clusters with a count, then jitter individual points.
+ * into clusters with a count, then jitter individual points deterministically.
  */
 function clusterAndJitter(
   points: Array<{ lat: number; lng: number; campus: string; city: string; zip: string }>
-) {
+): ProcessedPoint[] {
   const groups = new Map<string, typeof points>();
   for (const p of points) {
     const key = `${p.lat.toFixed(4)},${p.lng.toFixed(4)}`;
@@ -52,17 +76,9 @@ function clusterAndJitter(
     groups.get(key)!.push(p);
   }
 
-  const jittered: Array<{
-    lat: number;
-    lng: number;
-    campus: string;
-    city: string;
-    zip: string;
-    clusterSize: number;
-    isClusterCenter: boolean;
-  }> = [];
+  const jittered: ProcessedPoint[] = [];
 
-  for (const [, group] of Array.from(groups)) {
+  for (const [groupKey, group] of Array.from(groups)) {
     const centerLat = group[0].lat;
     const centerLng = group[0].lng;
     const count = group.length;
@@ -88,8 +104,11 @@ function clusterAndJitter(
         const posInRing = i % 12;
         const ringRadius = baseRadius * (ring + 1) / maxRings * (maxRings > 1 ? maxRings : 1);
         const angle = (posInRing / 12) * 2 * Math.PI + (ring * 0.3);
-        const jitterLat = centerLat + ringRadius * Math.cos(angle) * (0.8 + Math.random() * 0.4);
-        const jitterLng = centerLng + ringRadius * Math.sin(angle) * (0.8 + Math.random() * 0.4);
+        // Deterministic jitter based on group position + index
+        const seed = `${groupKey}-${i}`;
+        const jitterFactor = 0.8 + seededRandom(seed) * 0.4;
+        const jitterLat = centerLat + ringRadius * Math.cos(angle) * jitterFactor;
+        const jitterLng = centerLng + ringRadius * Math.sin(angle) * jitterFactor;
 
         jittered.push({
           ...group[i],
@@ -123,7 +142,8 @@ function getMajorityCampus(group: Array<{ campus: string }>): string {
 
 export default function DemographicMap() {
   const mapRef = useRef<google.maps.Map | null>(null);
-  const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
+  const markersRef = useRef<Array<{ marker: google.maps.marker.AdvancedMarkerElement; campus: string }>>([]);
+  const campusPinsRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
   const circlesRef = useRef<google.maps.Circle[]>([]);
   const [syncing, setSyncing] = useState(false);
   const [backfilling, setBackfilling] = useState(false);
@@ -154,13 +174,13 @@ export default function DemographicMap() {
   const totalPoints = mapData?.points?.length ?? 0;
   const needsBackfill = totalPoints > 0 && unknownCount > totalPoints * 0.5;
 
-  // Filter points by visible campuses
-  const filteredPoints = useMemo(() => {
+  // Process ALL points once (deterministic clustering + jitter)
+  const allProcessedPoints = useMemo(() => {
     if (!mapData?.points) return [];
-    return mapData.points.filter((p) => visibleCampuses.has(p.campus || "Unknown"));
-  }, [mapData?.points, visibleCampuses]);
+    return clusterAndJitter(mapData.points);
+  }, [mapData?.points]);
 
-  // Campus counts (from full data, not filtered)
+  // Campus counts (from full data)
   const campusCounts = useMemo(() => {
     if (!mapData?.points) return {} as Record<string, number>;
     return mapData.points.reduce((acc, p) => {
@@ -169,6 +189,12 @@ export default function DemographicMap() {
       return acc;
     }, {} as Record<string, number>);
   }, [mapData?.points]);
+
+  // Filtered count for subtitle
+  const filteredCount = useMemo(() => {
+    if (!mapData?.points) return 0;
+    return mapData.points.filter((p) => visibleCampuses.has(p.campus || "Unknown")).length;
+  }, [mapData?.points, visibleCampuses]);
 
   const toggleCampus = useCallback((campus: string) => {
     setVisibleCampuses((prev) => {
@@ -222,7 +248,7 @@ export default function DemographicMap() {
         totalFailed += geoResult.failed;
         geoRemaining = geoResult.remaining;
         setSyncMessage(`Phase 3/3: Geocoding batch ${geoBatch}... ${totalGeocoded} done, ${geoRemaining} remaining`);
-        if (geoBatch % 3 === 0) await refetchMapData(); // refresh map periodically
+        if (geoBatch % 3 === 0) await refetchMapData();
       }
 
       setSyncMessage(`Done! ${addrResult.total} people, ${totalAddrSynced} addresses, ${totalGeocoded} geocoded.`);
@@ -251,7 +277,7 @@ export default function DemographicMap() {
     }
   }, [backfillCampus, refetchMapData]);
 
-  // Standalone geocode handler — runs in batches of 50, auto-loops
+  // Standalone geocode handler
   const handleGeocode = useCallback(async () => {
     setGeocoding(true);
     try {
@@ -267,7 +293,6 @@ export default function DemographicMap() {
         totalFailed += result.failed;
         remaining = result.remaining;
         setSyncMessage(`Geocoding batch ${batch}... ${totalGeocoded} done, ${remaining} remaining`);
-        // Refresh map every 3 batches
         if (batch % 3 === 0) {
           await refetchMapData();
           await refetchStatus();
@@ -286,7 +311,6 @@ export default function DemographicMap() {
 
   // Render drive-time circles
   const renderCircles = useCallback((map: google.maps.Map) => {
-    // Clear existing circles
     for (const c of circlesRef.current) {
       c.setMap(null);
     }
@@ -313,14 +337,18 @@ export default function DemographicMap() {
     }
   }, [showDriveTime]);
 
-  // Render markers (filtered by visible campuses)
-  const renderMarkers = useCallback(
+  // Render ALL markers once (campus pins + member dots)
+  const renderAllMarkers = useCallback(
     (map: google.maps.Map) => {
       // Clear existing markers
-      for (const m of markersRef.current) {
-        m.map = null;
+      for (const { marker } of markersRef.current) {
+        marker.map = null;
       }
       markersRef.current = [];
+      for (const m of campusPinsRef.current) {
+        m.map = null;
+      }
+      campusPinsRef.current = [];
 
       if (!campuses) return;
 
@@ -361,15 +389,15 @@ export default function DemographicMap() {
           content: pinEl,
           zIndex: 1000,
         });
-        markersRef.current.push(marker);
+        campusPinsRef.current.push(marker);
       }
 
-      // Cluster and jitter filtered points
-      const processed = clusterAndJitter(filteredPoints);
+      // Add ALL processed points as markers
+      for (const point of allProcessedPoints) {
+        const campus = point.campus || "Unknown";
 
-      for (const point of processed) {
         if (point.isClusterCenter) {
-          const color = CAMPUS_DOT_COLORS[point.campus] || CAMPUS_DOT_COLORS.Unknown;
+          const color = CAMPUS_DOT_COLORS[campus] || CAMPUS_DOT_COLORS.Unknown;
           const size = Math.min(60, Math.max(32, 20 + Math.log2(point.clusterSize) * 8));
           const fontSize = size > 40 ? 13 : 11;
           const badgeEl = document.createElement("div");
@@ -390,7 +418,7 @@ export default function DemographicMap() {
             cursor: pointer;
           `;
           badgeEl.textContent = String(point.clusterSize);
-          badgeEl.title = `${point.clusterSize} people in ${point.city || "this area"} (${point.campus})`;
+          badgeEl.title = `${point.clusterSize} people in ${point.city || "this area"} (${campus})`;
 
           const marker = new google.maps.marker.AdvancedMarkerElement({
             map,
@@ -398,9 +426,11 @@ export default function DemographicMap() {
             content: badgeEl,
             zIndex: 500 + point.clusterSize,
           });
-          markersRef.current.push(marker);
-        } else {
-          const color = CAMPUS_DOT_COLORS[point.campus] || CAMPUS_DOT_COLORS.Unknown;
+          markersRef.current.push({ marker, campus });
+        } else if (point.clusterSize !== 0 || !point.isClusterCenter) {
+          // Individual dot (not a cluster center placeholder with size 0 from cluster groups)
+          if (point.clusterSize === 0 && point.isClusterCenter) continue; // skip
+          const color = CAMPUS_DOT_COLORS[campus] || CAMPUS_DOT_COLORS.Unknown;
           const dotEl = document.createElement("div");
           dotEl.style.cssText = `
             width: 10px;
@@ -412,7 +442,7 @@ export default function DemographicMap() {
             cursor: pointer;
             box-shadow: 0 1px 3px rgba(0,0,0,0.25);
           `;
-          dotEl.title = `${point.campus} — ${point.city || point.zip}`;
+          dotEl.title = `${campus} — ${point.city || point.zip}`;
 
           const marker = new google.maps.marker.AdvancedMarkerElement({
             map,
@@ -420,28 +450,38 @@ export default function DemographicMap() {
             content: dotEl,
             zIndex: 100,
           });
-          markersRef.current.push(marker);
+          markersRef.current.push({ marker, campus });
         }
       }
     },
-    [filteredPoints, campuses]
+    [allProcessedPoints, campuses]
   );
+
+  // Toggle marker visibility based on campus filter (no re-rendering, no repositioning)
+  useEffect(() => {
+    for (const { marker, campus } of markersRef.current) {
+      const shouldShow = visibleCampuses.has(campus);
+      if (marker.content instanceof HTMLElement) {
+        marker.content.style.display = shouldShow ? "" : "none";
+      }
+    }
+  }, [visibleCampuses]);
 
   const handleMapReady = useCallback(
     (map: google.maps.Map) => {
       mapRef.current = map;
-      renderMarkers(map);
+      renderAllMarkers(map);
       renderCircles(map);
     },
-    [renderMarkers, renderCircles]
+    [renderAllMarkers, renderCircles]
   );
 
-  // Re-render markers when filter or data changes
+  // Re-render markers when data changes (not when filter changes)
   useEffect(() => {
-    if (mapRef.current) {
-      renderMarkers(mapRef.current);
+    if (mapRef.current && allProcessedPoints.length > 0) {
+      renderAllMarkers(mapRef.current);
     }
-  }, [filteredPoints, campuses, renderMarkers]);
+  }, [allProcessedPoints, campuses, renderAllMarkers]);
 
   // Re-render circles when drive-time selection changes
   useEffect(() => {
@@ -460,7 +500,7 @@ export default function DemographicMap() {
           <h3 className="section-title text-card-foreground">Congregation Map</h3>
           <p className="text-[11px] text-muted-foreground mt-0.5">
             {hasData
-              ? `${filteredPoints.length} of ${mapData.points.length} members shown (${mapData.stats.total} active)`
+              ? `${filteredCount} of ${mapData.points.length} members shown (${mapData.stats.total} active)`
               : "Sync addresses from PCO to populate the map"}
           </p>
         </div>
