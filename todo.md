@@ -1226,3 +1226,11 @@
 - [x] Fix: removed 90s timeout, addresses come in same response as people
 - [x] 151 tests pass
 - [x] Deploy (with Round 132 campus filters + drive-time overlays)
+
+## Round 134: Fix Geocoding Stall — Resumable Batch Geocoding
+- [x] Root cause: include=addresses caused PCO API timeout; addresses now fetched individually in Phase 2
+- [x] Added fetchAddressBatch endpoint (batches of 50, called repeatedly from frontend)
+- [x] Added clickable "pending geocode" link that auto-loops geocoding in batches of 50
+- [x] Geocoding is now resumable — if it errors, click again to continue where it left off
+- [x] 151 tests pass
+- [ ] Deploy

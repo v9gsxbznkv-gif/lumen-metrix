@@ -127,6 +127,7 @@ export default function DemographicMap() {
   const circlesRef = useRef<google.maps.Circle[]>([]);
   const [syncing, setSyncing] = useState(false);
   const [backfilling, setBackfilling] = useState(false);
+  const [geocoding, setGeocoding] = useState(false);
   const [syncMessage, setSyncMessage] = useState("");
 
   // Campus filter state
@@ -249,6 +250,39 @@ export default function DemographicMap() {
       setBackfilling(false);
     }
   }, [backfillCampus, refetchMapData]);
+
+  // Standalone geocode handler — runs in batches of 50, auto-loops
+  const handleGeocode = useCallback(async () => {
+    setGeocoding(true);
+    try {
+      let totalGeocoded = 0;
+      let totalFailed = 0;
+      let remaining = Infinity;
+      let batch = 0;
+
+      while (remaining > 0) {
+        batch++;
+        const result = await geocodeAddresses.mutateAsync({ batchSize: 50 });
+        totalGeocoded += result.geocoded;
+        totalFailed += result.failed;
+        remaining = result.remaining;
+        setSyncMessage(`Geocoding batch ${batch}... ${totalGeocoded} done, ${remaining} remaining`);
+        // Refresh map every 3 batches
+        if (batch % 3 === 0) {
+          await refetchMapData();
+          await refetchStatus();
+        }
+      }
+
+      setSyncMessage(`Geocoding complete! ${totalGeocoded} geocoded, ${totalFailed} failed.`);
+      await refetchMapData();
+      await refetchStatus();
+    } catch (err: any) {
+      setSyncMessage(`Geocoding error: ${err.message}. Click again to resume.`);
+    } finally {
+      setGeocoding(false);
+    }
+  }, [geocodeAddresses, refetchMapData, refetchStatus]);
 
   // Render drive-time circles
   const renderCircles = useCallback((map: google.maps.Map) => {
@@ -480,9 +514,13 @@ export default function DemographicMap() {
             <MapPin className="w-3 h-3" /> {syncStatus.geocoded} mapped
           </span>
           {(syncStatus.pendingGeocode ?? 0) > 0 && (
-            <span className="text-amber-500">
-              {syncStatus.pendingGeocode} pending geocode
-            </span>
+            <button
+              onClick={handleGeocode}
+              disabled={geocoding || syncing}
+              className="text-amber-500 hover:text-amber-600 underline cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {geocoding ? "Geocoding..." : `${syncStatus.pendingGeocode} pending geocode`}
+            </button>
           )}
         </div>
       )}

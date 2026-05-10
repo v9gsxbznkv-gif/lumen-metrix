@@ -1,0 +1,18 @@
+{
+  "query": "SELECT \n  COUNT(*) as total_active,\n  SUM(CASE WHEN zip IS NOT NULL AND zip != '' THEN 1 ELSE 0 END) as has_address,\n  SUM(CASE WHEN zip IS NULL THEN 1 ELSE 0 END) as needs_address_fetch,\n  SUM(CASE WHEN zip = '' THEN 1 ELSE 0 END) as no_address_in_pco,\n  SUM(CASE WHEN zip IS NOT NULL AND zip != '' AND latitude IS NULL THEN 1 ELSE 0 END) as needs_geocode,\n  SUM(CASE WHEN latitude IS NOT NULL THEN 1 ELSE 0 END) as geocoded\nFROM pco_people WHERE status = 'active'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT \n  COUNT(*) as total_active,\n  SUM(CASE WHEN zip IS NOT NULL AND zip != '' THEN 1 ELSE 0 END) as has_address,\n  SUM(CASE WHEN zip IS NULL THEN 1 ELSE 0 END) as needs_address_fetch,\n  SUM(CASE WHEN zip = '' THEN 1 ELSE 0 END) as no_address_in_pco,\n  SUM(CASE WHEN zip IS NOT NULL AND zip != '' AND latitude IS NULL THEN 1 ELSE 0 END) as needs_geocode,\n  SUM(CASE WHEN latitude IS NOT NULL THEN 1 ELSE 0 END) as geocoded\nFROM pco_people WHERE status = 'active'",
+  "rows": [
+    {
+      "total_active": "2367",
+      "has_address": "2230",
+      "needs_address_fetch": "137",
+      "no_address_in_pco": "0",
+      "needs_geocode": "1127",
+      "geocoded": "1103"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_active\thas_address\tneeds_address_fetch\tno_address_in_pco\tneeds_geocode\tgeocoded\n2367\t2230\t137\t0\t1127\t1103\n",
+  "stderr": "",
+  "execution_time_ms": 268
+}
