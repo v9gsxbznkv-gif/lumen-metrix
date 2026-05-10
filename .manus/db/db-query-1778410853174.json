@@ -1,0 +1,14 @@
+{
+  "query": "SELECT SUM(headcount) as total_online, COUNT(DISTINCT weekNumber) as weeks FROM attendance_weekly WHERE year = 2026 AND subgroup = 'Online';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT SUM(headcount) as total_online, COUNT(DISTINCT weekNumber) as weeks FROM attendance_weekly WHERE year = 2026 AND subgroup = 'Online';",
+  "rows": [
+    {
+      "total_online": "5057",
+      "weeks": "9"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_online\tweeks\n5057\t9\n",
+  "stderr": "",
+  "execution_time_ms": 264
+}

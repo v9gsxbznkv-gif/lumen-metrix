@@ -3,6 +3,7 @@
  * Side-by-side campus comparison: Canton vs Jasper vs Online
  * Each campus gets a scorecard with key metrics
  * Uses DB-backed tRPC endpoints (dataViews) for consistent data across all pages
+ * Falls back to annual next_steps table for metrics not in weekly (e.g., Baptisms)
  */
 import { useMemo } from "react";
 import { useData } from "@/contexts/DataContext";
@@ -12,9 +13,9 @@ import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
 } from "recharts";
 import {
-  CAMPUS_COLORS, formatNumber, formatCurrency,
+  CAMPUS_COLORS, formatNumber, formatCurrency, getNextStepsFromWeekly,
 } from "@/lib/data";
-import { Building2, Users, DollarSign, UserPlus, Heart, TrendingUp, TrendingDown, Loader2 } from "lucide-react";
+import { Building2, Users, DollarSign, TrendingUp, TrendingDown, Loader2 } from "lucide-react";
 import DemographicMap from "@/components/DemographicMap";
 
 const CAMPUSES = ["Canton", "Jasper", "Online"] as const;
@@ -25,14 +26,16 @@ export default function CampusesTab() {
   const { data, filters } = useData();
 
   // ── DB-backed queries: attendance per campus (yearly) ──
+  // For Online, we query "all" and extract the online field from the response
   const attCantonQ = trpc.dataViews.attendance.getData.useQuery({
     viewMode: "yearly", campus: "Canton", startYear: PRIOR_YEAR, endYear: CURRENT_YEAR,
   });
   const attJasperQ = trpc.dataViews.attendance.getData.useQuery({
     viewMode: "yearly", campus: "Jasper", startYear: PRIOR_YEAR, endYear: CURRENT_YEAR,
   });
-  const attOnlineQ = trpc.dataViews.attendance.getData.useQuery({
-    viewMode: "yearly", campus: "Online", startYear: PRIOR_YEAR, endYear: CURRENT_YEAR,
+  // Online attendance: query all campuses and use the "online" field (since Online is a subgroup under Canton)
+  const attAllQ = trpc.dataViews.attendance.getData.useQuery({
+    viewMode: "yearly", startYear: PRIOR_YEAR, endYear: CURRENT_YEAR,
   });
 
   // ── DB-backed queries: giving per campus (yearly) ──
@@ -41,9 +44,6 @@ export default function CampusesTab() {
   });
   const givJasperQ = trpc.dataViews.giving.getData.useQuery({
     viewMode: "yearly", campus: "Jasper", startYear: PRIOR_YEAR, endYear: CURRENT_YEAR,
-  });
-  const givOnlineQ = trpc.dataViews.giving.getData.useQuery({
-    viewMode: "yearly", campus: "Online", startYear: PRIOR_YEAR, endYear: CURRENT_YEAR,
   });
 
   // ── DB-backed queries: per capita per campus ──
@@ -57,15 +57,12 @@ export default function CampusesTab() {
     year: CURRENT_YEAR,
   });
 
-  // ── DB-backed queries: next steps per campus (yearly) ──
+  // ── DB-backed queries: next steps per campus (yearly) — FTG & Salvations from weekly ──
   const nsCantonQ = trpc.dataViews.nextSteps.getData.useQuery({
     viewMode: "yearly", campus: "Canton", startYear: PRIOR_YEAR, endYear: CURRENT_YEAR,
   });
   const nsJasperQ = trpc.dataViews.nextSteps.getData.useQuery({
     viewMode: "yearly", campus: "Jasper", startYear: PRIOR_YEAR, endYear: CURRENT_YEAR,
-  });
-  const nsOnlineQ = trpc.dataViews.nextSteps.getData.useQuery({
-    viewMode: "yearly", campus: "Online", startYear: PRIOR_YEAR, endYear: CURRENT_YEAR,
   });
 
   // ── DB-backed queries: serving per campus (yearly) ──
@@ -75,9 +72,6 @@ export default function CampusesTab() {
   const servJasperQ = trpc.dataViews.serving.getData.useQuery({
     viewMode: "yearly", campus: "Jasper", startYear: PRIOR_YEAR, endYear: CURRENT_YEAR,
   });
-  const servOnlineQ = trpc.dataViews.serving.getData.useQuery({
-    viewMode: "yearly", campus: "Online", startYear: PRIOR_YEAR, endYear: CURRENT_YEAR,
-  });
 
   // ── DB-backed queries: attendance for bar chart (all years, per campus) ──
   const attCantonAllQ = trpc.dataViews.attendance.getData.useQuery({
@@ -86,12 +80,12 @@ export default function CampusesTab() {
   const attJasperAllQ = trpc.dataViews.attendance.getData.useQuery({
     viewMode: "yearly", campus: "Jasper",
   });
-  const attOnlineAllQ = trpc.dataViews.attendance.getData.useQuery({
-    viewMode: "yearly", campus: "Online",
+  const attAllYearsQ = trpc.dataViews.attendance.getData.useQuery({
+    viewMode: "yearly",
   });
 
   // Check if critical data is loading
-  const isLoading = !attCantonQ.data || !attJasperQ.data || !givCantonQ.data || !givJasperQ.data;
+  const isLoading = !attCantonQ.data || !attJasperQ.data || !attAllQ.data || !givCantonQ.data || !givJasperQ.data;
 
   // ── Helper: extract yearly row from DB query result ──
   const getYearRow = (queryData: any, year: number): any | null => {
@@ -109,14 +103,40 @@ export default function CampusesTab() {
 
   // ── Build campus scorecards from DB data ──
   const scorecards = useMemo(() => {
-    const attQueries = { Canton: attCantonQ, Jasper: attJasperQ, Online: attOnlineQ };
-    const givQueries = { Canton: givCantonQ, Jasper: givJasperQ, Online: givOnlineQ };
-    const gpcQueries = { Canton: gpcCantonQ, Jasper: gpcJasperQ, Online: null };
-    const nsQueries = { Canton: nsCantonQ, Jasper: nsJasperQ, Online: nsOnlineQ };
-    const servQueries = { Canton: servCantonQ, Jasper: servJasperQ, Online: servOnlineQ };
+    if (!data) return [];
+
+    const attQueries = { Canton: attCantonQ, Jasper: attJasperQ };
+    const givQueries = { Canton: givCantonQ, Jasper: givJasperQ };
+    const gpcQueries = { Canton: gpcCantonQ, Jasper: gpcJasperQ };
+    const nsQueries = { Canton: nsCantonQ, Jasper: nsJasperQ };
+    const servQueries = { Canton: servCantonQ, Jasper: servJasperQ };
 
     return CAMPUSES.map((c) => {
-      // Attendance: avgWeeklyTotal from yearly aggregation
+      if (c === "Online") {
+        // Online campus: attendance comes from the "online" field in the all-campus aggregation
+        const allRow = getYearRow(attAllQ.data, CURRENT_YEAR);
+        const allPriorRow = getYearRow(attAllQ.data, PRIOR_YEAR);
+        const attNow = allRow?.avgWeeklyOnline ?? 0;
+        const attPrior = allPriorRow?.avgWeeklyOnline ?? 0;
+        const attChange = attPrior > 0 ? ((attNow - attPrior) / attPrior * 100) : 0;
+
+        // Online has no separate giving, serving, or next steps data
+        return {
+          campus: c,
+          attNow,
+          attChange,
+          givNow: 0,
+          givChange: 0,
+          ftgNow: 0,
+          salvNow: 0,
+          baptNow: 0,
+          volNow: 0,
+          gpc: 0,
+          isOnline: true,
+        };
+      }
+
+      // Canton / Jasper
       const attRow = getYearRow(attQueries[c].data, CURRENT_YEAR);
       const attPriorRow = getYearRow(attQueries[c].data, PRIOR_YEAR);
       const attNow = attRow?.avgWeeklyTotal ?? 0;
@@ -132,11 +152,13 @@ export default function CampusesTab() {
       const gpcQ = gpcQueries[c];
       const gpc = gpcQ ? (gpcQ.data?.currentYearAvgGpc ?? 0) : 0;
 
-      // Next steps
+      // Next steps: FTG and Salvations from weekly DB
       const nsQ = nsQueries[c];
       const ftgNow = getNsCount(nsQ.data, CURRENT_YEAR, "FTG");
       const salvNow = getNsCount(nsQ.data, CURRENT_YEAR, "Salvations");
-      const baptNow = getNsCount(nsQ.data, CURRENT_YEAR, "Baptisms");
+
+      // Baptisms: NOT in weekly table for 2026 — fall back to annual next_steps via legacy helper
+      const baptNow = getNextStepsFromWeekly(data, CURRENT_YEAR, c, "Baptisms");
 
       // Serving: avgWeekly from yearly aggregation
       const servRow = getYearRow(servQueries[c].data, CURRENT_YEAR);
@@ -146,54 +168,72 @@ export default function CampusesTab() {
       const attChange = attPrior > 0 ? ((attNow - attPrior) / attPrior * 100) : 0;
       const givChange = givPrior > 0 ? ((givNow - givPrior) / givPrior * 100) : 0;
 
-      return { campus: c, attNow, attChange, givNow, givChange, ftgNow, salvNow, baptNow, volNow, gpc };
+      return { campus: c, attNow, attChange, givNow, givChange, ftgNow, salvNow, baptNow, volNow, gpc, isOnline: false };
     });
   }, [
-    attCantonQ.data, attJasperQ.data, attOnlineQ.data,
-    givCantonQ.data, givJasperQ.data, givOnlineQ.data,
+    data,
+    attCantonQ.data, attJasperQ.data, attAllQ.data,
+    givCantonQ.data, givJasperQ.data,
     gpcCantonQ.data, gpcJasperQ.data,
-    nsCantonQ.data, nsJasperQ.data, nsOnlineQ.data,
-    servCantonQ.data, servJasperQ.data, servOnlineQ.data,
+    nsCantonQ.data, nsJasperQ.data,
+    servCantonQ.data, servJasperQ.data,
   ]);
 
   // ── Multi-year campus comparison bar chart data (from DB) ──
   const campusYearData = useMemo(() => {
     const { yearStart, yearEnd } = filters;
     const allYears = new Set<number>();
-    const campusMap: Record<string, Map<number, number>> = {};
 
-    const allQueries = { Canton: attCantonAllQ, Jasper: attJasperAllQ, Online: attOnlineAllQ };
-    for (const c of CAMPUSES) {
-      const q = allQueries[c];
-      const map = new Map<number, number>();
-      if (q.data?.data) {
-        for (const row of q.data.data as any[]) {
-          if (row.year >= yearStart && row.year <= yearEnd) {
-            map.set(row.year, row.avgWeeklyTotal ?? 0);
-            allYears.add(row.year);
-          }
+    // Canton
+    const cantonMap = new Map<number, number>();
+    if (attCantonAllQ.data?.data) {
+      for (const row of attCantonAllQ.data.data as any[]) {
+        if (row.year >= yearStart && row.year <= yearEnd) {
+          cantonMap.set(row.year, row.avgWeeklyTotal ?? 0);
+          allYears.add(row.year);
         }
       }
-      campusMap[c] = map;
+    }
+
+    // Jasper
+    const jasperMap = new Map<number, number>();
+    if (attJasperAllQ.data?.data) {
+      for (const row of attJasperAllQ.data.data as any[]) {
+        if (row.year >= yearStart && row.year <= yearEnd) {
+          jasperMap.set(row.year, row.avgWeeklyTotal ?? 0);
+          allYears.add(row.year);
+        }
+      }
+    }
+
+    // Online (from all-campus query, use avgWeeklyOnline)
+    const onlineMap = new Map<number, number>();
+    if (attAllYearsQ.data?.data) {
+      for (const row of attAllYearsQ.data.data as any[]) {
+        if (row.year >= yearStart && row.year <= yearEnd) {
+          onlineMap.set(row.year, row.avgWeeklyOnline ?? 0);
+          allYears.add(row.year);
+        }
+      }
     }
 
     const years = Array.from(allYears).sort((a, b) => a - b);
-    return years.map((y) => {
-      const row: Record<string, number | string> = { year: y };
-      for (const c of CAMPUSES) {
-        row[c] = campusMap[c].get(y) ?? 0;
-      }
-      return row;
-    });
-  }, [attCantonAllQ.data, attJasperAllQ.data, attOnlineAllQ.data, filters]);
+    return years.map((y) => ({
+      year: y,
+      Canton: cantonMap.get(y) ?? 0,
+      Jasper: jasperMap.get(y) ?? 0,
+      Online: onlineMap.get(y) ?? 0,
+    }));
+  }, [attCantonAllQ.data, attJasperAllQ.data, attAllYearsQ.data, filters]);
 
-  // ── Radar chart data for latest year ──
+  // ── Radar chart data for latest year (Canton vs Jasper only — Online lacks most metrics) ──
   const radarData = useMemo(() => {
     const radarMetrics = ["Attendance", "Giving", "FTG", "Salvations", "Volunteers"];
+    const physicalCampuses = scorecards.filter(sc => !sc.isOnline);
     const maxVals: Record<string, number> = {};
     for (const m of radarMetrics) {
       maxVals[m] = Math.max(
-        ...scorecards.map((sc) => {
+        ...physicalCampuses.map((sc) => {
           if (m === "Attendance") return sc.attNow;
           if (m === "Giving") return sc.givNow;
           if (m === "FTG") return sc.ftgNow;
@@ -207,7 +247,7 @@ export default function CampusesTab() {
 
     return radarMetrics.map((m) => {
       const row: Record<string, number | string> = { metric: m };
-      for (const sc of scorecards) {
+      for (const sc of physicalCampuses) {
         let val = 0;
         if (m === "Attendance") val = sc.attNow;
         else if (m === "Giving") val = sc.givNow;
@@ -229,7 +269,7 @@ export default function CampusesTab() {
     </div>
   );
 
-  if (isLoading) {
+  if (isLoading || !data) {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -269,47 +309,57 @@ export default function CampusesTab() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <DollarSign className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">Total Giving</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-sm font-bold" style={{ fontFamily: "'DM Mono', monospace" }}>{formatCurrency(sc.givNow)}</span>
-                  <ChangeIndicator value={sc.givChange} />
-                </div>
-              </div>
+              {!sc.isOnline && (
+                <>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">Total Giving</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm font-bold" style={{ fontFamily: "'DM Mono', monospace" }}>{formatCurrency(sc.givNow)}</span>
+                      <ChangeIndicator value={sc.givChange} />
+                    </div>
+                  </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <DollarSign className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">Per Capita ($/wk)</span>
-                </div>
-                <span className="text-sm font-bold" style={{ fontFamily: "'DM Mono', monospace", color: "#E8913A" }}>
-                  {sc.gpc > 0 ? `$${sc.gpc.toFixed(0)}` : "—"}
-                </span>
-              </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">Per Capita ($/wk)</span>
+                    </div>
+                    <span className="text-sm font-bold" style={{ fontFamily: "'DM Mono', monospace", color: "#E8913A" }}>
+                      {sc.gpc > 0 ? `$${sc.gpc.toFixed(0)}` : "—"}
+                    </span>
+                  </div>
 
-              <div className="h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
+                  <div className="h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div>
-                  <p className="text-[9px] text-muted-foreground uppercase tracking-wider">FTG</p>
-                  <p className="text-sm font-bold" style={{ fontFamily: "'DM Mono', monospace" }}>{formatNumber(sc.ftgNow)}</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                      <p className="text-[9px] text-muted-foreground uppercase tracking-wider">FTG</p>
+                      <p className="text-sm font-bold" style={{ fontFamily: "'DM Mono', monospace" }}>{formatNumber(sc.ftgNow)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Salvations</p>
+                      <p className="text-sm font-bold" style={{ fontFamily: "'DM Mono', monospace" }}>{formatNumber(sc.salvNow)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Baptisms</p>
+                      <p className="text-sm font-bold" style={{ fontFamily: "'DM Mono', monospace" }}>{formatNumber(sc.baptNow)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Volunteers</p>
+                      <p className="text-sm font-bold" style={{ fontFamily: "'DM Mono', monospace" }}>{formatNumber(sc.volNow)}</p>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {sc.isOnline && (
+                <div className="text-[10px] text-muted-foreground mt-2">
+                  Giving, volunteers, and next steps are attributed to physical campuses in PCO
                 </div>
-                <div>
-                  <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Salvations</p>
-                  <p className="text-sm font-bold" style={{ fontFamily: "'DM Mono', monospace" }}>{formatNumber(sc.salvNow)}</p>
-                </div>
-                <div>
-                  <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Baptisms</p>
-                  <p className="text-sm font-bold" style={{ fontFamily: "'DM Mono', monospace" }}>{formatNumber(sc.baptNow)}</p>
-                </div>
-                <div>
-                  <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Volunteers</p>
-                  <p className="text-sm font-bold" style={{ fontFamily: "'DM Mono', monospace" }}>{formatNumber(sc.volNow)}</p>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         ))}
@@ -340,7 +390,7 @@ export default function CampusesTab() {
               <PolarGrid stroke="rgba(255,255,255,0.1)" />
               <PolarAngleAxis dataKey="metric" tick={{ fontSize: 11, fill: "#9CA3AF" }} />
               <PolarRadiusAxis tick={{ fontSize: 9, fill: "#6B7280" }} domain={[0, 100]} />
-              {CAMPUSES.filter((c) => c !== "Online").map((c) => (
+              {["Canton", "Jasper"].map((c) => (
                 <Radar key={c} name={c} dataKey={c} stroke={CAMPUS_COLORS[c]} fill={CAMPUS_COLORS[c]} fillOpacity={0.15} strokeWidth={2} />
               ))}
               <Legend wrapperStyle={{ fontSize: 11 }} />
@@ -370,24 +420,31 @@ export default function CampusesTab() {
             <tbody>
               {[
                 { label: "Avg Weekly Attendance", values: scorecards.map((sc) => sc.attNow), fmt: formatNumber },
-                { label: "Total Giving", values: scorecards.map((sc) => sc.givNow), fmt: formatCurrency },
-                { label: "Per Capita ($/wk)", values: scorecards.map((sc) => sc.gpc), fmt: (v: number) => v > 0 ? `$${v.toFixed(0)}` : "—" },
-                { label: "First-Time Guests", values: scorecards.map((sc) => sc.ftgNow), fmt: formatNumber },
-                { label: "Salvations", values: scorecards.map((sc) => sc.salvNow), fmt: formatNumber },
-                { label: "Baptisms", values: scorecards.map((sc) => sc.baptNow), fmt: formatNumber },
-                { label: "Avg Weekly Volunteers", values: scorecards.map((sc) => sc.volNow), fmt: formatNumber },
+                { label: "Total Giving", values: scorecards.map((sc) => sc.givNow), fmt: formatCurrency, skipOnline: true },
+                { label: "Per Capita ($/wk)", values: scorecards.map((sc) => sc.gpc), fmt: (v: number) => v > 0 ? `$${v.toFixed(0)}` : "—", skipOnline: true },
+                { label: "First-Time Guests", values: scorecards.map((sc) => sc.ftgNow), fmt: formatNumber, skipOnline: true },
+                { label: "Salvations", values: scorecards.map((sc) => sc.salvNow), fmt: formatNumber, skipOnline: true },
+                { label: "Baptisms", values: scorecards.map((sc) => sc.baptNow), fmt: formatNumber, skipOnline: true },
+                { label: "Avg Weekly Volunteers", values: scorecards.map((sc) => sc.volNow), fmt: formatNumber, skipOnline: true },
               ].map((row) => {
                 const isPerCapita = row.label === "Per Capita ($/wk)";
                 // For per capita, show weighted avg instead of sum
+                const physicalValues = row.values.filter((_, i) => !scorecards[i]?.isOnline);
                 const totalVal = isPerCapita
                   ? (gpcAllQ.data?.currentYearAvgGpc ?? 0)
-                  : row.values.reduce((s, v) => s + v, 0);
+                  : physicalValues.reduce((s, v) => s + v, 0);
                 return (
                   <tr key={row.label} className="border-b border-border/20">
                     <td className="py-2.5 font-medium">{row.label}</td>
-                    {row.values.map((v, i) => (
-                      <td key={CAMPUSES[i]} className="text-right py-2.5" style={{ fontFamily: "'DM Mono', monospace" }}>{row.fmt(v)}</td>
-                    ))}
+                    {row.values.map((v, i) => {
+                      const isOnlineCol = scorecards[i]?.isOnline;
+                      const showDash = isOnlineCol && (row as any).skipOnline;
+                      return (
+                        <td key={CAMPUSES[i]} className="text-right py-2.5" style={{ fontFamily: "'DM Mono', monospace" }}>
+                          {showDash ? "—" : row.fmt(v)}
+                        </td>
+                      );
+                    })}
                     <td className="text-right py-2.5 font-bold" style={{ fontFamily: "'DM Mono', monospace", color: "#E8913A" }}>
                       {isPerCapita ? (totalVal > 0 ? `$${totalVal.toFixed(0)}` : "—") : row.fmt(totalVal)}
                     </td>

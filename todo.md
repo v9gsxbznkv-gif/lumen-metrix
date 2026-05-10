@@ -1183,3 +1183,12 @@
 - [x] Bar chart now uses DB-backed yearly attendance data
 - [x] All 151 tests pass
 - [x] Deploy
+
+## Round 129: Fix Campuses Tab Missing Baptism Numbers
+- [x] Diagnose: Baptisms not in next_steps_weekly for 2026, only in annual next_steps table
+- [x] Fix: Added fallback to getNextStepsFromWeekly (legacy helper) for Baptisms
+- [x] Fix: Online campus now shows attendance via avgWeeklyOnline from all-campus query
+- [x] Fix: Online card shows note that giving/volunteers/next steps attributed to physical campuses
+- [x] Fix: Campus Share table shows dashes for Online on metrics not tracked separately
+- [x] 151 tests pass
+- [x] Deploy

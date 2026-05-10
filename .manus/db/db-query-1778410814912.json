@@ -1,0 +1,30 @@
+{
+  "query": "SELECT 'attendance_weekly' as tbl, COUNT(*) as cnt FROM attendance_weekly WHERE year = 2026 AND campus = 'Online' UNION ALL SELECT 'giving_weekly', COUNT(*) FROM giving_weekly WHERE year = 2026 AND campus = 'Online' UNION ALL SELECT 'serving_weekly', COUNT(*) FROM serving_weekly WHERE year = 2026 AND campus = 'Online' UNION ALL SELECT 'next_steps_weekly', COUNT(*) FROM next_steps_weekly WHERE year = 2026 AND campus = 'Online' UNION ALL SELECT 'next_steps_annual', COUNT(*) FROM next_steps WHERE year = 2026 AND campus = 'Online';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT 'attendance_weekly' as tbl, COUNT(*) as cnt FROM attendance_weekly WHERE year = 2026 AND campus = 'Online' UNION ALL SELECT 'giving_weekly', COUNT(*) FROM giving_weekly WHERE year = 2026 AND campus = 'Online' UNION ALL SELECT 'serving_weekly', COUNT(*) FROM serving_weekly WHERE year = 2026 AND campus = 'Online' UNION ALL SELECT 'next_steps_weekly', COUNT(*) FROM next_steps_weekly WHERE year = 2026 AND campus = 'Online' UNION ALL SELECT 'next_steps_annual', COUNT(*) FROM next_steps WHERE year = 2026 AND campus = 'Online';",
+  "rows": [
+    {
+      "tbl": "next_steps_annual",
+      "cnt": "0"
+    },
+    {
+      "tbl": "next_steps_weekly",
+      "cnt": "0"
+    },
+    {
+      "tbl": "giving_weekly",
+      "cnt": "0"
+    },
+    {
+      "tbl": "serving_weekly",
+      "cnt": "0"
+    },
+    {
+      "tbl": "attendance_weekly",
+      "cnt": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "tbl\tcnt\nnext_steps_annual\t0\nnext_steps_weekly\t0\ngiving_weekly\t0\nserving_weekly\t0\nattendance_weekly\t0\n",
+  "stderr": "",
+  "execution_time_ms": 267
+}

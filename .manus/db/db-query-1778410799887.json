@@ -1,0 +1,46 @@
+{
+  "query": "SELECT DISTINCT metric, year FROM next_steps_weekly WHERE metric LIKE '%Baptism%' OR metric LIKE '%baptism%' ORDER BY year DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT metric, year FROM next_steps_weekly WHERE metric LIKE '%Baptism%' OR metric LIKE '%baptism%' ORDER BY year DESC LIMIT 20;",
+  "rows": [
+    {
+      "metric": "Baptisms",
+      "year": "2025"
+    },
+    {
+      "metric": "Baptisms",
+      "year": "2024"
+    },
+    {
+      "metric": "Baptisms",
+      "year": "2023"
+    },
+    {
+      "metric": "Baptisms",
+      "year": "2022"
+    },
+    {
+      "metric": "Baptisms",
+      "year": "2021"
+    },
+    {
+      "metric": "Baptisms",
+      "year": "2020"
+    },
+    {
+      "metric": "Baptisms",
+      "year": "2019"
+    },
+    {
+      "metric": "Baptisms",
+      "year": "2018"
+    },
+    {
+      "metric": "Baptisms",
+      "year": "2017"
+    }
+  ],
+  "messages": [],
+  "stdout": "metric\tyear\nBaptisms\t2025\nBaptisms\t2024\nBaptisms\t2023\nBaptisms\t2022\nBaptisms\t2021\nBaptisms\t2020\nBaptisms\t2019\nBaptisms\t2018\nBaptisms\t2017\n",
+  "stderr": "",
+  "execution_time_ms": 275
+}

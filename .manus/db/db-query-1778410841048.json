@@ -1,0 +1,30 @@
+{
+  "query": "SELECT weekNumber, headcount FROM attendance_weekly WHERE year = 2026 AND subgroup = 'Online' ORDER BY weekNumber LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekNumber, headcount FROM attendance_weekly WHERE year = 2026 AND subgroup = 'Online' ORDER BY weekNumber LIMIT 5;",
+  "rows": [
+    {
+      "weekNumber": "10",
+      "headcount": "528"
+    },
+    {
+      "weekNumber": "11",
+      "headcount": "564"
+    },
+    {
+      "weekNumber": "12",
+      "headcount": "578"
+    },
+    {
+      "weekNumber": "13",
+      "headcount": "597"
+    },
+    {
+      "weekNumber": "14",
+      "headcount": "660"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\theadcount\n10\t528\n11\t564\n12\t578\n13\t597\n14\t660\n",
+  "stderr": "",
+  "execution_time_ms": 257
+}
