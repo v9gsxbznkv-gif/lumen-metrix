@@ -100,8 +100,21 @@ function jitterPoints(
     } else {
       const count = group.length;
       // Spread scales with group size (in degrees, 1 degree ≈ 111km)
-      // Same spread as original: ~0.001 to 0.003 degrees
-      const spread = 0.0008 + Math.min(count, 20) * 0.0001;
+      // Small groups (household): tight. Large groups (zip centroid): wide natural scatter.
+      let spread: number;
+      if (count <= 5) {
+        spread = 0.0003; // ~33m (household)
+      } else if (count <= 20) {
+        spread = 0.003; // ~330m (street/complex)
+      } else if (count <= 50) {
+        spread = 0.008; // ~890m (neighborhood)
+      } else if (count <= 150) {
+        spread = 0.02; // ~2.2km (large neighborhood)
+      } else if (count <= 400) {
+        spread = 0.035; // ~3.9km (town area)
+      } else {
+        spread = 0.045; // ~5km (zip code area)
+      }
 
       for (let i = 0; i < count; i++) {
         // Two independent hashes for x and y — completely different salt strings
