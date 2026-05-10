@@ -5,6 +5,7 @@
  */
 import { useMemo } from "react";
 import { useData } from "@/contexts/DataContext";
+import { trpc } from "@/lib/trpc";
 import {
   formatCurrency,
   formatNumber,
@@ -261,8 +262,7 @@ export default function HealthTab() {
       }
     }
 
-    const gpcMatch = gpc.find((g) => g.year === latestYear && g.campus === campus);
-    const gpcVal = gpcMatch?.weekly_gpc ?? 0;
+    const gpcVal = 0; // placeholder — overridden by perCapitaGpc below
 
     // FTG: use monthly data for same-period comparison, summing individual campuses
     // when "All Campuses" is selected (no pre-aggregated All Campuses monthly row).
@@ -350,13 +350,43 @@ export default function HealthTab() {
     ];
   }, [data, filters, latestYear]);
 
+  // Fetch per capita from DB pipeline (same source as Giving page) to ensure consistency
+  const campusParam = filters.campus === "All Campuses" ? undefined : filters.campus;
+  const perCapitaQuery = trpc.dataViews.giving.getPerCapita.useQuery(
+    { year: latestYear, campus: campusParam },
+    { enabled: !!data }
+  );
+  const perCapitaGpc = perCapitaQuery.data?.currentYearAvgGpc ?? 0;
+
+  // Override the GPC card in healthScores with the DB-sourced value
+  const healthScoresWithGpc = useMemo(() => {
+    return healthScores.map((score) => {
+      if (score.metric === "Giving Per Capita") {
+        const val = perCapitaGpc;
+        return {
+          ...score,
+          value: `$${Math.round(val)}/wk`,
+          status:
+            val > 60
+              ? "excellent"
+              : val > 40
+                ? "good"
+                : val > 30
+                  ? "caution"
+                  : ("concern" as string),
+        };
+      }
+      return score;
+    });
+  }, [healthScores, perCapitaGpc]);
+
   if (!data) return null;
 
   return (
     <div className="space-y-5">
       {/* Health Score Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {healthScores.map((score) => {
+        {healthScoresWithGpc.map((score) => {
           const config = STATUS_CONFIG[score.status];
           const Icon = config.icon;
           return (

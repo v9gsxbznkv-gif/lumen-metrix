@@ -1156,4 +1156,11 @@
 - [x] Updated thresholds: >$60 excellent, >$40 good, >$30 caution, <$30 concern
 - [x] Updated benchmark text: "National avg: $30/person/week"
 - [x] 151 tests pass
+- [x] Deployed (728ad9de)
+
+## Round 126: Fix Health Page Per Capita Mismatch ($26 vs $61)
+- [x] Root cause: Health used legacy CDN `weekly_gpc` ($26, broken annualization), Giving used DB pipeline ($61)
+- [x] Health tab now calls `trpc.dataViews.giving.getPerCapita` (same source as Giving page)
+- [x] Both pages now show $61/wk consistently
+- [x] 151 tests pass
 - [ ] Deploy
