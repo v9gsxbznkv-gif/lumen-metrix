@@ -144,6 +144,7 @@ export default function DemographicMap() {
 
   // Mutations
   const syncAddresses = trpc.demographics.syncAddresses.useMutation();
+  const fetchAddressBatch = trpc.demographics.fetchAddressBatch.useMutation();
   const geocodeAddresses = trpc.demographics.geocodeAddresses.useMutation();
   const backfillCampus = trpc.demographics.backfillCampus.useMutation();
 
@@ -182,29 +183,48 @@ export default function DemographicMap() {
 
   const handleSync = useCallback(async () => {
     setSyncing(true);
-    setSyncMessage("Pulling all active people with addresses from PCO (this may take 1-2 min)...");
     try {
+      // Phase 1: Sync people + campus from PCO
+      setSyncMessage("Phase 1/3: Syncing active people from PCO...");
       const addrResult = await syncAddresses.mutateAsync();
       setSyncMessage(
-        `Synced ${addrResult.total} people: ${addrResult.synced} with addresses, ${addrResult.noAddress} without. Geocoding...`
+        `Phase 1 done: ${addrResult.total} people synced. ${addrResult.noAddress} need addresses. Fetching...`
       );
 
+      // Phase 2: Fetch addresses in batches
+      let addrRemaining = addrResult.noAddress;
+      let totalAddrSynced = addrResult.synced;
+      let addrBatch = 0;
+
+      while (addrRemaining > 0) {
+        addrBatch++;
+        const batchResult = await fetchAddressBatch.mutateAsync({ batchSize: 50 });
+        totalAddrSynced += batchResult.synced;
+        addrRemaining = batchResult.remaining;
+        setSyncMessage(
+          `Phase 2/3: Fetching addresses... batch ${addrBatch}, ${totalAddrSynced} with address, ${addrRemaining} remaining`
+        );
+      }
+
+      setSyncMessage(`Phase 2 done: ${totalAddrSynced} addresses. Geocoding...`);
+
+      // Phase 3: Geocode
       let totalGeocoded = 0;
       let totalFailed = 0;
-      let remaining = Infinity;
-      let batchNum = 0;
+      let geoRemaining = Infinity;
+      let geoBatch = 0;
 
-      while (remaining > 0) {
-        batchNum++;
+      while (geoRemaining > 0) {
+        geoBatch++;
         const geoResult = await geocodeAddresses.mutateAsync({ batchSize: 100 });
         totalGeocoded += geoResult.geocoded;
         totalFailed += geoResult.failed;
-        remaining = geoResult.remaining;
-        setSyncMessage(`Geocoding batch ${batchNum}... ${totalGeocoded} done, ${remaining} remaining`);
-        await refetchMapData();
+        geoRemaining = geoResult.remaining;
+        setSyncMessage(`Phase 3/3: Geocoding batch ${geoBatch}... ${totalGeocoded} done, ${geoRemaining} remaining`);
+        if (geoBatch % 3 === 0) await refetchMapData(); // refresh map periodically
       }
 
-      setSyncMessage(`Done! ${totalGeocoded} geocoded, ${totalFailed} failed.`);
+      setSyncMessage(`Done! ${addrResult.total} people, ${totalAddrSynced} addresses, ${totalGeocoded} geocoded.`);
       await refetchMapData();
       await refetchStatus();
     } catch (err: any) {
@@ -212,7 +232,7 @@ export default function DemographicMap() {
     } finally {
       setSyncing(false);
     }
-  }, [syncAddresses, geocodeAddresses, refetchMapData, refetchStatus]);
+  }, [syncAddresses, fetchAddressBatch, geocodeAddresses, refetchMapData, refetchStatus]);
 
   const handleBackfillCampus = useCallback(async () => {
     setBackfilling(true);

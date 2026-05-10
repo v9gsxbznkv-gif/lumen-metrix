@@ -107,20 +107,18 @@ export const demographicsRouter = router({
   }),
 
   /**
-   * Sync all active people with addresses from PCO in bulk.
-   * Uses the people sync (which now includes addresses + campus in one paginated sweep).
-   * Much faster than fetching addresses one-by-one.
+   * Phase 1: Sync all active people from PCO (with campus assignment).
+   * Lightweight — no addresses. Returns count of people synced.
    */
   syncAddresses: publicProcedure.mutation(async () => {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
     const accessToken = await getValidAccessToken();
-    if (!accessToken) throw new Error("PCO not connected — please connect in Settings");
+    if (!accessToken) throw new Error("PCO not connected \u2014 please connect in Settings");
 
     const client = new PcoClient(accessToken);
 
-    // Import and run the people sync which now pulls addresses in bulk
     const { syncPeople } = await import("../pco/sync");
     const result = await syncPeople(client);
 
@@ -128,8 +126,17 @@ export const demographicsRouter = router({
       throw new Error(`People sync failed: ${result.errorMessage}`);
     }
 
-    // Count how many now have addresses
-    const [withAddr] = await db
+    // Count how many still need addresses
+    const [needAddr] = await db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(pcoPeople)
+      .where(
+        and(
+          eq(pcoPeople.status, "active"),
+          isNull(pcoPeople.zip)
+        )
+      );
+    const [haveAddr] = await db
       .select({ count: sql<number>`COUNT(*)` })
       .from(pcoPeople)
       .where(
@@ -139,23 +146,101 @@ export const demographicsRouter = router({
           sql`${pcoPeople.zip} != ''`
         )
       );
-    const [noAddr] = await db
-      .select({ count: sql<number>`COUNT(*)` })
-      .from(pcoPeople)
-      .where(
-        and(
-          eq(pcoPeople.status, "active"),
-          sql`(${pcoPeople.zip} IS NULL OR ${pcoPeople.zip} = '')`
-        )
-      );
 
     return {
-      synced: Number(withAddr?.count || 0),
-      noAddress: Number(noAddr?.count || 0),
+      synced: Number(haveAddr?.count || 0),
+      noAddress: Number(needAddr?.count || 0),
       errors: 0,
       total: result.recordsProcessed,
     };
   }),
+
+  /**
+   * Phase 2: Fetch addresses from PCO for a batch of people who don't have one.
+   * Called repeatedly from the frontend until remaining === 0.
+   */
+  fetchAddressBatch: publicProcedure
+    .input(z.object({ batchSize: z.number().min(1).max(100).default(50) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const accessToken = await getValidAccessToken();
+      if (!accessToken) throw new Error("PCO not connected");
+
+      const client = new PcoClient(accessToken);
+
+      // Get a batch of people who need addresses
+      const people = await db
+        .select({ id: pcoPeople.id, pcoId: pcoPeople.pcoId })
+        .from(pcoPeople)
+        .where(
+          and(
+            eq(pcoPeople.status, "active"),
+            isNull(pcoPeople.zip)
+          )
+        )
+        .limit(input.batchSize);
+
+      let synced = 0;
+      let noAddress = 0;
+      let errors = 0;
+
+      for (const person of people) {
+        try {
+          const addrResult = await client.get<any>(
+            `/people/v2/people/${person.pcoId}/addresses`
+          );
+
+          const addresses = Array.isArray(addrResult.data) ? addrResult.data : [];
+          const primary = addresses.find(
+            (a: any) => a.attributes?.primary === true
+          ) || addresses[0];
+
+          if (primary?.attributes) {
+            const attrs = primary.attributes;
+            await db
+              .update(pcoPeople)
+              .set({
+                street: attrs.street || null,
+                city: attrs.city || null,
+                state: attrs.state || null,
+                zip: attrs.zip || null,
+              })
+              .where(eq(pcoPeople.id, person.id));
+            synced++;
+          } else {
+            await db
+              .update(pcoPeople)
+              .set({ zip: "" })
+              .where(eq(pcoPeople.id, person.id));
+            noAddress++;
+          }
+        } catch (err: any) {
+          console.warn(`[Demographics] Address fetch failed for ${person.pcoId}: ${err.message}`);
+          errors++;
+        }
+      }
+
+      // Count remaining
+      const [rem] = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(pcoPeople)
+        .where(
+          and(
+            eq(pcoPeople.status, "active"),
+            isNull(pcoPeople.zip)
+          )
+        );
+
+      return {
+        synced,
+        noAddress,
+        errors,
+        remaining: Number(rem?.count || 0),
+        batchProcessed: people.length,
+      };
+    }),
 
   /**
    * Geocode addresses for active people who have an address but no lat/lng.

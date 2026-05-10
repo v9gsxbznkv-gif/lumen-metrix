@@ -1225,4 +1225,4 @@
 - [x] Fix: syncAddresses now delegates to syncPeople (bulk) instead of 4000+ individual API calls
 - [x] Fix: removed 90s timeout, addresses come in same response as people
 - [x] 151 tests pass
-- [ ] Deploy (with Round 132 campus filters + drive-time overlays)
+- [x] Deploy (with Round 132 campus filters + drive-time overlays)

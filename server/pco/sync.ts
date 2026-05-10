@@ -570,44 +570,26 @@ export async function syncPeople(client: PcoClient): Promise<SyncResult> {
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
-    console.log("[PCO Sync] Starting people sync (active only, with addresses)...");
+    console.log("[PCO Sync] Starting people sync (active only)...");
 
-    // Filter to active people only and include addresses + campus in one sweep
-    // PCO filter syntax: where[status]=active
+    // Filter to active people only, include campus (lightweight)
+    // Addresses are fetched separately to avoid response bloat/timeouts
     const peopleResult = await client.paginateAll(
       "/people/v2/people",
       {
         per_page: 100,
-        include: "primary_campus,addresses",
+        include: "primary_campus",
         "where[status]": "active",
       },
       200 // up to 20,000 active people
     );
     console.log(`[PCO Sync] Got ${peopleResult.data.length} active people, ${peopleResult.included.length} included resources`);
 
-    // Build lookup maps for included campus and address resources
+    // Build lookup map for included campus resources
     const campusMap: Record<string, any> = {};
-    const addressMap: Record<string, any[]> = {}; // personId -> addresses[]
     for (const inc of peopleResult.included) {
       if (inc.type === "Campus") {
         campusMap[`Campus-${inc.id}`] = inc;
-      } else if (inc.type === "Address") {
-        // Addresses are linked via relationships on the person
-        // We'll map them by the person's ID below
-      }
-    }
-
-    // Build address lookup from each person's relationships
-    for (const person of peopleResult.data) {
-      const addrRefs = (person as any).relationships?.addresses?.data;
-      if (addrRefs && Array.isArray(addrRefs)) {
-        const personId = String(person.id);
-        addressMap[personId] = addrRefs.map((ref: any) => {
-          const found = peopleResult.included.find(
-            (inc: any) => inc.type === "Address" && inc.id === ref.id
-          );
-          return found;
-        }).filter(Boolean);
       }
     }
 
@@ -623,13 +605,6 @@ export async function syncPeople(client: PcoClient): Promise<SyncResult> {
         : null;
       const campusName = campusObj?.attributes?.name || null;
 
-      // Resolve primary address from included resources
-      const personAddresses = addressMap[pcoId] || [];
-      const primaryAddr = personAddresses.find(
-        (a: any) => a.attributes?.primary === true
-      ) || personAddresses[0];
-      const addrAttrs = primaryAddr?.attributes || null;
-
       const existing = await db
         .select()
         .from(pcoPeople)
@@ -643,10 +618,6 @@ export async function syncPeople(client: PcoClient): Promise<SyncResult> {
         campus: campusName,
         membershipType: attrs.membership || null,
         status: attrs.status || null,
-        street: addrAttrs?.street || null,
-        city: addrAttrs?.city || null,
-        state: addrAttrs?.state || null,
-        zip: addrAttrs?.zip || null,
         lastSyncedAt: new Date(),
       };
 
