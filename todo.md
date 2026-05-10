@@ -1109,7 +1109,7 @@
 - [x] Create getMapPoints + getSyncStatus tRPC endpoints (no PII exposed)
 - [x] Build DemographicMap component (Google Maps with campus pins + colored member dots)
 - [x] Add map to CampusesTab (between charts and share table)
-- [ ] User triggers address sync + geocoding via "Sync Addresses" button
+- [x] User triggered address sync + geocoding — 1,103 of 1,173 active people mapped
 - [x] 151 tests pass (11 new demographics tests)
 - [x] Deployed (b6c73aaf)
 
@@ -1131,5 +1131,13 @@
 
 ## Round 122: Increase People Dot Visibility on Map
 - [x] Increased dots from 8px to 14px with 2px white border and drop shadow
+- [x] 151 tests pass
+- [x] Deployed (51e15a1c)
+
+## Round 123: Fix Stacked Dots on Demographic Map
+- [x] Root cause: city-level geocoding puts all people at same lat/lng per city (~10 unique coords)
+- [x] Added clusterAndJitter: groups same-coord points, shows count badge + jittered individual dots
+- [x] Cluster badges: colored circles with count (e.g. "247" in Canton), sized by log of count
+- [x] Individual dots jittered in concentric rings around centroid (~0.4mi radius)
 - [x] 151 tests pass
 - [ ] Deploy

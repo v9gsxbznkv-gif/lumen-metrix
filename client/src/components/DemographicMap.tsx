@@ -1,6 +1,8 @@
 /**
  * DemographicMap — Google Maps showing campus locations + member dots
  * Uses the MapView component with AdvancedMarkerElement for pins.
+ * Groups nearby points into clusters with count badges at zoomed-out levels,
+ * and jitters individual dots when zoomed in.
  */
 import { useRef, useState, useCallback, useEffect } from "react";
 import { MapView } from "@/components/Map";
@@ -20,6 +22,102 @@ const CAMPUS_PIN_COLORS: Record<string, string> = {
   Canton: "#E8913A",
   Jasper: "#6366F1",
 };
+
+/**
+ * Group points that share the same lat/lng (rounded to 4 decimals)
+ * into clusters with a count. Then jitter individual points within
+ * each cluster so they spread out visually.
+ */
+function clusterAndJitter(
+  points: Array<{ lat: number; lng: number; campus: string; city: string; zip: string }>
+) {
+  // Group by rounded coordinates
+  const groups = new Map<string, typeof points>();
+  for (const p of points) {
+    const key = `${p.lat.toFixed(4)},${p.lng.toFixed(4)}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(p);
+  }
+
+  // For each group, jitter points in a circle around the centroid
+  const jittered: Array<{
+    lat: number;
+    lng: number;
+    campus: string;
+    city: string;
+    zip: string;
+    clusterSize: number;
+    isClusterCenter: boolean;
+  }> = [];
+
+  for (const [, group] of groups) {
+    const centerLat = group[0].lat;
+    const centerLng = group[0].lng;
+    const count = group.length;
+
+    if (count === 1) {
+      // Single point — no jitter needed
+      jittered.push({
+        ...group[0],
+        clusterSize: 1,
+        isClusterCenter: false,
+      });
+    } else {
+      // Add a cluster center marker with the count
+      jittered.push({
+        lat: centerLat,
+        lng: centerLng,
+        campus: getMajorityCampus(group),
+        city: group[0].city,
+        zip: group[0].zip,
+        clusterSize: count,
+        isClusterCenter: true,
+      });
+
+      // Jitter individual dots in concentric rings around center
+      // Radius ~0.006 degrees ≈ ~0.4 miles
+      const baseRadius = 0.006;
+      const maxRings = Math.ceil(count / 12);
+
+      for (let i = 0; i < group.length; i++) {
+        const ring = Math.floor(i / 12);
+        const posInRing = i % 12;
+        const ringRadius = baseRadius * (ring + 1) / maxRings * (maxRings > 1 ? maxRings : 1);
+        const angle = (posInRing / 12) * 2 * Math.PI + (ring * 0.3);
+
+        // Add some randomness to avoid perfect circles
+        const jitterLat = centerLat + ringRadius * Math.cos(angle) * (0.8 + Math.random() * 0.4);
+        const jitterLng = centerLng + ringRadius * Math.sin(angle) * (0.8 + Math.random() * 0.4);
+
+        jittered.push({
+          ...group[i],
+          lat: jitterLat,
+          lng: jitterLng,
+          clusterSize: 0,
+          isClusterCenter: false,
+        });
+      }
+    }
+  }
+
+  return jittered;
+}
+
+function getMajorityCampus(group: Array<{ campus: string }>): string {
+  const counts = new Map<string, number>();
+  for (const p of group) {
+    counts.set(p.campus, (counts.get(p.campus) || 0) + 1);
+  }
+  let max = 0;
+  let result = "Unknown";
+  for (const [campus, count] of counts) {
+    if (count > max) {
+      max = count;
+      result = campus;
+    }
+  }
+  return result;
+}
 
 export default function DemographicMap() {
   const mapRef = useRef<google.maps.Map | null>(null);
@@ -130,28 +228,65 @@ export default function DemographicMap() {
         markersRef.current.push(marker);
       }
 
-      // Add member dots (small circles)
-      for (const point of mapData.points) {
-        const color = CAMPUS_DOT_COLORS[point.campus] || CAMPUS_DOT_COLORS.Unknown;
-        const dotEl = document.createElement("div");
-        dotEl.style.cssText = `
-          width: 14px;
-          height: 14px;
-          border-radius: 50%;
-          background: ${color};
-          border: 2px solid rgba(255,255,255,0.9);
-          opacity: 0.85;
-          cursor: pointer;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-        `;
+      // Cluster and jitter points
+      const processed = clusterAndJitter(mapData.points);
 
-        const marker = new google.maps.marker.AdvancedMarkerElement({
-          map,
-          position: { lat: point.lat, lng: point.lng },
-          content: dotEl,
-          zIndex: 100,
-        });
-        markersRef.current.push(marker);
+      for (const point of processed) {
+        if (point.isClusterCenter) {
+          // Render cluster badge (circle with count)
+          const color = CAMPUS_DOT_COLORS[point.campus] || CAMPUS_DOT_COLORS.Unknown;
+          const size = Math.min(60, Math.max(32, 20 + Math.log2(point.clusterSize) * 8));
+          const fontSize = size > 40 ? 13 : 11;
+          const badgeEl = document.createElement("div");
+          badgeEl.style.cssText = `
+            width: ${size}px;
+            height: ${size}px;
+            border-radius: 50%;
+            background: ${color};
+            border: 3px solid rgba(255,255,255,0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: ${fontSize}px;
+            font-weight: 800;
+            font-family: 'DM Sans', sans-serif;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+            cursor: pointer;
+          `;
+          badgeEl.textContent = String(point.clusterSize);
+          badgeEl.title = `${point.clusterSize} people in ${point.city || "this area"}`;
+
+          const marker = new google.maps.marker.AdvancedMarkerElement({
+            map,
+            position: { lat: point.lat, lng: point.lng },
+            content: badgeEl,
+            zIndex: 500 + point.clusterSize,
+          });
+          markersRef.current.push(marker);
+        } else {
+          // Individual dot
+          const color = CAMPUS_DOT_COLORS[point.campus] || CAMPUS_DOT_COLORS.Unknown;
+          const dotEl = document.createElement("div");
+          dotEl.style.cssText = `
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: ${color};
+            border: 1.5px solid rgba(255,255,255,0.85);
+            opacity: 0.8;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+          `;
+
+          const marker = new google.maps.marker.AdvancedMarkerElement({
+            map,
+            position: { lat: point.lat, lng: point.lng },
+            content: dotEl,
+            zIndex: 100,
+          });
+          markersRef.current.push(marker);
+        }
       }
     },
     [mapData, campuses]
@@ -247,7 +382,7 @@ export default function DemographicMap() {
       {/* Map */}
       <MapView
         className="h-[500px] rounded-lg overflow-hidden"
-        initialCenter={{ lat: 34.35, lng: -84.46 }} // Centered between Canton & Jasper
+        initialCenter={{ lat: 34.35, lng: -84.46 }}
         initialZoom={10}
         onMapReady={handleMapReady}
       />
