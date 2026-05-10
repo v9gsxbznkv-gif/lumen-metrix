@@ -1072,4 +1072,14 @@
 - [x] Baptisms/Stewardship now fall back to monthly with same-month-range comparison
 - [x] FTG: -24.1% (was -53.5%), Baptisms: +139.5% (was -10.4%), Stewardship: -40.7% (was -53.3%)
 - [x] Dashboard and Assimilation pages now both use same-period YTD comparison
+- [x] Deployed (22f76b5b)
+
+## Round 116: Attendance Page KPI Restructure
+- [x] Card 1: "Current Week" — last full week's total (3,225 on Apr 27)
+- [x] Card 2: "Yearly Average" — 3,047 across 19 weeks, +2.1% vs same period last year
+- [x] Remove "Latest Week Total" card
+- [x] Row 2: "Highest Attendance" — 7,029 (Mar 30, Easter)
+- [x] Row 2: "Lowest Attendance" — 431 (Jan 19), partial week excluded
+- [x] Added `changeLabel` prop to KpiCard for custom comparison text
+- [x] 133 tests pass, tsc clean (pre-existing scheduler/weeklySync errors only)
 - [ ] Deploy

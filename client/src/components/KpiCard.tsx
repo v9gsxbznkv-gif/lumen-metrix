@@ -8,12 +8,13 @@ interface KpiCardProps {
   label: string;
   value: string;
   change?: { label: string; positive: boolean; value: number };
+  changeLabel?: string;
   subtitle?: string;
   borderColor?: string;
   icon?: React.ReactNode;
 }
 
-export default function KpiCard({ label, value, change, subtitle, borderColor, icon }: KpiCardProps) {
+export default function KpiCard({ label, value, change, changeLabel, subtitle, borderColor, icon }: KpiCardProps) {
   return (
     <div
       className="bg-card rounded-lg p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] border border-border/60 transition-all hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
@@ -50,7 +51,7 @@ export default function KpiCard({ label, value, change, subtitle, borderColor, i
           >
             {change.label}
           </span>
-          <span className="text-[10px] text-muted-foreground">vs prior year</span>
+          <span className="text-[10px] text-muted-foreground">{changeLabel || "vs prior year"}</span>
         </div>
       )}
     </div>

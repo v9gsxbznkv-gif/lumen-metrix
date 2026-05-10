@@ -113,6 +113,16 @@ export default function AttendanceTab2() {
     endYear: viewMode === "yearly" ? Math.max(...years) : undefined,
   });
 
+  // Prior year data for YTD comparison (same weeks)
+  const priorYearQuery = trpc.dataViews.attendance.getData.useQuery(
+    {
+      viewMode: "weekly",
+      campus: campus === "all" ? undefined : campus,
+      year: year - 1,
+    },
+    { enabled: viewMode === "weekly" }
+  );
+
   // Kids room breakdown — try selected year first, fallback to most recent year with data
   const primaryKidsYear = viewMode === "yearly" ? Math.max(...years) : year;
   const primaryKidsRoomQuery = trpc.dataViews.attendance.getKidsRoomBreakdown.useQuery({
@@ -193,20 +203,47 @@ export default function AttendanceTab2() {
     return (rawData.data as any[]).slice().sort((a, b) => b.year - a.year);
   }, [rawData]);
 
+  // ─── Prior Year Weekly Data (for YTD comparison) ──────────
+  const priorYearWeeklyData = useMemo(() => {
+    if (!priorYearQuery.data || priorYearQuery.data.viewMode !== "weekly") return [];
+    return (priorYearQuery.data.data as any[]).slice().sort((a, b) => {
+      if (a.year !== b.year) return b.year - a.year;
+      return b.weekNumber - a.weekNumber;
+    });
+  }, [priorYearQuery.data]);
+
   // ─── KPI Cards ────────────────────────────────────────────
   const kpis = useMemo(() => {
     if (viewMode === "weekly" && weeklyData.length > 0) {
-      const latest = weeklyData[0];
-      const prior = weeklyData[1];
+      // weeklyData[0] = latest (may be partial/incomplete current week)
+      // weeklyData[1] = last full week ("Current Week")
+      const currentWeek = weeklyData.length > 1 ? weeklyData[1] : weeklyData[0];
       const avgTotal = Math.round(
         weeklyData.reduce((s, w) => s + w.total, 0) / weeklyData.length
       );
+      const maxWeekNum = weeklyData[0]?.weekNumber ?? 52;
+
+      // YTD comparison: prior year same weeks (1 to maxWeekNum)
+      const priorSamePeriod = priorYearWeeklyData.filter(w => w.weekNumber <= maxWeekNum);
+      const priorAvg = priorSamePeriod.length > 0
+        ? Math.round(priorSamePeriod.reduce((s: number, w: any) => s + w.total, 0) / priorSamePeriod.length)
+        : 0;
+
+      // Highest and lowest weeks of the year (exclude partial latest week)
+      // If latest week total is significantly lower than avg, it's likely partial
+      const fullWeeks = weeklyData.length > 1 ? weeklyData.slice(1) : weeklyData;
+      const sorted = [...fullWeeks].sort((a, b) => b.total - a.total);
+      const highest = sorted[0];
+      const lowest = sorted[sorted.length - 1];
+
       return {
-        latestTotal: latest.total,
-        latestDate: latest.weekStartDate,
+        currentWeekTotal: currentWeek.total,
+        currentWeekDate: currentWeek.weekStartDate,
         avgTotal,
-        priorTotal: prior?.total ?? 0,
+        priorAvg,
         weekCount: weeklyData.length,
+        highest: { total: highest.total, date: highest.weekStartDate },
+        lowest: { total: lowest.total, date: lowest.weekStartDate },
       };
     }
     if (viewMode === "monthly" && monthlyData.length > 0) {
@@ -215,26 +252,30 @@ export default function AttendanceTab2() {
         monthlyData.reduce((s, m) => s + m.avgWeeklyTotal, 0) / monthlyData.length
       );
       return {
-        latestTotal: latest.avgWeeklyTotal,
-        latestDate: `${MONTH_NAMES[latest.month - 1]} ${latest.year}`,
+        currentWeekTotal: latest.avgWeeklyTotal,
+        currentWeekDate: `${MONTH_NAMES[latest.month - 1]} ${latest.year}`,
         avgTotal,
-        priorTotal: monthlyData.length > 1 ? monthlyData[monthlyData.length - 2].avgWeeklyTotal : 0,
+        priorAvg: monthlyData.length > 1 ? monthlyData[monthlyData.length - 2].avgWeeklyTotal : 0,
         weekCount: monthlyData.reduce((s, m) => s + m.weekCount, 0),
+        highest: null,
+        lowest: null,
       };
     }
     if (viewMode === "yearly" && yearlyData.length > 0) {
       const latest = yearlyData[0];
       const prior = yearlyData[1];
       return {
-        latestTotal: latest.avgWeeklyTotal,
-        latestDate: String(latest.year),
+        currentWeekTotal: latest.avgWeeklyTotal,
+        currentWeekDate: String(latest.year),
         avgTotal: latest.avgWeeklyTotal,
-        priorTotal: prior?.avgWeeklyTotal ?? 0,
+        priorAvg: prior?.avgWeeklyTotal ?? 0,
         weekCount: latest.weekCount,
+        highest: null,
+        lowest: null,
       };
     }
     return null;
-  }, [viewMode, weeklyData, monthlyData, yearlyData]);
+  }, [viewMode, weeklyData, monthlyData, yearlyData, priorYearWeeklyData]);
 
   // ─── Chart Data ───────────────────────────────────────────
   const chartData = useMemo(() => {
@@ -386,27 +427,38 @@ export default function AttendanceTab2() {
         <>
           {/* KPI Cards */}
           {kpis && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <KpiCard
-                label={viewMode === "yearly" ? "Avg Weekly Attendance" : viewMode === "monthly" ? "Latest Month Avg" : "Latest Week Total"}
-                value={formatNumber(kpis.latestTotal)}
-                subtitle={viewMode === "yearly" ? kpis.latestDate : viewMode === "monthly" ? kpis.latestDate : formatDate(kpis.latestDate)}
-                borderColor="#E8913A"
-                change={kpis.priorTotal > 0 ? getYoYChange(kpis.latestTotal, kpis.priorTotal) : undefined}
-              />
-              <KpiCard
-                label={viewMode === "weekly" ? "Season Average" : "Weeks of Data"}
-                value={viewMode === "weekly" ? formatNumber(kpis.avgTotal) : String(kpis.weekCount)}
-                subtitle={viewMode === "weekly" ? `Across ${kpis.weekCount} weeks` : "Total weeks in period"}
-                borderColor="#4A7FB5"
-              />
-              {viewMode === "weekly" && kpis.priorTotal > 0 && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
                 <KpiCard
-                  label="Prior Week"
-                  value={formatNumber(kpis.priorTotal)}
-                  subtitle="Previous Sunday"
-                  borderColor="#4A7C59"
+                  label={viewMode === "yearly" ? "Avg Weekly Attendance" : viewMode === "monthly" ? "Latest Month Avg" : "Current Week"}
+                  value={formatNumber(kpis.currentWeekTotal)}
+                  subtitle={viewMode === "yearly" ? kpis.currentWeekDate : viewMode === "monthly" ? kpis.currentWeekDate : formatDate(kpis.currentWeekDate)}
+                  borderColor="#E8913A"
                 />
+                <KpiCard
+                  label="Yearly Average"
+                  value={formatNumber(kpis.avgTotal)}
+                  subtitle={`Across ${kpis.weekCount} weeks`}
+                  borderColor="#4A7FB5"
+                  change={kpis.priorAvg > 0 ? getYoYChange(kpis.avgTotal, kpis.priorAvg) : undefined}
+                  changeLabel="vs same period last year"
+                />
+              </div>
+              {viewMode === "weekly" && kpis.highest && kpis.lowest && (
+                <div className="grid grid-cols-2 gap-3">
+                  <KpiCard
+                    label="Highest Week"
+                    value={formatNumber(kpis.highest.total)}
+                    subtitle={formatDate(kpis.highest.date)}
+                    borderColor="#4A7C59"
+                  />
+                  <KpiCard
+                    label="Lowest Week"
+                    value={formatNumber(kpis.lowest.total)}
+                    subtitle={formatDate(kpis.lowest.date)}
+                    borderColor="#C45B4A"
+                  />
+                </div>
               )}
             </div>
           )}
