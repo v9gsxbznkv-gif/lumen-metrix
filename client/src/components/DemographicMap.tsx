@@ -1,9 +1,10 @@
 /**
  * DemographicMap — Google Maps showing campus locations + member dots
  * Features:
+ * - Every person shown as an individual colored dot (NO clustering)
+ * - Deterministic jitter for people at the same address (so they don't perfectly overlap)
  * - Campus filter toggles (show/hide Canton, Jasper, Unassigned)
  * - Drive-time radius overlays (15/30 min approximate circles)
- * - Deterministic clustering + jitter (dots don't move when toggling filters)
  */
 import { useRef, useState, useCallback, useEffect, useMemo } from "react";
 import { MapView } from "@/components/Map";
@@ -52,86 +53,58 @@ function seededRandom(seed: string): number {
   return (Math.abs(hash) % 10000) / 10000;
 }
 
-interface ProcessedPoint {
+interface JitteredPoint {
   lat: number;
   lng: number;
   campus: string;
   city: string;
   zip: string;
-  clusterSize: number;
-  isClusterCenter: boolean;
 }
 
 /**
- * Group points that share the same lat/lng (rounded to 4 decimals)
- * into clusters with a count, then jitter individual points deterministically.
+ * Apply deterministic jitter to points that share the same lat/lng.
+ * Each person gets a unique, stable offset so dots at the same address
+ * fan out in a small circle rather than stacking on top of each other.
+ * Points with unique positions are left unchanged.
  */
-function clusterAndJitter(
+function jitterPoints(
   points: Array<{ lat: number; lng: number; campus: string; city: string; zip: string }>
-): ProcessedPoint[] {
-  const groups = new Map<string, typeof points>();
-  for (const p of points) {
+): JitteredPoint[] {
+  // Group by rounded lat/lng (4 decimal places ≈ 11m precision)
+  const groups = new Map<string, Array<{ idx: number; point: typeof points[0] }>>();
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i];
     const key = `${p.lat.toFixed(4)},${p.lng.toFixed(4)}`;
     if (!groups.has(key)) groups.set(key, []);
-    groups.get(key)!.push(p);
+    groups.get(key)!.push({ idx: i, point: p });
   }
 
-  const jittered: ProcessedPoint[] = [];
+  const result: JitteredPoint[] = new Array(points.length);
 
   for (const [groupKey, group] of Array.from(groups)) {
-    const centerLat = group[0].lat;
-    const centerLng = group[0].lng;
-    const count = group.length;
-
-    if (count === 1) {
-      jittered.push({ ...group[0], clusterSize: 1, isClusterCenter: false });
-    } else if (count <= 4) {
-      // Small group: jitter individual dots (no cluster badge)
-      const baseRadius = 0.003;
-      for (let i = 0; i < group.length; i++) {
-        const angle = (i / count) * 2 * Math.PI;
+    if (group.length === 1) {
+      // Single person at this address — no jitter needed
+      result[group[0].idx] = { ...group[0].point };
+    } else {
+      // Multiple people at same address — fan out in a circle
+      const count = group.length;
+      // Radius scales slightly with group size but stays small (~0.001 to 0.003 degrees)
+      const baseRadius = 0.0008 + Math.min(count, 20) * 0.0001;
+      for (let i = 0; i < count; i++) {
         const seed = `${groupKey}-${i}`;
-        const jitterFactor = 0.8 + seededRandom(seed) * 0.4;
-        const jitterLat = centerLat + baseRadius * Math.cos(angle) * jitterFactor;
-        const jitterLng = centerLng + baseRadius * Math.sin(angle) * jitterFactor;
-        jittered.push({
-          ...group[i],
+        const angle = (i / count) * 2 * Math.PI + seededRandom(seed + "-a") * 0.3;
+        const radiusFactor = 0.7 + seededRandom(seed + "-r") * 0.6;
+        const jitterLat = group[i].point.lat + baseRadius * Math.cos(angle) * radiusFactor;
+        const jitterLng = group[i].point.lng + baseRadius * Math.sin(angle) * radiusFactor;
+        result[group[i].idx] = {
+          ...group[i].point,
           lat: jitterLat,
           lng: jitterLng,
-          clusterSize: 0,
-          isClusterCenter: false,
-        });
+        };
       }
-    } else {
-      // Large group: show ONLY the cluster badge (no individual dots)
-      jittered.push({
-        lat: centerLat,
-        lng: centerLng,
-        campus: getMajorityCampus(group),
-        city: group[0].city,
-        zip: group[0].zip,
-        clusterSize: count,
-        isClusterCenter: true,
-      });
     }
   }
 
-  return jittered;
-}
-
-function getMajorityCampus(group: Array<{ campus: string }>): string {
-  const counts = new Map<string, number>();
-  for (const p of group) {
-    counts.set(p.campus, (counts.get(p.campus) || 0) + 1);
-  }
-  let max = 0;
-  let result = "Unknown";
-  for (const [campus, count] of Array.from(counts)) {
-    if (count > max) {
-      max = count;
-      result = campus;
-    }
-  }
   return result;
 }
 
@@ -169,10 +142,10 @@ export default function DemographicMap() {
   const totalPoints = mapData?.points?.length ?? 0;
   const needsBackfill = totalPoints > 0 && unknownCount > totalPoints * 0.5;
 
-  // Process ALL points once (deterministic clustering + jitter)
-  const allProcessedPoints = useMemo(() => {
+  // Process ALL points with deterministic jitter (no clustering)
+  const allJitteredPoints = useMemo(() => {
     if (!mapData?.points) return [];
-    return clusterAndJitter(mapData.points);
+    return jitterPoints(mapData.points);
   }, [mapData?.points]);
 
   // Campus counts (from full data)
@@ -332,7 +305,7 @@ export default function DemographicMap() {
     }
   }, [showDriveTime]);
 
-  // Render ALL markers once (campus pins + member dots)
+  // Render ALL markers once (campus pins + individual member dots)
   const renderAllMarkers = useCallback(
     (map: google.maps.Map) => {
       // Clear existing markers
@@ -387,69 +360,39 @@ export default function DemographicMap() {
         campusPinsRef.current.push(marker);
       }
 
-      // Add ALL processed points as markers
-      for (const point of allProcessedPoints) {
+      // Add every person as an individual colored dot
+      for (const point of allJitteredPoints) {
         const campus = point.campus || "Unknown";
+        const color = CAMPUS_DOT_COLORS[campus] || CAMPUS_DOT_COLORS.Unknown;
+        const dotEl = document.createElement("div");
+        dotEl.style.cssText = `
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: ${color};
+          border: 1.5px solid rgba(255,255,255,0.85);
+          opacity: 0.8;
+          cursor: pointer;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+        `;
+        dotEl.title = `${campus} — ${point.city || point.zip}`;
 
-        if (point.isClusterCenter) {
-          const color = CAMPUS_DOT_COLORS[campus] || CAMPUS_DOT_COLORS.Unknown;
-          const size = Math.min(60, Math.max(32, 20 + Math.log2(point.clusterSize) * 8));
-          const fontSize = size > 40 ? 13 : 11;
-          const badgeEl = document.createElement("div");
-          badgeEl.style.cssText = `
-            width: ${size}px;
-            height: ${size}px;
-            border-radius: 50%;
-            background: ${color};
-            border: 3px solid rgba(255,255,255,0.95);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: ${fontSize}px;
-            font-weight: 800;
-            font-family: 'DM Sans', sans-serif;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.35);
-            cursor: pointer;
-          `;
-          badgeEl.textContent = String(point.clusterSize);
-          badgeEl.title = `${point.clusterSize} people in ${point.city || "this area"} (${campus})`;
-
-          const marker = new google.maps.marker.AdvancedMarkerElement({
-            map,
-            position: { lat: point.lat, lng: point.lng },
-            content: badgeEl,
-            zIndex: 500 + point.clusterSize,
-          });
-          markersRef.current.push({ marker, campus });
-        } else if (point.clusterSize !== 0 || !point.isClusterCenter) {
-          // Individual dot (not a cluster center placeholder with size 0 from cluster groups)
-          if (point.clusterSize === 0 && point.isClusterCenter) continue; // skip
-          const color = CAMPUS_DOT_COLORS[campus] || CAMPUS_DOT_COLORS.Unknown;
-          const dotEl = document.createElement("div");
-          dotEl.style.cssText = `
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: ${color};
-            border: 1.5px solid rgba(255,255,255,0.85);
-            opacity: 0.8;
-            cursor: pointer;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.25);
-          `;
-          dotEl.title = `${campus} — ${point.city || point.zip}`;
-
-          const marker = new google.maps.marker.AdvancedMarkerElement({
-            map,
-            position: { lat: point.lat, lng: point.lng },
-            content: dotEl,
-            zIndex: 100,
-          });
-          markersRef.current.push({ marker, campus });
+        // Respect current campus visibility
+        const shouldShow = visibleCampuses.has(campus);
+        if (!shouldShow) {
+          dotEl.style.display = "none";
         }
+
+        const marker = new google.maps.marker.AdvancedMarkerElement({
+          map,
+          position: { lat: point.lat, lng: point.lng },
+          content: dotEl,
+          zIndex: 100,
+        });
+        markersRef.current.push({ marker, campus });
       }
     },
-    [allProcessedPoints, campuses]
+    [allJitteredPoints, campuses, visibleCampuses]
   );
 
   // Toggle marker visibility based on campus filter (no re-rendering, no repositioning)
@@ -473,10 +416,10 @@ export default function DemographicMap() {
 
   // Re-render markers when data changes (not when filter changes)
   useEffect(() => {
-    if (mapRef.current && allProcessedPoints.length > 0) {
+    if (mapRef.current && allJitteredPoints.length > 0) {
       renderAllMarkers(mapRef.current);
     }
-  }, [allProcessedPoints, campuses, renderAllMarkers]);
+  }, [allJitteredPoints, campuses, renderAllMarkers]);
 
   // Re-render circles when drive-time selection changes
   useEffect(() => {

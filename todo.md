@@ -1250,3 +1250,6 @@
 - [x] Fix dots changing position when toggling campus filters — replaced Math.random() with deterministic seeded jitter, toggle marker visibility instead of re-rendering
 - [x] 151 tests pass
 - [x] Deploy
+
+## Round 136 Final: Remove All Clustering from Map
+- [x] Remove all clustering from DemographicMap — show every person as individual colored dot with deterministic jitter
