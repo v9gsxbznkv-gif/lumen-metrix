@@ -2,7 +2,7 @@
  * DemographicMap — Google Maps showing campus locations + member dots
  * Uses the MapView component with AdvancedMarkerElement for pins.
  */
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { MapView } from "@/components/Map";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -45,19 +45,34 @@ export default function DemographicMap() {
         `Addresses: ${addrResult.synced} synced, ${addrResult.noAddress} no address. Geocoding...`
       );
 
-      const geoResult = await geocodeAddresses.mutateAsync();
+      // Geocode in batches of 100 until none remaining
+      let totalGeocoded = 0;
+      let totalFailed = 0;
+      let remaining = Infinity;
+      let batchNum = 0;
+
+      while (remaining > 0) {
+        batchNum++;
+        const geoResult = await geocodeAddresses.mutateAsync({ batchSize: 100 });
+        totalGeocoded += geoResult.geocoded;
+        totalFailed += geoResult.failed;
+        remaining = geoResult.remaining;
+
+        setSyncMessage(
+          `Geocoding batch ${batchNum}... ${totalGeocoded} done, ${remaining} remaining`
+        );
+
+        // Refresh map after each batch so dots appear progressively
+        await refetchMapData();
+      }
+
       setSyncMessage(
-        `Done! ${geoResult.geocoded} geocoded, ${geoResult.failed} failed.`
+        `Done! ${totalGeocoded} geocoded, ${totalFailed} failed.`
       );
 
-      // Refresh data
+      // Final refresh
       await refetchMapData();
       await refetchStatus();
-
-      // Re-render markers
-      if (mapRef.current && mapData) {
-        renderMarkers(mapRef.current);
-      }
     } catch (err: any) {
       setSyncMessage(`Error: ${err.message}`);
     } finally {
@@ -148,6 +163,13 @@ export default function DemographicMap() {
     },
     [renderMarkers]
   );
+
+  // Re-render markers whenever mapData changes (e.g. after geocoding batches)
+  useEffect(() => {
+    if (mapRef.current) {
+      renderMarkers(mapRef.current);
+    }
+  }, [mapData, campuses, renderMarkers]);
 
   const hasData = mapData && mapData.points.length > 0;
 

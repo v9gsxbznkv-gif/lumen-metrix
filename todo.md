@@ -1117,4 +1117,14 @@
 - [x] Update Canton coordinates to 125 Union Hill Trail, Canton, GA 30115 (34.236065, -84.4125308)
 - [x] Update Jasper coordinates to 689 North Main St, Jasper, GA 30143 (34.4731533, -84.4390925)
 - [x] 151 tests pass
+- [x] Deployed (b90e03eb)
+
+## Round 121: Fix Geocoding Pipeline — People Dots Not Showing
+- [x] Root cause: geocoding 1,070 people in single request timed out; also "NULL" string in street field passed to geocoder
+- [x] Batch geocoding: process 100 at a time, loop on frontend until remaining=0
+- [x] Filter "NULL" strings from address parts
+- [x] Mark failed geocodes with lat=0/lng=0 to prevent infinite retries
+- [x] Filter lat=0/lng=0 from map points query
+- [x] Add useEffect to re-render markers when mapData changes (progressive loading)
+- [x] 151 tests pass
 - [ ] Deploy

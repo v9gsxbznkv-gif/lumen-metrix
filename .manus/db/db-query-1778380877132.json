@@ -1,0 +1,16 @@
+{
+  "query": "SELECT \n  COUNT(*) as total_active,\n  SUM(CASE WHEN city IS NOT NULL THEN 1 ELSE 0 END) as has_address,\n  SUM(CASE WHEN latitude IS NOT NULL THEN 1 ELSE 0 END) as geocoded,\n  SUM(CASE WHEN city IS NOT NULL AND latitude IS NULL THEN 1 ELSE 0 END) as pending_geocode\nFROM pco_people \nWHERE status = 'active';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT \n  COUNT(*) as total_active,\n  SUM(CASE WHEN city IS NOT NULL THEN 1 ELSE 0 END) as has_address,\n  SUM(CASE WHEN latitude IS NOT NULL THEN 1 ELSE 0 END) as geocoded,\n  SUM(CASE WHEN city IS NOT NULL AND latitude IS NULL THEN 1 ELSE 0 END) as pending_geocode\nFROM pco_people \nWHERE status = 'active';",
+  "rows": [
+    {
+      "total_active": "1173",
+      "has_address": "1070",
+      "geocoded": "0",
+      "pending_geocode": "1070"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_active\thas_address\tgeocoded\tpending_geocode\n1173\t1070\t0\t1070\n",
+  "stderr": "",
+  "execution_time_ms": 265
+}

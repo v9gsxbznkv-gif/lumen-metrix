@@ -1,0 +1,50 @@
+{
+  "query": "SELECT street, city, state, zip, latitude, longitude FROM pco_people WHERE status = 'active' AND zip IS NOT NULL AND zip != '' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT street, city, state, zip, latitude, longitude FROM pco_people WHERE status = 'active' AND zip IS NOT NULL AND zip != '' LIMIT 5;",
+  "rows": [
+    {
+      "street": "NULL",
+      "city": "Canton",
+      "state": "GA ",
+      "zip": "30115",
+      "latitude": "NULL",
+      "longitude": "NULL"
+    },
+    {
+      "street": "NULL",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30115-6053",
+      "latitude": "NULL",
+      "longitude": "NULL"
+    },
+    {
+      "street": "NULL",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30114",
+      "latitude": "NULL",
+      "longitude": "NULL"
+    },
+    {
+      "street": "NULL",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30115",
+      "latitude": "NULL",
+      "longitude": "NULL"
+    },
+    {
+      "street": "NULL",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30114",
+      "latitude": "NULL",
+      "longitude": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "street\tcity\tstate\tzip\tlatitude\tlongitude\nNULL\tCanton\tGA \t30115\tNULL\tNULL\nNULL\tCanton\tGA\t30115-6053\tNULL\tNULL\nNULL\tCanton\tGA\t30114\tNULL\tNULL\nNULL\tCanton\tGA\t30115\tNULL\tNULL\nNULL\tCanton\tGA\t30114\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 261
+}

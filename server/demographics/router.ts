@@ -57,7 +57,9 @@ export const demographicsRouter = router({
         and(
           eq(pcoPeople.status, "active"),
           isNotNull(pcoPeople.latitude),
-          isNotNull(pcoPeople.longitude)
+          isNotNull(pcoPeople.longitude),
+          sql`${pcoPeople.latitude} != 0`,
+          sql`${pcoPeople.longitude} != 0`
         )
       );
 
@@ -166,74 +168,104 @@ export const demographicsRouter = router({
   /**
    * Geocode addresses for active people who have an address but no lat/lng.
    * Uses Google Maps Geocoding API via the Manus proxy.
-   * Processes in batches to avoid rate limits.
+   * Processes a batch at a time (default 100) to avoid HTTP timeouts.
+   * Call repeatedly until remaining === 0.
    */
-  geocodeAddresses: publicProcedure.mutation(async () => {
-    const db = await getDb();
-    if (!db) throw new Error("Database not available");
+  geocodeAddresses: publicProcedure
+    .input(z.object({ batchSize: z.number().min(1).max(200).default(100) }).optional())
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
 
-    // Get people with addresses but no coordinates
-    const people = await db
-      .select({
-        id: pcoPeople.id,
-        street: pcoPeople.street,
-        city: pcoPeople.city,
-        state: pcoPeople.state,
-        zip: pcoPeople.zip,
-      })
-      .from(pcoPeople)
-      .where(
-        and(
-          eq(pcoPeople.status, "active"),
-          isNotNull(pcoPeople.zip),
-          sql`${pcoPeople.zip} != ''`, // has a real address (not empty marker)
-          isNull(pcoPeople.latitude)
+      const batchSize = input?.batchSize ?? 100;
+
+      // Get people with addresses but no coordinates — limited batch
+      const people = await db
+        .select({
+          id: pcoPeople.id,
+          street: pcoPeople.street,
+          city: pcoPeople.city,
+          state: pcoPeople.state,
+          zip: pcoPeople.zip,
+        })
+        .from(pcoPeople)
+        .where(
+          and(
+            eq(pcoPeople.status, "active"),
+            isNotNull(pcoPeople.zip),
+            sql`${pcoPeople.zip} != ''`,
+            isNull(pcoPeople.latitude)
+          )
         )
-      );
+        .limit(batchSize);
 
-    let geocoded = 0;
-    let failed = 0;
+      let geocoded = 0;
+      let failed = 0;
 
-    for (const person of people) {
-      try {
-        // Build address string
-        const parts = [person.street, person.city, person.state, person.zip].filter(Boolean);
-        const address = parts.join(", ");
-        if (!address) {
+      for (const person of people) {
+        try {
+          const parts = [person.street, person.city, person.state, person.zip].filter(
+            (v) => v && v !== "NULL"
+          );
+          const address = parts.join(", ");
+          if (!address) {
+            failed++;
+            continue;
+          }
+
+          const result = await makeRequest<GeocodingResult>(
+            "/maps/api/geocode/json",
+            { address }
+          );
+
+          if (result.status === "OK" && result.results[0]) {
+            const loc = result.results[0].geometry.location;
+            await db
+              .update(pcoPeople)
+              .set({
+                latitude: loc.lat,
+                longitude: loc.lng,
+                geocodedAt: new Date(),
+              })
+              .where(eq(pcoPeople.id, person.id));
+            geocoded++;
+          } else {
+            // Mark as failed so we don't retry forever — set lat to 0
+            await db
+              .update(pcoPeople)
+              .set({
+                latitude: 0,
+                longitude: 0,
+                geocodedAt: new Date(),
+              })
+              .where(eq(pcoPeople.id, person.id));
+            failed++;
+          }
+
+          // Small delay to avoid rate limits
+          await new Promise((r) => setTimeout(r, 50));
+        } catch (err: any) {
+          console.warn(`[Demographics] Geocoding failed for person ${person.id}: ${err.message}`);
           failed++;
-          continue;
         }
-
-        const result = await makeRequest<GeocodingResult>(
-          "/maps/api/geocode/json",
-          { address }
-        );
-
-        if (result.status === "OK" && result.results[0]) {
-          const loc = result.results[0].geometry.location;
-          await db
-            .update(pcoPeople)
-            .set({
-              latitude: loc.lat,
-              longitude: loc.lng,
-              geocodedAt: new Date(),
-            })
-            .where(eq(pcoPeople.id, person.id));
-          geocoded++;
-        } else {
-          failed++;
-        }
-
-        // Small delay to avoid rate limits (50ms between requests)
-        await new Promise((r) => setTimeout(r, 50));
-      } catch (err: any) {
-        console.warn(`[Demographics] Geocoding failed for person ${person.id}: ${err.message}`);
-        failed++;
       }
-    }
 
-    return { geocoded, failed, total: people.length };
-  }),
+      // Count remaining
+      const [remainingResult] = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(pcoPeople)
+        .where(
+          and(
+            eq(pcoPeople.status, "active"),
+            isNotNull(pcoPeople.zip),
+            sql`${pcoPeople.zip} != ''`,
+            isNull(pcoPeople.latitude)
+          )
+        );
+      const remaining = Number(remainingResult?.count || 0);
+
+      return { geocoded, failed, total: people.length, remaining };
+    }),
 
   /**
    * Get sync status — how many people have addresses, how many are geocoded
