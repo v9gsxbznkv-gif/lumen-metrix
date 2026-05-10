@@ -87,10 +87,11 @@ function jitterPoints(
       // Single person at this address — no jitter needed
       result[group[0].idx] = { ...group[0].point };
     } else {
-      // Multiple people at same address — fan out in a circle
+      // Multiple people at same address — tiny offset so they don't perfectly stack
       const count = group.length;
-      // Radius scales slightly with group size but stays small (~0.001 to 0.003 degrees)
-      const baseRadius = 0.0008 + Math.min(count, 20) * 0.0001;
+      // Very small radius: 0.00015-0.0003 degrees ≈ 15-30 meters
+      // Just enough to see individual dots when zoomed in, invisible at city zoom
+      const baseRadius = 0.00012 + Math.min(count, 15) * 0.000012;
       for (let i = 0; i < count; i++) {
         const seed = `${groupKey}-${i}`;
         const angle = (i / count) * 2 * Math.PI + seededRandom(seed + "-a") * 0.3;
