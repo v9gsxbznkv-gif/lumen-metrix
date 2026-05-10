@@ -1,8 +1,0 @@
-{
-  "query": "SELECT \n  COUNT(*) as total,\n  SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active,\n  SUM(CASE WHEN status = 'active' AND street IS NOT NULL AND street != '' THEN 1 ELSE 0 END) as active_with_address,\n  SUM(CASE WHEN status = 'active' AND lat IS NOT NULL THEN 1 ELSE 0 END) as active_geocoded,\n  SUM(CASE WHEN status = 'active' AND (street IS NULL OR street = '') THEN 1 ELSE 0 END) as active_no_address,\n  SUM(CASE WHEN status = 'active' AND street IS NOT NULL AND street != '' AND lat IS NULL THEN 1 ELSE 0 END) as active_has_address_not_geocoded\nFROM pco_people;",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT \n  COUNT(*) as total,\n  SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active,\n  SUM(CASE WHEN status = 'active' AND street IS NOT NULL AND street != '' THEN 1 ELSE 0 END) as active_with_address,\n  SUM(CASE WHEN status = 'active' AND lat IS NOT NULL THEN 1 ELSE 0 END) as active_geocoded,\n  SUM(CASE WHEN status = 'active' AND (street IS NULL OR street = '') THEN 1 ELSE 0 END) as active_no_address,\n  SUM(CASE WHEN status = 'active' AND street IS NOT NULL AND street != '' AND lat IS NULL THEN 1 ELSE 0 END) as active_has_address_not_geocoded\nFROM pco_people;",
-  "returncode": 1,
-  "logs": [
-    "ERROR 1054 (42S22) at line 1: Unknown column 'lat' in ''"
-  ]
-}

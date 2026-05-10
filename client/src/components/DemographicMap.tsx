@@ -26,11 +26,10 @@ const CAMPUS_PIN_COLORS: Record<string, string> = {
   Jasper: CAMPUS_DOT_COLORS.Jasper,
 };
 
-// Approximate drive-time radii in meters (rural north GA with stops/turns)
-// ~25mph effective for short trips, ~32mph for longer drives
+// Approximate drive-time radii in meters (rural GA, ~50mph avg)
 const DRIVE_TIME_RADII = {
-  "15 min": 9_650,
-  "30 min": 25_750,
+  "15 min": 19_300,
+  "30 min": 38_600,
 };
 
 // Campus coordinates
@@ -40,33 +39,18 @@ const CAMPUS_COORDS: Record<string, { lat: number; lng: number }> = {
 };
 
 /**
- * MurmurHash3-inspired 32-bit hash. Produces well-distributed output
- * even for sequential inputs like "key-0", "key-1", "key-2".
+ * Deterministic pseudo-random based on a seed string.
+ * Returns a value between 0 and 1.
  */
-function murmurhash3(str: string): number {
-  let h = 0x811c9dc5; // FNV offset basis as seed
-  for (let i = 0; i < str.length; i++) {
-    let k = str.charCodeAt(i);
-    k = Math.imul(k, 0xcc9e2d51);
-    k = (k << 15) | (k >>> 17);
-    k = Math.imul(k, 0x1b873593);
-    h ^= k;
-    h = (h << 13) | (h >>> 19);
-    h = Math.imul(h, 5) + 0xe6546b64;
-  }
-  // Finalization mix
-  h ^= str.length;
-  h ^= h >>> 16;
-  h = Math.imul(h, 0x85ebca6b);
-  h ^= h >>> 13;
-  h = Math.imul(h, 0xc2b2ae35);
-  h ^= h >>> 16;
-  return h >>> 0; // unsigned 32-bit
-}
-
-/** Returns a deterministic float in [0, 1) for a given seed string. */
 function seededRandom(seed: string): number {
-  return murmurhash3(seed) / 0x100000000;
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    const char = seed.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  // Normalize to 0-1
+  return (Math.abs(hash) % 10000) / 10000;
 }
 
 interface JitteredPoint {
@@ -79,8 +63,9 @@ interface JitteredPoint {
 
 /**
  * Apply deterministic jitter to points that share the same lat/lng.
- * Uses independent random x/y offsets (not polar coords) to avoid
- * any circular or spiral artifacts. Radius scales with group size.
+ * Each person gets a unique, stable offset so dots at the same address
+ * fan out in a small circle rather than stacking on top of each other.
+ * Points with unique positions are left unchanged.
  */
 function jitterPoints(
   points: Array<{ lat: number; lng: number; campus: string; city: string; zip: string }>
@@ -98,39 +83,23 @@ function jitterPoints(
 
   for (const [groupKey, group] of Array.from(groups)) {
     if (group.length === 1) {
+      // Single person at this address — no jitter needed
       result[group[0].idx] = { ...group[0].point };
     } else {
+      // Multiple people at same address — fan out in a circle
       const count = group.length;
-      // Scale spread based on group size (in degrees, 1 degree ≈ 111km)
-      let spread: number;
-      if (count <= 5) {
-        spread = 0.0002; // ~22m
-      } else if (count <= 20) {
-        spread = 0.002; // ~220m
-      } else if (count <= 50) {
-        spread = 0.005; // ~550m
-      } else if (count <= 150) {
-        spread = 0.015; // ~1.7km
-      } else if (count <= 400) {
-        spread = 0.025; // ~2.8km
-      } else {
-        spread = 0.035; // ~3.9km
-      }
-
+      // Radius scales slightly with group size but stays small (~0.001 to 0.003 degrees)
+      const baseRadius = 0.0008 + Math.min(count, 20) * 0.0001;
       for (let i = 0; i < count; i++) {
-        // Two completely independent random values for x and y offset
-        // Using different salt strings ensures no correlation
-        const rx = seededRandom(`${groupKey}:lat:${i}`);
-        const ry = seededRandom(`${groupKey}:lng:${i}`);
-
-        // Map from [0,1) to [-1, 1) range
-        const dx = (rx * 2 - 1) * spread;
-        const dy = (ry * 2 - 1) * spread;
-
+        const seed = `${groupKey}-${i}`;
+        const angle = (i / count) * 2 * Math.PI + seededRandom(seed + "-a") * 0.3;
+        const radiusFactor = 0.7 + seededRandom(seed + "-r") * 0.6;
+        const jitterLat = group[i].point.lat + baseRadius * Math.cos(angle) * radiusFactor;
+        const jitterLng = group[i].point.lng + baseRadius * Math.sin(angle) * radiusFactor;
         result[group[i].idx] = {
           ...group[i].point,
-          lat: group[i].point.lat + dx,
-          lng: group[i].point.lng + dy,
+          lat: jitterLat,
+          lng: jitterLng,
         };
       }
     }
