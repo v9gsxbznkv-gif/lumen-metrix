@@ -40,18 +40,33 @@ const CAMPUS_COORDS: Record<string, { lat: number; lng: number }> = {
 };
 
 /**
- * Deterministic pseudo-random based on a seed string.
- * Returns a value between 0 and 1.
+ * MurmurHash3-inspired 32-bit hash. Produces well-distributed output
+ * even for sequential inputs like "key-0", "key-1", "key-2".
  */
-function seededRandom(seed: string): number {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) {
-    const char = seed.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
+function murmurhash3(str: string): number {
+  let h = 0x811c9dc5; // FNV offset basis as seed
+  for (let i = 0; i < str.length; i++) {
+    let k = str.charCodeAt(i);
+    k = Math.imul(k, 0xcc9e2d51);
+    k = (k << 15) | (k >>> 17);
+    k = Math.imul(k, 0x1b873593);
+    h ^= k;
+    h = (h << 13) | (h >>> 19);
+    h = Math.imul(h, 5) + 0xe6546b64;
   }
-  // Normalize to 0-1
-  return (Math.abs(hash) % 10000) / 10000;
+  // Finalization mix
+  h ^= str.length;
+  h ^= h >>> 16;
+  h = Math.imul(h, 0x85ebca6b);
+  h ^= h >>> 13;
+  h = Math.imul(h, 0xc2b2ae35);
+  h ^= h >>> 16;
+  return h >>> 0; // unsigned 32-bit
+}
+
+/** Returns a deterministic float in [0, 1) for a given seed string. */
+function seededRandom(seed: string): number {
+  return murmurhash3(seed) / 0x100000000;
 }
 
 interface JitteredPoint {
@@ -64,9 +79,8 @@ interface JitteredPoint {
 
 /**
  * Apply deterministic jitter to points that share the same lat/lng.
- * Uses purely random scatter (no geometric patterns) with density
- * concentrated toward the center (Gaussian-like) for a natural look.
- * Radius scales with group size so zip-centroid clusters fill the area.
+ * Uses independent random x/y offsets (not polar coords) to avoid
+ * any circular or spiral artifacts. Radius scales with group size.
  */
 function jitterPoints(
   points: Array<{ lat: number; lng: number; campus: string; city: string; zip: string }>
@@ -87,48 +101,36 @@ function jitterPoints(
       result[group[0].idx] = { ...group[0].point };
     } else {
       const count = group.length;
-      // Scale radius based on group size (in degrees)
-      // 1 degree ≈ 111km
-      let maxRadius: number;
+      // Scale spread based on group size (in degrees, 1 degree ≈ 111km)
+      let spread: number;
       if (count <= 5) {
-        maxRadius = 0.0002; // ~22m (household)
+        spread = 0.0002; // ~22m
       } else if (count <= 20) {
-        maxRadius = 0.002; // ~220m
+        spread = 0.002; // ~220m
       } else if (count <= 50) {
-        maxRadius = 0.005; // ~550m
+        spread = 0.005; // ~550m
       } else if (count <= 150) {
-        maxRadius = 0.015; // ~1.7km
+        spread = 0.015; // ~1.7km
       } else if (count <= 400) {
-        maxRadius = 0.025; // ~2.8km
+        spread = 0.025; // ~2.8km
       } else {
-        maxRadius = 0.035; // ~3.9km
+        spread = 0.035; // ~3.9km
       }
 
       for (let i = 0; i < count; i++) {
-        const seed = `${groupKey}-${i}`;
-        // Use multiple seeded randoms for fully random angle + radius
-        const r1 = seededRandom(seed + "-x1");
-        const r2 = seededRandom(seed + "-x2");
-        const r3 = seededRandom(seed + "-x3");
-        const r4 = seededRandom(seed + "-x4");
+        // Two completely independent random values for x and y offset
+        // Using different salt strings ensures no correlation
+        const rx = seededRandom(`${groupKey}:lat:${i}`);
+        const ry = seededRandom(`${groupKey}:lng:${i}`);
 
-        // Fully random angle (full 360 degrees)
-        const angle = r1 * 2 * Math.PI;
+        // Map from [0,1) to [-1, 1) range
+        const dx = (rx * 2 - 1) * spread;
+        const dy = (ry * 2 - 1) * spread;
 
-        // Box-Muller-ish transform for Gaussian-like radius distribution:
-        // Most dots near center, thinning toward edges — looks like real population density
-        // Average of 2 random values gives a rough bell curve (central limit theorem)
-        const gaussianish = (r2 + r3) / 2; // peaks around 0.5
-        // Add some uniform randomness to break any remaining pattern
-        const blended = gaussianish * 0.7 + r4 * 0.3;
-        const r = maxRadius * blended;
-
-        const jitterLat = group[i].point.lat + r * Math.cos(angle);
-        const jitterLng = group[i].point.lng + r * Math.sin(angle);
         result[group[i].idx] = {
           ...group[i].point,
-          lat: jitterLat,
-          lng: jitterLng,
+          lat: group[i].point.lat + dx,
+          lng: group[i].point.lng + dy,
         };
       }
     }
