@@ -1056,4 +1056,13 @@
 - [x] Replaced getNsTotal with getNextStepsFromWeekly in NextStepsTab (KPIs, funnel, trend chart, YoY)
 - [x] Both pages now show FTG: 822, Salvations: 20, Baptisms: 103
 - [x] 133 tests pass
+- [x] Deployed (c9d3928b)
+
+## Round 114: Assimilation Page — Add Stewardship, New Serving, New Group Members
+- [x] Added Stewardship KPI card (35, -53.3% YoY)
+- [x] Added New Serving KPI (+80, avg weekly volunteer growth from serving_monthly)
+- [x] Added New Group Members KPI (+118, net new from groups_monthly)
+- [x] Added groups_monthly to API response and data pipeline
+- [x] Full funnel: FTG(822) → Salvations(20) → Baptisms(103) → Stewards(35) → Serving(+80) → Groups(+118)
+- [x] 133 tests pass, tsc clean
 - [ ] Deploy

@@ -109,6 +109,16 @@ interface RawServingWeekly {
   total: number;
 }
 
+interface RawGroupsMonthly {
+  year: number;
+  month: number;
+  campus: string;
+  activeGroups: number;
+  totalMembers: number;
+  totalLeaders: number;
+  avgAttendance: number;
+}
+
 interface RawDashboard {
   attendance: RawAttendance[];
   giving: RawGiving[];
@@ -125,6 +135,7 @@ interface RawDashboard {
   event_overrides?: EventOverride[];
   next_steps_weekly?: RawNextStepsWeekly[];
   serving_weekly?: RawServingWeekly[];
+  groups_monthly?: RawGroupsMonthly[];
 }
 
 // ============================================================
@@ -261,6 +272,16 @@ export interface EventOverride {
   notes: string | null;
 }
 
+export interface GroupsMonthly {
+  year: number;
+  month: number;
+  campus: string;
+  activeGroups: number;
+  totalMembers: number;
+  totalLeaders: number;
+  avgAttendance: number;
+}
+
 export interface DashboardData {
   attendance: AttendanceRecord[];
   attendance_monthly: AttendanceMonthly[];
@@ -275,6 +296,7 @@ export interface DashboardData {
   event_overrides: EventOverride[];
   next_steps_weekly: NextStepsWeekly[];
   serving_weekly: ServingWeekly[];
+  groups_monthly: GroupsMonthly[];
   computed: {
     giving_per_capita: GivingPerCapita[];
     volunteer_ratio: VolunteerRatio[];
@@ -439,6 +461,7 @@ function transformRawData(raw: RawDashboard): DashboardData {
     event_overrides: raw.event_overrides || [],
     next_steps_weekly: raw.next_steps_weekly || [],
     serving_weekly: raw.serving_weekly || [],
+    groups_monthly: raw.groups_monthly || [],
     computed: {
       giving_per_capita: gpc,
       volunteer_ratio: vr,
@@ -1206,4 +1229,84 @@ export function getNextStepsWithFallbackRange(
     }
   }
   return total;
+}
+
+
+// ============================================================
+// Assimilation helpers: New Serving & New Group Members (growth-based)
+// ============================================================
+
+/**
+ * Compute "New Serving Team Members" as the growth in avg weekly volunteers
+ * from the first month to the latest month of a given year.
+ * Uses serving_monthly (total monthly volunteer headcount).
+ * Growth = (latest month avg) - (first month avg)
+ */
+export function getNewServingGrowth(
+  data: DashboardData,
+  year: number,
+  campus: string
+): number {
+  const rows = data.serving_monthly.filter((r) => {
+    if (r.year !== year) return false;
+    if (campus === "All Campuses") return true;
+    return r.campus === campus;
+  });
+  if (rows.length === 0) return 0;
+
+  // Get unique months
+  const months = Array.from(new Set(rows.map((r) => r.month))).sort((a, b) => a - b);
+  if (months.length < 2) return 0;
+
+  const firstMonth = months[0];
+  const lastMonth = months[months.length - 1];
+
+  // Sum totals for first and last month (across campuses if All Campuses)
+  const firstTotal = rows
+    .filter((r) => r.month === firstMonth)
+    .reduce((s, r) => s + r.total, 0);
+  const lastTotal = rows
+    .filter((r) => r.month === lastMonth)
+    .reduce((s, r) => s + r.total, 0);
+
+  // Convert monthly totals to avg weekly (approx 4.33 weeks/month)
+  const firstAvg = firstTotal / 4.33;
+  const lastAvg = lastTotal / 4.33;
+
+  return Math.round(lastAvg - firstAvg);
+}
+
+/**
+ * Compute "New Group Members" as the growth in totalMembers
+ * from the first month to the latest month of a given year.
+ * Uses groups_monthly.
+ */
+export function getNewGroupMembersGrowth(
+  data: DashboardData,
+  year: number,
+  campus: string
+): number {
+  const rows = data.groups_monthly.filter((r) => {
+    if (r.year !== year) return false;
+    if (campus === "All Campuses") return true;
+    return r.campus === campus;
+  });
+  if (rows.length === 0) return 0;
+
+  // Get unique months
+  const months = Array.from(new Set(rows.map((r) => r.month))).sort((a, b) => a - b);
+  if (months.length < 2) return 0;
+
+  const firstMonth = months[0];
+  const lastMonth = months[months.length - 1];
+
+  // Sum totalMembers for first and last month (across campuses if All Campuses)
+  const firstTotal = rows
+    .filter((r) => r.month === firstMonth)
+    .reduce((s, r) => s + r.totalMembers, 0);
+  const lastTotal = rows
+    .filter((r) => r.month === lastMonth)
+    .reduce((s, r) => s + r.totalMembers, 0);
+
+  return lastTotal - firstTotal;
 }

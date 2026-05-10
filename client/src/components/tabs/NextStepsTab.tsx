@@ -1,7 +1,7 @@
 /*
- * Lumen Metrix — Next Steps Tab
- * Assimilation funnel, FTG/Salvation/Baptism trends, monthly patterns
- * Data: v3 flat structure
+ * Lumen Metrix — Assimilation Tab
+ * Full assimilation funnel: FTG → Salvations → Baptisms → Stewardship → New Serving → New Groups
+ * Data: weekly tables (primary), monthly tables (growth metrics), annual fallback
  */
 import { useMemo } from "react";
 import { useData } from "@/contexts/DataContext";
@@ -13,6 +13,8 @@ import {
   getMaxMonth,
   getNextStepsForMonths,
   getNextStepsFromWeekly,
+  getNewServingGrowth,
+  getNewGroupMembersGrowth,
   MONTH_NAMES,
 } from "@/lib/data";
 import {
@@ -34,6 +36,8 @@ const METRIC_COLORS: Record<string, string> = {
   Salvations: "#E8913A",
   Baptisms: "#4A7FB5",
   Stewardship: "#8B6DAF",
+  "New Serving": "#D4764E",
+  "New Groups": "#3B8EA5",
 };
 
 const TT = {
@@ -43,24 +47,6 @@ const TT = {
   boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
   fontFamily: "'Inter'",
 };
-
-function getNsTotal(
-  ns: { year: number; campus: string; metric: string; total: number }[],
-  year: number,
-  campus: string,
-  metric: string
-): number {
-  if (campus === "All Campuses") {
-    return ns
-      .filter((n) => n.year === year && n.metric === metric && n.campus === "All Campuses")
-      .reduce((s, n) => s + n.total, 0);
-  }
-  return (
-    ns.find(
-      (n) => n.year === year && n.campus === campus && n.metric === metric
-    )?.total ?? 0
-  );
-}
 
 export default function NextStepsTab() {
   const { data, filters } = useData();
@@ -76,51 +62,6 @@ export default function NextStepsTab() {
     () => filteredYears[filteredYears.length - 1] ?? 2026,
     [filteredYears]
   );
-
-  const metricTrend = useMemo(() => {
-    if (!data) return [];
-    return filteredYears.map((year) => {
-      const row: Record<string, number | string> = { year };
-      ["FTG", "Salvations", "Baptisms"].forEach((metric) => {
-        row[metric] = getNextStepsFromWeekly(data, year, filters.campus, metric);
-      });
-      return row;
-    });
-  }, [data, filters, filteredYears]);
-
-  const funnelData = useMemo(() => {
-    if (!data) return [];
-    const ftg = getNextStepsFromWeekly(data, latestYear, filters.campus, "FTG");
-    const salv = getNextStepsFromWeekly(data, latestYear, filters.campus, "Salvations");
-    const bap = getNextStepsFromWeekly(data, latestYear, filters.campus, "Baptisms");
-    const stew = getNextStepsFromWeekly(data, latestYear, filters.campus, "Stewardship");
-
-    return [
-      { step: "First Time Guests", value: ftg, color: METRIC_COLORS.FTG },
-      { step: "Salvations", value: salv, color: METRIC_COLORS.Salvations },
-      { step: "Baptisms", value: bap, color: METRIC_COLORS.Baptisms },
-      { step: "New Stewards", value: stew, color: METRIC_COLORS.Stewardship },
-    ];
-  }, [data, filters, latestYear]);
-
-  const monthlyPattern = useMemo(() => {
-    if (!data) return [];
-    return Array.from({ length: 12 }, (_, i) => {
-      const month = i + 1;
-      const row: Record<string, number | string> = { month: MONTH_NAMES[i] };
-      ["FTG", "Salvations", "Baptisms"].forEach((metric) => {
-        const matches = data.next_steps_monthly.filter(
-          (m) =>
-            m.year === latestYear &&
-            m.month === month &&
-            m.metric === metric &&
-            (filters.campus === "All Campuses" || m.campus === filters.campus)
-        );
-        row[metric] = matches.reduce((s, m) => s + m.count, 0);
-      });
-      return row;
-    });
-  }, [data, filters, latestYear]);
 
   const partial = useMemo(() => data ? isPartialYear(data, latestYear) : false, [data, latestYear]);
   const maxMonth = useMemo(() => data ? getMaxMonth(data, latestYear) : 12, [data, latestYear]);
@@ -142,6 +83,11 @@ export default function NextStepsTab() {
       );
     };
 
+    const newServing = getNewServingGrowth(data, latestYear, filters.campus);
+    const newServingPrior = getNewServingGrowth(data, priorYear, filters.campus);
+    const newGroups = getNewGroupMembersGrowth(data, latestYear, filters.campus);
+    const newGroupsPrior = getNewGroupMembersGrowth(data, priorYear, filters.campus);
+
     return {
       ftg: getNextStepsFromWeekly(data, latestYear, filters.campus, "FTG"),
       ftgChange: getChange("FTG"),
@@ -149,35 +95,107 @@ export default function NextStepsTab() {
       salvationsChange: getChange("Salvations"),
       baptisms: getNextStepsFromWeekly(data, latestYear, filters.campus, "Baptisms"),
       baptismsChange: getChange("Baptisms"),
+      stewardship: getNextStepsFromWeekly(data, latestYear, filters.campus, "Stewardship"),
+      stewardshipChange: getChange("Stewardship"),
+      newServing,
+      newServingChange: getYoYChange(newServing, newServingPrior),
+      newGroups,
+      newGroupsChange: getYoYChange(newGroups, newGroupsPrior),
     };
   }, [data, filters, latestYear, partial, maxMonth]);
+
+  const funnelData = useMemo(() => {
+    if (!data || !kpis) return [];
+    return [
+      { step: "First Time Guests", value: kpis.ftg, color: METRIC_COLORS.FTG },
+      { step: "Salvations", value: kpis.salvations, color: METRIC_COLORS.Salvations },
+      { step: "Baptisms", value: kpis.baptisms, color: METRIC_COLORS.Baptisms },
+      { step: "New Stewards", value: kpis.stewardship, color: METRIC_COLORS.Stewardship },
+      { step: "New Serving", value: kpis.newServing, color: METRIC_COLORS["New Serving"] },
+      { step: "New Group Members", value: kpis.newGroups, color: METRIC_COLORS["New Groups"] },
+    ];
+  }, [data, kpis]);
+
+  const metricTrend = useMemo(() => {
+    if (!data) return [];
+    return filteredYears.map((year) => {
+      const row: Record<string, number | string> = { year };
+      ["FTG", "Salvations", "Baptisms", "Stewardship"].forEach((metric) => {
+        row[metric] = getNextStepsFromWeekly(data, year, filters.campus, metric);
+      });
+      return row;
+    });
+  }, [data, filters, filteredYears]);
+
+  const monthlyPattern = useMemo(() => {
+    if (!data) return [];
+    return Array.from({ length: 12 }, (_, i) => {
+      const month = i + 1;
+      const row: Record<string, number | string> = { month: MONTH_NAMES[i] };
+      ["FTG", "Salvations", "Baptisms"].forEach((metric) => {
+        const matches = data.next_steps_monthly.filter(
+          (m) =>
+            m.year === latestYear &&
+            m.month === month &&
+            m.metric === metric &&
+            (filters.campus === "All Campuses" || m.campus === filters.campus)
+        );
+        row[metric] = matches.reduce((s, m) => s + m.count, 0);
+      });
+      return row;
+    });
+  }, [data, filters, latestYear]);
 
   if (!data || !kpis) return null;
   const maxFunnel = Math.max(...funnelData.map((f) => f.value), 1);
 
   return (
     <div className="space-y-5">
+      {/* KPI Cards — 6 metrics in 2 rows of 3 */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <KpiCard
           label="First Time Guests"
           value={formatNumber(kpis.ftg)}
           change={kpis.ftgChange}
-          subtitle={`${latestYear}${partial ? " YTD" : ""} total${partial ? " (vs same period prior year)" : ""}`}
+          subtitle={`${latestYear}${partial ? " YTD" : ""} total`}
           borderColor={METRIC_COLORS.FTG}
         />
         <KpiCard
           label="Salvations"
           value={formatNumber(kpis.salvations)}
           change={kpis.salvationsChange}
-          subtitle={`${latestYear}${partial ? " YTD" : ""} total${partial ? " (vs same period prior year)" : ""}`}
+          subtitle={`${latestYear}${partial ? " YTD" : ""} total`}
           borderColor={METRIC_COLORS.Salvations}
         />
         <KpiCard
           label="Baptisms"
           value={formatNumber(kpis.baptisms)}
           change={kpis.baptismsChange}
-          subtitle={`${latestYear}${partial ? " YTD" : ""} total${partial ? " (vs same period prior year)" : ""}`}
+          subtitle={`${latestYear}${partial ? " YTD" : ""} total`}
           borderColor={METRIC_COLORS.Baptisms}
+        />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <KpiCard
+          label="Stewardship"
+          value={formatNumber(kpis.stewardship)}
+          change={kpis.stewardshipChange}
+          subtitle={`${latestYear}${partial ? " YTD" : ""} new stewards`}
+          borderColor={METRIC_COLORS.Stewardship}
+        />
+        <KpiCard
+          label="New Serving"
+          value={kpis.newServing > 0 ? `+${formatNumber(kpis.newServing)}` : formatNumber(kpis.newServing)}
+          change={kpis.newServingChange}
+          subtitle={`${latestYear} avg weekly growth`}
+          borderColor={METRIC_COLORS["New Serving"]}
+        />
+        <KpiCard
+          label="New Group Members"
+          value={kpis.newGroups > 0 ? `+${formatNumber(kpis.newGroups)}` : formatNumber(kpis.newGroups)}
+          change={kpis.newGroupsChange}
+          subtitle={`${latestYear} net new members`}
+          borderColor={METRIC_COLORS["New Groups"]}
         />
       </div>
 
@@ -187,15 +205,15 @@ export default function NextStepsTab() {
           Assimilation Funnel — {latestYear}
         </h3>
         <p className="text-[11px] text-muted-foreground mb-5">
-          Tracking the journey from first visit to committed steward
+          Tracking the journey from first visit to committed community member
         </p>
         <div className="space-y-2">
           {funnelData.map((step, i) => {
             const widthPct =
-              maxFunnel > 0 ? (step.value / maxFunnel) * 100 : 0;
+              maxFunnel > 0 ? (Math.abs(step.value) / maxFunnel) * 100 : 0;
             const conversionRate =
               i > 0 && funnelData[i - 1].value > 0
-                ? ((step.value / funnelData[i - 1].value) * 100).toFixed(1)
+                ? ((Math.abs(step.value) / funnelData[i - 1].value) * 100).toFixed(1)
                 : null;
             return (
               <div key={step.step}>
@@ -210,7 +228,7 @@ export default function NextStepsTab() {
                   </div>
                 )}
                 <div className="flex items-center gap-4">
-                  <div className="w-32 text-right">
+                  <div className="w-36 text-right">
                     <span className="text-xs font-medium text-foreground/80">
                       {step.step}
                     </span>
@@ -224,7 +242,7 @@ export default function NextStepsTab() {
                       }}
                     >
                       <span className="stat-value text-sm text-white drop-shadow-sm">
-                        {formatNumber(step.value)}
+                        {step.value > 0 ? `+${formatNumber(step.value)}` : formatNumber(step.value)}
                       </span>
                     </div>
                   </div>
@@ -238,7 +256,7 @@ export default function NextStepsTab() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-card rounded-lg border border-border/60 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
           <h3 className="section-title mb-4">
-            Next Steps — Multi-Year Trend
+            Assimilation — Multi-Year Trend
           </h3>
           <ResponsiveContainer width="100%" height={280}>
             <LineChart data={metricTrend}>
@@ -279,6 +297,13 @@ export default function NextStepsTab() {
                 type="monotone"
                 dataKey="Baptisms"
                 stroke={METRIC_COLORS.Baptisms}
+                strokeWidth={2}
+                dot={{ r: 3 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="Stewardship"
+                stroke={METRIC_COLORS.Stewardship}
                 strokeWidth={2}
                 dot={{ r: 3 }}
               />
