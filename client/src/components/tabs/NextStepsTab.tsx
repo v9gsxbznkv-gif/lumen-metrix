@@ -12,6 +12,7 @@ import {
   isPartialYear,
   getMaxMonth,
   getNextStepsForMonths,
+  getNextStepsFromWeekly,
   MONTH_NAMES,
 } from "@/lib/data";
 import {
@@ -81,7 +82,7 @@ export default function NextStepsTab() {
     return filteredYears.map((year) => {
       const row: Record<string, number | string> = { year };
       ["FTG", "Salvations", "Baptisms"].forEach((metric) => {
-        row[metric] = getNsTotal(data.next_steps, year, filters.campus, metric);
+        row[metric] = getNextStepsFromWeekly(data, year, filters.campus, metric);
       });
       return row;
     });
@@ -89,10 +90,10 @@ export default function NextStepsTab() {
 
   const funnelData = useMemo(() => {
     if (!data) return [];
-    const ftg = getNsTotal(data.next_steps, latestYear, filters.campus, "FTG");
-    const salv = getNsTotal(data.next_steps, latestYear, filters.campus, "Salvations");
-    const bap = getNsTotal(data.next_steps, latestYear, filters.campus, "Baptisms");
-    const stew = getNsTotal(data.next_steps, latestYear, filters.campus, "Stewardship");
+    const ftg = getNextStepsFromWeekly(data, latestYear, filters.campus, "FTG");
+    const salv = getNextStepsFromWeekly(data, latestYear, filters.campus, "Salvations");
+    const bap = getNextStepsFromWeekly(data, latestYear, filters.campus, "Baptisms");
+    const stew = getNextStepsFromWeekly(data, latestYear, filters.campus, "Stewardship");
 
     return [
       { step: "First Time Guests", value: ftg, color: METRIC_COLORS.FTG },
@@ -136,17 +137,17 @@ export default function NextStepsTab() {
         return getYoYChange(curr, prev);
       }
       return getYoYChange(
-        getNsTotal(data.next_steps, latestYear, filters.campus, metric),
-        getNsTotal(data.next_steps, priorYear, filters.campus, metric)
+        getNextStepsFromWeekly(data, latestYear, filters.campus, metric),
+        getNextStepsFromWeekly(data, priorYear, filters.campus, metric)
       );
     };
 
     return {
-      ftg: getNsTotal(data.next_steps, latestYear, filters.campus, "FTG"),
+      ftg: getNextStepsFromWeekly(data, latestYear, filters.campus, "FTG"),
       ftgChange: getChange("FTG"),
-      salvations: getNsTotal(data.next_steps, latestYear, filters.campus, "Salvations"),
+      salvations: getNextStepsFromWeekly(data, latestYear, filters.campus, "Salvations"),
       salvationsChange: getChange("Salvations"),
-      baptisms: getNsTotal(data.next_steps, latestYear, filters.campus, "Baptisms"),
+      baptisms: getNextStepsFromWeekly(data, latestYear, filters.campus, "Baptisms"),
       baptismsChange: getChange("Baptisms"),
     };
   }, [data, filters, latestYear, partial, maxMonth]);

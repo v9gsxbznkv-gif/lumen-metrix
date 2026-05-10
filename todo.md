@@ -1031,7 +1031,7 @@
 - [x] campusComparison chart: from attendance_weekly
 - [x] Added next_steps_weekly and serving_weekly to API response
 - [x] 133 tests pass, tsc clean
-- [ ] Deploy
+- [x] Deployed (abba13b4)
 
 ## Round 111: Historical Attendance/Giving Too Low on Dashboard
 - [x] Root cause: weekly tables DO have all years (2013+), but subgroup names differ (old: "Adults"/"Students", new: "Revolution Canton Check-In"/"RevStudents HS")
@@ -1043,10 +1043,17 @@
 - [x] Serving: weekly for all years (2013+)
 - [x] GPC corrected from -73.7% to +7.1%, Attendance YoY from +312% to +1.0%
 - [x] 133 tests pass, tsc clean
-- [ ] Deploy
+- [x] Deployed (abba13b4)
 
 ## Round 112: Assimilation Page — Restore Old Next Steps Content
 - [x] Swapped AssimilationTab import to use NextStepsTab (has complete data: FTG, Salvations, Baptisms, Stewardship)
 - [x] Sidebar already labeled "Assimilation", header shows "Assimilation" with correct subtitle
 - [x] Verified: FTG 593, Salvations 24, Baptisms 103, New Stewards 35, funnel + charts working
+- [x] Deployed (abba13b4)
+
+## Round 113: FTG Discrepancy — Dashboard (822) vs Assimilation (593)
+- [x] Root cause: Assimilation reads stale next_steps annual table (593), Dashboard sums next_steps_weekly (822 = 591+195+36)
+- [x] Replaced getNsTotal with getNextStepsFromWeekly in NextStepsTab (KPIs, funnel, trend chart, YoY)
+- [x] Both pages now show FTG: 822, Salvations: 20, Baptisms: 103
+- [x] 133 tests pass
 - [ ] Deploy
