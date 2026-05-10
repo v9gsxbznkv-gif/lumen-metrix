@@ -1065,4 +1065,11 @@
 - [x] Added groups_monthly to API response and data pipeline
 - [x] Full funnel: FTG(822) → Salvations(20) → Baptisms(103) → Stewards(35) → Serving(+80) → Groups(+118)
 - [x] 133 tests pass, tsc clean
+- [x] Deployed (c8268cd5)
+
+## Round 115: Assimilation YoY Comparison — Use Same Period (YTD vs YTD)
+- [x] Rewrote getChange to use getWeeklyYoYChange + getNextStepsWithFallbackRange (weeks 1-19 vs weeks 1-19)
+- [x] Baptisms/Stewardship now fall back to monthly with same-month-range comparison
+- [x] FTG: -24.1% (was -53.5%), Baptisms: +139.5% (was -10.4%), Stewardship: -40.7% (was -53.3%)
+- [x] Dashboard and Assimilation pages now both use same-period YTD comparison
 - [ ] Deploy

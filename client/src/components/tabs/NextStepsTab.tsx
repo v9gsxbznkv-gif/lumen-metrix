@@ -9,12 +9,13 @@ import KpiCard from "@/components/KpiCard";
 import {
   formatNumber,
   getYoYChange,
-  isPartialYear,
-  getMaxMonth,
-  getNextStepsForMonths,
+  getWeeklyYoYChange,
   getNextStepsFromWeekly,
+  getNextStepsWithFallbackRange,
+  getMaxWeek,
   getNewServingGrowth,
   getNewGroupMembersGrowth,
+  getMaxMonth,
   MONTH_NAMES,
 } from "@/lib/data";
 import {
@@ -63,24 +64,19 @@ export default function NextStepsTab() {
     [filteredYears]
   );
 
-  const partial = useMemo(() => data ? isPartialYear(data, latestYear) : false, [data, latestYear]);
   const maxMonth = useMemo(() => data ? getMaxMonth(data, latestYear) : 12, [data, latestYear]);
 
   const kpis = useMemo(() => {
     if (!data) return null;
     const priorYear = latestYear - 1;
-    const compMonths = Array.from({ length: maxMonth }, (_, i) => i + 1);
+    const maxWeek = getMaxWeek(data, latestYear);
 
+    // YTD-to-YTD comparison: compare weeks 1..maxWeek of current year vs same weeks of prior year
+    // Uses fallback to monthly for metrics not in weekly (e.g. Baptisms, Stewardship)
     const getChange = (metric: string) => {
-      if (partial) {
-        const curr = getNextStepsForMonths(data, latestYear, filters.campus, metric, compMonths);
-        const prev = getNextStepsForMonths(data, priorYear, filters.campus, metric, compMonths);
-        return getYoYChange(curr, prev);
-      }
-      return getYoYChange(
-        getNextStepsFromWeekly(data, latestYear, filters.campus, metric),
-        getNextStepsFromWeekly(data, priorYear, filters.campus, metric)
-      );
+      return getWeeklyYoYChange(data, latestYear, priorYear, (year, mw) => {
+        return getNextStepsWithFallbackRange(data, year, filters.campus, metric, mw);
+      });
     };
 
     const newServing = getNewServingGrowth(data, latestYear, filters.campus);
@@ -102,7 +98,7 @@ export default function NextStepsTab() {
       newGroups,
       newGroupsChange: getYoYChange(newGroups, newGroupsPrior),
     };
-  }, [data, filters, latestYear, partial, maxMonth]);
+  }, [data, filters, latestYear, maxMonth]);
 
   const funnelData = useMemo(() => {
     if (!data || !kpis) return [];
@@ -157,21 +153,21 @@ export default function NextStepsTab() {
           label="First Time Guests"
           value={formatNumber(kpis.ftg)}
           change={kpis.ftgChange}
-          subtitle={`${latestYear}${partial ? " YTD" : ""} total`}
+          subtitle={`${latestYear} YTD total`}
           borderColor={METRIC_COLORS.FTG}
         />
         <KpiCard
           label="Salvations"
           value={formatNumber(kpis.salvations)}
           change={kpis.salvationsChange}
-          subtitle={`${latestYear}${partial ? " YTD" : ""} total`}
+          subtitle={`${latestYear} YTD total`}
           borderColor={METRIC_COLORS.Salvations}
         />
         <KpiCard
           label="Baptisms"
           value={formatNumber(kpis.baptisms)}
           change={kpis.baptismsChange}
-          subtitle={`${latestYear}${partial ? " YTD" : ""} total`}
+          subtitle={`${latestYear} YTD total`}
           borderColor={METRIC_COLORS.Baptisms}
         />
       </div>
@@ -180,7 +176,7 @@ export default function NextStepsTab() {
           label="Stewardship"
           value={formatNumber(kpis.stewardship)}
           change={kpis.stewardshipChange}
-          subtitle={`${latestYear}${partial ? " YTD" : ""} new stewards`}
+          subtitle={`${latestYear} YTD new stewards`}
           borderColor={METRIC_COLORS.Stewardship}
         />
         <KpiCard
