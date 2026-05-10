@@ -26,10 +26,11 @@ const CAMPUS_PIN_COLORS: Record<string, string> = {
   Jasper: CAMPUS_DOT_COLORS.Jasper,
 };
 
-// Approximate drive-time radii in meters (rural GA, ~50mph avg)
+// Approximate drive-time radii in meters (rural north GA with stops/turns)
+// ~25mph effective for short trips, ~32mph for longer drives
 const DRIVE_TIME_RADII = {
-  "15 min": 19_300,
-  "30 min": 38_600,
+  "15 min": 9_650,
+  "30 min": 25_750,
 };
 
 // Campus coordinates

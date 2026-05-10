@@ -1253,3 +1253,4 @@
 
 ## Round 136 Final: Remove All Clustering from Map
 - [x] Remove all clustering from DemographicMap — show every person as individual colored dot with deterministic jitter
+- [x] Fix drive-time radius circles — current 15min shows ~30min actual, 30min shows ~45min actual. Reduce radii to match real rural GA driving speeds.
