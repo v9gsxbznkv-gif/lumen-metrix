@@ -1173,4 +1173,13 @@
 - [x] Health Scorecard GPC: $61/wk with weekly thresholds (>$60 Excellent)
 - [x] Fixed SendReportDialog email summary to use same DB data
 - [x] 151 tests pass
-- [ ] Deploy
+- [x] Deployed (26ffef1b)
+
+## Round 128: Fix Campuses Tab Numbers Not Matching
+- [x] Diagnose Campuses tab data sources (legacy CDN pipeline confirmed)
+- [x] Fix CampusesTab.tsx to use DB-backed tRPC queries (attendance, giving, perCapita, nextSteps, serving) per campus
+- [x] Renamed GPC (Annual) → Per Capita ($/wk) showing per-person-per-week value
+- [x] Added Per Capita row to Campus Share table with weighted avg total
+- [x] Bar chart now uses DB-backed yearly attendance data
+- [x] All 151 tests pass
+- [x] Deploy
