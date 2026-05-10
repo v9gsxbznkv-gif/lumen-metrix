@@ -1148,4 +1148,12 @@
 - [x] Renamed label "Latest Month Avg" → "Current Month" for consistency
 - [x] Yearly avg now excludes partial month from calculation
 - [x] 151 tests pass
+- [x] Deployed (0b9141bd)
+
+## Round 125: Fix Health Tab Per Capita Calculation
+- [x] Root cause: using annual `giving_per_capita` (~$1,148) instead of `weekly_gpc` (~$61)
+- [x] Switched to `weekly_gpc` field, displays as "$61/wk"
+- [x] Updated thresholds: >$60 excellent, >$40 good, >$30 caution, <$30 concern
+- [x] Updated benchmark text: "National avg: $30/person/week"
+- [x] 151 tests pass
 - [ ] Deploy

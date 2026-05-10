@@ -261,9 +261,8 @@ export default function HealthTab() {
       }
     }
 
-    const gpcVal =
-      gpc.find((g) => g.year === latestYear && g.campus === campus)
-        ?.giving_per_capita ?? 0;
+    const gpcMatch = gpc.find((g) => g.year === latestYear && g.campus === campus);
+    const gpcVal = gpcMatch?.weekly_gpc ?? 0;
 
     // FTG: use monthly data for same-period comparison, summing individual campuses
     // when "All Campuses" is selected (no pre-aggregated All Campuses monthly row).
@@ -324,16 +323,16 @@ export default function HealthTab() {
       },
       {
         metric: "Giving Per Capita",
-        value: formatCurrency(gpcVal),
+        value: `$${Math.round(gpcVal)}/wk`,
         status:
-          gpcVal > 3000
+          gpcVal > 60
             ? "excellent"
-            : gpcVal > 2000
+            : gpcVal > 40
               ? "good"
-              : gpcVal > 1000
+              : gpcVal > 30
                 ? "caution"
                 : "concern",
-        benchmark: "National avg: ~$2,000-$3,000/year",
+        benchmark: "National avg: $30/person/week",
       },
       {
         metric: "FTG Rate",
