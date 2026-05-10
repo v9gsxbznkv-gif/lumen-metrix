@@ -1203,3 +1203,12 @@
 - [x] Chart axes now use Inter on X-axis, DM Mono on Y-axis (matching all other tabs)
 - [x] 151 tests pass
 - [x] Deploy with Round 129 fixes
+
+## Round 131: Color-Code Map Dots by Campus
+- [x] Map dots already use CAMPUS_COLORS — but campus field is NULL on all pco_people records
+- [x] Legend already exists on map
+- [x] Fix PCO sync to include primary_campus relationship when syncing people
+- [x] Add backfill endpoint (demographics.backfillCampus) that re-fetches campus from PCO
+- [x] Updated DemographicMap to use CAMPUS_COLORS from data.ts, show counts in legend, show "Assign Campuses" button when >50% unknown
+- [x] 151 tests pass
+- [ ] Deploy

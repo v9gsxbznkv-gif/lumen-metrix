@@ -7,20 +7,21 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { MapView } from "@/components/Map";
 import { trpc } from "@/lib/trpc";
+import { CAMPUS_COLORS } from "@/lib/data";
 import { Button } from "@/components/ui/button";
-import { Loader2, MapPin, RefreshCw, Users } from "lucide-react";
+import { Loader2, MapPin, RefreshCw, Users, Building2 } from "lucide-react";
 
-// Campus colors matching the rest of the dashboard
+// Dot colors matching CAMPUS_COLORS from the dashboard
 const CAMPUS_DOT_COLORS: Record<string, string> = {
-  Canton: "#E8913A",   // orange
-  Jasper: "#6366F1",   // indigo
-  Online: "#10B981",   // emerald
-  Unknown: "#9CA3AF",  // gray
+  Canton: CAMPUS_COLORS["Canton"] || "#C4813A",
+  Jasper: CAMPUS_COLORS["Jasper"] || "#4A7FB5",
+  Online: CAMPUS_COLORS["Online"] || "#8B6DAF",
+  Unknown: "#9CA3AF",
 };
 
 const CAMPUS_PIN_COLORS: Record<string, string> = {
-  Canton: "#E8913A",
-  Jasper: "#6366F1",
+  Canton: CAMPUS_DOT_COLORS.Canton,
+  Jasper: CAMPUS_DOT_COLORS.Jasper,
 };
 
 /**
@@ -50,7 +51,7 @@ function clusterAndJitter(
     isClusterCenter: boolean;
   }> = [];
 
-  for (const [, group] of groups) {
+  for (const [, group] of Array.from(groups)) {
     const centerLat = group[0].lat;
     const centerLng = group[0].lng;
     const count = group.length;
@@ -110,7 +111,7 @@ function getMajorityCampus(group: Array<{ campus: string }>): string {
   }
   let max = 0;
   let result = "Unknown";
-  for (const [campus, count] of counts) {
+  for (const [campus, count] of Array.from(counts)) {
     if (count > max) {
       max = count;
       result = campus;
@@ -123,6 +124,7 @@ export default function DemographicMap() {
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
   const [syncing, setSyncing] = useState(false);
+  const [backfilling, setBackfilling] = useState(false);
   const [syncMessage, setSyncMessage] = useState("");
 
   // Fetch map data
@@ -133,6 +135,12 @@ export default function DemographicMap() {
   // Mutations
   const syncAddresses = trpc.demographics.syncAddresses.useMutation();
   const geocodeAddresses = trpc.demographics.geocodeAddresses.useMutation();
+  const backfillCampus = trpc.demographics.backfillCampus.useMutation();
+
+  // Check if most dots are "Unknown" campus — suggest backfill
+  const unknownCount = mapData?.points?.filter((p) => !p.campus || p.campus === "Unknown").length ?? 0;
+  const totalPoints = mapData?.points?.length ?? 0;
+  const needsBackfill = totalPoints > 0 && unknownCount > totalPoints * 0.5;
 
   const handleSync = useCallback(async () => {
     setSyncing(true);
@@ -178,6 +186,23 @@ export default function DemographicMap() {
     }
   }, [syncAddresses, geocodeAddresses, refetchMapData, refetchStatus]);
 
+  const handleBackfillCampus = useCallback(async () => {
+    setBackfilling(true);
+    setSyncMessage("Fetching campus assignments from PCO...");
+    try {
+      const result = await backfillCampus.mutateAsync();
+      setSyncMessage(
+        `Campus backfill complete: ${result.withCampus} of ${result.totalPeople} people have a campus, ${result.updated} records updated.`
+      );
+      // Refresh map to show colored dots
+      await refetchMapData();
+    } catch (err: any) {
+      setSyncMessage(`Error: ${err.message}`);
+    } finally {
+      setBackfilling(false);
+    }
+  }, [backfillCampus, refetchMapData]);
+
   const renderMarkers = useCallback(
     (map: google.maps.Map) => {
       // Clear existing markers
@@ -199,7 +224,7 @@ export default function DemographicMap() {
             cursor: pointer;
           ">
             <div style="
-              background: ${CAMPUS_PIN_COLORS[campus.name] || "#E8913A"};
+              background: ${CAMPUS_PIN_COLORS[campus.name] || CAMPUS_DOT_COLORS.Canton};
               color: white;
               padding: 4px 10px;
               border-radius: 6px;
@@ -214,7 +239,7 @@ export default function DemographicMap() {
               height: 0;
               border-left: 6px solid transparent;
               border-right: 6px solid transparent;
-              border-top: 6px solid ${CAMPUS_PIN_COLORS[campus.name] || "#E8913A"};
+              border-top: 6px solid ${CAMPUS_PIN_COLORS[campus.name] || CAMPUS_DOT_COLORS.Canton};
             "></div>
           </div>
         `;
@@ -255,7 +280,7 @@ export default function DemographicMap() {
             cursor: pointer;
           `;
           badgeEl.textContent = String(point.clusterSize);
-          badgeEl.title = `${point.clusterSize} people in ${point.city || "this area"}`;
+          badgeEl.title = `${point.clusterSize} people in ${point.city || "this area"} (${point.campus})`;
 
           const marker = new google.maps.marker.AdvancedMarkerElement({
             map,
@@ -278,6 +303,7 @@ export default function DemographicMap() {
             cursor: pointer;
             box-shadow: 0 1px 3px rgba(0,0,0,0.25);
           `;
+          dotEl.title = `${point.campus} — ${point.city || point.zip}`;
 
           const marker = new google.maps.marker.AdvancedMarkerElement({
             map,
@@ -309,36 +335,60 @@ export default function DemographicMap() {
 
   const hasData = mapData && mapData.points.length > 0;
 
+  // Count by campus for the legend
+  const campusCounts = hasData
+    ? mapData.points.reduce((acc, p) => {
+        const c = p.campus || "Unknown";
+        acc[c] = (acc[c] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>)
+    : {};
+
   return (
-    <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
+    <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3
-            className="text-sm font-semibold"
-            style={{ fontFamily: "'DM Sans', sans-serif" }}
-          >
+          <h3 className="section-title text-card-foreground">
             Congregation Map
           </h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="text-[11px] text-muted-foreground mt-0.5">
             {hasData
               ? `${mapData.points.length} members mapped of ${mapData.stats.total} active`
               : "Sync addresses from PCO to populate the map"}
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleSync}
-          disabled={syncing}
-          className="text-xs"
-        >
-          {syncing ? (
-            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-          ) : (
-            <RefreshCw className="w-3 h-3 mr-1" />
+        <div className="flex gap-2">
+          {needsBackfill && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleBackfillCampus}
+              disabled={backfilling || syncing}
+              className="text-xs"
+            >
+              {backfilling ? (
+                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+              ) : (
+                <Building2 className="w-3 h-3 mr-1" />
+              )}
+              {backfilling ? "Backfilling..." : "Assign Campuses"}
+            </Button>
           )}
-          {syncing ? "Syncing..." : hasData ? "Refresh" : "Sync Addresses"}
-        </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSync}
+            disabled={syncing || backfilling}
+            className="text-xs"
+          >
+            {syncing ? (
+              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+            ) : (
+              <RefreshCw className="w-3 h-3 mr-1" />
+            )}
+            {syncing ? "Syncing..." : hasData ? "Refresh" : "Sync Addresses"}
+          </Button>
+        </div>
       </div>
 
       {syncMessage && (
@@ -356,7 +406,7 @@ export default function DemographicMap() {
           <span className="flex items-center gap-1">
             <MapPin className="w-3 h-3" /> {syncStatus.geocoded} mapped
           </span>
-          {syncStatus.pendingGeocode > 0 && (
+          {(syncStatus.pendingGeocode ?? 0) > 0 && (
             <span className="text-amber-500">
               {syncStatus.pendingGeocode} pending geocode
             </span>
@@ -364,8 +414,8 @@ export default function DemographicMap() {
         </div>
       )}
 
-      {/* Legend */}
-      <div className="flex gap-4 mb-3">
+      {/* Legend with counts */}
+      <div className="flex flex-wrap gap-4 mb-3">
         {Object.entries(CAMPUS_DOT_COLORS)
           .filter(([k]) => k !== "Unknown")
           .map(([name, color]) => (
@@ -375,8 +425,21 @@ export default function DemographicMap() {
                 style={{ background: color }}
               />
               {name}
+              {campusCounts[name] ? (
+                <span className="stat-value text-[10px] text-card-foreground">{campusCounts[name]}</span>
+              ) : null}
             </div>
           ))}
+        {(campusCounts["Unknown"] ?? 0) > 0 && (
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <div
+              className="w-2.5 h-2.5 rounded-full"
+              style={{ background: CAMPUS_DOT_COLORS.Unknown }}
+            />
+            Unassigned
+            <span className="stat-value text-[10px] text-card-foreground">{campusCounts["Unknown"]}</span>
+          </div>
+        )}
       </div>
 
       {/* Map */}

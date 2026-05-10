@@ -268,6 +268,73 @@ export const demographicsRouter = router({
     }),
 
   /**
+   * Backfill campus from PCO for all active people.
+   * Fetches /people/v2/people with include=primary_campus and updates the campus field.
+   * This is a one-time operation to populate campus for records that were synced before
+   * the campus field was included in the people sync.
+   */
+  backfillCampus: publicProcedure.mutation(async () => {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+
+    const accessToken = await getValidAccessToken();
+    if (!accessToken) throw new Error("PCO not connected — please connect in Settings");
+
+    const client = new PcoClient(accessToken);
+
+    console.log("[Demographics] Starting campus backfill from PCO...");
+
+    // Fetch all people with primary_campus included
+    const TIMEOUT_MS = 120_000;
+    const peopleResult = await Promise.race([
+      client.paginateAll("/people/v2/people", { per_page: 100, include: "primary_campus" }),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`Timeout after ${TIMEOUT_MS}ms`)), TIMEOUT_MS)
+      ),
+    ]);
+
+    console.log(`[Demographics] Got ${peopleResult.data.length} people, ${peopleResult.included.length} included resources`);
+
+    // Build lookup map for included campus resources
+    const includedMap: Record<string, any> = {};
+    for (const inc of peopleResult.included) {
+      includedMap[`${inc.type}-${inc.id}`] = inc;
+    }
+
+    // Build pcoId -> campusName map
+    const campusMap = new Map<string, string>();
+    for (const person of peopleResult.data) {
+      const pcoId = String(person.id);
+      const campusRef = (person as any).relationships?.primary_campus?.data;
+      const campusObj = campusRef ? includedMap[`Campus-${campusRef.id}`] : null;
+      const campusName = campusObj?.attributes?.name || null;
+      if (campusName) {
+        campusMap.set(pcoId, campusName);
+      }
+    }
+
+    console.log(`[Demographics] Found campus assignments for ${campusMap.size} people`);
+
+    // Update all matching records in DB
+    let updated = 0;
+    for (const [pcoId, campusName] of Array.from(campusMap)) {
+      const result = await db
+        .update(pcoPeople)
+        .set({ campus: campusName })
+        .where(eq(pcoPeople.pcoId, pcoId));
+      if (result[0]?.affectedRows > 0) updated++;
+    }
+
+    console.log(`[Demographics] Campus backfill complete: ${updated} records updated`);
+
+    return {
+      totalPeople: peopleResult.data.length,
+      withCampus: campusMap.size,
+      updated,
+    };
+  }),
+
+  /**
    * Get sync status — how many people have addresses, how many are geocoded
    */
   getSyncStatus: publicProcedure.query(async () => {

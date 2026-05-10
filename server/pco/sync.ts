@@ -574,17 +574,30 @@ export async function syncPeople(client: PcoClient): Promise<SyncResult> {
 
     const PEOPLE_TIMEOUT_MS = 90_000;
     const peopleResult = await Promise.race([
-      client.paginateAll("/people/v2/people", { per_page: 100 }),
+      client.paginateAll("/people/v2/people", { per_page: 100, include: "primary_campus" }),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error(`Timeout fetching people after ${PEOPLE_TIMEOUT_MS}ms`)), PEOPLE_TIMEOUT_MS)
       ),
     ]);
-    console.log(`[PCO Sync] Got ${peopleResult.data.length} people`);
+    console.log(`[PCO Sync] Got ${peopleResult.data.length} people, ${peopleResult.included.length} included resources`);
+
+    // Build lookup map for included campus resources
+    const includedMap: Record<string, any> = {};
+    for (const inc of peopleResult.included) {
+      includedMap[`${inc.type}-${inc.id}`] = inc;
+    }
 
     for (const person of peopleResult.data) {
       recordsProcessed++;
       const attrs = (person as any).attributes;
       const pcoId = String(person.id);
+
+      // Resolve primary_campus from included resources
+      const campusRef = (person as any).relationships?.primary_campus?.data;
+      const campusObj = campusRef
+        ? includedMap[`Campus-${campusRef.id}`]
+        : null;
+      const campusName = campusObj?.attributes?.name || null;
 
       const existing = await db
         .select()
@@ -599,6 +612,7 @@ export async function syncPeople(client: PcoClient): Promise<SyncResult> {
             firstName: attrs.first_name || null,
             lastName: attrs.last_name || null,
             email: attrs.primary_contact_email || null,
+            campus: campusName,
             membershipType: attrs.membership || null,
             status: attrs.status || null,
             lastSyncedAt: new Date(),
@@ -611,6 +625,7 @@ export async function syncPeople(client: PcoClient): Promise<SyncResult> {
           firstName: attrs.first_name || null,
           lastName: attrs.last_name || null,
           email: attrs.primary_contact_email || null,
+          campus: campusName,
           membershipType: attrs.membership || null,
           status: attrs.status || null,
           lastSyncedAt: new Date(),
