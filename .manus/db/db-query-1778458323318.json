@@ -1,0 +1,17 @@
+{
+  "query": "SELECT \n  COUNT(*) as total_active,\n  SUM(CASE WHEN street IS NOT NULL AND street != '' AND street != 'NULL' THEN 1 ELSE 0 END) as has_street,\n  SUM(CASE WHEN street IS NULL OR street = '' OR street = 'NULL' THEN 1 ELSE 0 END) as no_street,\n  SUM(CASE WHEN latitude IS NOT NULL THEN 1 ELSE 0 END) as geocoded,\n  COUNT(DISTINCT CONCAT(latitude, ',', longitude)) as unique_coords\nFROM pco_people WHERE status = 'active'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT \n  COUNT(*) as total_active,\n  SUM(CASE WHEN street IS NOT NULL AND street != '' AND street != 'NULL' THEN 1 ELSE 0 END) as has_street,\n  SUM(CASE WHEN street IS NULL OR street = '' OR street = 'NULL' THEN 1 ELSE 0 END) as no_street,\n  SUM(CASE WHEN latitude IS NOT NULL THEN 1 ELSE 0 END) as geocoded,\n  COUNT(DISTINCT CONCAT(latitude, ',', longitude)) as unique_coords\nFROM pco_people WHERE status = 'active'",
+  "rows": [
+    {
+      "total_active": "3515",
+      "has_street": "0",
+      "no_street": "3515",
+      "geocoded": "1542",
+      "unique_coords": "47"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_active\thas_street\tno_street\tgeocoded\tunique_coords\n3515\t0\t3515\t1542\t47\n",
+  "stderr": "",
+  "execution_time_ms": 278
+}

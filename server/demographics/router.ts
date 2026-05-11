@@ -126,14 +126,14 @@ export const demographicsRouter = router({
       throw new Error(`People sync failed: ${result.errorMessage}`);
     }
 
-    // Count how many still need addresses
+    // Count how many still need addresses (no zip OR no valid street)
     const [needAddr] = await db
       .select({ count: sql<number>`COUNT(*)` })
       .from(pcoPeople)
       .where(
         and(
           eq(pcoPeople.status, "active"),
-          isNull(pcoPeople.zip)
+          sql`(${pcoPeople.zip} IS NULL OR (${pcoPeople.street} IS NULL OR ${pcoPeople.street} = '' OR ${pcoPeople.street} = 'NULL'))`
         )
       );
     const [haveAddr] = await db
@@ -142,8 +142,9 @@ export const demographicsRouter = router({
       .where(
         and(
           eq(pcoPeople.status, "active"),
-          isNotNull(pcoPeople.zip),
-          sql`${pcoPeople.zip} != ''`
+          isNotNull(pcoPeople.street),
+          sql`${pcoPeople.street} != ''`,
+          sql`${pcoPeople.street} != 'NULL'`
         )
       );
 
