@@ -170,14 +170,16 @@ export const demographicsRouter = router({
 
       const client = new PcoClient(accessToken);
 
-      // Get a batch of people who need addresses
+      // Get a batch of people who need addresses:
+      // - No zip at all (never fetched)
+      // - Have zip but no valid street (previously fetched with wrong field name)
       const people = await db
         .select({ id: pcoPeople.id, pcoId: pcoPeople.pcoId })
         .from(pcoPeople)
         .where(
           and(
             eq(pcoPeople.status, "active"),
-            isNull(pcoPeople.zip)
+            sql`(${pcoPeople.zip} IS NULL OR (${pcoPeople.street} IS NULL OR ${pcoPeople.street} = '' OR ${pcoPeople.street} = 'NULL'))`
           )
         )
         .limit(input.batchSize);
@@ -199,12 +201,15 @@ export const demographicsRouter = router({
 
           if (primary?.attributes) {
             const attrs = primary.attributes;
+            // PCO uses street_line_1 and street_line_2, NOT "street"
+            const streetParts = [attrs.street_line_1, attrs.street_line_2].filter(Boolean);
+            const street = streetParts.join(", ") || null;
             await db
               .update(pcoPeople)
               .set({
-                street: attrs.street || null,
+                street,
                 city: attrs.city || null,
-                state: attrs.state || null,
+                state: attrs.state?.trim() || null,
                 zip: attrs.zip || null,
               })
               .where(eq(pcoPeople.id, person.id));
@@ -222,14 +227,14 @@ export const demographicsRouter = router({
         }
       }
 
-      // Count remaining
+      // Count remaining (same condition as the fetch query)
       const [rem] = await db
         .select({ count: sql<number>`COUNT(*)` })
         .from(pcoPeople)
         .where(
           and(
             eq(pcoPeople.status, "active"),
-            isNull(pcoPeople.zip)
+            sql`(${pcoPeople.zip} IS NULL OR (${pcoPeople.street} IS NULL OR ${pcoPeople.street} = '' OR ${pcoPeople.street} = 'NULL'))`
           )
         );
 

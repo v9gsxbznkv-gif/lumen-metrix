@@ -100,20 +100,21 @@ function jitterPoints(
     } else {
       const count = group.length;
       // Spread scales with group size (in degrees, 1 degree ≈ 111km)
-      // Small groups stay tight, large zip-centroid groups fill the surrounding area
+      // With real street addresses, most groups will be small (household = 2-5)
+      // Larger groups only happen if geocoding still lands on same point
       let spread: number;
-      if (count <= 5) {
-        spread = 0.001; // ~110m (household)
-      } else if (count <= 20) {
+      if (count <= 3) {
+        spread = 0.0003; // ~33m (household members at same address)
+      } else if (count <= 10) {
+        spread = 0.001; // ~110m (small cluster)
+      } else if (count <= 30) {
+        spread = 0.003; // ~330m
+      } else if (count <= 100) {
         spread = 0.008; // ~890m
-      } else if (count <= 50) {
+      } else if (count <= 300) {
         spread = 0.02; // ~2.2km
-      } else if (count <= 150) {
-        spread = 0.04; // ~4.4km
-      } else if (count <= 400) {
-        spread = 0.07; // ~7.8km
       } else {
-        spread = 0.09; // ~10km — fills the zip code area naturally
+        spread = 0.04; // ~4.4km — fallback for any remaining zip-centroid clusters
       }
 
       for (let i = 0; i < count; i++) {
@@ -161,8 +162,7 @@ export default function DemographicMap() {
   const fetchAddressBatch = trpc.demographics.fetchAddressBatch.useMutation();
   const geocodeAddresses = trpc.demographics.geocodeAddresses.useMutation();
   const backfillCampus = trpc.demographics.backfillCampus.useMutation();
-  const debugAddressFetch = trpc.demographics.debugAddressFetch.useMutation();
-  const [debugResult, setDebugResult] = useState<string>("");
+
 
   // Check if most dots are "Unknown" campus — suggest backfill
   const unknownCount = mapData?.points?.filter((p) => !p.campus || p.campus === "Unknown").length ?? 0;
@@ -469,23 +469,7 @@ export default function DemographicMap() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={async () => {
-              setDebugResult("Fetching raw PCO address data...");
-              try {
-                const result = await debugAddressFetch.mutateAsync();
-                setDebugResult(JSON.stringify(result, null, 2));
-              } catch (err: any) {
-                setDebugResult(`Error: ${err.message}`);
-              }
-            }}
-            disabled={debugAddressFetch.isPending}
-            className="text-xs border-red-300 text-red-600"
-          >
-            {debugAddressFetch.isPending ? "Checking..." : "Debug Addresses"}
-          </Button>
+
           {needsBackfill && (
             <Button
               variant="outline"
@@ -525,15 +509,7 @@ export default function DemographicMap() {
         </div>
       )}
 
-      {debugResult && (
-        <div className="mb-3 border border-red-200 rounded-md bg-red-50 p-3 max-h-80 overflow-auto">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-xs font-bold text-red-700">PCO Address Debug Output</span>
-            <button onClick={() => setDebugResult("")} className="text-xs text-red-500 underline">Close</button>
-          </div>
-          <pre className="text-[10px] text-red-900 whitespace-pre-wrap break-all">{debugResult}</pre>
-        </div>
-      )}
+
 
       {/* Sync status bar */}
       {syncStatus && (

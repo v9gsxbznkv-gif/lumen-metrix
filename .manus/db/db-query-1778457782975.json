@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE pco_people SET latitude = NULL, longitude = NULL, geocodedAt = NULL WHERE status = 'active' AND (street IS NULL OR street = '' OR street = 'NULL')",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute UPDATE pco_people SET latitude = NULL, longitude = NULL, geocodedAt = NULL WHERE status = 'active' AND (street IS NULL OR street = '' OR street = 'NULL')",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 329
+}

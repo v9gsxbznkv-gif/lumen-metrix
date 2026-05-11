@@ -1255,6 +1255,9 @@
 - [x] Remove all clustering from DemographicMap — show every person as individual colored dot with deterministic jitter
 
 ## Fix PCO Address Fetch for Real Street-Level Geocoding
-- [ ] Investigate why PCO address fetch returns no street addresses
-- [ ] Fix address fetch to pull actual street addresses from PCO API
-- [ ] Re-geocode people with street-level addresses for accurate map pins
+- [x] Investigate why PCO address fetch returns no street addresses — PCO uses `street_line_1` not `street`
+- [x] Fix address fetch to read `street_line_1` + `street_line_2` from PCO API
+- [x] Clear lat/lng for people with bad street data so they get re-geocoded
+- [x] Update fetchAddressBatch to re-fetch people who have zip but no valid street
+- [x] Reduce jitter spread for real street-level data (households = 2-5 people)
+- [x] Remove debug button from UI
