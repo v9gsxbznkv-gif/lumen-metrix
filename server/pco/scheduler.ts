@@ -1,8 +1,6 @@
 /**
  * PCO Auto-Sync Scheduler
- * Runs a full sync at midnight (Eastern Time) every Tuesday night.
- * Tuesday gives PCO 2 full days after Sunday services to finalize
- * all check-in and donation data.
+ * Runs a full sync at midnight (Eastern Time) every night.
  * Uses setInterval with 30-minute checks to avoid drift.
  */
 import { createAuthenticatedPcoClient } from "./client";
@@ -10,7 +8,6 @@ import { syncAll, logSyncResult } from "./sync";
 import { syncAllWeekly } from "./weeklySync";
 import { getDb } from "../db";
 import { pcoSettings } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
 
 let schedulerInterval: ReturnType<typeof setInterval> | null = null;
 let isRunning = false;
@@ -28,19 +25,6 @@ function getEasternHour(): number {
   return parseInt(eastern);
 }
 
-/** Get Eastern day of week: 0=Sunday, 1=Monday, 2=Tuesday, ... */
-function getEasternDayOfWeek(): number {
-  const now = new Date();
-  const dayStr = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/New_York",
-    weekday: "short",
-  }).format(now);
-  const dayMap: Record<string, number> = {
-    Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6,
-  };
-  return dayMap[dayStr] ?? -1;
-}
-
 function getEasternTimeString(): string {
   return new Intl.DateTimeFormat("en-US", {
     timeZone: "America/New_York",
@@ -49,11 +33,19 @@ function getEasternTimeString(): string {
   }).format(new Date());
 }
 
+function getEasternDateString(): string {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    dateStyle: "short",
+  }).format(new Date());
+}
+
 /**
  * Run the nightly sync — pulls all modules from PCO.
  * Only syncs the current year to keep it fast.
+ * Exported so it can be triggered manually from the UI.
  */
-async function runNightlySync(): Promise<void> {
+export async function runNightlySync(): Promise<void> {
   if (isRunning) {
     console.log("[Scheduler] Sync already in progress, skipping...");
     return;
@@ -61,7 +53,7 @@ async function runNightlySync(): Promise<void> {
 
   isRunning = true;
   const startTime = Date.now();
-  console.log(`[Scheduler] Starting Tuesday nightly sync at ${getEasternTimeString()}`);
+  console.log(`[Scheduler] Starting nightly sync at ${getEasternTimeString()}`);
 
   try {
     const client = await createAuthenticatedPcoClient();
@@ -118,45 +110,10 @@ async function runNightlySync(): Promise<void> {
   }
 }
 
-// Sync day: default Tuesday (day 2), but configurable via database
-let SYNC_DAY = 2;
-
-/**
- * Load sync day from database.
- * Falls back to Tuesday (2) if not configured.
- */
-async function loadSyncDay(): Promise<number> {
-  try {
-    const db = await getDb();
-    if (!db) {
-      console.warn("[Scheduler] Database not available, using default sync day");
-      return 2;
-    }
-    // Query pco_settings table for the first record
-    const results = await db.select().from(pcoSettings).limit(1);
-    if (results.length > 0 && (results[0] as any).weeklySyncDay !== null && (results[0] as any).weeklySyncDay !== undefined) {
-      SYNC_DAY = (results[0] as any).weeklySyncDay;
-      console.log(`[Scheduler] Loaded sync day from database: ${getDayName(SYNC_DAY)} (${SYNC_DAY})`);
-      return SYNC_DAY;
-    }
-  } catch (error: any) {
-    console.warn(`[Scheduler] Failed to load sync day from database: ${error.message}`);
-  }
-  SYNC_DAY = 2; // Default to Tuesday
-  return SYNC_DAY;
-}
-
-/**
- * Convert day number to name.
- */
-function getDayName(day: number): string {
-  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  return days[day] ?? "Unknown";
-}
-
 /**
  * Start the auto-sync scheduler.
- * Checks every 30 minutes if it's midnight Eastern on Tuesday, then runs the sync.
+ * Checks every 30 minutes if it's midnight Eastern, then runs the sync.
+ * Runs every night — no day-of-week restriction.
  */
 export async function startAutoSyncScheduler(): Promise<void> {
   if (schedulerInterval) {
@@ -164,21 +121,15 @@ export async function startAutoSyncScheduler(): Promise<void> {
     return;
   }
 
-  // Load configurable sync day from database
-  await loadSyncDay();
-  console.log(`[Scheduler] Auto-sync scheduler started. Will sync at midnight Eastern Time every ${getDayName(SYNC_DAY)}.`);
+  console.log(`[Scheduler] Auto-sync scheduler started. Will sync at midnight Eastern Time every night.`);
 
   // Check every 30 minutes
   schedulerInterval = setInterval(() => {
     const hour = getEasternHour();
-    const day = getEasternDayOfWeek();
-    const today = new Intl.DateTimeFormat("en-US", {
-      timeZone: "America/New_York",
-      dateStyle: "short",
-    }).format(new Date());
+    const today = getEasternDateString();
 
-    // Run at midnight (hour 0) on Tuesday (day 2) and only once per day
-    if (hour === 0 && day === SYNC_DAY && lastSyncDate !== today) {
+    // Run at midnight (hour 0) every night, only once per day
+    if (hour === 0 && lastSyncDate !== today) {
       lastSyncDate = today;
       runNightlySync().catch((err) =>
         console.error("[Scheduler] Unhandled sync error:", err)
@@ -199,7 +150,7 @@ export function stopAutoSyncScheduler(): void {
 }
 
 /**
- * Get scheduler status with lastSyncAt for the Settings UI.
+ * Get scheduler status for the Settings UI.
  */
 export function getSchedulerStatus(): {
   active: boolean;
@@ -209,52 +160,32 @@ export function getSchedulerStatus(): {
   syncDay: number;
   syncDayName: string;
 } {
-  // Calculate next sync day midnight Eastern
+  // Calculate next midnight Eastern
   const now = new Date();
   const easternNow = new Date(
     now.toLocaleString("en-US", { timeZone: "America/New_York" })
   );
-  const currentDay = easternNow.getDay(); // 0=Sun...6=Sat
-  // Days until next sync day
-  let daysUntilSyncDay = (SYNC_DAY - currentDay + 7) % 7;
-  // If it's already sync day past midnight, next one is in 7 days
-  if (daysUntilSyncDay === 0 && easternNow.getHours() >= 1) {
-    daysUntilSyncDay = 7;
+  const nextMidnight = new Date(easternNow);
+  if (easternNow.getHours() >= 1) {
+    // Past midnight, next sync is tomorrow
+    nextMidnight.setDate(nextMidnight.getDate() + 1);
   }
-  const nextSyncDayMidnight = new Date(easternNow);
-  nextSyncDayMidnight.setDate(nextSyncDayMidnight.getDate() + daysUntilSyncDay);
-  nextSyncDayMidnight.setHours(0, 0, 0, 0);
+  nextMidnight.setHours(0, 0, 0, 0);
 
   return {
     active: schedulerInterval !== null,
-    nextSyncTime: nextSyncDayMidnight.toISOString(),
+    nextSyncTime: nextMidnight.toISOString(),
     isCurrentlySyncing: isRunning,
     lastSyncAt: lastSyncAt ? lastSyncAt.toISOString() : null,
-    syncDay: SYNC_DAY,
-    syncDayName: getDayName(SYNC_DAY),
+    syncDay: -1, // -1 means nightly (every day)
+    syncDayName: "Every night",
   };
 }
 
 /**
- * Update the sync day and reload scheduler.
- * Called when user changes sync day in Settings.
+ * updateSyncDay is kept for backward compatibility but is now a no-op.
+ * The scheduler runs every night regardless.
  */
-export async function updateSyncDay(newDay: number): Promise<void> {
-  if (newDay < 0 || newDay > 6) {
-    throw new Error("Invalid sync day: must be 0-6 (Sunday-Saturday)");
-  }
-
-  try {
-    const db = await getDb();
-    if (!db) {
-      throw new Error("Database not available");
-    }
-    // Update the first pco_settings record
-    await db.update(pcoSettings).set({ weeklySyncDay: newDay } as any);
-    SYNC_DAY = newDay;
-    console.log(`[Scheduler] Updated sync day to ${getDayName(newDay)} (${newDay})`);
-  } catch (error: any) {
-    console.error(`[Scheduler] Failed to update sync day: ${error.message}`);
-    throw error;
-  }
+export async function updateSyncDay(_newDay: number): Promise<void> {
+  console.log("[Scheduler] Sync schedule is now nightly. Day-of-week setting is ignored.");
 }

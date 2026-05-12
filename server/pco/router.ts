@@ -54,7 +54,7 @@ import {
   syncAllWeekly,
   syncVolunteersFromServices,
 } from "./weeklySync";
-import { getSchedulerStatus, updateSyncDay } from "./scheduler";
+import { getSchedulerStatus, updateSyncDay, runNightlySync } from "./scheduler";
 import {
   generateJobId,
   createJob,
@@ -556,6 +556,41 @@ export const pcoRouter = router({
       await updateSyncDay(input.day);
       return { success: true, syncDay: input.day };
     }),
+
+  /**
+   * Manual trigger for the nightly sync.
+   * Runs the same full sync that fires at midnight Eastern.
+   * Fire-and-forget — returns immediately, sync runs in background.
+   */
+  triggerNightlySync: publicProcedure.mutation(async () => {
+    // Create a job record so the UI can track progress
+    const jobId = generateJobId();
+    await createJob(jobId, "full");
+    console.log(`[Manual Sync] Job ${jobId} created, running nightly sync in background...`);
+
+    // Fire-and-forget
+    (async () => {
+      try {
+        await updateJob(jobId, { status: "running", progress: 0, message: "Starting nightly sync..." });
+        await runNightlySync();
+        await updateJob(jobId, {
+          status: "completed",
+          progress: 100,
+          message: "Nightly sync completed successfully",
+          completedAt: new Date(),
+        });
+      } catch (err: any) {
+        console.error(`[Manual Sync] Error in job ${jobId}:`, err);
+        await updateJob(jobId, {
+          status: "failed",
+          error: err.message || "Unknown error",
+          completedAt: new Date(),
+        });
+      }
+    })();
+
+    return { jobId };
+  }),
 
   getPeopleStats: publicProcedure.query(async () => {
     const db = await getDb();

@@ -1,0 +1,25 @@
+{
+  "query": "SHOW TABLES LIKE '%weekly%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SHOW TABLES LIKE '%weekly%';",
+  "rows": [
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm (%weekly%)": "attendance_weekly"
+    },
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm (%weekly%)": "giving_weekly"
+    },
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm (%weekly%)": "next_steps_weekly"
+    },
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm (%weekly%)": "serving_weekly"
+    },
+    {
+      "Tables_in_EmzMXpmCwkQz2biKeRL4cm (%weekly%)": "weekly_report_config"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_EmzMXpmCwkQz2biKeRL4cm (%weekly%)\nattendance_weekly\ngiving_weekly\nnext_steps_weekly\nserving_weekly\nweekly_report_config\n",
+  "stderr": "",
+  "execution_time_ms": 255
+}

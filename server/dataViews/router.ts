@@ -812,7 +812,7 @@ const givingRouter = router({
       const currentYear: { weekNumber: number; weekStartDate: string; giving: number; attendance: number; gpc: number }[] = [];
       const priorYearData: { weekNumber: number; weekStartDate: string; giving: number; attendance: number; gpc: number }[] = [];
 
-      for (const [key, giv] of givMap) {
+      for (const [key, giv] of Array.from(givMap)) {
         const att = attMap.get(key) || 0;
         if (att === 0) continue;
         const gpc = Math.round((giv.total / att) * 100) / 100;

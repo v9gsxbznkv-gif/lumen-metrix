@@ -1,0 +1,40 @@
+{
+  "query": "SELECT DISTINCT weekStartDate FROM attendance_weekly ORDER BY weekStartDate DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT weekStartDate FROM attendance_weekly ORDER BY weekStartDate DESC LIMIT 10;",
+  "rows": [
+    {
+      "weekStartDate": "2026-05-04"
+    },
+    {
+      "weekStartDate": "2026-04-27"
+    },
+    {
+      "weekStartDate": "2026-04-20"
+    },
+    {
+      "weekStartDate": "2026-04-13"
+    },
+    {
+      "weekStartDate": "2026-04-06"
+    },
+    {
+      "weekStartDate": "2026-03-30"
+    },
+    {
+      "weekStartDate": "2026-03-23"
+    },
+    {
+      "weekStartDate": "2026-03-16"
+    },
+    {
+      "weekStartDate": "2026-03-09"
+    },
+    {
+      "weekStartDate": "2026-03-02"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekStartDate\n2026-05-04\n2026-04-27\n2026-04-20\n2026-04-13\n2026-04-06\n2026-03-30\n2026-03-23\n2026-03-16\n2026-03-09\n2026-03-02\n",
+  "stderr": "",
+  "execution_time_ms": 265
+}

@@ -1261,3 +1261,10 @@
 - [x] Update fetchAddressBatch to re-fetch people who have zip but no valid street
 - [x] Reduce jitter spread for real street-level data (households = 2-5 people)
 - [x] Remove debug button from UI
+
+## Nightly Sync + Manual Sync Trigger
+- [x] Change auto-sync scheduler from weekly (Tuesday) to nightly at midnight Eastern
+- [ ] Investigate why May 4 data is incomplete (missing key subgroups)
+- [x] Add manual sync trigger so Chad can force a sync from the UI
+- [x] Update Settings UI: removed sync day dropdown (now nightly), added Sync Now button with job progress tracking
+- [ ] Deploy and trigger manual sync for May 11 data

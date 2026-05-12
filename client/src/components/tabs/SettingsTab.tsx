@@ -209,40 +209,44 @@ function PcoConnectionSection() {
 
 // ─── Auto-Sync Scheduler Section ─────────────────────────────────────────────
 function AutoSyncSection() {
-  const { data: schedulerStatus, refetch: refetchScheduler } = trpc.pco.getSchedulerStatus.useQuery(undefined, {
+  const { data: schedulerStatus } = trpc.pco.getSchedulerStatus.useQuery(undefined, {
     refetchInterval: 60000, // refresh every minute
   });
   const { data: connectionStatus } = trpc.pco.getConnectionStatus.useQuery();
-  const [selectedSyncDay, setSelectedSyncDay] = useState<number | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [manualJobId, setManualJobId] = useState<string | null>(null);
+  const [manualJobDone, setManualJobDone] = useState(false);
 
-  const updateSyncDayMutation = trpc.pco.updateSyncDay.useMutation({
-    onSuccess: () => {
-      toast.success("Sync day updated successfully");
-      setIsUpdating(false);
-      refetchScheduler();
+  const triggerNightlySync = trpc.pco.triggerNightlySync.useMutation({
+    onSuccess: (result) => {
+      setManualJobId(result.jobId);
+      setManualJobDone(false);
+      toast.success("Nightly sync started — running in background");
     },
-    onError: (error: any) => {
-      toast.error(`Failed to update sync day: ${error.message}`);
-      setIsUpdating(false);
+    onError: (err) => {
+      toast.error(`Failed to start sync: ${err.message}`);
     },
   });
 
-  // Initialize selected sync day from scheduler status
-  useEffect(() => {
-    if (schedulerStatus?.syncDay !== undefined && selectedSyncDay === null) {
-      setSelectedSyncDay(schedulerStatus.syncDay);
-    }
-  }, [schedulerStatus?.syncDay, selectedSyncDay]);
+  // Poll the manual sync job status
+  const { data: manualJobStatus } = trpc.pco.getSyncJobStatus.useQuery(
+    { jobId: manualJobId ?? "" },
+    { enabled: manualJobId != null && !manualJobDone, refetchInterval: 3000 }
+  );
 
-  const handleSyncDayChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newDay = parseInt(e.target.value, 10);
-    setSelectedSyncDay(newDay);
-    setIsUpdating(true);
-    updateSyncDayMutation.mutate({ day: newDay });
-  };
+  // Handle job completion
+  useEffect(() => {
+    if (!manualJobStatus) return;
+    if (manualJobStatus.status === "completed") {
+      toast.success(`Nightly sync complete — ${manualJobStatus.recordsProcessed.toLocaleString()} records`);
+      setManualJobDone(true);
+    } else if (manualJobStatus.status === "failed") {
+      toast.error(`Sync failed: ${manualJobStatus.error || "Unknown error"}`);
+      setManualJobDone(true);
+    }
+  }, [manualJobStatus?.status]);
 
   const isConnected = connectionStatus?.connected === true;
+  const isSyncing = triggerNightlySync.isPending || (manualJobId != null && !manualJobDone && manualJobStatus?.status === "running");
 
   return (
     <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
@@ -287,44 +291,77 @@ function AutoSyncSection() {
           <div className="flex items-center justify-between py-2 border-b border-border/20">
             <span className="text-xs text-muted-foreground">Last Auto-Sync</span>
             <span className="text-xs font-mono">
-              {schedulerStatus?.isCurrentlySyncing
+              {schedulerStatus?.isCurrentlySyncing || isSyncing
                 ? "Syncing now..."
                 : schedulerStatus?.lastSyncAt
                   ? formatDate(schedulerStatus.lastSyncAt)
                   : "Not yet (will run at midnight)"}
             </span>
           </div>
-          <div className="flex items-center justify-between py-2">
-            <span className="text-xs text-muted-foreground">Modules</span>
-            <span className="text-xs">Attendance, Giving, Groups, Events, People</span>
-          </div>
           <div className="flex items-center justify-between py-2 border-b border-border/20">
-            <span className="text-xs text-muted-foreground">Sync Day</span>
-            <select
-              value={selectedSyncDay ?? schedulerStatus?.syncDay ?? 2}
-              onChange={handleSyncDayChange}
-              disabled={isUpdating}
-              className="text-xs px-2 py-1 rounded border border-border/40 bg-muted/30 focus:outline-none focus:ring-1 focus:ring-amber-500/50 disabled:opacity-50"
-            >
-              <option value="0">Sunday</option>
-              <option value="1">Monday</option>
-              <option value="2">Tuesday</option>
-              <option value="3">Wednesday</option>
-              <option value="4">Thursday</option>
-              <option value="5">Friday</option>
-              <option value="6">Saturday</option>
-            </select>
+            <span className="text-xs text-muted-foreground">Modules</span>
+            <span className="text-xs">Attendance, Giving, Groups, Events, People, Volunteers</span>
           </div>
-          {schedulerStatus?.syncDayName && (
-            <div className="flex items-center justify-between py-2">
-              <span className="text-xs text-muted-foreground">Next Sync Day</span>
-              <span className="text-xs font-medium">{schedulerStatus.syncDayName} at midnight (ET)</span>
+
+          {/* Sync Now button */}
+          <button
+            onClick={() => triggerNightlySync.mutate()}
+            disabled={isSyncing || schedulerStatus?.isCurrentlySyncing}
+            className="flex items-center gap-2 text-sm px-4 py-2 rounded-md text-white transition-colors disabled:opacity-60"
+            style={{ backgroundColor: "#E8913A" }}
+          >
+            {isSyncing ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Syncing…
+              </>
+            ) : (
+              <>
+                <Play className="w-4 h-4" />
+                Sync Now
+              </>
+            )}
+          </button>
+
+          {/* Manual sync progress */}
+          {manualJobId && manualJobStatus && (
+            <div className={`rounded-md border p-3 space-y-2 ${
+              manualJobStatus.status === "completed"
+                ? "border-green-500/40 bg-green-50 dark:bg-green-950/20"
+                : manualJobStatus.status === "failed"
+                ? "border-red-500/40 bg-red-50 dark:bg-red-950/20"
+                : "border-border/40 bg-muted/10"
+            }`}>
+              <div className="flex items-center justify-between text-xs">
+                <span className={`font-medium ${
+                  manualJobStatus.status === "completed"
+                    ? "text-green-700 dark:text-green-400"
+                    : manualJobStatus.status === "failed"
+                    ? "text-red-700 dark:text-red-400"
+                    : "text-muted-foreground"
+                }`}>
+                  {manualJobStatus.status === "completed"
+                    ? `Sync complete — ${manualJobStatus.recordsProcessed.toLocaleString()} records`
+                    : manualJobStatus.status === "failed"
+                    ? `Sync failed: ${manualJobStatus.error || "Unknown error"}`
+                    : manualJobStatus.message || "Running nightly sync…"}
+                </span>
+              </div>
+              {manualJobStatus.status === "running" && (
+                <div className="w-full h-1.5 bg-muted/30 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500 animate-pulse"
+                    style={{ width: "100%", backgroundColor: "#E8913A" }}
+                  />
+                </div>
+              )}
             </div>
           )}
+
           <div className="flex items-start gap-2 p-3 rounded-md bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/40">
             <Info className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
             <p className="text-xs text-blue-700 dark:text-blue-400">
-              The auto-sync runs a full sync of all PCO modules every night at midnight. Data from 2026 onward is sourced exclusively from PCO. Historical data (2025 and earlier) is preserved from the original spreadsheets.
+              The auto-sync runs a full sync of all PCO modules every night at midnight (ET). Use "Sync Now" to trigger an immediate sync. Data from 2026 onward is sourced exclusively from PCO. Historical data (2025 and earlier) is preserved from the original spreadsheets.
             </p>
           </div>
         </div>

@@ -1142,7 +1142,7 @@ export function getWeeklyGpcTimeSeries(
   // the weekly data is already clean from the sync process.)
 
   const results: { weekNumber: number; weekStartDate: string; gpc: number }[] = [];
-  for (const [weekNum, givData] of givingByWeek) {
+  for (const [weekNum, givData] of Array.from(givingByWeek)) {
     const att = attByWeek.get(weekNum) || 0;
     if (att === 0) continue;
     results.push({
