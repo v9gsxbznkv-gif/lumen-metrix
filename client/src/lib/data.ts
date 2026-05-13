@@ -1021,13 +1021,31 @@ function getCurrentISOWeek(): number {
 }
 
 /**
+ * Get the last fully completed ISO week number.
+ * If today is Sunday (day 0), the current week just started so last complete = current - 1.
+ * If today is Saturday (day 6), the current week is almost done but not yet — still current - 1.
+ * Church weeks run Sun-Sat, so a week is only "complete" after Saturday.
+ * We consider a week complete once we've passed its Saturday (i.e., we're in the next week).
+ */
+function getLastCompleteISOWeek(): number {
+  const currentWeek = getCurrentISOWeek();
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0=Sun, 6=Sat
+  // If it's Sunday (day 0), we just entered a new church week — the previous week is complete.
+  // For any other day (Mon-Sat), we're mid-week so the last complete week is currentWeek - 1.
+  // Exception: if dayOfWeek is 0 (Sunday) AND it's very early, the prior week's data may still
+  // be trickling in, but structurally the week boundary has passed.
+  return dayOfWeek === 0 ? currentWeek - 1 : currentWeek - 1;
+}
+
+/**
  * Get max week number for a year from any weekly table.
- * For the current year, caps at the current ISO week to prevent
- * future-scheduled data (e.g. volunteer schedules) from inflating the range.
+ * For the current year, caps at the last fully completed week to prevent
+ * partial current-week data and future-scheduled data from inflating the range.
  */
 export function getMaxWeek(data: DashboardData, year: number): number {
   const currentYear = new Date().getFullYear();
-  const weekCap = year === currentYear ? getCurrentISOWeek() : 52;
+  const weekCap = year === currentYear ? getLastCompleteISOWeek() : 52;
 
   let maxWeek = 0;
   for (const r of data.attendance_weekly) {

@@ -1309,3 +1309,7 @@
 ## Bug: Attendance page should show May 4 (week 19) as current week, not Apr 27
 - [x] Fix currentWeek logic to use date comparison instead of blindly skipping latest week
 - [ ] Deploy fix
+
+## Bug: Dashboard shows Weeks 1-20 but week 20 is partial — should be 1-19
+- [x] Fix getMaxWeek to cap at last completed week (current ISO week minus 1 if we're mid-week)
+- [ ] Deploy fix
