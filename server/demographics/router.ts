@@ -480,6 +480,130 @@ export const demographicsRouter = router({
   }),
 
   /**
+   * Reset all address data and re-fetch from PCO.
+   * Phase 1: Clear all street/lat/lng for active people (forces full re-fetch + re-geocode)
+   * Phase 2: Fetch addresses from PCO in batches using correct street_line_1 field
+   * Phase 3: Geocode all addresses with full street+city+state+zip
+   * Returns progress after each phase so frontend can show status.
+   */
+  resetAddressData: publicProcedure.mutation(async () => {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+
+    // Clear all address + geocoding data for active people
+    // This forces a complete re-fetch from PCO and re-geocode
+    const result = await db
+      .update(pcoPeople)
+      .set({
+        street: null,
+        city: null,
+        state: null,
+        zip: null,
+        latitude: null,
+        longitude: null,
+        geocodedAt: null,
+      })
+      .where(eq(pcoPeople.status, "active"));
+
+    const cleared = result[0]?.affectedRows || 0;
+    console.log(`[Demographics] Reset address data for ${cleared} active people`);
+
+    return { cleared };
+  }),
+
+  /**
+   * Fetch addresses from PCO for ALL active people (not just those missing addresses).
+   * This is the "re-fetch" step after resetAddressData clears everything.
+   * Processes in batches to avoid timeouts.
+   */
+  fetchAllAddresses: publicProcedure
+    .input(z.object({ batchSize: z.number().min(1).max(100).default(50) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const accessToken = await getValidAccessToken();
+      if (!accessToken) throw new Error("PCO not connected");
+
+      const client = new PcoClient(accessToken);
+
+      // Get a batch of active people who need addresses (zip IS NULL)
+      const people = await db
+        .select({ id: pcoPeople.id, pcoId: pcoPeople.pcoId })
+        .from(pcoPeople)
+        .where(
+          and(
+            eq(pcoPeople.status, "active"),
+            isNull(pcoPeople.zip)
+          )
+        )
+        .limit(input.batchSize);
+
+      let synced = 0;
+      let noAddress = 0;
+      let errors = 0;
+
+      for (const person of people) {
+        try {
+          const addrResult = await client.get<any>(
+            `/people/v2/people/${person.pcoId}/addresses`
+          );
+
+          const addresses = Array.isArray(addrResult.data) ? addrResult.data : [];
+          const primary = addresses.find(
+            (a: any) => a.attributes?.primary === true
+          ) || addresses[0];
+
+          if (primary?.attributes) {
+            const attrs = primary.attributes;
+            // PCO uses street_line_1 and street_line_2, NOT "street"
+            const streetParts = [attrs.street_line_1, attrs.street_line_2].filter(Boolean);
+            const street = streetParts.join(", ") || null;
+            await db
+              .update(pcoPeople)
+              .set({
+                street,
+                city: attrs.city || null,
+                state: attrs.state?.trim() || null,
+                zip: attrs.zip || null,
+              })
+              .where(eq(pcoPeople.id, person.id));
+            synced++;
+          } else {
+            // No address on file — mark with empty zip so we don't keep retrying
+            await db
+              .update(pcoPeople)
+              .set({ zip: "" })
+              .where(eq(pcoPeople.id, person.id));
+            noAddress++;
+          }
+        } catch (err: any) {
+          console.warn(`[Demographics] Address fetch failed for ${person.pcoId}: ${err.message}`);
+          errors++;
+        }
+      }
+
+      // Count remaining
+      const [rem] = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(pcoPeople)
+        .where(
+          and(
+            eq(pcoPeople.status, "active"),
+            isNull(pcoPeople.zip)
+          )
+        );
+
+      return {
+        synced,
+        noAddress,
+        errors,
+        remaining: Number(rem?.count || 0),
+        batchProcessed: people.length,
+      };
+    }),
+
+  /**
    * Get sync status — how many people have addresses, how many are geocoded
    */
   getSyncStatus: publicProcedure.query(async () => {

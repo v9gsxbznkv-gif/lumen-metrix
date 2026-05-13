@@ -1,0 +1,210 @@
+{
+  "query": "SELECT ROUND(latitude, 3) as lat_group, ROUND(longitude, 3) as lng_group, COUNT(*) as cnt, MIN(street) as sample_street, MIN(city) as sample_city, MIN(zip) as sample_zip FROM pco_people WHERE status = 'active' AND latitude IS NOT NULL AND latitude != 0 GROUP BY ROUND(latitude, 3), ROUND(longitude, 3) ORDER BY cnt DESC LIMIT 25;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT ROUND(latitude, 3) as lat_group, ROUND(longitude, 3) as lng_group, COUNT(*) as cnt, MIN(street) as sample_street, MIN(city) as sample_city, MIN(zip) as sample_zip FROM pco_people WHERE status = 'active' AND latitude IS NOT NULL AND latitude != 0 GROUP BY ROUND(latitude, 3), ROUND(longitude, 3) ORDER BY cnt DESC LIMIT 25;",
+  "rows": [
+    {
+      "lat_group": "34.226",
+      "lng_group": "-84.417",
+      "cnt": "993",
+      "sample_street": "NULL",
+      "sample_city": "Canton",
+      "sample_zip": " 30115-4594"
+    },
+    {
+      "lat_group": "34.237",
+      "lng_group": "-84.491",
+      "cnt": "382",
+      "sample_street": "NULL",
+      "sample_city": " Canton",
+      "sample_zip": "30114"
+    },
+    {
+      "lat_group": "34.337",
+      "lng_group": "-84.378",
+      "cnt": "298",
+      "sample_street": "NULL",
+      "sample_city": "Ball Ground",
+      "sample_zip": "30107"
+    },
+    {
+      "lat_group": "34.47",
+      "lng_group": "-84.429",
+      "cnt": "149",
+      "sample_street": "NULL",
+      "sample_city": "Jasper",
+      "sample_zip": "30143"
+    },
+    {
+      "lat_group": "34.128",
+      "lng_group": "-84.449",
+      "cnt": "114",
+      "sample_street": "NULL",
+      "sample_city": " Woodstock",
+      "sample_zip": "30188"
+    },
+    {
+      "lat_group": "34.134",
+      "lng_group": "-84.575",
+      "cnt": "37",
+      "sample_street": "NULL",
+      "sample_city": "woodstock",
+      "sample_zip": " 30189-352"
+    },
+    {
+      "lat_group": "34.316",
+      "lng_group": "-84.552",
+      "cnt": "32",
+      "sample_street": "NULL",
+      "sample_city": "Waleska",
+      "sample_zip": "30183"
+    },
+    {
+      "lat_group": "34.207",
+      "lng_group": "-84.14",
+      "cnt": "30",
+      "sample_street": "NULL",
+      "sample_city": "Cumming",
+      "sample_zip": "30028"
+    },
+    {
+      "lat_group": "34.176",
+      "lng_group": "-84.291",
+      "cnt": "30",
+      "sample_street": "NULL",
+      "sample_city": "Alpharetta",
+      "sample_zip": "30004"
+    },
+    {
+      "lat_group": "34.509",
+      "lng_group": "-84.505",
+      "cnt": "25",
+      "sample_street": "NULL",
+      "sample_city": "Talking Rock",
+      "sample_zip": "30175"
+    },
+    {
+      "lat_group": "34.283",
+      "lng_group": "-84.745",
+      "cnt": "17",
+      "sample_street": "NULL",
+      "sample_city": "White",
+      "sample_zip": "30184"
+    },
+    {
+      "lat_group": "34.174",
+      "lng_group": "-84.501",
+      "cnt": "14",
+      "sample_street": "NULL",
+      "sample_city": "Holly Springs",
+      "sample_zip": "30115"
+    },
+    {
+      "lat_group": "34.066",
+      "lng_group": "-84.677",
+      "cnt": "11",
+      "sample_street": "NULL",
+      "sample_city": "Acworth ",
+      "sample_zip": "30102"
+    },
+    {
+      "lat_group": "34.101",
+      "lng_group": "-84.519",
+      "cnt": "9",
+      "sample_street": "NULL",
+      "sample_city": "Woodstock",
+      "sample_zip": "301189"
+    },
+    {
+      "lat_group": "34.436",
+      "lng_group": "-84.7",
+      "cnt": "7",
+      "sample_street": "NULL",
+      "sample_city": "Fairmount",
+      "sample_zip": "30139"
+    },
+    {
+      "lat_group": "34.695",
+      "lng_group": "-84.482",
+      "cnt": "6",
+      "sample_street": "NULL",
+      "sample_city": "Ellijay",
+      "sample_zip": "30540"
+    },
+    {
+      "lat_group": "34.024",
+      "lng_group": "-84.596",
+      "cnt": "6",
+      "sample_street": "NULL",
+      "sample_city": "Kennesaw ",
+      "sample_zip": "30144"
+    },
+    {
+      "lat_group": "34.418",
+      "lng_group": "-84.383",
+      "cnt": "5",
+      "sample_street": "NULL",
+      "sample_city": "Tate",
+      "sample_zip": "30177"
+    },
+    {
+      "lat_group": "41.609",
+      "lng_group": "-73.682",
+      "cnt": "4",
+      "sample_street": "NULL",
+      "sample_city": "Poughquag",
+      "sample_zip": "12570-5829"
+    },
+    {
+      "lat_group": "34.072",
+      "lng_group": "-84.307",
+      "cnt": "3",
+      "sample_street": "NULL",
+      "sample_city": "Milton",
+      "sample_zip": "30009"
+    },
+    {
+      "lat_group": "33.6",
+      "lng_group": "-83.86",
+      "cnt": "3",
+      "sample_street": "NULL",
+      "sample_city": "Canton",
+      "sample_zip": "30015"
+    },
+    {
+      "lat_group": "34.197",
+      "lng_group": "-84.752",
+      "cnt": "3",
+      "sample_street": "NULL",
+      "sample_city": "Cartersville",
+      "sample_zip": "30121"
+    },
+    {
+      "lat_group": "33.538",
+      "lng_group": "-85.253",
+      "cnt": "3",
+      "sample_street": "NULL",
+      "sample_city": "Bowdon",
+      "sample_zip": "30108"
+    },
+    {
+      "lat_group": "34.02",
+      "lng_group": "-84.512",
+      "cnt": "3",
+      "sample_street": "NULL",
+      "sample_city": "Marietta",
+      "sample_zip": "30066"
+    },
+    {
+      "lat_group": "34.38",
+      "lng_group": "-84.37",
+      "cnt": "3",
+      "sample_street": "NULL",
+      "sample_city": "Nelson ",
+      "sample_zip": "30151"
+    }
+  ],
+  "messages": [],
+  "stdout": "lat_group\tlng_group\tcnt\tsample_street\tsample_city\tsample_zip\n34.226\t-84.417\t993\tNULL\tCanton\t 30115-4594\n34.237\t-84.491\t382\tNULL\t Canton\t30114\n34.337\t-84.378\t298\tNULL\tBall Ground\t30107\n34.47\t-84.429\t149\tNULL\tJasper\t30143\n34.128\t-84.449\t114\tNULL\t Woodstock\t30188\n34.134\t-84.575\t37\tNULL\twoodstock\t 30189-352\n34.316\t-84.552\t32\tNULL\tWaleska\t30183\n34.207\t-84.14\t30\tNULL\tCumming\t30028\n34.176\t-84.291\t30\tNULL\tAlpharetta\t30004\n34.509\t-84.505\t25\tNULL\tTalking Rock\t30175\n34.283\t-84.745\t17\tNULL\tWhite\t30184\n34.174\t-84.501\t14\tNULL\tHolly Springs\t30115\n34.066\t-84.677\t11\tNULL\tAcworth \t30102\n34.101\t-84.519\t9\tNULL\tWoodstock\t301189\n34.436\t-84.7\t7\tNULL\tFairmount\t30139\n34.695\t-84.482\t6\tNULL\tEllijay\t30540\n34.024\t-84.596\t6\tNULL\tKennesaw \t30144\n34.418\t-84.383\t5\tNULL\tTate\t30177\n41.609\t-73.682\t4\tNULL\tPoughquag\t12570-5829\n34.072\t-84.307\t3\tNULL\tMilton\t30009\n33.6\t-83.86\t3\tNULL\tCanton\t30015\n34.197\t-84.752\t3\tNULL\tCartersville\t30121\n33.538\t-85.253\t3\tNULL\tBowdon\t30108\n34.02\t-84.512\t3\tNULL\tMarietta\t30066\n34.38\t-84.37\t3\tNULL\tNelson \t30151\n",
+  "stderr": "",
+  "execution_time_ms": 274
+}

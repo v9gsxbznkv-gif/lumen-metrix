@@ -1,0 +1,60 @@
+{
+  "query": "SELECT pcoId, firstName, street, city, state, zip, latitude, longitude FROM pco_people WHERE status = 'active' AND latitude IS NOT NULL AND latitude != 0 LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT pcoId, firstName, street, city, state, zip, latitude, longitude FROM pco_people WHERE status = 'active' AND latitude IS NOT NULL AND latitude != 0 LIMIT 5;",
+  "rows": [
+    {
+      "pcoId": "124354",
+      "firstName": "Thad",
+      "street": "NULL",
+      "city": "Canton",
+      "state": "GA ",
+      "zip": "30115",
+      "latitude": "34.2264431",
+      "longitude": "-84.41726659999999"
+    },
+    {
+      "pcoId": "124778",
+      "firstName": "David",
+      "street": "NULL",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30115-6053",
+      "latitude": "34.2264431",
+      "longitude": "-84.41726659999999"
+    },
+    {
+      "pcoId": "124804",
+      "firstName": "Cassey",
+      "street": "NULL",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30114",
+      "latitude": "34.2367621",
+      "longitude": "-84.4907621"
+    },
+    {
+      "pcoId": "124808",
+      "firstName": "Shawn (Swift)",
+      "street": "NULL",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30115",
+      "latitude": "34.2264431",
+      "longitude": "-84.41726659999999"
+    },
+    {
+      "pcoId": "131686",
+      "firstName": "Don",
+      "street": "NULL",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30114",
+      "latitude": "34.2367621",
+      "longitude": "-84.4907621"
+    }
+  ],
+  "messages": [],
+  "stdout": "pcoId\tfirstName\tstreet\tcity\tstate\tzip\tlatitude\tlongitude\n124354\tThad\tNULL\tCanton\tGA \t30115\t34.2264431\t-84.41726659999999\n124778\tDavid\tNULL\tCanton\tGA\t30115-6053\t34.2264431\t-84.41726659999999\n124804\tCassey\tNULL\tCanton\tGA\t30114\t34.2367621\t-84.4907621\n124808\tShawn (Swift)\tNULL\tCanton\tGA\t30115\t34.2264431\t-84.41726659999999\n131686\tDon\tNULL\tCanton\tGA\t30114\t34.2367621\t-84.4907621\n",
+  "stderr": "",
+  "execution_time_ms": 264
+}

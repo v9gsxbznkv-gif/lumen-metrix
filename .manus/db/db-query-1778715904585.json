@@ -1,0 +1,14 @@
+{
+  "query": "SELECT CASE WHEN street IS NULL THEN 'NULL' WHEN street = '' THEN 'EMPTY' WHEN street = 'NULL' THEN 'STRING_NULL' ELSE 'HAS_STREET' END as street_status, COUNT(*) as cnt FROM pco_people WHERE status = 'active' GROUP BY street_status;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT CASE WHEN street IS NULL THEN 'NULL' WHEN street = '' THEN 'EMPTY' WHEN street = 'NULL' THEN 'STRING_NULL' ELSE 'HAS_STREET' END as street_status, COUNT(*) as cnt FROM pco_people WHERE status = 'active' GROUP BY street_status;",
+  "rows": [
+    {
+      "street_status": "NULL",
+      "cnt": "3516"
+    }
+  ],
+  "messages": [],
+  "stdout": "street_status\tcnt\nNULL\t3516\n",
+  "stderr": "",
+  "execution_time_ms": 267
+}

@@ -1,0 +1,16 @@
+{
+  "query": "SELECT COUNT(*) as total_active, SUM(CASE WHEN latitude IS NOT NULL AND latitude != 0 THEN 1 ELSE 0 END) as geocoded, SUM(CASE WHEN zip IS NOT NULL AND zip != '' THEN 1 ELSE 0 END) as has_zip, SUM(CASE WHEN street IS NOT NULL AND street != '' AND street != 'NULL' THEN 1 ELSE 0 END) as has_real_street FROM pco_people WHERE status = 'active';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT COUNT(*) as total_active, SUM(CASE WHEN latitude IS NOT NULL AND latitude != 0 THEN 1 ELSE 0 END) as geocoded, SUM(CASE WHEN zip IS NOT NULL AND zip != '' THEN 1 ELSE 0 END) as has_zip, SUM(CASE WHEN street IS NOT NULL AND street != '' AND street != 'NULL' THEN 1 ELSE 0 END) as has_real_street FROM pco_people WHERE status = 'active';",
+  "rows": [
+    {
+      "total_active": "3516",
+      "geocoded": "2230",
+      "has_zip": "2230",
+      "has_real_street": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_active\tgeocoded\thas_zip\thas_real_street\n3516\t2230\t2230\t0\n",
+  "stderr": "",
+  "execution_time_ms": 268
+}

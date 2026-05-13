@@ -1308,17 +1308,28 @@
 
 ## Bug: Attendance page should show May 4 (week 19) as current week, not Apr 27
 - [x] Fix currentWeek logic to use date comparison instead of blindly skipping latest week
-- [ ] Deploy fix
+- [x] Deploy fix
 
 ## Bug: Dashboard shows Weeks 1-20 but week 20 is partial — should be 1-19
 - [x] Fix getMaxWeek to cap at last completed week (current ISO week minus 1 if we're mid-week)
-- [ ] Deploy fix
+- [x] Deploy fix
 
 ## Bug: Giving page pulling week 20 partial data — should cap at last completed week (19)
 - [x] Fix giving page to exclude partial current week data — added getLastCompleteISOWeek() filter to giving getData, attendance getData, and per capita queries
-- [ ] Deploy fix
+- [x] Deploy fix
 
 ## Bug: AI Analyst GPC trend shows wrong numbers ($14 annual for 2024, duplicate years, wildly inconsistent values)
 - [x] Diagnose how AI Analyst queries and formats GPC data for the LLM — DB has duplicate giving rows per year/campus (general vs designated), computeGPC iterated row-by-row creating duplicate GPC entries
 - [x] Fix the data pipeline so GPC trend is accurate — rewrote computeGPC to use weekly giving/attendance data (same as Giving page backend)
+- [x] Deploy fix
+
+## Bug: Map dots clustered in square pattern instead of at actual geocoded addresses
+- [ ] Diagnose why map pins are in a grid/square instead of real lat/lng positions
+- [ ] Fix the map to use actual geocoded coordinates from addresses
+- [ ] Deploy fix
+
+## Map Fix: Re-fetch addresses and re-geocode with street addresses
+- [ ] Add resetAndRefetchAddresses endpoint to demographics router (clears lat/lng/street for all people, re-fetches from PCO with street_line_1, then re-geocodes)
+- [ ] Add "Fix Map Data" button to DemographicMap UI that triggers the full reset+refetch+regeocode pipeline
+- [ ] Verify map shows dots at actual street addresses instead of zip centroids
 - [ ] Deploy fix

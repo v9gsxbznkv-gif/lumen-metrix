@@ -162,6 +162,9 @@ export default function DemographicMap() {
   const fetchAddressBatch = trpc.demographics.fetchAddressBatch.useMutation();
   const geocodeAddresses = trpc.demographics.geocodeAddresses.useMutation();
   const backfillCampus = trpc.demographics.backfillCampus.useMutation();
+  const resetAddressData = trpc.demographics.resetAddressData.useMutation();
+  const fetchAllAddresses = trpc.demographics.fetchAllAddresses.useMutation();
+  const [fixingMap, setFixingMap] = useState(false);
 
 
   // Check if most dots are "Unknown" campus — suggest backfill
@@ -255,6 +258,63 @@ export default function DemographicMap() {
       setSyncing(false);
     }
   }, [syncAddresses, fetchAddressBatch, geocodeAddresses, refetchMapData, refetchStatus]);
+
+  /**
+   * Fix Map Data: full pipeline to reset stale zip-centroid geocoding,
+   * re-fetch addresses from PCO with correct street_line_1 field,
+   * and re-geocode with full street addresses.
+   */
+  const handleFixMapData = useCallback(async () => {
+    setFixingMap(true);
+    try {
+      // Step 1: Reset all address data
+      setSyncMessage("Step 1/3: Clearing stale address data...");
+      const resetResult = await resetAddressData.mutateAsync();
+      setSyncMessage(`Step 1 done: Cleared ${resetResult.cleared} records. Fetching fresh addresses from PCO...`);
+
+      // Step 2: Re-fetch addresses from PCO in batches
+      let addrRemaining = Infinity;
+      let totalFetched = 0;
+      let addrBatch = 0;
+
+      while (addrRemaining > 0) {
+        addrBatch++;
+        const batchResult = await fetchAllAddresses.mutateAsync({ batchSize: 50 });
+        totalFetched += batchResult.synced;
+        addrRemaining = batchResult.remaining;
+        setSyncMessage(
+          `Step 2/3: Fetching addresses... batch ${addrBatch}, ${totalFetched} fetched, ${addrRemaining} remaining`
+        );
+      }
+
+      setSyncMessage(`Step 2 done: ${totalFetched} addresses fetched. Geocoding with full street addresses...`);
+
+      // Step 3: Geocode with full street addresses
+      let totalGeocoded = 0;
+      let totalFailed = 0;
+      let geoRemaining = Infinity;
+      let geoBatch = 0;
+
+      while (geoRemaining > 0) {
+        geoBatch++;
+        const geoResult = await geocodeAddresses.mutateAsync({ batchSize: 100 });
+        totalGeocoded += geoResult.geocoded;
+        totalFailed += geoResult.failed;
+        geoRemaining = geoResult.remaining;
+        setSyncMessage(`Step 3/3: Geocoding batch ${geoBatch}... ${totalGeocoded} done, ${geoRemaining} remaining`);
+        // Refresh map every 3 batches so user sees progress
+        if (geoBatch % 3 === 0) await refetchMapData();
+      }
+
+      setSyncMessage(`Done! ${totalFetched} addresses fetched, ${totalGeocoded} geocoded with street addresses, ${totalFailed} failed.`);
+      await refetchMapData();
+      await refetchStatus();
+    } catch (err: any) {
+      setSyncMessage(`Error: ${err.message}`);
+    } finally {
+      setFixingMap(false);
+    }
+  }, [resetAddressData, fetchAllAddresses, geocodeAddresses, refetchMapData, refetchStatus]);
 
   const handleBackfillCampus = useCallback(async () => {
     setBackfilling(true);
@@ -469,7 +529,20 @@ export default function DemographicMap() {
           </p>
         </div>
         <div className="flex gap-2">
-
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleFixMapData}
+            disabled={fixingMap || syncing || backfilling || geocoding}
+            className="text-xs border-amber-500/50 text-amber-600 hover:bg-amber-500/10"
+          >
+            {fixingMap ? (
+              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+            ) : (
+              <MapPin className="w-3 h-3 mr-1" />
+            )}
+            {fixingMap ? "Fixing..." : "Fix Map Data"}
+          </Button>
           {needsBackfill && (
             <Button
               variant="outline"
