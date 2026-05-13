@@ -334,8 +334,20 @@ function computeGPC(
     }
   }
 
+  // Aggregate giving by year+campus first (DB may have multiple rows per year/campus)
+  const givingAgg = new Map<string, { year: number; campus: string; total: number }>();
   for (const g of giving) {
     if (!campuses.includes(g.campus)) continue;
+    const key = `${g.year}-${g.campus}`;
+    const existing = givingAgg.get(key);
+    if (existing) {
+      existing.total += g.total;
+    } else {
+      givingAgg.set(key, { year: g.year, campus: g.campus, total: g.total });
+    }
+  }
+
+  for (const g of Array.from(givingAgg.values())) {
     const att = attendance.find(
       (a) => a.year === g.year && a.campus === g.campus && a.subgroup === "Total"
     );

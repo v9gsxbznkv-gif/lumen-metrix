@@ -1317,3 +1317,8 @@
 ## Bug: Giving page pulling week 20 partial data — should cap at last completed week (19)
 - [x] Fix giving page to exclude partial current week data — added getLastCompleteISOWeek() filter to giving getData, attendance getData, and per capita queries
 - [ ] Deploy fix
+
+## Bug: AI Analyst GPC trend shows wrong numbers ($14 annual for 2024, duplicate years, wildly inconsistent values)
+- [x] Diagnose how AI Analyst queries and formats GPC data for the LLM — DB has duplicate giving rows per year/campus (general vs designated), computeGPC iterated row-by-row creating duplicate GPC entries
+- [x] Fix the data pipeline so GPC trend is accurate — aggregate giving by year+campus before computing GPC
+- [ ] Deploy fix

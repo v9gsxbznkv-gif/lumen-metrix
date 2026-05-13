@@ -1,0 +1,202 @@
+{
+  "query": "SELECT year, campus, source, total, general, designated FROM giving WHERE campus = 'All Campuses' ORDER BY year, source;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, campus, source, total, general, designated FROM giving WHERE campus = 'All Campuses' ORDER BY year, source;",
+  "rows": [
+    {
+      "year": "2014",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "total": "2468974.53",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2014",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "total": "232115.18",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2016",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "total": "3395652.89",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2016",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "total": "411937.02",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2017",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "total": "3915001.48",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2017",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "total": "611176.16",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2018",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "total": "3972322.99",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2018",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "total": "537607.63",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2019",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "total": "4113609.48",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2019",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "total": "886028.78",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2020",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "total": "4733921.14",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2020",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "total": "128606.24",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2021",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "total": "6718336.67",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2021",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "total": "73107.41",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2022",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "total": "6807889.63",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2022",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "total": "56856.17",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2023",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "total": "8084890.75",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2023",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "total": "45964.23",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2024",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "total": "8514091.02",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2024",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "total": "49084.90",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2025",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "total": "9606347.69",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2025",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "total": "89198.08",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "total": "2266798.85",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "total": "14136.16",
+      "general": "0.00",
+      "designated": "0.00"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tcampus\tsource\ttotal\tgeneral\tdesignated\n2014\tAll Campuses\tspreadsheet\t2468974.53\t0.00\t0.00\n2014\tAll Campuses\tspreadsheet\t232115.18\t0.00\t0.00\n2016\tAll Campuses\tspreadsheet\t3395652.89\t0.00\t0.00\n2016\tAll Campuses\tspreadsheet\t411937.02\t0.00\t0.00\n2017\tAll Campuses\tspreadsheet\t3915001.48\t0.00\t0.00\n2017\tAll Campuses\tspreadsheet\t611176.16\t0.00\t0.00\n2018\tAll Campuses\tspreadsheet\t3972322.99\t0.00\t0.00\n2018\tAll Campuses\tspreadsheet\t537607.63\t0.00\t0.00\n2019\tAll Campuses\tspreadsheet\t4113609.48\t0.00\t0.00\n2019\tAll Campuses\tspreadsheet\t886028.78\t0.00\t0.00\n2020\tAll Campuses\tspreadsheet\t4733921.14\t0.00\t0.00\n2020\tAll Campuses\tspreadsheet\t128606.24\t0.00\t0.00\n2021\tAll Campuses\tspreadsheet\t6718336.67\t0.00\t0.00\n2021\tAll Campuses\tspreadsheet\t73107.41\t0.00\t0.00\n2022\tAll Campuses\tspreadsheet\t6807889.63\t0.00\t0.00\n2022\tAll Campuses\tspreadsheet\t56856.17\t0.00\t0.00\n2023\tAll Campuses\tspreadsheet\t8084890.75\t0.00\t0.00\n2023\tAll Campuses\tspreadsheet\t45964.23\t0.00\t0.00\n2024\tAll Campuses\tspreadsheet\t8514091.02\t0.00\t0.00\n2024\tAll Campuses\tspreadsheet\t49084.90\t0.00\t0.00\n2025\tAll Campuses\tspreadsheet\t9606347.69\t0.00\t0.00\n2025\tAll Campuses\tspreadsheet\t89198.08\t0.00\t0.00\n2026\tAll Campuses\tspreadsheet\t2266798.85\t0.00\t0.00\n2026\tAll Campuses\tspreadsheet\t14136.16\t0.00\t0.00\n",
+  "stderr": "",
+  "execution_time_ms": 263
+}
