@@ -1010,15 +1010,31 @@ export function getAvgServingFromWeekly(
 }
 
 /**
+ * Get current ISO week number.
+ */
+function getCurrentISOWeek(): number {
+  const now = new Date();
+  const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+}
+
+/**
  * Get max week number for a year from any weekly table.
+ * For the current year, caps at the current ISO week to prevent
+ * future-scheduled data (e.g. volunteer schedules) from inflating the range.
  */
 export function getMaxWeek(data: DashboardData, year: number): number {
+  const currentYear = new Date().getFullYear();
+  const weekCap = year === currentYear ? getCurrentISOWeek() : 52;
+
   let maxWeek = 0;
   for (const r of data.attendance_weekly) {
-    if (r.year === year && r.weekNumber > maxWeek) maxWeek = r.weekNumber;
+    if (r.year === year && r.weekNumber > maxWeek && r.weekNumber <= weekCap) maxWeek = r.weekNumber;
   }
   for (const r of data.giving_weekly) {
-    if (r.year === year && r.weekNumber > maxWeek) maxWeek = r.weekNumber;
+    if (r.year === year && r.weekNumber > maxWeek && r.weekNumber <= weekCap) maxWeek = r.weekNumber;
   }
   return maxWeek;
 }

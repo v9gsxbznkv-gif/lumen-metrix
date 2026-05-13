@@ -1296,3 +1296,8 @@
 - [ ] Remove old single-password auth system
 - [ ] Write vitest tests for auth, invites, data isolation
 - [ ] Deploy multi-tenant MVP
+
+## Bug: YoY comparison showing weeks 1-35 instead of current week (19)
+- [x] Diagnose where the week cap logic is wrong — PCO Services returns future volunteer schedules, inflating maxWeek
+- [x] Fix the week comparison to cap at current ISO week (frontend getMaxWeek + server volunteer sync future-date filter + DB cleanup)
+- [ ] Deploy fix

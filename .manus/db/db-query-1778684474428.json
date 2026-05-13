@@ -1,0 +1,150 @@
+{
+  "query": "SELECT weekNumber, weekStartDate, campus, subgroup, headcount FROM attendance_weekly WHERE year = 2026 AND weekNumber > 19 ORDER BY weekNumber ASC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekNumber, weekStartDate, campus, subgroup, headcount FROM attendance_weekly WHERE year = 2026 AND weekNumber > 19 ORDER BY weekNumber ASC LIMIT 20;",
+  "rows": [
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Canton",
+      "subgroup": "Volunteers",
+      "headcount": "539"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Jasper",
+      "subgroup": "Volunteers",
+      "headcount": "156"
+    },
+    {
+      "weekNumber": "21",
+      "weekStartDate": "2026-05-18",
+      "campus": "Canton",
+      "subgroup": "Volunteers",
+      "headcount": "209"
+    },
+    {
+      "weekNumber": "21",
+      "weekStartDate": "2026-05-18",
+      "campus": "Jasper",
+      "subgroup": "Volunteers",
+      "headcount": "77"
+    },
+    {
+      "weekNumber": "22",
+      "weekStartDate": "2026-05-25",
+      "campus": "Canton",
+      "subgroup": "Volunteers",
+      "headcount": "200"
+    },
+    {
+      "weekNumber": "22",
+      "weekStartDate": "2026-05-25",
+      "campus": "Jasper",
+      "subgroup": "Volunteers",
+      "headcount": "79"
+    },
+    {
+      "weekNumber": "23",
+      "weekStartDate": "2026-06-01",
+      "campus": "Canton",
+      "subgroup": "Volunteers",
+      "headcount": "39"
+    },
+    {
+      "weekNumber": "23",
+      "weekStartDate": "2026-06-01",
+      "campus": "Jasper",
+      "subgroup": "Volunteers",
+      "headcount": "26"
+    },
+    {
+      "weekNumber": "24",
+      "weekStartDate": "2026-06-08",
+      "campus": "Canton",
+      "subgroup": "Volunteers",
+      "headcount": "30"
+    },
+    {
+      "weekNumber": "24",
+      "weekStartDate": "2026-06-08",
+      "campus": "Jasper",
+      "subgroup": "Volunteers",
+      "headcount": "22"
+    },
+    {
+      "weekNumber": "25",
+      "weekStartDate": "2026-06-15",
+      "campus": "Canton",
+      "subgroup": "Volunteers",
+      "headcount": "17"
+    },
+    {
+      "weekNumber": "25",
+      "weekStartDate": "2026-06-15",
+      "campus": "Jasper",
+      "subgroup": "Volunteers",
+      "headcount": "15"
+    },
+    {
+      "weekNumber": "26",
+      "weekStartDate": "2026-06-22",
+      "campus": "Canton",
+      "subgroup": "Volunteers",
+      "headcount": "28"
+    },
+    {
+      "weekNumber": "26",
+      "weekStartDate": "2026-06-22",
+      "campus": "Jasper",
+      "subgroup": "Volunteers",
+      "headcount": "17"
+    },
+    {
+      "weekNumber": "27",
+      "weekStartDate": "2026-06-29",
+      "campus": "Canton",
+      "subgroup": "Volunteers",
+      "headcount": "22"
+    },
+    {
+      "weekNumber": "27",
+      "weekStartDate": "2026-06-29",
+      "campus": "Jasper",
+      "subgroup": "Volunteers",
+      "headcount": "17"
+    },
+    {
+      "weekNumber": "28",
+      "weekStartDate": "2026-07-06",
+      "campus": "Canton",
+      "subgroup": "Volunteers",
+      "headcount": "22"
+    },
+    {
+      "weekNumber": "28",
+      "weekStartDate": "2026-07-06",
+      "campus": "Jasper",
+      "subgroup": "Volunteers",
+      "headcount": "13"
+    },
+    {
+      "weekNumber": "29",
+      "weekStartDate": "2026-07-13",
+      "campus": "Canton",
+      "subgroup": "Volunteers",
+      "headcount": "22"
+    },
+    {
+      "weekNumber": "29",
+      "weekStartDate": "2026-07-13",
+      "campus": "Jasper",
+      "subgroup": "Volunteers",
+      "headcount": "14"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\tweekStartDate\tcampus\tsubgroup\theadcount\n20\t2026-05-11\tCanton\tVolunteers\t539\n20\t2026-05-11\tJasper\tVolunteers\t156\n21\t2026-05-18\tCanton\tVolunteers\t209\n21\t2026-05-18\tJasper\tVolunteers\t77\n22\t2026-05-25\tCanton\tVolunteers\t200\n22\t2026-05-25\tJasper\tVolunteers\t79\n23\t2026-06-01\tCanton\tVolunteers\t39\n23\t2026-06-01\tJasper\tVolunteers\t26\n24\t2026-06-08\tCanton\tVolunteers\t30\n24\t2026-06-08\tJasper\tVolunteers\t22\n25\t2026-06-15\tCanton\tVolunteers\t17\n25\t2026-06-15\tJasper\tVolunteers\t15\n26\t2026-06-22\tCanton\tVolunteers\t28\n26\t2026-06-22\tJasper\tVolunteers\t17\n27\t2026-06-29\tCanton\tVolunteers\t22\n27\t2026-06-29\tJasper\tVolunteers\t17\n28\t2026-07-06\tCanton\tVolunteers\t22\n28\t2026-07-06\tJasper\tVolunteers\t13\n29\t2026-07-13\tCanton\tVolunteers\t22\n29\t2026-07-13\tJasper\tVolunteers\t14\n",
+  "stderr": "",
+  "execution_time_ms": 273
+}

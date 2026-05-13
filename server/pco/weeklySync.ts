@@ -1617,10 +1617,17 @@ export async function syncVolunteersFromServices(
     }
 
     // Step 3: Write to attendance_weekly as subgroup "Volunteers"
+    // Filter out future weeks - PCO Services returns scheduled volunteers for upcoming dates
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const { db, end } = await createFreshDb();
     try {
       for (const [weekStart, campusMap] of Array.from(weekCampusVolunteers)) {
         const weekDate = new Date(weekStart + "T00:00:00");
+        if (weekDate > today) {
+          console.log(`[Volunteer Sync] Skipping future week: ${weekStart}`);
+          continue;
+        }
         const year = weekDate.getFullYear();
         const weekNumber = getISOWeekNumber(weekDate);
 
