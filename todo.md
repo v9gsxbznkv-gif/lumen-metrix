@@ -1268,3 +1268,31 @@
 - [x] Add manual sync trigger so Chad can force a sync from the UI
 - [x] Update Settings UI: removed sync day dropdown (now nightly), added Sync Now button with job progress tracking
 - [ ] Deploy and trigger manual sync for May 11 data
+
+## Bug: Sync Now button doesn't start the sync
+- [ ] Diagnose why clicking Sync Now doesn't trigger the nightly sync
+- [ ] Fix the issue
+- [ ] Deploy
+
+## Multi-Tenant + Multi-User System (SaaS MVP)
+- [ ] Audit current schema and identify all tables needing org_id
+- [ ] Create organizations table (name, slug, plan_tier, pco_connection, created_at)
+- [ ] Create auth_users table (email, password_hash, name, org_id, role, oauth_provider, oauth_id)
+- [ ] Create invites table (token, org_id, role, email, expires_at, used_at)
+- [ ] Create sessions table for JWT/cookie auth
+- [ ] Add org_id foreign key to all existing data tables
+- [ ] Build email/password registration and login (bcrypt hashing, JWT sessions)
+- [ ] Build Google OAuth sign-in
+- [ ] Build Apple Sign-In
+- [ ] Build org creation flow (first signup creates org, becomes Admin)
+- [ ] Build invite system (Admin generates invite link, user signs up via link)
+- [ ] Build role-based permissions (Admin, Manager, Viewer)
+- [ ] Scope all existing tRPC procedures by org_id from session
+- [ ] Build landing/marketing page at root (lumenmetrix.com)
+- [ ] Build signup/login UI (email + Google + Apple options)
+- [ ] Build user management UI (Admin: invite users, assign roles, remove users)
+- [ ] Build org settings page (org name, PCO connection per org)
+- [ ] Migrate Revolution Church as first tenant (existing data gets org_id)
+- [ ] Remove old single-password auth system
+- [ ] Write vitest tests for auth, invites, data isolation
+- [ ] Deploy multi-tenant MVP

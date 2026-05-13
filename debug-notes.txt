@@ -1,0 +1,10 @@
+Key findings:
+1. Schema has manualLock on attendanceWeekly (line 396) and givingWeekly (line 421) - CORRECT
+2. Schema has weeklySyncDay on pcoSettings (line 43) - STILL IN SCHEMA but scheduler no longer uses it
+3. scheduler.ts does NOT reference weeklySyncDay - clean
+4. weeklySync.ts DOES reference manualLock - correct, it's in schema
+
+The TS errors are STALE from the tsc watcher. Fresh `npx tsc --noEmit` shows 0 errors.
+The console error about manualLock insert failing suggests the DB migration wasn't applied.
+
+Need to run: pnpm db:push to ensure migrations are applied to production DB.
