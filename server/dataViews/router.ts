@@ -18,7 +18,21 @@
 import { publicProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { getDb } from "../db";
-import { eq, and, gte, lte, desc, asc } from "drizzle-orm";
+import { eq, and, gte, lte, desc, asc, lt } from "drizzle-orm";
+
+/**
+ * Get the last fully completed ISO week number for the current year.
+ * A church week runs Sun-Sat. We consider a week complete once
+ * we've moved past its Saturday into the next week.
+ */
+function getLastCompleteISOWeek(): number {
+  const now = new Date();
+  const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const currentWeek = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  return currentWeek - 1; // exclude current partial week
+}
 import {
   attendanceWeekly,
   givingWeekly,
@@ -296,11 +310,16 @@ const attendanceRouter = router({
       // Campus filtering happens after normalization
 
       const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-      const rows = await d
+      const allRows = await d
         .select()
         .from(attendanceWeekly)
         .where(whereClause)
         .orderBy(asc(attendanceWeekly.year), asc(attendanceWeekly.weekNumber));
+
+      // Exclude partial current week for the current year
+      const currentYear = new Date().getFullYear();
+      const lastCompleteWeek = getLastCompleteISOWeek();
+      const rows = allRows.filter(r => !(r.year === currentYear && r.weekNumber > lastCompleteWeek));
 
       // Normalize and filter
       const normalized = normalizeAttendanceRows(rows);
@@ -615,13 +634,20 @@ const givingRouter = router({
         .where(whereClause)
         .orderBy(asc(givingWeekly.year), asc(givingWeekly.weekNumber));
 
-      // Parse numeric strings to numbers
-      const parsed = rows.map(r => ({
-        ...r,
-        total: parseFloat(r.total as any) || 0,
-        general: parseFloat(r.general as any) || 0,
-        designated: parseFloat(r.designated as any) || 0,
-      }));
+      // Exclude partial current week for the current year (post-query filter
+      // so prior year data is not affected by the week cap)
+      const currentYear = new Date().getFullYear();
+      const lastCompleteWeek = getLastCompleteISOWeek();
+
+      // Parse numeric strings to numbers and filter out partial current week
+      const parsed = rows
+        .filter(r => !(r.year === currentYear && r.weekNumber > lastCompleteWeek))
+        .map(r => ({
+          ...r,
+          total: parseFloat(r.total as any) || 0,
+          general: parseFloat(r.general as any) || 0,
+          designated: parseFloat(r.designated as any) || 0,
+        }));
 
       if (viewMode === "weekly") {
         // For "all" campus, aggregate per week
@@ -757,8 +783,12 @@ const givingRouter = router({
       const d = await db();
       const priorYear = year - 1;
 
+      // Exclude partial current week
+      const currentYear = new Date().getFullYear();
+      const lastCompleteWeek = getLastCompleteISOWeek();
+
       // Fetch giving for both years
-      const givingRows = await d
+      const allGivingRows = await d
         .select()
         .from(givingWeekly)
         .where(
@@ -769,9 +799,11 @@ const givingRouter = router({
           )
         )
         .orderBy(asc(givingWeekly.year), asc(givingWeekly.weekNumber));
+      // Filter out partial current week (only affects current year rows)
+      const givingRows = allGivingRows.filter(r => !(r.year === currentYear && r.weekNumber > lastCompleteWeek));
 
       // Fetch attendance for both years
-      const attRows = await d
+      const allAttRows = await d
         .select()
         .from(attendanceWeekly)
         .where(
@@ -781,6 +813,8 @@ const givingRouter = router({
           )
         )
         .orderBy(asc(attendanceWeekly.year), asc(attendanceWeekly.weekNumber));
+      // Filter out partial current week for attendance too
+      const attRows = allAttRows.filter(r => !(r.year === currentYear && r.weekNumber > lastCompleteWeek));
 
       // Normalize attendance
       const normalizedAtt = normalizeAttendanceRows(attRows);
@@ -812,7 +846,7 @@ const givingRouter = router({
       }
 
       // Compute per capita per week
-      const currentYear: { weekNumber: number; weekStartDate: string; giving: number; attendance: number; gpc: number }[] = [];
+      const currentYearWeeks: { weekNumber: number; weekStartDate: string; giving: number; attendance: number; gpc: number }[] = [];
       const priorYearData: { weekNumber: number; weekStartDate: string; giving: number; attendance: number; gpc: number }[] = [];
 
       for (const [key, giv] of Array.from(givMap)) {
@@ -827,17 +861,17 @@ const givingRouter = router({
           gpc,
         };
         if (giv.year === year) {
-          currentYear.push(entry);
+          currentYearWeeks.push(entry);
         } else {
           priorYearData.push(entry);
         }
       }
 
-      currentYear.sort((a, b) => a.weekNumber - b.weekNumber);
+      currentYearWeeks.sort((a, b) => a.weekNumber - b.weekNumber);
       priorYearData.sort((a, b) => a.weekNumber - b.weekNumber);
 
       // Compute YTD averages
-      const avgGpc = (arr: typeof currentYear) => {
+      const avgGpc = (arr: typeof currentYearWeeks) => {
         if (arr.length === 0) return 0;
         const totalGiving = arr.reduce((s, w) => s + w.giving, 0);
         const totalAtt = arr.reduce((s, w) => s + w.attendance, 0);
@@ -845,15 +879,15 @@ const givingRouter = router({
       };
 
       // For YoY comparison, limit prior year to same number of weeks
-      const maxWeekCurrent = currentYear.length > 0 ? Math.max(...currentYear.map(w => w.weekNumber)) : 0;
+      const maxWeekCurrent = currentYearWeeks.length > 0 ? Math.max(...currentYearWeeks.map(w => w.weekNumber)) : 0;
       const priorYearSameWeeks = priorYearData.filter(w => w.weekNumber <= maxWeekCurrent);
 
       return {
         year,
         priorYear,
-        currentYearAvgGpc: avgGpc(currentYear),
+        currentYearAvgGpc: avgGpc(currentYearWeeks),
         priorYearAvgGpc: avgGpc(priorYearSameWeeks),
-        currentYearWeeks: currentYear,
+        currentYearWeeks: currentYearWeeks,
         priorYearWeeks: priorYearData,
       };
     }),

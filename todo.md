@@ -1313,3 +1313,7 @@
 ## Bug: Dashboard shows Weeks 1-20 but week 20 is partial — should be 1-19
 - [x] Fix getMaxWeek to cap at last completed week (current ISO week minus 1 if we're mid-week)
 - [ ] Deploy fix
+
+## Bug: Giving page pulling week 20 partial data — should cap at last completed week (19)
+- [x] Fix giving page to exclude partial current week data — added getLastCompleteISOWeek() filter to giving getData, attendance getData, and per capita queries
+- [ ] Deploy fix
