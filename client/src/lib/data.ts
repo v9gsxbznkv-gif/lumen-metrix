@@ -313,66 +313,59 @@ export interface DashboardData {
 let cachedData: DashboardData | null = null;
 
 function computeGPC(
-  attendance: RawAttendance[],
-  giving: RawGiving[],
-  attendanceMonthly: RawAttendanceMonthly[],
-  givingMonthly: RawGivingMonthly[]
+  _attendance: RawAttendance[],
+  _giving: RawGiving[],
+  _attendanceMonthly: RawAttendanceMonthly[],
+  _givingMonthly: RawGivingMonthly[]
 ): GivingPerCapita[] {
+  // This is now a stub — actual GPC is computed post-transform using weekly data.
+  // Kept for signature compatibility with transformRawData.
+  return [];
+}
+
+/**
+ * Compute GPC using weekly giving + weekly attendance data (same logic as the Giving page).
+ * GPC = total_giving_for_year / (avg_weekly_attendance * weeks_with_data)
+ * weekly_gpc = total_giving / total_attendance across all weeks
+ */
+function computeGPCFromWeekly(data: DashboardData): GivingPerCapita[] {
   const results: GivingPerCapita[] = [];
   const campuses = ["Canton", "Jasper", "All Campuses"];
+  const years = data.meta.years;
 
-  // Determine the max month with data across all years
-  const monthsByYear: Record<number, number> = {};
-  for (const r of givingMonthly) {
-    if (!monthsByYear[r.year] || r.month > monthsByYear[r.year]) {
-      monthsByYear[r.year] = r.month;
+  for (const year of years) {
+    for (const campus of campuses) {
+      // Get total giving from weekly data
+      let totalGiving = 0;
+      const givingByWeek = new Map<number, number>();
+      for (const r of data.giving_weekly) {
+        if (r.year !== year) continue;
+        if (campus !== "All Campuses" && r.campus !== campus) continue;
+        givingByWeek.set(r.weekNumber, (givingByWeek.get(r.weekNumber) || 0) + r.total);
+      }
+      for (const v of Array.from(givingByWeek.values())) totalGiving += v;
+
+      // Get avg weekly attendance using the same logic as getAvgAttendanceFromWeekly
+      const avgAtt = getAvgAttendanceFromWeekly(data, year, campus, "Total");
+      if (avgAtt === 0 || totalGiving === 0) continue;
+
+      const weeksWithData = givingByWeek.size;
+      if (weeksWithData === 0) continue;
+
+      // Weekly GPC = total giving / (weeks * avg attendance)
+      const weeklyGpc = totalGiving / (weeksWithData * avgAtt);
+      // Annual GPC = weekly * 52
+      const annualGpc = weeklyGpc * 52;
+
+      results.push({
+        year,
+        campus,
+        total_giving: totalGiving,
+        avg_attendance: Math.round(avgAtt),
+        giving_per_capita: Math.round(annualGpc),
+        weekly_gpc: Math.round(weeklyGpc * 100) / 100,
+      });
     }
-  }
-  for (const r of attendanceMonthly) {
-    if (!monthsByYear[r.year] || r.month > monthsByYear[r.year]) {
-      monthsByYear[r.year] = r.month;
-    }
-  }
-
-  // Aggregate giving by year+campus first (DB may have multiple rows per year/campus)
-  const givingAgg = new Map<string, { year: number; campus: string; total: number }>();
-  for (const g of giving) {
-    if (!campuses.includes(g.campus)) continue;
-    const key = `${g.year}-${g.campus}`;
-    const existing = givingAgg.get(key);
-    if (existing) {
-      existing.total += g.total;
-    } else {
-      givingAgg.set(key, { year: g.year, campus: g.campus, total: g.total });
-    }
-  }
-
-  for (const g of Array.from(givingAgg.values())) {
-    const att = attendance.find(
-      (a) => a.year === g.year && a.campus === g.campus && a.subgroup === "Total"
-    );
-    if (!att || att.avg_weekly === 0) continue;
-
-    const maxMonth = monthsByYear[g.year] ?? 12;
-    const isPartial = maxMonth < 12;
-
-    // For partial years: scale giving to full-year equivalent for a fair per-capita
-    // by dividing by fraction of year elapsed, then divide by avg_weekly attendance.
-    // This gives an annualized GPC that's comparable across years.
-    const yearFraction = maxMonth / 12;
-    const annualizedGiving = isPartial ? g.total / yearFraction : g.total;
-    const weeks = 52;
-    const gpc = annualizedGiving / att.avg_weekly;
-    const weeklyGpc = gpc / weeks;
-
-    results.push({
-      year: g.year,
-      campus: g.campus,
-      total_giving: g.total,
-      avg_attendance: att.avg_weekly,
-      giving_per_capita: Math.round(gpc),
-      weekly_gpc: Math.round(weeklyGpc * 100) / 100,
-    });
   }
   return results;
 }
@@ -456,10 +449,10 @@ function computeVolunteerRatio(
  * Transform raw data (from either API or CDN) into DashboardData.
  */
 function transformRawData(raw: RawDashboard): DashboardData {
-  const gpc = computeGPC(raw.attendance, raw.giving, raw.attendance_monthly, raw.giving_monthly);
   const vr = computeVolunteerRatio(raw.attendance, raw.serving);
 
-  return {
+  // Build the data object first (GPC needs the full object for weekly data access)
+  const data: DashboardData = {
     attendance: raw.attendance,
     attendance_monthly: raw.attendance_monthly,
     attendance_weekly: raw.attendance_weekly || [],
@@ -475,7 +468,7 @@ function transformRawData(raw: RawDashboard): DashboardData {
     serving_weekly: raw.serving_weekly || [],
     groups_monthly: raw.groups_monthly || [],
     computed: {
-      giving_per_capita: gpc,
+      giving_per_capita: [],
       volunteer_ratio: vr,
     },
     meta: {
@@ -483,6 +476,11 @@ function transformRawData(raw: RawDashboard): DashboardData {
       campuses: raw.campuses || ["Canton", "Jasper", "Online", "All Campuses"],
     },
   };
+
+  // Now compute GPC using weekly data (requires full DashboardData for attendance helpers)
+  data.computed.giving_per_capita = computeGPCFromWeekly(data);
+
+  return data;
 }
 
 /**

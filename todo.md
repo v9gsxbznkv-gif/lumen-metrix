@@ -1320,5 +1320,5 @@
 
 ## Bug: AI Analyst GPC trend shows wrong numbers ($14 annual for 2024, duplicate years, wildly inconsistent values)
 - [x] Diagnose how AI Analyst queries and formats GPC data for the LLM — DB has duplicate giving rows per year/campus (general vs designated), computeGPC iterated row-by-row creating duplicate GPC entries
-- [x] Fix the data pipeline so GPC trend is accurate — aggregate giving by year+campus before computing GPC
+- [x] Fix the data pipeline so GPC trend is accurate — rewrote computeGPC to use weekly giving/attendance data (same as Giving page backend)
 - [ ] Deploy fix

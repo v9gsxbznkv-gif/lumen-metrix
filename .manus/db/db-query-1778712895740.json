@@ -1,0 +1,19 @@
+{
+  "query": "SELECT * FROM attendance WHERE year = 2026 AND campus = 'All Campuses' AND subgroup = 'Total' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT * FROM attendance WHERE year = 2026 AND campus = 'All Campuses' AND subgroup = 'Total' LIMIT 5;",
+  "rows": [
+    {
+      "id": "115",
+      "year": "2026",
+      "campus": "All Campuses",
+      "subgroup": "Total",
+      "avgWeekly": "3968",
+      "total": "47616",
+      "source": "spreadsheet"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tyear\tcampus\tsubgroup\tavgWeekly\ttotal\tsource\n115\t2026\tAll Campuses\tTotal\t3968\t47616\tspreadsheet\n",
+  "stderr": "",
+  "execution_time_ms": 255
+}

@@ -1,0 +1,16 @@
+{
+  "query": "SELECT year, campus, source, SUM(CAST(total AS DECIMAL(15,2))) as total_giving FROM giving WHERE year = 2026 AND campus = 'All Campuses' GROUP BY year, campus, source;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, campus, source, SUM(CAST(total AS DECIMAL(15,2))) as total_giving FROM giving WHERE year = 2026 AND campus = 'All Campuses' GROUP BY year, campus, source;",
+  "rows": [
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "source": "spreadsheet",
+      "total_giving": "2280935.01"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tcampus\tsource\ttotal_giving\n2026\tAll Campuses\tspreadsheet\t2280935.01\n",
+  "stderr": "",
+  "execution_time_ms": 263
+}
