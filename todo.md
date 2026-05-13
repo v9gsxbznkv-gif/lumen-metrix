@@ -1305,3 +1305,7 @@
 ## Bug: Attendance page showing Apr 20 as current week instead of latest May week
 - [x] Diagnose why attendance page shows week of Apr 20 — PCO sources assign different weekStartDates to same ISO week, causing duplicate entries
 - [x] Fix the issue — changed normalizeAttendanceRows and filterByCampus to group by year+weekNumber instead of weekStartDate
+
+## Bug: Attendance page should show May 4 (week 19) as current week, not Apr 27
+- [x] Fix currentWeek logic to use date comparison instead of blindly skipping latest week
+- [ ] Deploy fix

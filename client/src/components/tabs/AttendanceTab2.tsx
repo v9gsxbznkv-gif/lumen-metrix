@@ -215,13 +215,27 @@ export default function AttendanceTab2() {
   // ─── KPI Cards ────────────────────────────────────────────
   const kpis = useMemo(() => {
     if (viewMode === "weekly" && weeklyData.length > 0) {
-      // weeklyData[0] = latest (may be partial/incomplete current week)
-      // weeklyData[1] = last full week ("Current Week")
-      const currentWeek = weeklyData.length > 1 ? weeklyData[1] : weeklyData[0];
+      // Determine if the latest week is still in progress (current calendar week)
+      // Only skip it if today falls within that week (Sun-Sat)
+      const latestWeek = weeklyData[0];
+      const now = new Date();
+      const latestStart = new Date(latestWeek.weekStartDate + "T00:00:00");
+      const latestEnd = new Date(latestStart);
+      latestEnd.setDate(latestEnd.getDate() + 6); // Saturday of that week
+      const isCurrentWeekPartial = now >= latestStart && now <= latestEnd;
+
+      const currentWeek = (isCurrentWeekPartial && weeklyData.length > 1)
+        ? weeklyData[1]  // skip partial current week
+        : weeklyData[0]; // latest week is fully complete
+
+      // For averages and comparisons, exclude partial current week if applicable
+      const fullWeeksForAvg = isCurrentWeekPartial && weeklyData.length > 1
+        ? weeklyData.slice(1)
+        : weeklyData;
       const avgTotal = Math.round(
-        weeklyData.reduce((s, w) => s + w.total, 0) / weeklyData.length
+        fullWeeksForAvg.reduce((s, w) => s + w.total, 0) / fullWeeksForAvg.length
       );
-      const maxWeekNum = weeklyData[0]?.weekNumber ?? 52;
+      const maxWeekNum = fullWeeksForAvg[0]?.weekNumber ?? 52;
 
       // YTD comparison: prior year same weeks (1 to maxWeekNum)
       const priorSamePeriod = priorYearWeeklyData.filter(w => w.weekNumber <= maxWeekNum);
@@ -229,9 +243,10 @@ export default function AttendanceTab2() {
         ? Math.round(priorSamePeriod.reduce((s: number, w: any) => s + w.total, 0) / priorSamePeriod.length)
         : 0;
 
-      // Highest and lowest weeks of the year (exclude partial latest week)
-      // If latest week total is significantly lower than avg, it's likely partial
-      const fullWeeks = weeklyData.length > 1 ? weeklyData.slice(1) : weeklyData;
+      // Highest and lowest weeks — exclude partial current week
+      const fullWeeks = isCurrentWeekPartial && weeklyData.length > 1
+        ? weeklyData.slice(1)
+        : weeklyData;
       const sorted = [...fullWeeks].sort((a, b) => b.total - a.total);
       const highest = sorted[0];
       const lowest = sorted[sorted.length - 1];
