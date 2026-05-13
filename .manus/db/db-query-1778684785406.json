@@ -1,0 +1,202 @@
+{
+  "query": "SELECT weekNumber, weekStartDate, subgroup, SUM(headcount) as total FROM attendance_weekly WHERE year = 2026 AND weekNumber IN (17, 18, 19) AND subgroup NOT LIKE 'Kids:%' GROUP BY weekNumber, weekStartDate, subgroup ORDER BY weekNumber, subgroup;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekNumber, weekStartDate, subgroup, SUM(headcount) as total FROM attendance_weekly WHERE year = 2026 AND weekNumber IN (17, 18, 19) AND subgroup NOT LIKE 'Kids:%' GROUP BY weekNumber, weekStartDate, subgroup ORDER BY weekNumber, subgroup;",
+  "rows": [
+    {
+      "weekNumber": "17",
+      "weekStartDate": "2026-04-20",
+      "subgroup": "FTG Adults",
+      "total": "21"
+    },
+    {
+      "weekNumber": "17",
+      "weekStartDate": "2026-04-20",
+      "subgroup": "FTG Kids",
+      "total": "24"
+    },
+    {
+      "weekNumber": "17",
+      "weekStartDate": "2026-04-20",
+      "subgroup": "Kids",
+      "total": "642"
+    },
+    {
+      "weekNumber": "17",
+      "weekStartDate": "2026-04-20",
+      "subgroup": "Online",
+      "total": "558"
+    },
+    {
+      "weekNumber": "17",
+      "weekStartDate": "2026-04-20",
+      "subgroup": "Revolution Canton Check-In",
+      "total": "1961"
+    },
+    {
+      "weekNumber": "17",
+      "weekStartDate": "2026-04-20",
+      "subgroup": "Revolution Jasper Check-In",
+      "total": "447"
+    },
+    {
+      "weekNumber": "17",
+      "weekStartDate": "2026-04-20",
+      "subgroup": "RevStudents Attendance",
+      "total": "438"
+    },
+    {
+      "weekNumber": "17",
+      "weekStartDate": "2026-04-27",
+      "subgroup": "RevStudents FTG",
+      "total": "1"
+    },
+    {
+      "weekNumber": "17",
+      "weekStartDate": "2026-04-20",
+      "subgroup": "RevStudents HS",
+      "total": "169"
+    },
+    {
+      "weekNumber": "17",
+      "weekStartDate": "2026-04-20",
+      "subgroup": "RevStudents MS",
+      "total": "269"
+    },
+    {
+      "weekNumber": "17",
+      "weekStartDate": "2026-04-20",
+      "subgroup": "Volunteers",
+      "total": "621"
+    },
+    {
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "subgroup": "FTG Adults",
+      "total": "24"
+    },
+    {
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "subgroup": "FTG Kids",
+      "total": "21"
+    },
+    {
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "subgroup": "Kids",
+      "total": "715"
+    },
+    {
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "subgroup": "Online",
+      "total": "506"
+    },
+    {
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "subgroup": "Revolution Canton Check-In",
+      "total": "2041"
+    },
+    {
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "subgroup": "Revolution Jasper Check-In",
+      "total": "469"
+    },
+    {
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "subgroup": "RevStudents Attendance",
+      "total": "66"
+    },
+    {
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "subgroup": "RevStudents FTG",
+      "total": "1"
+    },
+    {
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "subgroup": "RevStudents HS",
+      "total": "151"
+    },
+    {
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "subgroup": "RevStudents MS",
+      "total": "242"
+    },
+    {
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "subgroup": "Volunteers",
+      "total": "629"
+    },
+    {
+      "weekNumber": "18",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "YA FTG",
+      "total": "4"
+    },
+    {
+      "weekNumber": "18",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "YA Gathering",
+      "total": "64"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "FTG Adults",
+      "total": "16"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "FTG Kids",
+      "total": "15"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "Kids",
+      "total": "768"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "Revolution Canton Check-In",
+      "total": "2381"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "Revolution Jasper Check-In",
+      "total": "518"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "Volunteers",
+      "total": "648"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "YA FTG",
+      "total": "4"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "YA Gathering",
+      "total": "64"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\tweekStartDate\tsubgroup\ttotal\n17\t2026-04-20\tFTG Adults\t21\n17\t2026-04-20\tFTG Kids\t24\n17\t2026-04-20\tKids\t642\n17\t2026-04-20\tOnline\t558\n17\t2026-04-20\tRevolution Canton Check-In\t1961\n17\t2026-04-20\tRevolution Jasper Check-In\t447\n17\t2026-04-20\tRevStudents Attendance\t438\n17\t2026-04-27\tRevStudents FTG\t1\n17\t2026-04-20\tRevStudents HS\t169\n17\t2026-04-20\tRevStudents MS\t269\n17\t2026-04-20\tVolunteers\t621\n18\t2026-04-27\tFTG Adults\t24\n18\t2026-04-27\tFTG Kids\t21\n18\t2026-04-27\tKids\t715\n18\t2026-04-27\tOnline\t506\n18\t2026-04-27\tRevolution Canton Check-In\t2041\n18\t2026-04-27\tRevolution Jasper Check-In\t469\n18\t2026-04-27\tRevStudents Attendance\t66\n18\t2026-04-27\tRevStudents FTG\t1\n18\t2026-04-27\tRevStudents HS\t151\n18\t2026-04-27\tRevStudents MS\t242\n18\t2026-04-27\tVolunteers\t629\n18\t2026-05-04\tYA FTG\t4\n18\t2026-05-04\tYA Gathering\t64\n19\t2026-05-04\tFTG Adults\t16\n19\t2026-05-04\tFTG Kids\t15\n19\t2026-05-04\tKids\t768\n19\t2026-05-04\tRevolution Canton Check-In\t2381\n19\t2026-05-04\tRevolution Jasper Check-In\t518\n19\t2026-05-04\tVolunteers\t648\n19\t2026-05-04\tYA FTG\t4\n19\t2026-05-04\tYA Gathering\t64\n",
+  "stderr": "",
+  "execution_time_ms": 258
+}

@@ -1270,9 +1270,9 @@
 - [ ] Deploy and trigger manual sync for May 11 data
 
 ## Bug: Sync Now button doesn't start the sync
-- [ ] Diagnose why clicking Sync Now doesn't trigger the nightly sync
-- [ ] Fix the issue
-- [ ] Deploy
+- [x] Diagnosed — Sync Now works on dev server, was not deployed to production yet
+- [x] Fixed — deployed latest code
+- [x] Deploy
 
 ## Multi-Tenant + Multi-User System (SaaS MVP)
 - [ ] Audit current schema and identify all tables needing org_id
@@ -1300,4 +1300,8 @@
 ## Bug: YoY comparison showing weeks 1-35 instead of current week (19)
 - [x] Diagnose where the week cap logic is wrong — PCO Services returns future volunteer schedules, inflating maxWeek
 - [x] Fix the week comparison to cap at current ISO week (frontend getMaxWeek + server volunteer sync future-date filter + DB cleanup)
-- [ ] Deploy fix
+- [x] Deploy fix
+
+## Bug: Attendance page showing Apr 20 as current week instead of latest May week
+- [x] Diagnose why attendance page shows week of Apr 20 — PCO sources assign different weekStartDates to same ISO week, causing duplicate entries
+- [x] Fix the issue — changed normalizeAttendanceRows and filterByCampus to group by year+weekNumber instead of weekStartDate

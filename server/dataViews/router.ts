@@ -154,7 +154,7 @@ function normalizeAttendanceRows(rows: any[]): NormalizedWeek[] {
   for (const row of rows) {
     if (row.subgroup === "RevStudents HS" || row.subgroup === "RevStudents MS") {
       const campus = row.campus === "Other" ? "Other" : row.campus;
-      hasHsMsSet.add(`${row.weekStartDate}-${campus}`);
+      hasHsMsSet.add(`${row.year}-${row.weekNumber}-${campus}`);
     }
   }
 
@@ -165,12 +165,14 @@ function normalizeAttendanceRows(rows: any[]): NormalizedWeek[] {
     // Skip "RevStudents Attendance" when HS+MS exist for the same week+campus
     if (row.subgroup === "RevStudents Attendance") {
       const campus = row.campus === "Other" ? "Other" : row.campus;
-      if (hasHsMsSet.has(`${row.weekStartDate}-${campus}`)) continue;
+      if (hasHsMsSet.has(`${row.year}-${row.weekNumber}-${campus}`)) continue;
     }
 
     // Map "Other" campus (YA Gathering) to a virtual campus
     const campus = row.campus === "Other" ? "Other" : row.campus;
-    const key = `${row.weekStartDate}-${campus}`;
+    // Group by year+weekNumber+campus (not weekStartDate) because different
+    // PCO sources may assign slightly different weekStartDates to the same ISO week
+    const key = `${row.year}-${row.weekNumber}-${campus}`;
 
     let entry = weekMap.get(key);
     if (!entry) {
@@ -218,10 +220,11 @@ function normalizeAttendanceRows(rows: any[]): NormalizedWeek[] {
  */
 function filterByCampus(weeks: NormalizedWeek[], campus?: string): NormalizedWeek[] {
   if (!campus || campus === "all") {
-    // Aggregate across campuses per week
+    // Aggregate across campuses per week (use year+weekNumber as key
+    // because different sources may have different weekStartDates for the same ISO week)
     const weekMap = new Map<string, NormalizedWeek>();
     for (const w of weeks) {
-      const key = w.weekStartDate;
+      const key = `${w.year}-${w.weekNumber}`;
       const existing = weekMap.get(key);
       if (existing) {
         existing.adults += w.adults;
@@ -247,7 +250,7 @@ function filterByCampus(weeks: NormalizedWeek[], campus?: string): NormalizedWee
     const weekMap = new Map<string, NormalizedWeek>();
     for (const w of weeks) {
       if (w.online > 0 || w.campus === "Online") {
-        const key = w.weekStartDate;
+        const key = `${w.year}-${w.weekNumber}`;
         const existing = weekMap.get(key);
         if (existing) {
           existing.online += w.online;

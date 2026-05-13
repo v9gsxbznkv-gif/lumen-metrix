@@ -1,0 +1,34 @@
+{
+  "query": "SELECT weekNumber, weekStartDate, subgroup, SUM(headcount) as total FROM attendance_weekly WHERE year = 2026 AND weekNumber = 19 AND subgroup IN ('Revolution Canton Check-In', 'Revolution Jasper Check-In', 'Kids', 'Online', 'Volunteers') GROUP BY weekNumber, weekStartDate, subgroup ORDER BY subgroup;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekNumber, weekStartDate, subgroup, SUM(headcount) as total FROM attendance_weekly WHERE year = 2026 AND weekNumber = 19 AND subgroup IN ('Revolution Canton Check-In', 'Revolution Jasper Check-In', 'Kids', 'Online', 'Volunteers') GROUP BY weekNumber, weekStartDate, subgroup ORDER BY subgroup;",
+  "rows": [
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "Kids",
+      "total": "768"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "Revolution Canton Check-In",
+      "total": "2381"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "Revolution Jasper Check-In",
+      "total": "518"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "Volunteers",
+      "total": "648"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\tweekStartDate\tsubgroup\ttotal\n19\t2026-05-04\tKids\t768\n19\t2026-05-04\tRevolution Canton Check-In\t2381\n19\t2026-05-04\tRevolution Jasper Check-In\t518\n19\t2026-05-04\tVolunteers\t648\n",
+  "stderr": "",
+  "execution_time_ms": 269
+}

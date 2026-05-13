@@ -1,0 +1,46 @@
+{
+  "query": "SELECT DISTINCT weekNumber, weekStartDate FROM attendance_weekly WHERE year = 2026 AND weekNumber >= 15 ORDER BY weekStartDate DESC LIMIT 15;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT weekNumber, weekStartDate FROM attendance_weekly WHERE year = 2026 AND weekNumber >= 15 ORDER BY weekStartDate DESC LIMIT 15;",
+  "rows": [
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04"
+    },
+    {
+      "weekNumber": "18",
+      "weekStartDate": "2026-05-04"
+    },
+    {
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27"
+    },
+    {
+      "weekNumber": "17",
+      "weekStartDate": "2026-04-27"
+    },
+    {
+      "weekNumber": "17",
+      "weekStartDate": "2026-04-20"
+    },
+    {
+      "weekNumber": "16",
+      "weekStartDate": "2026-04-20"
+    },
+    {
+      "weekNumber": "16",
+      "weekStartDate": "2026-04-13"
+    },
+    {
+      "weekNumber": "15",
+      "weekStartDate": "2026-04-13"
+    },
+    {
+      "weekNumber": "15",
+      "weekStartDate": "2026-04-06"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\tweekStartDate\n19\t2026-05-04\n18\t2026-05-04\n18\t2026-04-27\n17\t2026-04-27\n17\t2026-04-20\n16\t2026-04-20\n16\t2026-04-13\n15\t2026-04-13\n15\t2026-04-06\n",
+  "stderr": "",
+  "execution_time_ms": 266
+}

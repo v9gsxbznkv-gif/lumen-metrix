@@ -1,0 +1,55 @@
+{
+  "query": "SELECT DISTINCT weekNumber, weekStartDate, COUNT(*) as rowCount FROM attendance_weekly WHERE year = 2026 AND weekNumber >= 15 GROUP BY weekNumber, weekStartDate ORDER BY weekNumber DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT weekNumber, weekStartDate, COUNT(*) as rowCount FROM attendance_weekly WHERE year = 2026 AND weekNumber >= 15 GROUP BY weekNumber, weekStartDate ORDER BY weekNumber DESC;",
+  "rows": [
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "rowCount": "24"
+    },
+    {
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "rowCount": "29"
+    },
+    {
+      "weekNumber": "18",
+      "weekStartDate": "2026-05-04",
+      "rowCount": "2"
+    },
+    {
+      "weekNumber": "17",
+      "weekStartDate": "2026-04-20",
+      "rowCount": "29"
+    },
+    {
+      "weekNumber": "17",
+      "weekStartDate": "2026-04-27",
+      "rowCount": "1"
+    },
+    {
+      "weekNumber": "16",
+      "weekStartDate": "2026-04-13",
+      "rowCount": "31"
+    },
+    {
+      "weekNumber": "16",
+      "weekStartDate": "2026-04-20",
+      "rowCount": "1"
+    },
+    {
+      "weekNumber": "15",
+      "weekStartDate": "2026-04-13",
+      "rowCount": "8"
+    },
+    {
+      "weekNumber": "15",
+      "weekStartDate": "2026-04-06",
+      "rowCount": "23"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\tweekStartDate\trowCount\n19\t2026-05-04\t24\n18\t2026-04-27\t29\n18\t2026-05-04\t2\n17\t2026-04-20\t29\n17\t2026-04-27\t1\n16\t2026-04-13\t31\n16\t2026-04-20\t1\n15\t2026-04-13\t8\n15\t2026-04-06\t23\n",
+  "stderr": "",
+  "execution_time_ms": 263
+}
