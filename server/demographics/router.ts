@@ -656,16 +656,38 @@ export const demographicsRouter = router({
     const withAddress = Number(addressResult?.count || 0);
     const geocoded = Number(geocodedResult?.count || 0);
 
+    // Count people who still need address fetch (zip IS NULL = never fetched from PCO)
+    const [needsFetchResult] = await db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(pcoPeople)
+      .where(
+        and(
+          eq(pcoPeople.status, "active"),
+          isNull(pcoPeople.zip)
+        )
+      );
+    const needsFetch = Number(needsFetchResult?.count || 0);
+
+    // Count people with real street address but no geocode yet
+    const [pendingGeocodeResult] = await db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(pcoPeople)
+      .where(
+        and(
+          eq(pcoPeople.status, "active"),
+          isNotNull(pcoPeople.street),
+          sql`${pcoPeople.street} != ''`,
+          isNull(pcoPeople.latitude)
+        )
+      );
+    const pendingGeocode = Number(pendingGeocodeResult?.count || 0);
+
     return {
       totalActive,
       withAddress,
       geocoded,
-      pendingAddressSync: totalActive - withAddress - (totalActive - Number(
-        (await db.select({ count: sql<number>`COUNT(*)` }).from(pcoPeople).where(
-          and(eq(pcoPeople.status, "active"), isNull(pcoPeople.zip))
-        ))[0]?.count || 0
-      )),
-      pendingGeocode: withAddress - geocoded,
+      needsFetch,
+      pendingGeocode,
     };
   }),
 });

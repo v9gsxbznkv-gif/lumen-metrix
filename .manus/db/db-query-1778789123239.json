@@ -1,0 +1,17 @@
+{
+  "query": "SELECT \n  COUNT(*) as total_active,\n  SUM(CASE WHEN street IS NOT NULL AND street != '' AND street != 'NULL' THEN 1 ELSE 0 END) as has_real_street,\n  SUM(CASE WHEN latitude IS NOT NULL AND latitude != 0 THEN 1 ELSE 0 END) as has_geocode,\n  SUM(CASE WHEN (street IS NULL OR street = '' OR street = 'NULL') AND zip IS NOT NULL AND zip != '' AND zip != 'NULL' THEN 1 ELSE 0 END) as has_zip_no_street,\n  SUM(CASE WHEN street IS NULL OR street = '' OR street = 'NULL' THEN 1 ELSE 0 END) as no_street\nFROM pco_people WHERE status = 'active';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT \n  COUNT(*) as total_active,\n  SUM(CASE WHEN street IS NOT NULL AND street != '' AND street != 'NULL' THEN 1 ELSE 0 END) as has_real_street,\n  SUM(CASE WHEN latitude IS NOT NULL AND latitude != 0 THEN 1 ELSE 0 END) as has_geocode,\n  SUM(CASE WHEN (street IS NULL OR street = '' OR street = 'NULL') AND zip IS NOT NULL AND zip != '' AND zip != 'NULL' THEN 1 ELSE 0 END) as has_zip_no_street,\n  SUM(CASE WHEN street IS NULL OR street = '' OR street = 'NULL' THEN 1 ELSE 0 END) as no_street\nFROM pco_people WHERE status = 'active';",
+  "rows": [
+    {
+      "total_active": "3516",
+      "has_real_street": "273",
+      "has_geocode": "273",
+      "has_zip_no_street": "0",
+      "no_street": "3243"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_active\thas_real_street\thas_geocode\thas_zip_no_street\tno_street\n3516\t273\t273\t0\t3243\n",
+  "stderr": "",
+  "execution_time_ms": 274
+}

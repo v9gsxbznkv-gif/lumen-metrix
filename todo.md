@@ -1337,4 +1337,10 @@
 ## Bug: Giving page yearly tab shows 57 weeks and inflated avg weekly for 2026
 - [x] Diagnose why yearly tab shows 57 weeks instead of correct week count for the year
 - [x] Fix avg weekly calculation for 2026 (showing much higher than expected ~64k)
-- [ ] Deploy fix
+- [x] Deploy fix
+
+## Bug: Map address fetch stalls at ~2200, dots disappear on refresh
+- [x] Diagnose why address fetch stops at ~2200 out of 3516
+- [x] Diagnose why map dots disappear after page refresh
+- [x] Fix both issues
+- [ ] Deploy fix (map stall/disappear)

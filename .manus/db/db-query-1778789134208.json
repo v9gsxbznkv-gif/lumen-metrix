@@ -1,0 +1,90 @@
+{
+  "query": "SELECT street, city, state, zip, latitude, longitude FROM pco_people WHERE status = 'active' AND street IS NOT NULL AND street != '' AND street != 'NULL' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT street, city, state, zip, latitude, longitude FROM pco_people WHERE status = 'active' AND street IS NOT NULL AND street != '' AND street != 'NULL' LIMIT 10;",
+  "rows": [
+    {
+      "street": "616 Whistler Dr",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30115",
+      "latitude": "34.2360839",
+      "longitude": "-84.4191661"
+    },
+    {
+      "street": "508 Canton Ct",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30115-6053",
+      "latitude": "34.2156569",
+      "longitude": "-84.37975449999999"
+    },
+    {
+      "street": "132 Spring Way Sq",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30114",
+      "latitude": "34.1812541",
+      "longitude": "-84.5108779"
+    },
+    {
+      "street": "174 Charles Rd.",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30115",
+      "latitude": "34.1828612",
+      "longitude": "-84.45963429999999"
+    },
+    {
+      "street": "114 Holly Reserve Pkwy",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30114",
+      "latitude": "34.1771594",
+      "longitude": "-84.5301441"
+    },
+    {
+      "street": "114 Holly Reserve Pkwy",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30114",
+      "latitude": "34.1771594",
+      "longitude": "-84.5301441"
+    },
+    {
+      "street": "609 Shelter Cove",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30114",
+      "latitude": "34.202531",
+      "longitude": "-84.5512609"
+    },
+    {
+      "street": "169 Vaughn Ct",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30115",
+      "latitude": "34.1600322",
+      "longitude": "-84.4186952"
+    },
+    {
+      "street": "183 Sexton Dr.",
+      "city": "Ball Ground",
+      "state": "GA",
+      "zip": "30107",
+      "latitude": "34.263563",
+      "longitude": "-84.3479847"
+    },
+    {
+      "street": "4341 Whiteleaf Way  ",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30115",
+      "latitude": "34.1948216",
+      "longitude": "-84.4868279"
+    }
+  ],
+  "messages": [],
+  "stdout": "street\tcity\tstate\tzip\tlatitude\tlongitude\n616 Whistler Dr\tCanton\tGA\t30115\t34.2360839\t-84.4191661\n508 Canton Ct\tCanton\tGA\t30115-6053\t34.2156569\t-84.37975449999999\n132 Spring Way Sq\tCanton\tGA\t30114\t34.1812541\t-84.5108779\n174 Charles Rd.\tCanton\tGA\t30115\t34.1828612\t-84.45963429999999\n114 Holly Reserve Pkwy\tCanton\tGA\t30114\t34.1771594\t-84.5301441\n114 Holly Reserve Pkwy\tCanton\tGA\t30114\t34.1771594\t-84.5301441\n609 Shelter Cove\tCanton\tGA\t30114\t34.202531\t-84.5512609\n169 Vaughn Ct\tCanton\tGA\t30115\t34.1600322\t-84.4186952\n183 Sexton Dr.\tBall Ground\tGA\t30107\t34.263563\t-84.3479847\n4341 Whiteleaf Way  \tCanton\tGA\t30115\t34.1948216\t-84.4868279\n",
+  "stderr": "",
+  "execution_time_ms": 273
+}

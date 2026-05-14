@@ -162,7 +162,6 @@ export default function DemographicMap() {
   const fetchAddressBatch = trpc.demographics.fetchAddressBatch.useMutation();
   const geocodeAddresses = trpc.demographics.geocodeAddresses.useMutation();
   const backfillCampus = trpc.demographics.backfillCampus.useMutation();
-  const resetAddressData = trpc.demographics.resetAddressData.useMutation();
   const fetchAllAddresses = trpc.demographics.fetchAllAddresses.useMutation();
   const [fixingMap, setFixingMap] = useState(false);
 
@@ -260,33 +259,18 @@ export default function DemographicMap() {
   }, [syncAddresses, fetchAddressBatch, geocodeAddresses, refetchMapData, refetchStatus]);
 
   /**
-   * Fix Map Data: resumable pipeline that:
-   * 1. Checks current state — only resets if ALL data is stale (no real streets)
-   * 2. Fetches addresses from PCO with retry/backoff on failure
-   * 3. Geocodes with full street addresses
-   * Can be clicked multiple times to resume where it left off.
+   * Fix Map Data: purely additive pipeline (NO reset/destructive operations).
+   * Step 1: Fetch addresses from PCO for people who don't have one yet (zip IS NULL)
+   * Step 2: Geocode people who have an address but no lat/lng
+   * Safe to click multiple times — always resumes where it left off.
    */
   const handleFixMapData = useCallback(async () => {
     setFixingMap(true);
     try {
-      // Check if we need to reset or can resume
-      const status = await refetchStatus();
-      const currentStatus = status.data;
+      await refetchStatus();
 
-      // Only reset if no real street addresses exist yet
-      // (i.e., first run or all data is stale zip-centroid data)
-      const hasRealStreets = syncStatus && (syncStatus.withAddress ?? 0) > 0 && (syncStatus.geocoded ?? 0) === 0;
-      const needsReset = !hasRealStreets && syncStatus && syncStatus.geocoded > 0;
-
-      if (needsReset) {
-        setSyncMessage("Step 1/3: Clearing stale address data...");
-        const resetResult = await resetAddressData.mutateAsync();
-        setSyncMessage(`Step 1 done: Cleared ${resetResult.cleared} records.`);
-      } else {
-        setSyncMessage("Resuming address fetch (no reset needed)...");
-      }
-
-      // Step 2: Fetch addresses from PCO in batches with retry
+      // Step 1: Fetch addresses from PCO in batches (only for people with NULL zip)
+      setSyncMessage("Step 1/2: Fetching addresses from PCO...");
       let addrRemaining = Infinity;
       let totalFetched = 0;
       let addrBatch = 0;
@@ -297,23 +281,22 @@ export default function DemographicMap() {
         addrBatch++;
         try {
           const batchResult = await fetchAllAddresses.mutateAsync({ batchSize: 25 });
-          totalFetched += batchResult.synced;
+          totalFetched += batchResult.synced + batchResult.noAddress;
           addrRemaining = batchResult.remaining;
-          consecutiveErrors = 0; // Reset on success
+          consecutiveErrors = 0;
           setSyncMessage(
-            `Step 1/2: Fetching addresses... batch ${addrBatch}, ${totalFetched} fetched, ${addrRemaining} remaining`
+            `Step 1/2: Fetching addresses... ${totalFetched} processed (${batchResult.synced} with address this batch), ${addrRemaining} remaining`
           );
         } catch (batchErr: any) {
           consecutiveErrors++;
           if (consecutiveErrors >= MAX_RETRIES) {
             setSyncMessage(
-              `Address fetch paused after ${MAX_RETRIES} consecutive errors (${totalFetched} fetched so far). Click "Fix Map Data" again to resume.`
+              `Address fetch paused after ${MAX_RETRIES} consecutive errors (${totalFetched} processed so far). Click "Fix Map Data" again to resume.`
             );
             setFixingMap(false);
             await refetchStatus();
             return;
           }
-          // Exponential backoff: 3s, 9s, 27s
           const delay = Math.pow(3, consecutiveErrors) * 1000;
           setSyncMessage(
             `Step 1/2: Error on batch ${addrBatch}, retrying in ${delay / 1000}s... (attempt ${consecutiveErrors}/${MAX_RETRIES})`
@@ -322,9 +305,9 @@ export default function DemographicMap() {
         }
       }
 
-      setSyncMessage(`Addresses done: ${totalFetched} fetched. Geocoding with full street addresses...`);
+      setSyncMessage(`Addresses done: ${totalFetched} processed. Geocoding...`);
 
-      // Step 3: Geocode with full street addresses
+      // Step 2: Geocode people who have address but no lat/lng
       let totalGeocoded = 0;
       let totalFailed = 0;
       let geoRemaining = Infinity;
@@ -360,7 +343,7 @@ export default function DemographicMap() {
         }
       }
 
-      setSyncMessage(`Done! ${totalFetched} addresses fetched, ${totalGeocoded} geocoded with street addresses, ${totalFailed} failed.`);
+      setSyncMessage(`Done! ${totalGeocoded} geocoded, ${totalFailed} failed. Map updated.`);
       await refetchMapData();
       await refetchStatus();
     } catch (err: any) {
@@ -368,7 +351,7 @@ export default function DemographicMap() {
     } finally {
       setFixingMap(false);
     }
-  }, [resetAddressData, fetchAllAddresses, geocodeAddresses, refetchMapData, refetchStatus, syncStatus]);
+  }, [fetchAllAddresses, geocodeAddresses, refetchMapData, refetchStatus]);
 
   const handleBackfillCampus = useCallback(async () => {
     setBackfilling(true);
@@ -640,13 +623,18 @@ export default function DemographicMap() {
 
       {/* Sync status bar */}
       {syncStatus && (
-        <div className="flex gap-4 mb-3 text-xs text-muted-foreground">
+        <div className="flex flex-wrap gap-4 mb-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <Users className="w-3 h-3" /> {syncStatus.totalActive} active
           </span>
           <span className="flex items-center gap-1">
             <MapPin className="w-3 h-3" /> {syncStatus.geocoded} mapped
           </span>
+          {(syncStatus.needsFetch ?? 0) > 0 && (
+            <span className="text-amber-500">
+              {syncStatus.needsFetch} need address fetch
+            </span>
+          )}
           {(syncStatus.pendingGeocode ?? 0) > 0 && (
             <button
               onClick={handleGeocode}
