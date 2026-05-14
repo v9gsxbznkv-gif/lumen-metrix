@@ -544,43 +544,59 @@ export const demographicsRouter = router({
       let errors = 0;
 
       for (const person of people) {
-        try {
-          const addrResult = await client.get<any>(
-            `/people/v2/people/${person.pcoId}/addresses`
-          );
+        let retries = 0;
+        const MAX_RETRIES = 2;
+        let success = false;
 
-          const addresses = Array.isArray(addrResult.data) ? addrResult.data : [];
-          const primary = addresses.find(
-            (a: any) => a.attributes?.primary === true
-          ) || addresses[0];
+        while (!success && retries <= MAX_RETRIES) {
+          try {
+            const addrResult = await client.get<any>(
+              `/people/v2/people/${person.pcoId}/addresses`
+            );
 
-          if (primary?.attributes) {
-            const attrs = primary.attributes;
-            // PCO uses street_line_1 and street_line_2, NOT "street"
-            const streetParts = [attrs.street_line_1, attrs.street_line_2].filter(Boolean);
-            const street = streetParts.join(", ") || null;
-            await db
-              .update(pcoPeople)
-              .set({
-                street,
-                city: attrs.city || null,
-                state: attrs.state?.trim() || null,
-                zip: attrs.zip || null,
-              })
-              .where(eq(pcoPeople.id, person.id));
-            synced++;
-          } else {
-            // No address on file — mark with empty zip so we don't keep retrying
-            await db
-              .update(pcoPeople)
-              .set({ zip: "" })
-              .where(eq(pcoPeople.id, person.id));
-            noAddress++;
+            const addresses = Array.isArray(addrResult.data) ? addrResult.data : [];
+            const primary = addresses.find(
+              (a: any) => a.attributes?.primary === true
+            ) || addresses[0];
+
+            if (primary?.attributes) {
+              const attrs = primary.attributes;
+              // PCO uses street_line_1 and street_line_2, NOT "street"
+              const streetParts = [attrs.street_line_1, attrs.street_line_2].filter(Boolean);
+              const street = streetParts.join(", ") || null;
+              await db
+                .update(pcoPeople)
+                .set({
+                  street,
+                  city: attrs.city || null,
+                  state: attrs.state?.trim() || null,
+                  zip: attrs.zip || null,
+                })
+                .where(eq(pcoPeople.id, person.id));
+              synced++;
+            } else {
+              // No address on file — mark with empty zip so we don't keep retrying
+              await db
+                .update(pcoPeople)
+                .set({ zip: "" })
+                .where(eq(pcoPeople.id, person.id));
+              noAddress++;
+            }
+            success = true;
+          } catch (err: any) {
+            retries++;
+            if (retries > MAX_RETRIES) {
+              console.warn(`[Demographics] Address fetch failed for ${person.pcoId} after ${MAX_RETRIES + 1} attempts: ${err.message}`);
+              errors++;
+            } else {
+              // Wait before retry (exponential: 1s, 3s)
+              await new Promise((r) => setTimeout(r, retries * 2000));
+            }
           }
-        } catch (err: any) {
-          console.warn(`[Demographics] Address fetch failed for ${person.pcoId}: ${err.message}`);
-          errors++;
         }
+
+        // Rate limit: 250ms between requests to avoid PCO throttling
+        await new Promise((r) => setTimeout(r, 250));
       }
 
       // Count remaining

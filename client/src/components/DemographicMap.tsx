@@ -260,61 +260,115 @@ export default function DemographicMap() {
   }, [syncAddresses, fetchAddressBatch, geocodeAddresses, refetchMapData, refetchStatus]);
 
   /**
-   * Fix Map Data: full pipeline to reset stale zip-centroid geocoding,
-   * re-fetch addresses from PCO with correct street_line_1 field,
-   * and re-geocode with full street addresses.
+   * Fix Map Data: resumable pipeline that:
+   * 1. Checks current state — only resets if ALL data is stale (no real streets)
+   * 2. Fetches addresses from PCO with retry/backoff on failure
+   * 3. Geocodes with full street addresses
+   * Can be clicked multiple times to resume where it left off.
    */
   const handleFixMapData = useCallback(async () => {
     setFixingMap(true);
     try {
-      // Step 1: Reset all address data
-      setSyncMessage("Step 1/3: Clearing stale address data...");
-      const resetResult = await resetAddressData.mutateAsync();
-      setSyncMessage(`Step 1 done: Cleared ${resetResult.cleared} records. Fetching fresh addresses from PCO...`);
+      // Check if we need to reset or can resume
+      const status = await refetchStatus();
+      const currentStatus = status.data;
 
-      // Step 2: Re-fetch addresses from PCO in batches
+      // Only reset if no real street addresses exist yet
+      // (i.e., first run or all data is stale zip-centroid data)
+      const hasRealStreets = syncStatus && (syncStatus.withAddress ?? 0) > 0 && (syncStatus.geocoded ?? 0) === 0;
+      const needsReset = !hasRealStreets && syncStatus && syncStatus.geocoded > 0;
+
+      if (needsReset) {
+        setSyncMessage("Step 1/3: Clearing stale address data...");
+        const resetResult = await resetAddressData.mutateAsync();
+        setSyncMessage(`Step 1 done: Cleared ${resetResult.cleared} records.`);
+      } else {
+        setSyncMessage("Resuming address fetch (no reset needed)...");
+      }
+
+      // Step 2: Fetch addresses from PCO in batches with retry
       let addrRemaining = Infinity;
       let totalFetched = 0;
       let addrBatch = 0;
+      let consecutiveErrors = 0;
+      const MAX_RETRIES = 3;
 
       while (addrRemaining > 0) {
         addrBatch++;
-        const batchResult = await fetchAllAddresses.mutateAsync({ batchSize: 50 });
-        totalFetched += batchResult.synced;
-        addrRemaining = batchResult.remaining;
-        setSyncMessage(
-          `Step 2/3: Fetching addresses... batch ${addrBatch}, ${totalFetched} fetched, ${addrRemaining} remaining`
-        );
+        try {
+          const batchResult = await fetchAllAddresses.mutateAsync({ batchSize: 25 });
+          totalFetched += batchResult.synced;
+          addrRemaining = batchResult.remaining;
+          consecutiveErrors = 0; // Reset on success
+          setSyncMessage(
+            `Step 1/2: Fetching addresses... batch ${addrBatch}, ${totalFetched} fetched, ${addrRemaining} remaining`
+          );
+        } catch (batchErr: any) {
+          consecutiveErrors++;
+          if (consecutiveErrors >= MAX_RETRIES) {
+            setSyncMessage(
+              `Address fetch paused after ${MAX_RETRIES} consecutive errors (${totalFetched} fetched so far). Click "Fix Map Data" again to resume.`
+            );
+            setFixingMap(false);
+            await refetchStatus();
+            return;
+          }
+          // Exponential backoff: 3s, 9s, 27s
+          const delay = Math.pow(3, consecutiveErrors) * 1000;
+          setSyncMessage(
+            `Step 1/2: Error on batch ${addrBatch}, retrying in ${delay / 1000}s... (attempt ${consecutiveErrors}/${MAX_RETRIES})`
+          );
+          await new Promise((r) => setTimeout(r, delay));
+        }
       }
 
-      setSyncMessage(`Step 2 done: ${totalFetched} addresses fetched. Geocoding with full street addresses...`);
+      setSyncMessage(`Addresses done: ${totalFetched} fetched. Geocoding with full street addresses...`);
 
       // Step 3: Geocode with full street addresses
       let totalGeocoded = 0;
       let totalFailed = 0;
       let geoRemaining = Infinity;
       let geoBatch = 0;
+      consecutiveErrors = 0;
 
       while (geoRemaining > 0) {
         geoBatch++;
-        const geoResult = await geocodeAddresses.mutateAsync({ batchSize: 100 });
-        totalGeocoded += geoResult.geocoded;
-        totalFailed += geoResult.failed;
-        geoRemaining = geoResult.remaining;
-        setSyncMessage(`Step 3/3: Geocoding batch ${geoBatch}... ${totalGeocoded} done, ${geoRemaining} remaining`);
-        // Refresh map every 3 batches so user sees progress
-        if (geoBatch % 3 === 0) await refetchMapData();
+        try {
+          const geoResult = await geocodeAddresses.mutateAsync({ batchSize: 50 });
+          totalGeocoded += geoResult.geocoded;
+          totalFailed += geoResult.failed;
+          geoRemaining = geoResult.remaining;
+          consecutiveErrors = 0;
+          setSyncMessage(`Step 2/2: Geocoding batch ${geoBatch}... ${totalGeocoded} done, ${geoRemaining} remaining`);
+          if (geoBatch % 3 === 0) await refetchMapData();
+        } catch (geoErr: any) {
+          consecutiveErrors++;
+          if (consecutiveErrors >= MAX_RETRIES) {
+            setSyncMessage(
+              `Geocoding paused after ${MAX_RETRIES} errors (${totalGeocoded} geocoded so far). Click "Fix Map Data" again to resume.`
+            );
+            setFixingMap(false);
+            await refetchMapData();
+            await refetchStatus();
+            return;
+          }
+          const delay = Math.pow(3, consecutiveErrors) * 1000;
+          setSyncMessage(
+            `Step 2/2: Geocoding error, retrying in ${delay / 1000}s... (attempt ${consecutiveErrors}/${MAX_RETRIES})`
+          );
+          await new Promise((r) => setTimeout(r, delay));
+        }
       }
 
       setSyncMessage(`Done! ${totalFetched} addresses fetched, ${totalGeocoded} geocoded with street addresses, ${totalFailed} failed.`);
       await refetchMapData();
       await refetchStatus();
     } catch (err: any) {
-      setSyncMessage(`Error: ${err.message}`);
+      setSyncMessage(`Error: ${err.message}. Click "Fix Map Data" again to resume.`);
     } finally {
       setFixingMap(false);
     }
-  }, [resetAddressData, fetchAllAddresses, geocodeAddresses, refetchMapData, refetchStatus]);
+  }, [resetAddressData, fetchAllAddresses, geocodeAddresses, refetchMapData, refetchStatus, syncStatus]);
 
   const handleBackfillCampus = useCallback(async () => {
     setBackfilling(true);

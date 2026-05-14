@@ -1324,12 +1324,12 @@
 - [x] Deploy fix
 
 ## Bug: Map dots clustered in square pattern instead of at actual geocoded addresses
-- [ ] Diagnose why map pins are in a grid/square instead of real lat/lng positions
-- [ ] Fix the map to use actual geocoded coordinates from addresses
-- [ ] Deploy fix
+- [x] Diagnose why map pins are in a grid/square instead of real lat/lng positions
+- [x] Fix the map to use actual geocoded coordinates from addresses
+- [x] Deploy fix
 
 ## Map Fix: Re-fetch addresses and re-geocode with street addresses
-- [ ] Add resetAndRefetchAddresses endpoint to demographics router (clears lat/lng/street for all people, re-fetches from PCO with street_line_1, then re-geocodes)
-- [ ] Add "Fix Map Data" button to DemographicMap UI that triggers the full reset+refetch+regeocode pipeline
-- [ ] Verify map shows dots at actual street addresses instead of zip centroids
-- [ ] Deploy fix
+- [x] Add resetAndRefetchAddresses endpoint to demographics router (clears lat/lng/street for all people, re-fetches from PCO with street_line_1, then re-geocodes)
+- [x] Add "Fix Map Data" button to DemographicMap UI that triggers the full reset+refetch+regeocode pipeline
+- [ ] Verify map shows dots at actual street addresses instead of zip centroids (user needs to click Fix Map Data button)
+- [x] Deploy fix

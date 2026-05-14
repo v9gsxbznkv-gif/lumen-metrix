@@ -1,0 +1,40 @@
+{
+  "query": "SELECT street, city, state, zip FROM pco_people WHERE status = 'active' AND street IS NOT NULL AND street != '' AND street != 'NULL' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT street, city, state, zip FROM pco_people WHERE status = 'active' AND street IS NOT NULL AND street != '' AND street != 'NULL' LIMIT 5;",
+  "rows": [
+    {
+      "street": "616 Whistler Dr",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30115"
+    },
+    {
+      "street": "508 Canton Ct",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30115-6053"
+    },
+    {
+      "street": "132 Spring Way Sq",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30114"
+    },
+    {
+      "street": "174 Charles Rd.",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30115"
+    },
+    {
+      "street": "114 Holly Reserve Pkwy",
+      "city": "Canton",
+      "state": "GA",
+      "zip": "30114"
+    }
+  ],
+  "messages": [],
+  "stdout": "street\tcity\tstate\tzip\n616 Whistler Dr\tCanton\tGA\t30115\n508 Canton Ct\tCanton\tGA\t30115-6053\n132 Spring Way Sq\tCanton\tGA\t30114\n174 Charles Rd.\tCanton\tGA\t30115\n114 Holly Reserve Pkwy\tCanton\tGA\t30114\n",
+  "stderr": "",
+  "execution_time_ms": 265
+}

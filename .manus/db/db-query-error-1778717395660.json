@@ -1,0 +1,8 @@
+{
+  "query": "SELECT CASE WHEN street IS NOT NULL AND street != '' AND street != 'NULL' THEN 'HAS_STREET' WHEN zip IS NOT NULL AND zip != '' THEN 'HAS_ZIP_NO_STREET' WHEN zip = '' THEN 'NO_ADDRESS_ON_FILE' WHEN zip IS NULL THEN 'NOT_FETCHED' ELSE 'OTHER' END as status, COUNT(*) as cnt FROM pco_people WHERE status = 'active' GROUP BY status ORDER BY cnt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT CASE WHEN street IS NOT NULL AND street != '' AND street != 'NULL' THEN 'HAS_STREET' WHEN zip IS NOT NULL AND zip != '' THEN 'HAS_ZIP_NO_STREET' WHEN zip = '' THEN 'NO_ADDRESS_ON_FILE' WHEN zip IS NULL THEN 'NOT_FETCHED' ELSE 'OTHER' END as status, COUNT(*) as cnt FROM pco_people WHERE status = 'active' GROUP BY status ORDER BY cnt DESC;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1055 (42000) at line 1: Expression #1 of SELECT list is not in GROUP BY clause and contains nonaggregated column 'EmzMXpmCwkQz2biKeRL4cm.pco_people.street' which is not functionally dependent on columns in GROUP BY clause; this is incompatible with sql_mode=only_full_group_by"
+  ]
+}

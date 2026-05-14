@@ -1,0 +1,17 @@
+{
+  "query": "SELECT SUM(CASE WHEN street IS NOT NULL AND street != '' AND street != 'NULL' THEN 1 ELSE 0 END) as has_street, SUM(CASE WHEN (street IS NULL OR street = '' OR street = 'NULL') AND zip IS NOT NULL AND zip != '' THEN 1 ELSE 0 END) as has_zip_no_street, SUM(CASE WHEN zip = '' THEN 1 ELSE 0 END) as no_address_on_file, SUM(CASE WHEN zip IS NULL THEN 1 ELSE 0 END) as not_fetched, SUM(CASE WHEN latitude IS NOT NULL AND latitude != 0 THEN 1 ELSE 0 END) as geocoded FROM pco_people WHERE status = 'active';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT SUM(CASE WHEN street IS NOT NULL AND street != '' AND street != 'NULL' THEN 1 ELSE 0 END) as has_street, SUM(CASE WHEN (street IS NULL OR street = '' OR street = 'NULL') AND zip IS NOT NULL AND zip != '' THEN 1 ELSE 0 END) as has_zip_no_street, SUM(CASE WHEN zip = '' THEN 1 ELSE 0 END) as no_address_on_file, SUM(CASE WHEN zip IS NULL THEN 1 ELSE 0 END) as not_fetched, SUM(CASE WHEN latitude IS NOT NULL AND latitude != 0 THEN 1 ELSE 0 END) as geocoded FROM pco_people WHERE status = 'active';",
+  "rows": [
+    {
+      "has_street": "996",
+      "has_zip_no_street": "1",
+      "no_address_on_file": "48",
+      "not_fetched": "2471",
+      "geocoded": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "has_street\thas_zip_no_street\tno_address_on_file\tnot_fetched\tgeocoded\n996\t1\t48\t2471\t0\n",
+  "stderr": "",
+  "execution_time_ms": 268
+}
