@@ -1,0 +1,94 @@
+{
+  "query": "SELECT weekNumber, campus, total, scheduled, confirmed FROM serving_weekly WHERE year = 2026 AND weekNumber >= 15 ORDER BY weekNumber, campus",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekNumber, campus, total, scheduled, confirmed FROM serving_weekly WHERE year = 2026 AND weekNumber >= 15 ORDER BY weekNumber, campus",
+  "rows": [
+    {
+      "weekNumber": "15",
+      "campus": "Canton",
+      "total": "299",
+      "scheduled": "299",
+      "confirmed": "0"
+    },
+    {
+      "weekNumber": "15",
+      "campus": "Jasper",
+      "total": "87",
+      "scheduled": "87",
+      "confirmed": "0"
+    },
+    {
+      "weekNumber": "16",
+      "campus": "Canton",
+      "total": "438",
+      "scheduled": "438",
+      "confirmed": "0"
+    },
+    {
+      "weekNumber": "16",
+      "campus": "Jasper",
+      "total": "162",
+      "scheduled": "162",
+      "confirmed": "0"
+    },
+    {
+      "weekNumber": "17",
+      "campus": "Canton",
+      "total": "425",
+      "scheduled": "425",
+      "confirmed": "0"
+    },
+    {
+      "weekNumber": "17",
+      "campus": "Jasper",
+      "total": "155",
+      "scheduled": "155",
+      "confirmed": "0"
+    },
+    {
+      "weekNumber": "18",
+      "campus": "Canton",
+      "total": "422",
+      "scheduled": "422",
+      "confirmed": "0"
+    },
+    {
+      "weekNumber": "18",
+      "campus": "Jasper",
+      "total": "159",
+      "scheduled": "159",
+      "confirmed": "0"
+    },
+    {
+      "weekNumber": "19",
+      "campus": "Canton",
+      "total": "447",
+      "scheduled": "447",
+      "confirmed": "0"
+    },
+    {
+      "weekNumber": "19",
+      "campus": "Jasper",
+      "total": "157",
+      "scheduled": "157",
+      "confirmed": "0"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Canton",
+      "total": "97",
+      "scheduled": "97",
+      "confirmed": "0"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Jasper",
+      "total": "57",
+      "scheduled": "57",
+      "confirmed": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\tcampus\ttotal\tscheduled\tconfirmed\n15\tCanton\t299\t299\t0\n15\tJasper\t87\t87\t0\n16\tCanton\t438\t438\t0\n16\tJasper\t162\t162\t0\n17\tCanton\t425\t425\t0\n17\tJasper\t155\t155\t0\n18\tCanton\t422\t422\t0\n18\tJasper\t159\t159\t0\n19\tCanton\t447\t447\t0\n19\tJasper\t157\t157\t0\n20\tCanton\t97\t97\t0\n20\tJasper\t57\t57\t0\n",
+  "stderr": "",
+  "execution_time_ms": 271
+}

@@ -82,13 +82,17 @@ export default function TeamMembersTab() {
   const isLoading = dataQuery.isLoading;
   const rawData = dataQuery.data;
 
-  // Detect if the data has real scheduled/confirmed values (2026+ after sync)
-  // vs legacy data where only `total` is populated
-  const hasScheduledData = useMemo(() => {
+  // Detect if the data has real confirmed (check-in) data.
+  // hasConfirmedData = true → show Scheduled vs Checked In dual columns
+  // hasConfirmedData = false → show single "Team Members" column using best available number
+  const hasConfirmedData = useMemo(() => {
     if (!rawData) return false;
     const rows = rawData.data as any[];
-    return rows.some(r => (r.scheduled || 0) > 0 || (r.confirmed || 0) > 0);
+    return rows.some(r => (r.confirmed || 0) > 0);
   }, [rawData]);
+
+  // For legacy compatibility: hasScheduledData is used for the dual-column view
+  const hasScheduledData = hasConfirmedData;
 
   // ─── Weekly ───────────────────────────────────────────────
   const weeklyData = useMemo(() => {
@@ -196,11 +200,13 @@ export default function TeamMembersTab() {
       .sort((a, b) => b.year - a.year);
   }, [rawData]);
 
-  // Helper: get the "primary" number for a row (confirmed if available, else total)
+  // Helper: get the "primary" number for a row
+  // When we have confirmed data → use confirmed (actual check-ins)
+  // When no confirmed data → use total (which equals scheduled from Services, or legacy spreadsheet data)
   const getPrimary = (row: { confirmed: number; total: number }) =>
-    hasScheduledData ? row.confirmed : row.total;
+    hasConfirmedData ? row.confirmed : row.total;
   const getPrimaryAvg = (row: { avgConfirmed: number; avgWeekly: number }) =>
-    hasScheduledData ? row.avgConfirmed : row.avgWeekly;
+    hasConfirmedData ? row.avgConfirmed : row.avgWeekly;
 
   const chartData = useMemo(() => {
     if (hasScheduledData) {

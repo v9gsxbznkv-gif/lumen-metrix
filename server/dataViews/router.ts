@@ -929,11 +929,16 @@ const servingRouter = router({
       if (endYear) conditions.push(lte(servingWeekly.year, endYear));
 
       const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-      const rows = await d
+      const allRows = await d
         .select()
         .from(servingWeekly)
         .where(whereClause)
         .orderBy(asc(servingWeekly.year), asc(servingWeekly.weekNumber));
+
+      // Exclude partial current week for the current year (same as attendance/giving)
+      const currentYear = new Date().getFullYear();
+      const lastCompleteWeek = getLastCompleteISOWeek();
+      const rows = allRows.filter(r => !(r.year === currentYear && r.weekNumber > lastCompleteWeek));
 
       if (viewMode === "weekly") {
         if (!campus || campus === "all") {
@@ -971,8 +976,12 @@ const servingRouter = router({
             existing.total += row.total;
             existing.scheduled += row.scheduled;
             existing.confirmed += row.confirmed;
-            existing.weekCount += 1;
+            // Use Set for distinct week counting (avoid double-counting when campus=all)
+            (existing as any)._weekSet.add(row.weekNumber);
+            existing.weekCount = (existing as any)._weekSet.size;
           } else {
+            const _weekSet = new Set<number>();
+            _weekSet.add(row.weekNumber);
             monthly.set(key, {
               year: row.year,
               month,
@@ -981,6 +990,7 @@ const servingRouter = router({
               scheduled: row.scheduled,
               confirmed: row.confirmed,
               weekCount: 1,
+              ...(Object.defineProperty({}, '_weekSet', { value: _weekSet, enumerable: false }) as any),
             });
           }
         }
@@ -1009,8 +1019,12 @@ const servingRouter = router({
           existing.total += row.total;
           existing.scheduled += row.scheduled;
           existing.confirmed += row.confirmed;
-          existing.weekCount += 1;
+          // Use Set for distinct week counting (avoid double-counting when campus=all)
+          (existing as any)._weekSet.add(row.weekNumber);
+          existing.weekCount = (existing as any)._weekSet.size;
         } else {
+          const _weekSet = new Set<number>();
+          _weekSet.add(row.weekNumber);
           yearly.set(key, {
             year: row.year,
             campus: campusKey === "All" ? "All Campuses" : row.campus,
@@ -1018,6 +1032,7 @@ const servingRouter = router({
             scheduled: row.scheduled,
             confirmed: row.confirmed,
             weekCount: 1,
+            ...(Object.defineProperty({}, '_weekSet', { value: _weekSet, enumerable: false }) as any),
           });
         }
       }

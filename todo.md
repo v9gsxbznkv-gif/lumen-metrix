@@ -1361,4 +1361,10 @@
 - [x] Write volunteer check-in count as 'confirmed' in serving_weekly via populateServingAndNextSteps merge
 - [x] Keep PCO Services plan_people_count as 'scheduled' in serving_weekly
 - [x] Frontend: fall back to total when scheduled/confirmed are both 0 (legacy data)
+- [x] Deploy fix
+
+## Bug: Team Members page week 20 + no avg/checked-in data
+- [x] Diagnose why week 20 is showing (no partial-week filter on serving router)
+- [x] Diagnose why no avg or checked-in data from past weeks (hasScheduledData triggered by scheduled>0 but confirmed=0)
+- [x] Fix both issues (added getLastCompleteISOWeek filter, changed to hasConfirmedData detection, fixed distinct week counting)
 - [ ] Deploy fix

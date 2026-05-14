@@ -1,0 +1,330 @@
+{
+  "query": "SELECT weekNumber, campus, total, scheduled, confirmed, source FROM serving_weekly WHERE year = 2026 ORDER BY weekNumber, campus",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekNumber, campus, total, scheduled, confirmed, source FROM serving_weekly WHERE year = 2026 ORDER BY weekNumber, campus",
+  "rows": [
+    {
+      "weekNumber": "1",
+      "campus": "Canton",
+      "total": "260",
+      "scheduled": "260",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "1",
+      "campus": "Jasper",
+      "total": "102",
+      "scheduled": "102",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "2",
+      "campus": "Canton",
+      "total": "475",
+      "scheduled": "475",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "2",
+      "campus": "Jasper",
+      "total": "169",
+      "scheduled": "169",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "3",
+      "campus": "Canton",
+      "total": "422",
+      "scheduled": "422",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "3",
+      "campus": "Jasper",
+      "total": "173",
+      "scheduled": "173",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "4",
+      "campus": "Canton",
+      "total": "457",
+      "scheduled": "457",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "4",
+      "campus": "Jasper",
+      "total": "148",
+      "scheduled": "148",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "5",
+      "campus": "Canton",
+      "total": "459",
+      "scheduled": "459",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "5",
+      "campus": "Jasper",
+      "total": "169",
+      "scheduled": "169",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "6",
+      "campus": "Canton",
+      "total": "465",
+      "scheduled": "465",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "6",
+      "campus": "Jasper",
+      "total": "161",
+      "scheduled": "161",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "7",
+      "campus": "Canton",
+      "total": "423",
+      "scheduled": "423",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "7",
+      "campus": "Jasper",
+      "total": "172",
+      "scheduled": "172",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "8",
+      "campus": "Canton",
+      "total": "289",
+      "scheduled": "289",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "8",
+      "campus": "Jasper",
+      "total": "94",
+      "scheduled": "94",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "9",
+      "campus": "Canton",
+      "total": "454",
+      "scheduled": "454",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "9",
+      "campus": "Jasper",
+      "total": "161",
+      "scheduled": "161",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "10",
+      "campus": "Canton",
+      "total": "443",
+      "scheduled": "443",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "10",
+      "campus": "Jasper",
+      "total": "164",
+      "scheduled": "164",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "11",
+      "campus": "Canton",
+      "total": "456",
+      "scheduled": "456",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "11",
+      "campus": "Jasper",
+      "total": "153",
+      "scheduled": "153",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "12",
+      "campus": "Canton",
+      "total": "435",
+      "scheduled": "435",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "12",
+      "campus": "Jasper",
+      "total": "162",
+      "scheduled": "162",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "13",
+      "campus": "Canton",
+      "total": "467",
+      "scheduled": "467",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "13",
+      "campus": "Jasper",
+      "total": "154",
+      "scheduled": "154",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "14",
+      "campus": "Canton",
+      "total": "582",
+      "scheduled": "582",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "14",
+      "campus": "Jasper",
+      "total": "232",
+      "scheduled": "232",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "15",
+      "campus": "Canton",
+      "total": "299",
+      "scheduled": "299",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "15",
+      "campus": "Jasper",
+      "total": "87",
+      "scheduled": "87",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "16",
+      "campus": "Canton",
+      "total": "438",
+      "scheduled": "438",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "16",
+      "campus": "Jasper",
+      "total": "162",
+      "scheduled": "162",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "17",
+      "campus": "Canton",
+      "total": "425",
+      "scheduled": "425",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "17",
+      "campus": "Jasper",
+      "total": "155",
+      "scheduled": "155",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "18",
+      "campus": "Canton",
+      "total": "422",
+      "scheduled": "422",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "18",
+      "campus": "Jasper",
+      "total": "159",
+      "scheduled": "159",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "19",
+      "campus": "Canton",
+      "total": "447",
+      "scheduled": "447",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "19",
+      "campus": "Jasper",
+      "total": "157",
+      "scheduled": "157",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Canton",
+      "total": "97",
+      "scheduled": "97",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Jasper",
+      "total": "57",
+      "scheduled": "57",
+      "confirmed": "0",
+      "source": "pco"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\tcampus\ttotal\tscheduled\tconfirmed\tsource\n1\tCanton\t260\t260\t0\tpco\n1\tJasper\t102\t102\t0\tpco\n2\tCanton\t475\t475\t0\tpco\n2\tJasper\t169\t169\t0\tpco\n3\tCanton\t422\t422\t0\tpco\n3\tJasper\t173\t173\t0\tpco\n4\tCanton\t457\t457\t0\tpco\n4\tJasper\t148\t148\t0\tpco\n5\tCanton\t459\t459\t0\tpco\n5\tJasper\t169\t169\t0\tpco\n6\tCanton\t465\t465\t0\tpco\n6\tJasper\t161\t161\t0\tpco\n7\tCanton\t423\t423\t0\tpco\n7\tJasper\t172\t172\t0\tpco\n8\tCanton\t289\t289\t0\tpco\n8\tJasper\t94\t94\t0\tpco\n9\tCanton\t454\t454\t0\tpco\n9\tJasper\t161\t161\t0\tpco\n10\tCanton\t443\t443\t0\tpco\n10\tJasper\t164\t164\t0\tpco\n11\tCanton\t456\t456\t0\tpco\n11\tJasper\t153\t153\t0\tpco\n12\tCanton\t435\t435\t0\tpco\n12\tJasper\t162\t162\t0\tpco\n13\tCanton\t467\t467\t0\tpco\n13\tJasper\t154\t154\t0\tpco\n14\tCanton\t582\t582\t0\tpco\n14\tJasper\t232\t232\t0\tpco\n15\tCanton\t299\t299\t0\tpco\n15\tJasper\t87\t87\t0\tpco\n16\tCanton\t438\t438\t0\tpco\n16\tJasper\t162\t162\t0\tpco\n17\tCanton\t425\t425\t0\tpco\n17\tJasper\t155\t155\t0\tpco\n18\tCanton\t422\t422\t0\tpco\n18\tJasper\t159\t159\t0\tpco\n19\tCanton\t447\t447\t0\tpco\n19\tJasper\t157\t157\t0\tpco\n20\tCanton\t97\t97\t0\tpco\n20\tJasper\t57\t57\t0\tpco\n",
+  "stderr": "",
+  "execution_time_ms": 1019
+}
