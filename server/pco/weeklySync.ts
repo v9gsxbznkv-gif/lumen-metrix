@@ -1562,8 +1562,8 @@ export async function syncVolunteersFromServices(
     }
 
     // Step 2: For each service type, fetch plans in the date range
-    // Aggregate: weekStart → campus → volunteer count
-    const weekCampusVolunteers = new Map<string, Map<string, number>>();
+    // Aggregate: weekStart → campus → { scheduled, confirmed }
+    const weekCampusVolunteers = new Map<string, Map<string, { scheduled: number; confirmed: number }>>();
 
     for (const st of serviceTypes) {
       const stName = st.attributes?.name || "Unknown";
@@ -1600,8 +1600,22 @@ export async function syncVolunteersFromServices(
 
       for (const plan of plansResult.data) {
         const sortDate = plan.attributes?.sort_date;
-        const teamMemberCount = plan.attributes?.plan_people_count ?? 0;
-        if (!sortDate || teamMemberCount === 0) continue;
+        const scheduledCount = plan.attributes?.plan_people_count ?? 0;
+        if (!sortDate || scheduledCount === 0) continue;
+
+        // Get confirmed count by fetching team_members with confirmed filter
+        let confirmedCount = 0;
+        try {
+          const confirmedResult = await client.get(
+            `/services/v2/service_types/${st.id}/plans/${plan.id}/team_members`,
+            { filter: "confirmed", per_page: 1 }
+          );
+          confirmedCount = confirmedResult.meta?.total_count ?? 0;
+        } catch (err: any) {
+          // If we can't get confirmed count, fall back to scheduled
+          console.warn(`[Volunteer Sync] Could not get confirmed count for plan ${plan.id}: ${err.message}`);
+          confirmedCount = scheduledCount;
+        }
 
         // Get the week start (Sunday) for this plan date
         const planDate = new Date(sortDate);
@@ -1611,12 +1625,15 @@ export async function syncVolunteersFromServices(
           weekCampusVolunteers.set(weekStart, new Map());
         }
         const campusMap = weekCampusVolunteers.get(weekStart)!;
-        campusMap.set(campus, (campusMap.get(campus) || 0) + teamMemberCount);
+        const existing = campusMap.get(campus) || { scheduled: 0, confirmed: 0 };
+        existing.scheduled += scheduledCount;
+        existing.confirmed += confirmedCount;
+        campusMap.set(campus, existing);
         recordsProcessed++;
       }
     }
 
-    // Step 3: Write to attendance_weekly as subgroup "Volunteers"
+    // Step 3: Write to attendance_weekly as subgroup "Volunteers" AND serving_weekly
     // Filter out future weeks - PCO Services returns scheduled volunteers for upcoming dates
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -1631,9 +1648,11 @@ export async function syncVolunteersFromServices(
         const year = weekDate.getFullYear();
         const weekNumber = getISOWeekNumber(weekDate);
 
-        for (const [campus, volCount] of Array.from(campusMap)) {
-          // Check for existing row
-          const existing = await db
+        for (const [campus, counts] of Array.from(campusMap)) {
+          const { scheduled, confirmed } = counts;
+
+          // Write to attendance_weekly (uses confirmed as the headcount)
+          const existingAtt = await db
             .select()
             .from(attendanceWeekly)
             .where(
@@ -1645,8 +1664,8 @@ export async function syncVolunteersFromServices(
             )
             .limit(1);
 
-          if (existing.length > 0) {
-            const row = existing[0] as any;
+          if (existingAtt.length > 0) {
+            const row = existingAtt[0] as any;
             if (row.manualLock) {
               console.log(`[Volunteer Sync] Skipping locked row: ${campus} ${weekStart}`);
               continue;
@@ -1654,8 +1673,8 @@ export async function syncVolunteersFromServices(
             await db
               .update(attendanceWeekly)
               .set({
-                headcount: volCount,
-                volunteerCount: volCount,
+                headcount: confirmed,
+                volunteerCount: confirmed,
                 source: "pco_services",
                 updatedAt: new Date(),
               })
@@ -1668,13 +1687,50 @@ export async function syncVolunteersFromServices(
               weekStartDate: weekStart,
               campus,
               subgroup: "Volunteers",
-              headcount: volCount,
+              headcount: confirmed,
               regularCount: 0,
               guestCount: 0,
-              volunteerCount: volCount,
+              volunteerCount: confirmed,
               source: "pco_services",
             });
             recordsCreated++;
+          }
+
+          // Write directly to serving_weekly with scheduled + confirmed
+          const existingServ = await db
+            .select()
+            .from(servingWeekly)
+            .where(
+              and(
+                eq(servingWeekly.year, year),
+                eq(servingWeekly.weekNumber, weekNumber),
+                eq(servingWeekly.campus, campus),
+              )
+            )
+            .limit(1);
+
+          if (existingServ.length > 0) {
+            await db
+              .update(servingWeekly)
+              .set({
+                total: confirmed,
+                scheduled,
+                confirmed,
+                source: "pco" as const,
+                updatedAt: new Date(),
+              })
+              .where(eq(servingWeekly.id, existingServ[0].id));
+          } else {
+            await db.insert(servingWeekly).values({
+              year,
+              weekNumber,
+              weekStartDate: weekStart,
+              campus,
+              total: confirmed,
+              scheduled,
+              confirmed,
+              source: "pco" as const,
+            });
           }
         }
       }

@@ -1,0 +1,120 @@
+{
+  "query": "SELECT * FROM serving_weekly ORDER BY year DESC, weekNumber DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT * FROM serving_weekly ORDER BY year DESC, weekNumber DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "90109",
+      "year": "2026",
+      "weekNumber": "35",
+      "weekStartDate": "2026-08-24",
+      "campus": "Canton",
+      "total": "2",
+      "source": "pco",
+      "createdAt": "2026-05-12 18:24:35",
+      "updatedAt": "2026-05-12 18:24:35"
+    },
+    {
+      "id": "90108",
+      "year": "2026",
+      "weekNumber": "34",
+      "weekStartDate": "2026-08-17",
+      "campus": "Canton",
+      "total": "2",
+      "source": "pco",
+      "createdAt": "2026-05-12 18:24:35",
+      "updatedAt": "2026-05-12 18:24:35"
+    },
+    {
+      "id": "90107",
+      "year": "2026",
+      "weekNumber": "33",
+      "weekStartDate": "2026-08-10",
+      "campus": "Canton",
+      "total": "9",
+      "source": "pco",
+      "createdAt": "2026-05-12 18:24:35",
+      "updatedAt": "2026-05-12 18:24:35"
+    },
+    {
+      "id": "90106",
+      "year": "2026",
+      "weekNumber": "32",
+      "weekStartDate": "2026-08-03",
+      "campus": "Jasper",
+      "total": "3",
+      "source": "pco",
+      "createdAt": "2026-05-12 18:24:35",
+      "updatedAt": "2026-05-12 18:24:35"
+    },
+    {
+      "id": "90105",
+      "year": "2026",
+      "weekNumber": "32",
+      "weekStartDate": "2026-08-03",
+      "campus": "Canton",
+      "total": "9",
+      "source": "pco",
+      "createdAt": "2026-05-12 18:24:35",
+      "updatedAt": "2026-05-12 18:24:35"
+    },
+    {
+      "id": "90104",
+      "year": "2026",
+      "weekNumber": "31",
+      "weekStartDate": "2026-07-27",
+      "campus": "Jasper",
+      "total": "5",
+      "source": "pco",
+      "createdAt": "2026-05-12 18:24:35",
+      "updatedAt": "2026-05-12 18:24:35"
+    },
+    {
+      "id": "90103",
+      "year": "2026",
+      "weekNumber": "31",
+      "weekStartDate": "2026-07-27",
+      "campus": "Canton",
+      "total": "21",
+      "source": "pco",
+      "createdAt": "2026-05-12 18:24:35",
+      "updatedAt": "2026-05-12 18:24:35"
+    },
+    {
+      "id": "90102",
+      "year": "2026",
+      "weekNumber": "30",
+      "weekStartDate": "2026-07-20",
+      "campus": "Jasper",
+      "total": "14",
+      "source": "pco",
+      "createdAt": "2026-05-12 18:24:35",
+      "updatedAt": "2026-05-12 18:24:35"
+    },
+    {
+      "id": "90101",
+      "year": "2026",
+      "weekNumber": "30",
+      "weekStartDate": "2026-07-20",
+      "campus": "Canton",
+      "total": "21",
+      "source": "pco",
+      "createdAt": "2026-05-12 18:24:35",
+      "updatedAt": "2026-05-12 18:24:35"
+    },
+    {
+      "id": "90100",
+      "year": "2026",
+      "weekNumber": "29",
+      "weekStartDate": "2026-07-13",
+      "campus": "Jasper",
+      "total": "14",
+      "source": "pco",
+      "createdAt": "2026-05-12 18:24:35",
+      "updatedAt": "2026-05-12 18:24:35"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tyear\tweekNumber\tweekStartDate\tcampus\ttotal\tsource\tcreatedAt\tupdatedAt\n90109\t2026\t35\t2026-08-24\tCanton\t2\tpco\t2026-05-12 18:24:35\t2026-05-12 18:24:35\n90108\t2026\t34\t2026-08-17\tCanton\t2\tpco\t2026-05-12 18:24:35\t2026-05-12 18:24:35\n90107\t2026\t33\t2026-08-10\tCanton\t9\tpco\t2026-05-12 18:24:35\t2026-05-12 18:24:35\n90106\t2026\t32\t2026-08-03\tJasper\t3\tpco\t2026-05-12 18:24:35\t2026-05-12 18:24:35\n90105\t2026\t32\t2026-08-03\tCanton\t9\tpco\t2026-05-12 18:24:35\t2026-05-12 18:24:35\n90104\t2026\t31\t2026-07-27\tJasper\t5\tpco\t2026-05-12 18:24:35\t2026-05-12 18:24:35\n90103\t2026\t31\t2026-07-27\tCanton\t21\tpco\t2026-05-12 18:24:35\t2026-05-12 18:24:35\n90102\t2026\t30\t2026-07-20\tJasper\t14\tpco\t2026-05-12 18:24:35\t2026-05-12 18:24:35\n90101\t2026\t30\t2026-07-20\tCanton\t21\tpco\t2026-05-12 18:24:35\t2026-05-12 18:24:35\n90100\t2026\t29\t2026-07-13\tJasper\t14\tpco\t2026-05-12 18:24:35\t2026-05-12 18:24:35\n",
+  "stderr": "",
+  "execution_time_ms": 267
+}

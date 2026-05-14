@@ -480,6 +480,8 @@ export const servingWeekly = mysqlTable("serving_weekly", {
   weekStartDate: varchar("weekStartDate", { length: 10 }).notNull(),
   campus: varchar("campus", { length: 64 }).notNull(),
   total: int("total").default(0).notNull(),
+  scheduled: int("scheduled").default(0).notNull(),
+  confirmed: int("confirmed").default(0).notNull(),
   source: varchar("source", { length: 32 }).default("spreadsheet").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

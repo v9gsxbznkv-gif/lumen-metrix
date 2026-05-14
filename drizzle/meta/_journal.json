@@ -127,6 +127,13 @@
       "when": 1778379578300,
       "tag": "0017_daffy_molecule_man",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "5",
+      "when": 1778791492670,
+      "tag": "0018_supreme_magdalene",
+      "breakpoints": true
     }
   ]
 }

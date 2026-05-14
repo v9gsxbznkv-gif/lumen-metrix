@@ -1343,4 +1343,13 @@
 - [x] Diagnose why address fetch stops at ~2200 out of 3516
 - [x] Diagnose why map dots disappear after page refresh
 - [x] Fix both issues
-- [ ] Deploy fix (map stall/disappear)
+- [x] Deploy fix (map stall/disappear)
+
+## Feature: Scheduled vs Checked-In volunteers on Team Member page
+- [x] Investigate PCO API for scheduled vs checked-in volunteer data
+- [x] Update schema/data model to store both scheduled and checked-in counts per week
+- [x] Update backend sync to pull both scheduled and checked-in from PCO
+- [x] Update frontend table to show both Scheduled and Checked-In columns
+- [x] Use checked-in as the weekly number and for calculating averages
+- [x] Add Show Rate (confirmed/scheduled %) KPI and column
+- [ ] Deploy feature

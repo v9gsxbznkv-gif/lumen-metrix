@@ -943,6 +943,8 @@ const servingRouter = router({
             const existing = weekMap.get(key);
             if (existing) {
               existing.total += row.total;
+              existing.scheduled += row.scheduled;
+              existing.confirmed += row.confirmed;
             } else {
               weekMap.set(key, { ...row, campus: "All Campuses" });
             }
@@ -957,7 +959,7 @@ const servingRouter = router({
       if (viewMode === "monthly") {
         const monthly = new Map<string, {
           year: number; month: number; campus: string;
-          total: number; weekCount: number;
+          total: number; scheduled: number; confirmed: number; weekCount: number;
         }>();
 
         for (const row of rows) {
@@ -967,6 +969,8 @@ const servingRouter = router({
           const existing = monthly.get(key);
           if (existing) {
             existing.total += row.total;
+            existing.scheduled += row.scheduled;
+            existing.confirmed += row.confirmed;
             existing.weekCount += 1;
           } else {
             monthly.set(key, {
@@ -974,6 +978,8 @@ const servingRouter = router({
               month,
               campus: campusKey === "All" ? "All Campuses" : row.campus,
               total: row.total,
+              scheduled: row.scheduled,
+              confirmed: row.confirmed,
               weekCount: 1,
             });
           }
@@ -982,6 +988,8 @@ const servingRouter = router({
         const data = Array.from(monthly.values()).map(m => ({
           ...m,
           avgWeekly: Math.round(m.total / m.weekCount),
+          avgScheduled: Math.round(m.scheduled / m.weekCount),
+          avgConfirmed: Math.round(m.confirmed / m.weekCount),
         }));
         data.sort((a, b) => a.year - b.year || a.month - b.month);
         return { viewMode, data };
@@ -990,7 +998,7 @@ const servingRouter = router({
       // yearly
       const yearly = new Map<string, {
         year: number; campus: string;
-        total: number; weekCount: number;
+        total: number; scheduled: number; confirmed: number; weekCount: number;
       }>();
 
       for (const row of rows) {
@@ -999,12 +1007,16 @@ const servingRouter = router({
         const existing = yearly.get(key);
         if (existing) {
           existing.total += row.total;
+          existing.scheduled += row.scheduled;
+          existing.confirmed += row.confirmed;
           existing.weekCount += 1;
         } else {
           yearly.set(key, {
             year: row.year,
             campus: campusKey === "All" ? "All Campuses" : row.campus,
             total: row.total,
+            scheduled: row.scheduled,
+            confirmed: row.confirmed,
             weekCount: 1,
           });
         }
@@ -1013,6 +1025,8 @@ const servingRouter = router({
       const data = Array.from(yearly.values()).map(y => ({
         ...y,
         avgWeekly: Math.round(y.total / y.weekCount),
+        avgScheduled: Math.round(y.scheduled / y.weekCount),
+        avgConfirmed: Math.round(y.confirmed / y.weekCount),
       }));
       data.sort((a, b) => a.year - b.year);
       return { viewMode, data };

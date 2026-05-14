@@ -1,0 +1,22 @@
+{
+  "query": "SELECT source, COUNT(*) as cnt, MIN(year) as min_year, MAX(year) as max_year FROM serving_weekly GROUP BY source;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT source, COUNT(*) as cnt, MIN(year) as min_year, MAX(year) as max_year FROM serving_weekly GROUP BY source;",
+  "rows": [
+    {
+      "source": "spreadsheet",
+      "cnt": "1071",
+      "min_year": "2013",
+      "max_year": "2025"
+    },
+    {
+      "source": "pco",
+      "cnt": "69",
+      "min_year": "2025",
+      "max_year": "2026"
+    }
+  ],
+  "messages": [],
+  "stdout": "source\tcnt\tmin_year\tmax_year\nspreadsheet\t1071\t2013\t2025\npco\t69\t2025\t2026\n",
+  "stderr": "",
+  "execution_time_ms": 267
+}
