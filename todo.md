@@ -1333,3 +1333,8 @@
 - [x] Add "Fix Map Data" button to DemographicMap UI that triggers the full reset+refetch+regeocode pipeline
 - [ ] Verify map shows dots at actual street addresses instead of zip centroids (user needs to click Fix Map Data button)
 - [x] Deploy fix
+
+## Bug: Giving page yearly tab shows 57 weeks and inflated avg weekly for 2026
+- [x] Diagnose why yearly tab shows 57 weeks instead of correct week count for the year
+- [x] Fix avg weekly calculation for 2026 (showing much higher than expected ~64k)
+- [ ] Deploy fix

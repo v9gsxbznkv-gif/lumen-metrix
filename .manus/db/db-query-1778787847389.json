@@ -1,0 +1,18 @@
+{
+  "query": "SELECT year, COUNT(*) as total_rows, COUNT(DISTINCT weekNumber) as distinct_weeks, SUM(total) as total_giving, SUM(total) / COUNT(*) as avg_by_rows, SUM(total) / COUNT(DISTINCT weekNumber) as avg_by_distinct_weeks FROM giving_weekly WHERE year = 2026 AND weekNumber <= 19;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, COUNT(*) as total_rows, COUNT(DISTINCT weekNumber) as distinct_weeks, SUM(total) as total_giving, SUM(total) / COUNT(*) as avg_by_rows, SUM(total) / COUNT(DISTINCT weekNumber) as avg_by_distinct_weeks FROM giving_weekly WHERE year = 2026 AND weekNumber <= 19;",
+  "rows": [
+    {
+      "year": "2026",
+      "total_rows": "57",
+      "distinct_weeks": "19",
+      "total_giving": "3638678.65",
+      "avg_by_rows": "63836.467544",
+      "avg_by_distinct_weeks": "191509.402632"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\ttotal_rows\tdistinct_weeks\ttotal_giving\tavg_by_rows\tavg_by_distinct_weeks\n2026\t57\t19\t3638678.65\t63836.467544\t191509.402632\n",
+  "stderr": "",
+  "execution_time_ms": 267
+}

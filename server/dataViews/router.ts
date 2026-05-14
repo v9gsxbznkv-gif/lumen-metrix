@@ -676,7 +676,7 @@ const givingRouter = router({
         const monthly = new Map<string, {
           year: number; month: number; campus: string;
           total: number; general: number; designated: number;
-          donationCount: number; weekCount: number;
+          donationCount: number; weekNumbers: Set<number>;
         }>();
 
         for (const row of parsed) {
@@ -689,7 +689,7 @@ const givingRouter = router({
             existing.general += row.general;
             existing.designated += row.designated;
             existing.donationCount += row.donationCount;
-            existing.weekCount += 1;
+            existing.weekNumbers.add(row.weekNumber);
           } else {
             monthly.set(key, {
               year: row.year,
@@ -699,15 +699,25 @@ const givingRouter = router({
               general: row.general,
               designated: row.designated,
               donationCount: row.donationCount,
-              weekCount: 1,
+              weekNumbers: new Set([row.weekNumber]),
             });
           }
         }
 
-        const data = Array.from(monthly.values()).map(m => ({
-          ...m,
-          avgWeekly: Math.round(m.total / m.weekCount * 100) / 100,
-        }));
+        const data = Array.from(monthly.values()).map(m => {
+          const weekCount = m.weekNumbers.size;
+          return {
+            year: m.year,
+            month: m.month,
+            campus: m.campus,
+            total: m.total,
+            general: m.general,
+            designated: m.designated,
+            donationCount: m.donationCount,
+            weekCount,
+            avgWeekly: weekCount > 0 ? Math.round(m.total / weekCount * 100) / 100 : 0,
+          };
+        });
         data.sort((a, b) => a.year - b.year || a.month - b.month);
         return { viewMode, data };
       }
@@ -716,7 +726,7 @@ const givingRouter = router({
       const yearly = new Map<string, {
         year: number; campus: string;
         total: number; general: number; designated: number;
-        donationCount: number; weekCount: number;
+        donationCount: number; weekNumbers: Set<number>;
       }>();
 
       for (const row of parsed) {
@@ -728,7 +738,7 @@ const givingRouter = router({
           existing.general += row.general;
           existing.designated += row.designated;
           existing.donationCount += row.donationCount;
-          existing.weekCount += 1;
+          existing.weekNumbers.add(row.weekNumber);
         } else {
           yearly.set(key, {
             year: row.year,
@@ -737,15 +747,24 @@ const givingRouter = router({
             general: row.general,
             designated: row.designated,
             donationCount: row.donationCount,
-            weekCount: 1,
+            weekNumbers: new Set([row.weekNumber]),
           });
         }
       }
 
-      const data = Array.from(yearly.values()).map(y => ({
-        ...y,
-        avgWeekly: Math.round(y.total / y.weekCount * 100) / 100,
-      }));
+      const data = Array.from(yearly.values()).map(y => {
+        const weekCount = y.weekNumbers.size;
+        return {
+          year: y.year,
+          campus: y.campus,
+          total: y.total,
+          general: y.general,
+          designated: y.designated,
+          donationCount: y.donationCount,
+          weekCount,
+          avgWeekly: weekCount > 0 ? Math.round(y.total / weekCount * 100) / 100 : 0,
+        };
+      });
       data.sort((a, b) => a.year - b.year);
       return { viewMode, data };
     }),

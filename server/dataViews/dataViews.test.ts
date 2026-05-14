@@ -705,3 +705,160 @@ describe("per capita giving calculation", () => {
     expect(chartData[3]).toEqual({ weekNumber: 4, prior: 56 }); // only prior
   });
 });
+
+describe("giving yearly/monthly distinct week counting", () => {
+  it("should count distinct weeks, not rows, when aggregating across campuses for yearly view", () => {
+    // Simulate what the backend does: 3 campuses × 19 weeks = 57 rows
+    // but only 19 distinct weeks
+    const parsed = [
+      ...Array.from({ length: 19 }, (_, i) => ({
+        year: 2026, weekNumber: i + 1, weekStartDate: `2026-0${Math.ceil((i + 1) / 4)}-01`,
+        campus: "Canton", total: 150000, general: 140000, designated: 10000, donationCount: 300,
+      })),
+      ...Array.from({ length: 19 }, (_, i) => ({
+        year: 2026, weekNumber: i + 1, weekStartDate: `2026-0${Math.ceil((i + 1) / 4)}-01`,
+        campus: "Jasper", total: 25000, general: 23000, designated: 2000, donationCount: 80,
+      })),
+      ...Array.from({ length: 19 }, (_, i) => ({
+        year: 2026, weekNumber: i + 1, weekStartDate: `2026-0${Math.ceil((i + 1) / 4)}-01`,
+        campus: "All Campuses", total: 3000, general: 0, designated: 3000, donationCount: 10,
+      })),
+    ];
+
+    // Replicate the fixed yearly aggregation logic (using Set for distinct weeks)
+    const yearly = new Map<string, {
+      year: number; campus: string;
+      total: number; general: number; designated: number;
+      donationCount: number; weekNumbers: Set<number>;
+    }>();
+
+    for (const row of parsed) {
+      const campusKey = "All"; // campus="all" filter
+      const key = `${row.year}-${campusKey}`;
+      const existing = yearly.get(key);
+      if (existing) {
+        existing.total += row.total;
+        existing.general += row.general;
+        existing.designated += row.designated;
+        existing.donationCount += row.donationCount;
+        existing.weekNumbers.add(row.weekNumber);
+      } else {
+        yearly.set(key, {
+          year: row.year,
+          campus: "All Campuses",
+          total: row.total,
+          general: row.general,
+          designated: row.designated,
+          donationCount: row.donationCount,
+          weekNumbers: new Set([row.weekNumber]),
+        });
+      }
+    }
+
+    const result = Array.from(yearly.values()).map(y => {
+      const weekCount = y.weekNumbers.size;
+      return {
+        ...y,
+        weekCount,
+        avgWeekly: weekCount > 0 ? Math.round(y.total / weekCount * 100) / 100 : 0,
+      };
+    });
+
+    expect(result).toHaveLength(1);
+    const yr = result[0];
+
+    // Key assertion: weekCount should be 19 (distinct weeks), NOT 57 (total rows)
+    expect(yr.weekCount).toBe(19);
+
+    // Total should include all campuses
+    const expectedTotal = (150000 + 25000 + 3000) * 19;
+    expect(yr.total).toBe(expectedTotal);
+
+    // avgWeekly = total / 19 distinct weeks
+    const expectedAvg = Math.round(expectedTotal / 19 * 100) / 100;
+    expect(yr.avgWeekly).toBe(expectedAvg);
+  });
+
+  it("should count distinct weeks for monthly view across campuses", () => {
+    // 2 campuses × 4 weeks in April = 8 rows, but only 4 distinct weeks
+    const parsed = [
+      { year: 2026, weekNumber: 14, weekStartDate: "2026-04-05", campus: "Canton", total: 100000, general: 90000, designated: 10000, donationCount: 300 },
+      { year: 2026, weekNumber: 15, weekStartDate: "2026-04-12", campus: "Canton", total: 120000, general: 110000, designated: 10000, donationCount: 350 },
+      { year: 2026, weekNumber: 14, weekStartDate: "2026-04-05", campus: "Jasper", total: 20000, general: 18000, designated: 2000, donationCount: 80 },
+      { year: 2026, weekNumber: 15, weekStartDate: "2026-04-12", campus: "Jasper", total: 25000, general: 23000, designated: 2000, donationCount: 90 },
+    ];
+
+    const getMonthFromDate = (dateStr: string): number => parseInt(dateStr.split("-")[1]);
+
+    const monthly = new Map<string, {
+      year: number; month: number; campus: string;
+      total: number; weekNumbers: Set<number>;
+    }>();
+
+    for (const row of parsed) {
+      const month = getMonthFromDate(row.weekStartDate);
+      const campusKey = "All"; // campus="all"
+      const key = `${row.year}-${month}-${campusKey}`;
+      const existing = monthly.get(key);
+      if (existing) {
+        existing.total += row.total;
+        existing.weekNumbers.add(row.weekNumber);
+      } else {
+        monthly.set(key, {
+          year: row.year,
+          month,
+          campus: "All Campuses",
+          total: row.total,
+          weekNumbers: new Set([row.weekNumber]),
+        });
+      }
+    }
+
+    const result = Array.from(monthly.values()).map(m => ({
+      ...m,
+      weekCount: m.weekNumbers.size,
+      avgWeekly: m.weekNumbers.size > 0 ? Math.round(m.total / m.weekNumbers.size * 100) / 100 : 0,
+    }));
+
+    expect(result).toHaveLength(1);
+    const apr = result[0];
+
+    // Should be 2 distinct weeks (14, 15), NOT 4 rows
+    expect(apr.weekCount).toBe(2);
+    expect(apr.total).toBe(265000); // 100k + 120k + 20k + 25k
+    expect(apr.avgWeekly).toBe(132500); // 265k / 2
+  });
+
+  it("should NOT double-count when filtering a specific campus", () => {
+    // When filtering to a specific campus, each row is unique per week already
+    const parsed = [
+      { year: 2026, weekNumber: 14, weekStartDate: "2026-04-05", campus: "Canton", total: 100000, general: 90000, designated: 10000, donationCount: 300 },
+      { year: 2026, weekNumber: 15, weekStartDate: "2026-04-12", campus: "Canton", total: 120000, general: 110000, designated: 10000, donationCount: 350 },
+    ];
+
+    const yearly = new Map<string, {
+      year: number; campus: string; total: number; weekNumbers: Set<number>;
+    }>();
+
+    for (const row of parsed) {
+      const key = `${row.year}-${row.campus}`;
+      const existing = yearly.get(key);
+      if (existing) {
+        existing.total += row.total;
+        existing.weekNumbers.add(row.weekNumber);
+      } else {
+        yearly.set(key, {
+          year: row.year,
+          campus: row.campus,
+          total: row.total,
+          weekNumbers: new Set([row.weekNumber]),
+        });
+      }
+    }
+
+    const result = Array.from(yearly.values());
+    expect(result).toHaveLength(1);
+    expect(result[0].weekNumbers.size).toBe(2);
+    expect(result[0].total).toBe(220000);
+  });
+});

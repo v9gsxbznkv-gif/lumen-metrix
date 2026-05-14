@@ -1,0 +1,235 @@
+{
+  "query": "SELECT year, campus, COUNT(*) as row_count, COUNT(DISTINCT weekNumber) as distinct_weeks, MIN(weekNumber) as min_week, MAX(weekNumber) as max_week, SUM(total) as total_giving FROM giving_weekly GROUP BY year, campus ORDER BY year, campus;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, campus, COUNT(*) as row_count, COUNT(DISTINCT weekNumber) as distinct_weeks, MIN(weekNumber) as min_week, MAX(weekNumber) as max_week, SUM(total) as total_giving FROM giving_weekly GROUP BY year, campus ORDER BY year, campus;",
+  "rows": [
+    {
+      "year": "2013",
+      "campus": "Canton",
+      "row_count": "52",
+      "distinct_weeks": "52",
+      "min_week": "1",
+      "max_week": "52",
+      "total_giving": "2831086.25"
+    },
+    {
+      "year": "2014",
+      "campus": "Canton",
+      "row_count": "52",
+      "distinct_weeks": "52",
+      "min_week": "1",
+      "max_week": "52",
+      "total_giving": "2933204.89"
+    },
+    {
+      "year": "2015",
+      "campus": "Canton",
+      "row_count": "52",
+      "distinct_weeks": "52",
+      "min_week": "1",
+      "max_week": "52",
+      "total_giving": "3259088.70"
+    },
+    {
+      "year": "2016",
+      "campus": "Canton",
+      "row_count": "52",
+      "distinct_weeks": "52",
+      "min_week": "1",
+      "max_week": "52",
+      "total_giving": "3807589.91"
+    },
+    {
+      "year": "2017",
+      "campus": "Canton",
+      "row_count": "49",
+      "distinct_weeks": "49",
+      "min_week": "1",
+      "max_week": "49",
+      "total_giving": "4149656.74"
+    },
+    {
+      "year": "2018",
+      "campus": "Canton",
+      "row_count": "51",
+      "distinct_weeks": "51",
+      "min_week": "1",
+      "max_week": "51",
+      "total_giving": "4118613.71"
+    },
+    {
+      "year": "2018",
+      "campus": "Jasper",
+      "row_count": "51",
+      "distinct_weeks": "51",
+      "min_week": "1",
+      "max_week": "51",
+      "total_giving": "230345.11"
+    },
+    {
+      "year": "2019",
+      "campus": "Canton",
+      "row_count": "52",
+      "distinct_weeks": "52",
+      "min_week": "1",
+      "max_week": "52",
+      "total_giving": "4860547.63"
+    },
+    {
+      "year": "2019",
+      "campus": "Jasper",
+      "row_count": "52",
+      "distinct_weeks": "52",
+      "min_week": "1",
+      "max_week": "52",
+      "total_giving": "430494.47"
+    },
+    {
+      "year": "2020",
+      "campus": "Canton",
+      "row_count": "49",
+      "distinct_weeks": "49",
+      "min_week": "1",
+      "max_week": "52",
+      "total_giving": "4114337.59"
+    },
+    {
+      "year": "2020",
+      "campus": "Jasper",
+      "row_count": "49",
+      "distinct_weeks": "49",
+      "min_week": "1",
+      "max_week": "52",
+      "total_giving": "506399.53"
+    },
+    {
+      "year": "2021",
+      "campus": "Canton",
+      "row_count": "52",
+      "distinct_weeks": "52",
+      "min_week": "1",
+      "max_week": "52",
+      "total_giving": "6232973.40"
+    },
+    {
+      "year": "2021",
+      "campus": "Jasper",
+      "row_count": "51",
+      "distinct_weeks": "51",
+      "min_week": "2",
+      "max_week": "52",
+      "total_giving": "674631.00"
+    },
+    {
+      "year": "2022",
+      "campus": "Canton",
+      "row_count": "51",
+      "distinct_weeks": "51",
+      "min_week": "2",
+      "max_week": "52",
+      "total_giving": "5928629.00"
+    },
+    {
+      "year": "2022",
+      "campus": "Jasper",
+      "row_count": "51",
+      "distinct_weeks": "51",
+      "min_week": "2",
+      "max_week": "52",
+      "total_giving": "936115.00"
+    },
+    {
+      "year": "2023",
+      "campus": "Canton",
+      "row_count": "52",
+      "distinct_weeks": "52",
+      "min_week": "1",
+      "max_week": "52",
+      "total_giving": "6682896.85"
+    },
+    {
+      "year": "2023",
+      "campus": "Jasper",
+      "row_count": "52",
+      "distinct_weeks": "52",
+      "min_week": "1",
+      "max_week": "52",
+      "total_giving": "1035877.41"
+    },
+    {
+      "year": "2024",
+      "campus": "Canton",
+      "row_count": "52",
+      "distinct_weeks": "52",
+      "min_week": "1",
+      "max_week": "52",
+      "total_giving": "7924917.00"
+    },
+    {
+      "year": "2024",
+      "campus": "Jasper",
+      "row_count": "52",
+      "distinct_weeks": "52",
+      "min_week": "1",
+      "max_week": "52",
+      "total_giving": "1220441.00"
+    },
+    {
+      "year": "2025",
+      "campus": "All Campuses",
+      "row_count": "2",
+      "distinct_weeks": "2",
+      "min_week": "1",
+      "max_week": "53",
+      "total_giving": "6993.27"
+    },
+    {
+      "year": "2025",
+      "campus": "Canton",
+      "row_count": "53",
+      "distinct_weeks": "53",
+      "min_week": "1",
+      "max_week": "53",
+      "total_giving": "8555127.38"
+    },
+    {
+      "year": "2025",
+      "campus": "Jasper",
+      "row_count": "53",
+      "distinct_weeks": "53",
+      "min_week": "1",
+      "max_week": "53",
+      "total_giving": "1438444.06"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "row_count": "20",
+      "distinct_weeks": "20",
+      "min_week": "1",
+      "max_week": "20",
+      "total_giving": "60582.94"
+    },
+    {
+      "year": "2026",
+      "campus": "Canton",
+      "row_count": "20",
+      "distinct_weeks": "20",
+      "min_week": "1",
+      "max_week": "20",
+      "total_giving": "3059217.70"
+    },
+    {
+      "year": "2026",
+      "campus": "Jasper",
+      "row_count": "20",
+      "distinct_weeks": "20",
+      "min_week": "1",
+      "max_week": "20",
+      "total_giving": "524514.09"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tcampus\trow_count\tdistinct_weeks\tmin_week\tmax_week\ttotal_giving\n2013\tCanton\t52\t52\t1\t52\t2831086.25\n2014\tCanton\t52\t52\t1\t52\t2933204.89\n2015\tCanton\t52\t52\t1\t52\t3259088.70\n2016\tCanton\t52\t52\t1\t52\t3807589.91\n2017\tCanton\t49\t49\t1\t49\t4149656.74\n2018\tCanton\t51\t51\t1\t51\t4118613.71\n2018\tJasper\t51\t51\t1\t51\t230345.11\n2019\tCanton\t52\t52\t1\t52\t4860547.63\n2019\tJasper\t52\t52\t1\t52\t430494.47\n2020\tCanton\t49\t49\t1\t52\t4114337.59\n2020\tJasper\t49\t49\t1\t52\t506399.53\n2021\tCanton\t52\t52\t1\t52\t6232973.40\n2021\tJasper\t51\t51\t2\t52\t674631.00\n2022\tCanton\t51\t51\t2\t52\t5928629.00\n2022\tJasper\t51\t51\t2\t52\t936115.00\n2023\tCanton\t52\t52\t1\t52\t6682896.85\n2023\tJasper\t52\t52\t1\t52\t1035877.41\n2024\tCanton\t52\t52\t1\t52\t7924917.00\n2024\tJasper\t52\t52\t1\t52\t1220441.00\n2025\tAll Campuses\t2\t2\t1\t53\t6993.27\n2025\tCanton\t53\t53\t1\t53\t8555127.38\n2025\tJasper\t53\t53\t1\t53\t1438444.06\n2026\tAll Campuses\t20\t20\t1\t20\t60582.94\n2026\tCanton\t20\t20\t1\t20\t3059217.70\n2026\tJasper\t20\t20\t1\t20\t524514.09\n",
+  "stderr": "",
+  "execution_time_ms": 263
+}
