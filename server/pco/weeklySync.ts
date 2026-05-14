@@ -823,6 +823,7 @@ export async function syncWeeklyAttendance(
           );
           if (isCampusCheckin) {
             const roomTotals = new Map<string, number>();
+            let volunteerCheckinCount = 0; // Track volunteer check-ins from check-in stations
             for (const eventTime of eventTimesResult.data) {
               const etId = (eventTime as any).id;
               try {
@@ -849,22 +850,51 @@ export async function syncWeeklyAttendance(
                 for (const let_ of locResult.data as any[]) {
                   const regular = let_.attributes?.regular_count || 0;
                   const guest = let_.attributes?.guest_count || 0;
-                  const total = regular + guest; // exclude volunteers from kids count
-                  if (total === 0) continue;
+                  const total = regular + guest;
 
                   // Get location name from included data or relationship
                   const locId = let_.relationships?.location?.data?.id;
                   const locName = locId ? locationNames.get(locId) : null;
                   if (!locName) continue;
 
+                  // Check if this is a volunteer check-in location
+                  const trimmedName = locName.trim();
+                  if (VOLUNTEER_LOCATIONS.has(trimmedName) || trimmedName.toLowerCase() === "team member") {
+                    // Count volunteer check-ins (regular + guest at volunteer stations)
+                    volunteerCheckinCount += total;
+                    continue; // Don't add to room totals
+                  }
+
+                  if (total === 0) continue;
+
                   const category = mapLocationToCategory(locName, campus);
-                  if (!category || category === "ADULT") continue; // skip volunteers, adults, unknown
+                  if (!category || category === "ADULT") continue; // skip adults, unknown
 
                   roomTotals.set(category, (roomTotals.get(category) || 0) + total);
                 }
               } catch (err: any) {
                 console.warn(`[PCO Weekly Sync] Skipping location_event_times for event_time ${etId}: ${err.message}`);
               }
+            }
+
+            // Write volunteer check-in count as a separate "Volunteer Check-Ins" subgroup
+            if (volunteerCheckinCount > 0) {
+              const volKey = `${weekStartDate}|${campus}|Volunteer Check-Ins`;
+              const existingVol = weeklyMap.get(volKey);
+              if (existingVol) {
+                existingVol.headcount += volunteerCheckinCount;
+                existingVol.volunteerCount += volunteerCheckinCount;
+              } else {
+                weeklyMap.set(volKey, {
+                  year, weekNumber, weekStartDate, campus,
+                  subgroup: "Volunteer Check-Ins",
+                  headcount: volunteerCheckinCount,
+                  regularCount: 0,
+                  guestCount: 0,
+                  volunteerCount: volunteerCheckinCount,
+                });
+              }
+              console.log(`[PCO Weekly Sync]   ${eventName} ${weekStartDate} volunteer check-ins: ${volunteerCheckinCount}`);
             }
 
             // Write room-level rows to weeklyMap
@@ -1696,42 +1726,9 @@ export async function syncVolunteersFromServices(
             recordsCreated++;
           }
 
-          // Write directly to serving_weekly with scheduled + confirmed
-          const existingServ = await db
-            .select()
-            .from(servingWeekly)
-            .where(
-              and(
-                eq(servingWeekly.year, year),
-                eq(servingWeekly.weekNumber, weekNumber),
-                eq(servingWeekly.campus, campus),
-              )
-            )
-            .limit(1);
-
-          if (existingServ.length > 0) {
-            await db
-              .update(servingWeekly)
-              .set({
-                total: confirmed,
-                scheduled,
-                confirmed,
-                source: "pco" as const,
-                updatedAt: new Date(),
-              })
-              .where(eq(servingWeekly.id, existingServ[0].id));
-          } else {
-            await db.insert(servingWeekly).values({
-              year,
-              weekNumber,
-              weekStartDate: weekStart,
-              campus,
-              total: confirmed,
-              scheduled,
-              confirmed,
-              source: "pco" as const,
-            });
-          }
+          // NOTE: serving_weekly is populated by populateServingAndNextSteps()
+          // which merges Services scheduled data with Check-Ins confirmed data.
+          // We only write to attendance_weekly here (as "Volunteers" subgroup).
         }
       }
     } finally {
@@ -1781,35 +1778,100 @@ async function populateServingAndNextSteps(): Promise<void> {
   const { db: freshDb, end } = await createFreshDb();
   try {
     // ── Serving (Volunteers) ──
-    const volRows = await freshDb
+    // Two data sources:
+    //   1. "Volunteers" subgroup (from PCO Services) → scheduled count (total from Services)
+    //   2. "Volunteer Check-Ins" subgroup (from PCO Check-Ins) → confirmed count (who actually showed up)
+    // Merge both into serving_weekly with scheduled + confirmed columns.
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayStr = formatDate(today);
+
+    // Get scheduled counts from Services sync ("Volunteers" subgroup)
+    const scheduledRows = await freshDb
       .select()
       .from(attendanceWeekly)
       .where(and(
         eq(attendanceWeekly.subgroup, "Volunteers"),
         eq(attendanceWeekly.source, "pco_services"),
+        lte(attendanceWeekly.weekStartDate, todayStr),
       ));
 
-    if (volRows.length > 0) {
+    // Get confirmed counts from Check-Ins sync ("Volunteer Check-Ins" subgroup)
+    const checkinRows = await freshDb
+      .select()
+      .from(attendanceWeekly)
+      .where(and(
+        eq(attendanceWeekly.subgroup, "Volunteer Check-Ins"),
+        lte(attendanceWeekly.weekStartDate, todayStr),
+      ));
+
+    // Build a lookup: "year|weekNumber|campus" → confirmed count
+    const checkinLookup = new Map<string, number>();
+    for (const r of checkinRows) {
+      const key = `${r.year}|${r.weekNumber}|${r.campus}`;
+      checkinLookup.set(key, (checkinLookup.get(key) || 0) + r.headcount);
+    }
+
+    // Merge: for each scheduled row, look up the corresponding confirmed count
+    if (scheduledRows.length > 0) {
       const CHUNK = 50;
-      for (let i = 0; i < volRows.length; i += CHUNK) {
-        const chunk = volRows.slice(i, i + CHUNK);
+      for (let i = 0; i < scheduledRows.length; i += CHUNK) {
+        const chunk = scheduledRows.slice(i, i + CHUNK);
+        const values = chunk.map(r => {
+          const lookupKey = `${r.year}|${r.weekNumber}|${r.campus}`;
+          const confirmedFromCheckins = checkinLookup.get(lookupKey) || 0;
+          return {
+            year: r.year,
+            weekNumber: r.weekNumber,
+            weekStartDate: r.weekStartDate,
+            campus: r.campus,
+            total: confirmedFromCheckins > 0 ? confirmedFromCheckins : r.headcount,
+            scheduled: r.headcount, // Services count = scheduled
+            confirmed: confirmedFromCheckins, // Check-Ins count = confirmed (who showed up)
+            source: "pco" as const,
+          };
+        });
+        await freshDb.insert(servingWeekly).values(values)
+          .onDuplicateKeyUpdate({
+            set: {
+              total: sql`VALUES(total)`,
+              scheduled: sql`VALUES(${servingWeekly.scheduled})`,
+              confirmed: sql`VALUES(${servingWeekly.confirmed})`,
+              source: sql`VALUES(source)`,
+            },
+          });
+      }
+      console.log(`[populateServing] Wrote ${scheduledRows.length} serving_weekly rows with scheduled + ${checkinRows.length} check-in confirmed rows`);
+    }
+
+    // Also write check-in-only rows (weeks with check-in data but no Services scheduled data)
+    // This handles cases where check-ins exist but Services sync didn't produce a matching row
+    const scheduledKeys = new Set(scheduledRows.map(r => `${r.year}|${r.weekNumber}|${r.campus}`));
+    const orphanCheckins = checkinRows.filter(r => !scheduledKeys.has(`${r.year}|${r.weekNumber}|${r.campus}`));
+    if (orphanCheckins.length > 0) {
+      const CHUNK = 50;
+      for (let i = 0; i < orphanCheckins.length; i += CHUNK) {
+        const chunk = orphanCheckins.slice(i, i + CHUNK);
         const values = chunk.map(r => ({
           year: r.year,
           weekNumber: r.weekNumber,
           weekStartDate: r.weekStartDate,
           campus: r.campus,
           total: r.headcount,
+          scheduled: 0,
+          confirmed: r.headcount,
           source: "pco" as const,
         }));
         await freshDb.insert(servingWeekly).values(values)
           .onDuplicateKeyUpdate({
             set: {
-              total: sql`VALUES(total)`,
+              confirmed: sql`VALUES(${servingWeekly.confirmed})`,
+              total: sql`CASE WHEN ${servingWeekly.total} = 0 THEN VALUES(total) ELSE ${servingWeekly.total} END`,
               source: sql`VALUES(source)`,
             },
           });
       }
-      console.log(`[populateServing] Wrote ${volRows.length} serving_weekly rows`);
+      console.log(`[populateServing] Wrote ${orphanCheckins.length} orphan check-in rows (no matching Services data)`);
     }
 
     // ── Next Steps (FTG, Salvations) ──

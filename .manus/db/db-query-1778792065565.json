@@ -1,0 +1,22 @@
+{
+  "query": "SELECT campus, COUNT(*) as cnt, MIN(weekNumber) as min_week, MAX(weekNumber) as max_week FROM serving_weekly WHERE year = 2026 GROUP BY campus;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT campus, COUNT(*) as cnt, MIN(weekNumber) as min_week, MAX(weekNumber) as max_week FROM serving_weekly WHERE year = 2026 GROUP BY campus;",
+  "rows": [
+    {
+      "campus": "Jasper",
+      "cnt": "20",
+      "min_week": "1",
+      "max_week": "20"
+    },
+    {
+      "campus": "Canton",
+      "cnt": "20",
+      "min_week": "1",
+      "max_week": "20"
+    }
+  ],
+  "messages": [],
+  "stdout": "campus\tcnt\tmin_week\tmax_week\nJasper\t20\t1\t20\nCanton\t20\t1\t20\n",
+  "stderr": "",
+  "execution_time_ms": 262
+}

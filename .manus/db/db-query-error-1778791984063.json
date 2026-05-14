@@ -1,0 +1,8 @@
+{
+  "query": "SELECT year, campus, COUNT(*) as rows, MIN(weekNumber) as min_week, MAX(weekNumber) as max_week, SUM(total) as sum_total, SUM(scheduled) as sum_scheduled, SUM(confirmed) as sum_confirmed FROM serving_weekly GROUP BY year, campus ORDER BY year DESC, campus;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, campus, COUNT(*) as rows, MIN(weekNumber) as min_week, MAX(weekNumber) as max_week, SUM(total) as sum_total, SUM(scheduled) as sum_scheduled, SUM(confirmed) as sum_confirmed FROM serving_weekly GROUP BY year, campus ORDER BY year DESC, campus;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1064 (42000) at line 1: You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 1 column 37 near \"rows, MIN(weekNumber) as min_week, MAX(weekNumber) as max_week, SUM(total) as sum_total, SUM(scheduled) as sum_scheduled, SUM(confirmed) as sum_confirmed FROM serving_weekly GROUP BY year, campus ORDER BY year DESC, campus\""
+  ]
+}

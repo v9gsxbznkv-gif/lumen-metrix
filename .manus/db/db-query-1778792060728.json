@@ -1,0 +1,34 @@
+{
+  "query": "SELECT weekNumber, weekStartDate, campus, total FROM serving_weekly WHERE year = 2026 AND weekNumber >= 19 ORDER BY weekNumber, campus;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekNumber, weekStartDate, campus, total FROM serving_weekly WHERE year = 2026 AND weekNumber >= 19 ORDER BY weekNumber, campus;",
+  "rows": [
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "campus": "Canton",
+      "total": "493"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "campus": "Jasper",
+      "total": "155"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Canton",
+      "total": "539"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Jasper",
+      "total": "156"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\tweekStartDate\tcampus\ttotal\n19\t2026-05-04\tCanton\t493\n19\t2026-05-04\tJasper\t155\n20\t2026-05-11\tCanton\t539\n20\t2026-05-11\tJasper\t156\n",
+  "stderr": "",
+  "execution_time_ms": 260
+}

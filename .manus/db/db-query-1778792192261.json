@@ -1,0 +1,26 @@
+{
+  "query": "SELECT year, campus, source, COUNT(*) as cnt, SUM(headcount) as total_headcount, SUM(volunteerCount) as total_vol FROM attendance_weekly WHERE subgroup = 'Volunteers' AND year = 2026 GROUP BY year, campus, source;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, campus, source, COUNT(*) as cnt, SUM(headcount) as total_headcount, SUM(volunteerCount) as total_vol FROM attendance_weekly WHERE subgroup = 'Volunteers' AND year = 2026 GROUP BY year, campus, source;",
+  "rows": [
+    {
+      "year": "2026",
+      "campus": "Jasper",
+      "source": "pco_services",
+      "cnt": "19",
+      "total_headcount": "2885",
+      "total_vol": "2885"
+    },
+    {
+      "year": "2026",
+      "campus": "Canton",
+      "source": "pco_services",
+      "cnt": "19",
+      "total_headcount": "8903",
+      "total_vol": "8903"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tcampus\tsource\tcnt\ttotal_headcount\ttotal_vol\n2026\tJasper\tpco_services\t19\t2885\t2885\n2026\tCanton\tpco_services\t19\t8903\t8903\n",
+  "stderr": "",
+  "execution_time_ms": 281
+}

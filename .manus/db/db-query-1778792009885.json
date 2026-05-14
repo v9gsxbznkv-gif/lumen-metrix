@@ -1,0 +1,28 @@
+{
+  "query": "SELECT year, campus, COUNT(*) as cnt, MIN(weekNumber) as min_week, MAX(weekNumber) as max_week, MIN(weekStartDate) as min_date, MAX(weekStartDate) as max_date FROM attendance_weekly WHERE subgroup = 'Volunteers' AND year = 2026 GROUP BY year, campus;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, campus, COUNT(*) as cnt, MIN(weekNumber) as min_week, MAX(weekNumber) as max_week, MIN(weekStartDate) as min_date, MAX(weekStartDate) as max_date FROM attendance_weekly WHERE subgroup = 'Volunteers' AND year = 2026 GROUP BY year, campus;",
+  "rows": [
+    {
+      "year": "2026",
+      "campus": "Canton",
+      "cnt": "19",
+      "min_week": "1",
+      "max_week": "19",
+      "min_date": "2026-01-01",
+      "max_date": "2026-05-04"
+    },
+    {
+      "year": "2026",
+      "campus": "Jasper",
+      "cnt": "19",
+      "min_week": "1",
+      "max_week": "19",
+      "min_date": "2026-01-01",
+      "max_date": "2026-05-04"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tcampus\tcnt\tmin_week\tmax_week\tmin_date\tmax_date\n2026\tCanton\t19\t1\t19\t2026-01-01\t2026-05-04\n2026\tJasper\t19\t1\t19\t2026-01-01\t2026-05-04\n",
+  "stderr": "",
+  "execution_time_ms": 280
+}

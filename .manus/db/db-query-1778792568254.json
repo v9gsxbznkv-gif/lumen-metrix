@@ -1,0 +1,14 @@
+{
+  "query": "SELECT MAX(weekNumber) as maxWeek, COUNT(*) as total_rows FROM serving_weekly WHERE year = 2026",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT MAX(weekNumber) as maxWeek, COUNT(*) as total_rows FROM serving_weekly WHERE year = 2026",
+  "rows": [
+    {
+      "maxWeek": "20",
+      "total_rows": "40"
+    }
+  ],
+  "messages": [],
+  "stdout": "maxWeek\ttotal_rows\n20\t40\n",
+  "stderr": "",
+  "execution_time_ms": 271
+}

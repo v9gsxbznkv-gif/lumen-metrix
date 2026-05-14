@@ -1,0 +1,9 @@
+{
+  "query": "SELECT year, campus, COUNT(*) as weeks, SUM(headcount) as total_checkins FROM attendance_weekly WHERE subgroup = 'Volunteer Check-Ins' GROUP BY year, campus ORDER BY year DESC, campus",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, campus, COUNT(*) as weeks, SUM(headcount) as total_checkins FROM attendance_weekly WHERE subgroup = 'Volunteer Check-Ins' GROUP BY year, campus ORDER BY year DESC, campus",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 287
+}

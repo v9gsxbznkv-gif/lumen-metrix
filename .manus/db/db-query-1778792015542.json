@@ -1,0 +1,80 @@
+{
+  "query": "SELECT campus, weekNumber, weekStartDate, total, source FROM serving_weekly WHERE year = 2026 AND campus = 'Canton' AND weekNumber > 19 ORDER BY weekNumber LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT campus, weekNumber, weekStartDate, total, source FROM serving_weekly WHERE year = 2026 AND campus = 'Canton' AND weekNumber > 19 ORDER BY weekNumber LIMIT 10;",
+  "rows": [
+    {
+      "campus": "Canton",
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "total": "539",
+      "source": "pco"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "21",
+      "weekStartDate": "2026-05-18",
+      "total": "209",
+      "source": "pco"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "22",
+      "weekStartDate": "2026-05-25",
+      "total": "200",
+      "source": "pco"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "23",
+      "weekStartDate": "2026-06-01",
+      "total": "39",
+      "source": "pco"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "24",
+      "weekStartDate": "2026-06-08",
+      "total": "30",
+      "source": "pco"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "25",
+      "weekStartDate": "2026-06-15",
+      "total": "17",
+      "source": "pco"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "26",
+      "weekStartDate": "2026-06-22",
+      "total": "28",
+      "source": "pco"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "27",
+      "weekStartDate": "2026-06-29",
+      "total": "22",
+      "source": "pco"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "28",
+      "weekStartDate": "2026-07-06",
+      "total": "22",
+      "source": "pco"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "29",
+      "weekStartDate": "2026-07-13",
+      "total": "22",
+      "source": "pco"
+    }
+  ],
+  "messages": [],
+  "stdout": "campus\tweekNumber\tweekStartDate\ttotal\tsource\nCanton\t20\t2026-05-11\t539\tpco\nCanton\t21\t2026-05-18\t209\tpco\nCanton\t22\t2026-05-25\t200\tpco\nCanton\t23\t2026-06-01\t39\tpco\nCanton\t24\t2026-06-08\t30\tpco\nCanton\t25\t2026-06-15\t17\tpco\nCanton\t26\t2026-06-22\t28\tpco\nCanton\t27\t2026-06-29\t22\tpco\nCanton\t28\t2026-07-06\t22\tpco\nCanton\t29\t2026-07-13\t22\tpco\n",
+  "stderr": "",
+  "execution_time_ms": 273
+}

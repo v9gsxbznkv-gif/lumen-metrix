@@ -1,0 +1,250 @@
+{
+  "query": "SELECT year, campus, COUNT(*) as cnt, MIN(weekNumber) as min_week, MAX(weekNumber) as max_week, SUM(total) as sum_total, SUM(scheduled) as sum_scheduled, SUM(confirmed) as sum_confirmed FROM serving_weekly GROUP BY year, campus ORDER BY year DESC, campus;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, campus, COUNT(*) as cnt, MIN(weekNumber) as min_week, MAX(weekNumber) as max_week, SUM(total) as sum_total, SUM(scheduled) as sum_scheduled, SUM(confirmed) as sum_confirmed FROM serving_weekly GROUP BY year, campus ORDER BY year DESC, campus;",
+  "rows": [
+    {
+      "year": "2026",
+      "campus": "Canton",
+      "cnt": "35",
+      "min_week": "1",
+      "max_week": "35",
+      "sum_total": "10095",
+      "sum_scheduled": "0",
+      "sum_confirmed": "0"
+    },
+    {
+      "year": "2026",
+      "campus": "Jasper",
+      "cnt": "32",
+      "min_week": "1",
+      "max_week": "32",
+      "sum_total": "3343",
+      "sum_scheduled": "0",
+      "sum_confirmed": "0"
+    },
+    {
+      "year": "2025",
+      "campus": "Canton",
+      "cnt": "51",
+      "min_week": "1",
+      "max_week": "51",
+      "sum_total": "21661",
+      "sum_scheduled": "0",
+      "sum_confirmed": "0"
+    },
+    {
+      "year": "2025",
+      "campus": "Jasper",
+      "cnt": "51",
+      "min_week": "1",
+      "max_week": "51",
+      "sum_total": "6139",
+      "sum_scheduled": "0",
+      "sum_confirmed": "0"
+    },
+    {
+      "year": "2024",
+      "campus": "Canton",
+      "cnt": "51",
+      "min_week": "1",
+      "max_week": "51",
+      "sum_total": "20050",
+      "sum_scheduled": "0",
+      "sum_confirmed": "0"
+    },
+    {
+      "year": "2024",
+      "campus": "Jasper",
+      "cnt": "51",
+      "min_week": "1",
+      "max_week": "51",
+      "sum_total": "5694",
+      "sum_scheduled": "0",
+      "sum_confirmed": "0"
+    },
+    {
+      "year": "2023",
+      "campus": "Canton",
+      "cnt": "51",
+      "min_week": "2",
+      "max_week": "52",
+      "sum_total": "18617",
+      "sum_scheduled": "0",
+      "sum_confirmed": "0"
+    },
+    {
+      "year": "2023",
+      "campus": "Jasper",
+      "cnt": "51",
+      "min_week": "2",
+      "max_week": "52",
+      "sum_total": "5383",
+      "sum_scheduled": "0",
+      "sum_confirmed": "0"
+    },
+    {
+      "year": "2022",
+      "campus": "Canton",
+      "cnt": "52",
+      "min_week": "1",
+      "max_week": "52",
+      "sum_total": "15867",
+      "sum_scheduled": "0",
+      "sum_confirmed": "0"
+    },
+    {
+      "year": "2022",
+      "campus": "Jasper",
+      "cnt": "52",
+      "min_week": "1",
+      "max_week": "52",
+      "sum_total": "3936",
+      "sum_scheduled": "0",
+      "sum_confirmed": "0"
+    },
+    {
+      "year": "2021",
+      "campus": "Canton",
+      "cnt": "51",
+      "min_week": "1",
+      "max_week": "52",
+      "sum_total": "12388",
+      "sum_scheduled": "0",
+      "sum_confirmed": "0"
+    },
+    {
+      "year": "2021",
+      "campus": "Jasper",
+      "cnt": "51",
+      "min_week": "2",
+      "max_week": "52",
+      "sum_total": "4125",
+      "sum_scheduled": "0",
+      "sum_confirmed": "0"
+    },
+    {
+      "year": "2020",
+      "campus": "Canton",
+      "cnt": "52",
+      "min_week": "1",
+      "max_week": "52",
+      "sum_total": "20963",
+      "sum_scheduled": "0",
+      "sum_confirmed": "0"
+    },
+    {
+      "year": "2020",
+      "campus": "Jasper",
+      "cnt": "47",
+      "min_week": "1",
+      "max_week": "51",
+      "sum_total": "5543",
+      "sum_scheduled": "0",
+      "sum_confirmed": "0"
+    },
+    {
+      "year": "2019",
+      "campus": "Canton",
+      "cnt": "51",
+      "min_week": "1",
+      "max_week": "51",
+      "sum_total": "14554",
+      "sum_scheduled": "0",
+      "sum_confirmed": "0"
+    },
+    {
+      "year": "2019",
+      "campus": "Jasper",
+      "cnt": "51",
+      "min_week": "1",
+      "max_week": "52",
+      "sum_total": "4243",
+      "sum_scheduled": "0",
+      "sum_confirmed": "0"
+    },
+    {
+      "year": "2018",
+      "campus": "Canton",
+      "cnt": "51",
+      "min_week": "1",
+      "max_week": "51",
+      "sum_total": "16778",
+      "sum_scheduled": "0",
+      "sum_confirmed": "0"
+    },
+    {
+      "year": "2018",
+      "campus": "Jasper",
+      "cnt": "50",
+      "min_week": "1",
+      "max_week": "50",
+      "sum_total": "719",
+      "sum_scheduled": "0",
+      "sum_confirmed": "0"
+    },
+    {
+      "year": "2017",
+      "campus": "Canton",
+      "cnt": "49",
+      "min_week": "2",
+      "max_week": "50",
+      "sum_total": "18807",
+      "sum_scheduled": "0",
+      "sum_confirmed": "0"
+    },
+    {
+      "year": "2017",
+      "campus": "Jasper",
+      "cnt": "10",
+      "min_week": "16",
+      "max_week": "45",
+      "sum_total": "480",
+      "sum_scheduled": "0",
+      "sum_confirmed": "0"
+    },
+    {
+      "year": "2016",
+      "campus": "Canton",
+      "cnt": "52",
+      "min_week": "1",
+      "max_week": "52",
+      "sum_total": "19728",
+      "sum_scheduled": "0",
+      "sum_confirmed": "0"
+    },
+    {
+      "year": "2015",
+      "campus": "Canton",
+      "cnt": "51",
+      "min_week": "1",
+      "max_week": "51",
+      "sum_total": "16581",
+      "sum_scheduled": "0",
+      "sum_confirmed": "0"
+    },
+    {
+      "year": "2014",
+      "campus": "Canton",
+      "cnt": "51",
+      "min_week": "1",
+      "max_week": "51",
+      "sum_total": "7919",
+      "sum_scheduled": "0",
+      "sum_confirmed": "0"
+    },
+    {
+      "year": "2013",
+      "campus": "Canton",
+      "cnt": "46",
+      "min_week": "5",
+      "max_week": "50",
+      "sum_total": "6047",
+      "sum_scheduled": "0",
+      "sum_confirmed": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tcampus\tcnt\tmin_week\tmax_week\tsum_total\tsum_scheduled\tsum_confirmed\n2026\tCanton\t35\t1\t35\t10095\t0\t0\n2026\tJasper\t32\t1\t32\t3343\t0\t0\n2025\tCanton\t51\t1\t51\t21661\t0\t0\n2025\tJasper\t51\t1\t51\t6139\t0\t0\n2024\tCanton\t51\t1\t51\t20050\t0\t0\n2024\tJasper\t51\t1\t51\t5694\t0\t0\n2023\tCanton\t51\t2\t52\t18617\t0\t0\n2023\tJasper\t51\t2\t52\t5383\t0\t0\n2022\tCanton\t52\t1\t52\t15867\t0\t0\n2022\tJasper\t52\t1\t52\t3936\t0\t0\n2021\tCanton\t51\t1\t52\t12388\t0\t0\n2021\tJasper\t51\t2\t52\t4125\t0\t0\n2020\tCanton\t52\t1\t52\t20963\t0\t0\n2020\tJasper\t47\t1\t51\t5543\t0\t0\n2019\tCanton\t51\t1\t51\t14554\t0\t0\n2019\tJasper\t51\t1\t52\t4243\t0\t0\n2018\tCanton\t51\t1\t51\t16778\t0\t0\n2018\tJasper\t50\t1\t50\t719\t0\t0\n2017\tCanton\t49\t2\t50\t18807\t0\t0\n2017\tJasper\t10\t16\t45\t480\t0\t0\n2016\tCanton\t52\t1\t52\t19728\t0\t0\n2015\tCanton\t51\t1\t51\t16581\t0\t0\n2014\tCanton\t51\t1\t51\t7919\t0\t0\n2013\tCanton\t46\t5\t50\t6047\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 263
+}

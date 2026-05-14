@@ -1352,4 +1352,13 @@
 - [x] Update frontend table to show both Scheduled and Checked-In columns
 - [x] Use checked-in as the weekly number and for calculating averages
 - [x] Add Show Rate (confirmed/scheduled %) KPI and column
-- [ ] Deploy feature
+- [x] Deploy feature
+
+## Bug: Team Members page showing no data + pulling future weeks
+- [x] Diagnose why Team Members page shows no data after sync (scheduled/confirmed columns are 0 for all existing data)
+- [x] Fix sync pulling through week 35 (deleted stale future-week rows, added future-week filter to populateServingAndNextSteps)
+- [x] Capture volunteer check-in counts from VOLUNTEER_LOCATIONS during attendance sync
+- [x] Write volunteer check-in count as 'confirmed' in serving_weekly via populateServingAndNextSteps merge
+- [x] Keep PCO Services plan_people_count as 'scheduled' in serving_weekly
+- [x] Frontend: fall back to total when scheduled/confirmed are both 0 (legacy data)
+- [ ] Deploy fix
