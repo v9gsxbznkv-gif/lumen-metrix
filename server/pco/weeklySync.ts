@@ -850,22 +850,31 @@ export async function syncWeeklyAttendance(
                 for (const let_ of locResult.data as any[]) {
                   const regular = let_.attributes?.regular_count || 0;
                   const guest = let_.attributes?.guest_count || 0;
-                  const total = regular + guest;
+                  const volunteer = let_.attributes?.volunteer_count || 0;
+                  const attendeeTotal = regular + guest; // Non-volunteer attendees
+
+                  // Accumulate volunteer_count from ALL locations
+                  // (volunteers check in at their assigned room, not a separate "volunteer" location)
+                  volunteerCheckinCount += volunteer;
 
                   // Get location name from included data or relationship
                   const locId = let_.relationships?.location?.data?.id;
                   const locName = locId ? locationNames.get(locId) : null;
                   if (!locName) continue;
 
-                  // Check if this is a volunteer check-in location
+                  // Check if this is a volunteer-specific check-in location
                   const trimmedName = locName.trim();
-                  if (VOLUNTEER_LOCATIONS.has(trimmedName) || trimmedName.toLowerCase() === "team member") {
-                    // Count volunteer check-ins (regular + guest at volunteer stations)
-                    volunteerCheckinCount += total;
+                  const isVolMatch = VOLUNTEER_LOCATIONS.has(trimmedName) || trimmedName.toLowerCase() === "team member";
+
+                  if (isVolMatch) {
+                    // For dedicated volunteer locations, also count regular+guest as volunteer check-ins
+                    // (these are people checking in at a volunteer-only station)
+                    volunteerCheckinCount += attendeeTotal;
                     continue; // Don't add to room totals
                   }
 
-                  if (total === 0) continue;
+                  if (attendeeTotal === 0) continue;
+                  const total = attendeeTotal; // For room totals, only count non-volunteer attendees
 
                   const category = mapLocationToCategory(locName, campus);
                   if (!category || category === "ADULT") continue; // skip adults, unknown

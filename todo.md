@@ -1382,7 +1382,7 @@
 - [ ] Deploy fix
 
 ## Bug: Team Members Scheduled = Checked In = same number, Show Rate 0%
-- [ ] Root cause: serving_weekly has total=scheduled=same value (from PCO Services), confirmed=0 everywhere. populateServingAndNextSteps copies "Volunteers" from attendance_weekly into total+scheduled but never populates confirmed from actual PCO Check-Ins data.
-- [ ] Fix sync: pull actual volunteer check-in counts from PCO Check-Ins API (volunteer location headcounts) and write to confirmed column
-- [ ] Fix frontend: show Scheduled (Services) vs Checked In (Check-Ins) with real distinct data
+- [x] Root cause: PCO API has `volunteer_count` field on LocationEventTime that we were not reading — only reading `regular_count + guest_count` which is 0 for volunteers
+- [x] Fix sync: read `volunteer_count` from ALL locations and sum into volunteerCheckinCount; also count regular+guest at dedicated volunteer locations
+- [x] Fix frontend: show Scheduled (Services) vs Checked In (Check-Ins) when confirmed > 0 data exists
 - [ ] Deploy fix
