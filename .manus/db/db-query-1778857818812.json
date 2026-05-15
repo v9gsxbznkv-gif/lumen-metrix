@@ -1,0 +1,66 @@
+{
+  "query": "SELECT weekStartDate, campus, subgroup, headcount, source FROM attendance_weekly WHERE year = 2026 AND subgroup = 'YA Gathering' ORDER BY weekStartDate DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekStartDate, campus, subgroup, headcount, source FROM attendance_weekly WHERE year = 2026 AND subgroup = 'YA Gathering' ORDER BY weekStartDate DESC;",
+  "rows": [
+    {
+      "weekStartDate": "2026-05-04",
+      "campus": "Other",
+      "subgroup": "YA Gathering",
+      "headcount": "64",
+      "source": "pco"
+    },
+    {
+      "weekStartDate": "2026-05-04",
+      "campus": "Other",
+      "subgroup": "YA Gathering",
+      "headcount": "64",
+      "source": "pco"
+    },
+    {
+      "weekStartDate": "2026-04-13",
+      "campus": "Other",
+      "subgroup": "YA Gathering",
+      "headcount": "63",
+      "source": "pco"
+    },
+    {
+      "weekStartDate": "2026-04-13",
+      "campus": "Other",
+      "subgroup": "YA Gathering",
+      "headcount": "63",
+      "source": "pco"
+    },
+    {
+      "weekStartDate": "2026-03-09",
+      "campus": "Other",
+      "subgroup": "YA Gathering",
+      "headcount": "67",
+      "source": "pco"
+    },
+    {
+      "weekStartDate": "2026-03-09",
+      "campus": "Other",
+      "subgroup": "YA Gathering",
+      "headcount": "67",
+      "source": "pco"
+    },
+    {
+      "weekStartDate": "2026-02-09",
+      "campus": "Other",
+      "subgroup": "YA Gathering",
+      "headcount": "67",
+      "source": "pco"
+    },
+    {
+      "weekStartDate": "2026-01-12",
+      "campus": "Other",
+      "subgroup": "YA Gathering",
+      "headcount": "81",
+      "source": "pco"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekStartDate\tcampus\tsubgroup\theadcount\tsource\n2026-05-04\tOther\tYA Gathering\t64\tpco\n2026-05-04\tOther\tYA Gathering\t64\tpco\n2026-04-13\tOther\tYA Gathering\t63\tpco\n2026-04-13\tOther\tYA Gathering\t63\tpco\n2026-03-09\tOther\tYA Gathering\t67\tpco\n2026-03-09\tOther\tYA Gathering\t67\tpco\n2026-02-09\tOther\tYA Gathering\t67\tpco\n2026-01-12\tOther\tYA Gathering\t81\tpco\n",
+  "stderr": "",
+  "execution_time_ms": 271
+}

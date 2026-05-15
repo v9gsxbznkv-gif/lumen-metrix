@@ -1,0 +1,58 @@
+{
+  "query": "SELECT weekStartDate, campus, headcount, id FROM attendance_weekly WHERE year = 2026 AND subgroup = 'YA Gathering' ORDER BY weekStartDate;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekStartDate, campus, headcount, id FROM attendance_weekly WHERE year = 2026 AND subgroup = 'YA Gathering' ORDER BY weekStartDate;",
+  "rows": [
+    {
+      "weekStartDate": "2026-01-12",
+      "campus": "Other",
+      "headcount": "81",
+      "id": "330450"
+    },
+    {
+      "weekStartDate": "2026-02-09",
+      "campus": "Other",
+      "headcount": "67",
+      "id": "330448"
+    },
+    {
+      "weekStartDate": "2026-03-09",
+      "campus": "Other",
+      "headcount": "67",
+      "id": "330446"
+    },
+    {
+      "weekStartDate": "2026-03-09",
+      "campus": "Other",
+      "headcount": "67",
+      "id": "420925"
+    },
+    {
+      "weekStartDate": "2026-04-13",
+      "campus": "Other",
+      "headcount": "63",
+      "id": "330443"
+    },
+    {
+      "weekStartDate": "2026-04-13",
+      "campus": "Other",
+      "headcount": "63",
+      "id": "420922"
+    },
+    {
+      "weekStartDate": "2026-05-04",
+      "campus": "Other",
+      "headcount": "64",
+      "id": "330441"
+    },
+    {
+      "weekStartDate": "2026-05-04",
+      "campus": "Other",
+      "headcount": "64",
+      "id": "420920"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekStartDate\tcampus\theadcount\tid\n2026-01-12\tOther\t81\t330450\n2026-02-09\tOther\t67\t330448\n2026-03-09\tOther\t67\t330446\n2026-03-09\tOther\t67\t420925\n2026-04-13\tOther\t63\t330443\n2026-04-13\tOther\t63\t420922\n2026-05-04\tOther\t64\t330441\n2026-05-04\tOther\t64\t420920\n",
+  "stderr": "",
+  "execution_time_ms": 263
+}

@@ -1,0 +1,22 @@
+{
+  "query": "SELECT DISTINCT subgroup FROM attendance_weekly WHERE year = 2026 AND (subgroup LIKE '%Young%' OR subgroup LIKE '%YA%' OR subgroup LIKE '%young%' OR subgroup LIKE '%adult%') ORDER BY subgroup;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT subgroup FROM attendance_weekly WHERE year = 2026 AND (subgroup LIKE '%Young%' OR subgroup LIKE '%YA%' OR subgroup LIKE '%young%' OR subgroup LIKE '%adult%') ORDER BY subgroup;",
+  "rows": [
+    {
+      "subgroup": "FTG Adults"
+    },
+    {
+      "subgroup": "YA FTG"
+    },
+    {
+      "subgroup": "YA Gathering"
+    },
+    {
+      "subgroup": "YA Salvations"
+    }
+  ],
+  "messages": [],
+  "stdout": "subgroup\nFTG Adults\nYA FTG\nYA Gathering\nYA Salvations\n",
+  "stderr": "",
+  "execution_time_ms": 263
+}

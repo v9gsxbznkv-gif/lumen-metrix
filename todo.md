@@ -1379,10 +1379,17 @@
 - [x] Fix kpis useMemo missing monthly case (only handles weekly+yearly, returns null for monthly)
 - [x] Add monthlyData to kpis useMemo dependency array
 - [x] Fix hasScheduledData to show Scheduled column when scheduled > 0 (not just when confirmed > 0)
-- [ ] Deploy fix
+- [x] Deploy fix
 
 ## Bug: Team Members Scheduled = Checked In = same number, Show Rate 0%
 - [x] Root cause: PCO API has `volunteer_count` field on LocationEventTime that we were not reading — only reading `regular_count + guest_count` which is 0 for volunteers
 - [x] Fix sync: read `volunteer_count` from ALL locations and sum into volunteerCheckinCount; also count regular+guest at dedicated volunteer locations
 - [x] Fix frontend: show Scheduled (Services) vs Checked In (Check-Ins) when confirmed > 0 data exists
+- [x] Deploy fix
+
+## Bug: Young Adults column shows data on only some weeks (dashes on others)
+- [x] Investigate: YA Gathering is a monthly event — dashes on other weeks are correct (no event)
+- [x] Remove YA from weekly breakdown table (monthly event doesn't belong in weekly view)
+- [x] Ensure YA shows correctly in monthly view (kept in activeMetrics for monthly/yearly)
+- [x] Clean up duplicate YA rows in DB (deleted IDs 420925, 420922, 420920)
 - [ ] Deploy fix

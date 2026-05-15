@@ -167,16 +167,22 @@ export default function AttendanceTab2() {
   const rawData = dataQuery.data;
 
   // ─── Detect which metrics have data ────────────────────────
+  // Exclude Young Adults from weekly view — YA is a monthly event, so showing it
+  // in the weekly table creates a mostly-empty column with dashes.
+  const MONTHLY_ONLY_METRICS = new Set(["youngAdults"]);
+
   const activeMetrics = useMemo(() => {
     if (!rawData) return METRICS;
     const data = rawData.data as any[];
-    return METRICS.filter(m =>
-      data.some(row => {
+    return METRICS.filter(m => {
+      // Skip monthly-only metrics in weekly view
+      if (viewMode === "weekly" && MONTHLY_ONLY_METRICS.has(m.key)) return false;
+      return data.some(row => {
         const val = row[m.key] ?? row[`avgWeekly${m.key.charAt(0).toUpperCase() + m.key.slice(1)}`];
         return val && val > 0;
-      })
-    );
-  }, [rawData]);
+      });
+    });
+  }, [rawData, viewMode]);
 
   const activeChartMetrics = useMemo(() => {
     return CHART_METRICS.filter(m => activeMetrics.some(am => am.key === m.key));
