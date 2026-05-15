@@ -1367,4 +1367,16 @@
 - [x] Diagnose why week 20 is showing (no partial-week filter on serving router)
 - [x] Diagnose why no avg or checked-in data from past weeks (hasScheduledData triggered by scheduled>0 but confirmed=0)
 - [x] Fix both issues (added getLastCompleteISOWeek filter, changed to hasConfirmedData detection, fixed distinct week counting)
+- [x] Deploy fix
+
+## Bug: Sync failed
+- [x] Diagnose sync failure from server logs (500 error on getDashboardData due to serving_weekly query selecting scheduled/confirmed columns — stale production build before migration deployed)
+- [x] Root cause resolved: latest deploy (0eede093) has correct schema + migration. Browser console shows no errors after deploy.
+- [x] Verified: getLastCompleteISOWeek() returns 19, week 20 correctly filtered out. All data loading successfully.
+
+## Bug: Team Members monthly/yearly views show "No data"
+- [x] Weekly view works (604, avg 582, 19 weeks) but monthly and yearly show empty
+- [x] Fix kpis useMemo missing monthly case (only handles weekly+yearly, returns null for monthly)
+- [x] Add monthlyData to kpis useMemo dependency array
+- [x] Fix hasScheduledData to show Scheduled column when scheduled > 0 (not just when confirmed > 0)
 - [ ] Deploy fix

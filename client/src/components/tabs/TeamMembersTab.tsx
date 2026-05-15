@@ -83,16 +83,20 @@ export default function TeamMembersTab() {
   const rawData = dataQuery.data;
 
   // Detect if the data has real confirmed (check-in) data.
-  // hasConfirmedData = true → show Scheduled vs Checked In dual columns
-  // hasConfirmedData = false → show single "Team Members" column using best available number
   const hasConfirmedData = useMemo(() => {
     if (!rawData) return false;
     const rows = rawData.data as any[];
     return rows.some(r => (r.confirmed || 0) > 0);
   }, [rawData]);
 
-  // For legacy compatibility: hasScheduledData is used for the dual-column view
-  const hasScheduledData = hasConfirmedData;
+  // Show dual Scheduled/Checked In columns when scheduled data exists (even if confirmed=0).
+  // This lets users see scheduled counts from PCO Services immediately,
+  // before a sync with check-in capture code has run.
+  const hasScheduledData = useMemo(() => {
+    if (!rawData) return false;
+    const rows = rawData.data as any[];
+    return rows.some(r => (r.scheduled || 0) > 0);
+  }, [rawData]);
 
   // ─── Weekly ───────────────────────────────────────────────
   const weeklyData = useMemo(() => {
@@ -261,6 +265,21 @@ export default function TeamMembersTab() {
         weekCount: weeklyData.length,
       };
     }
+    if (viewMode === "monthly" && monthlyData.length > 0) {
+      const latest = monthlyData[monthlyData.length - 1];
+      const prior = monthlyData.length > 1 ? monthlyData[monthlyData.length - 2] : null;
+      const avgPrimary = Math.round(monthlyData.reduce((s, m) => s + getPrimaryAvg(m), 0) / monthlyData.length);
+      const avgScheduled = Math.round(monthlyData.reduce((s, m) => s + m.avgScheduled, 0) / monthlyData.length);
+      return {
+        latestPrimary: getPrimaryAvg(latest),
+        latestScheduled: latest.avgScheduled,
+        latestDate: MONTH_NAMES[latest.month - 1],
+        avgPrimary,
+        avgScheduled,
+        priorPrimary: prior ? getPrimaryAvg(prior) : 0,
+        weekCount: monthlyData.reduce((s, m) => s + m.weekCount, 0),
+      };
+    }
     if (viewMode === "yearly" && yearlyData.length > 0) {
       const latest = yearlyData[0];
       const prior = yearlyData[1];
@@ -275,7 +294,7 @@ export default function TeamMembersTab() {
       };
     }
     return null;
-  }, [viewMode, weeklyData, yearlyData, hasScheduledData]);
+  }, [viewMode, weeklyData, monthlyData, yearlyData, hasScheduledData]);
 
   return (
     <div className="space-y-5">
@@ -319,14 +338,14 @@ export default function TeamMembersTab() {
               <KpiCard
                 label={hasScheduledData ? "Checked In" : "Team Members"}
                 value={formatNumber(kpis.latestPrimary)}
-                subtitle={viewMode === "yearly" ? `avg weekly ${kpis.latestDate}` : formatDate(kpis.latestDate)}
+                subtitle={viewMode === "yearly" ? `avg weekly ${kpis.latestDate}` : viewMode === "monthly" ? `avg weekly ${kpis.latestDate}` : formatDate(kpis.latestDate)}
                 borderColor="#4A7C59"
               />
               {hasScheduledData && (
                 <KpiCard
                   label="Scheduled"
                   value={formatNumber(kpis.latestScheduled)}
-                  subtitle={viewMode === "yearly" ? `avg weekly ${kpis.latestDate}` : formatDate(kpis.latestDate)}
+                  subtitle={viewMode === "yearly" ? `avg weekly ${kpis.latestDate}` : viewMode === "monthly" ? `avg weekly ${kpis.latestDate}` : formatDate(kpis.latestDate)}
                   borderColor="#4A7FB5"
                 />
               )}

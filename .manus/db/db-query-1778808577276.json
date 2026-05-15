@@ -1,0 +1,55 @@
+{
+  "query": "SELECT year, weekNumber, weekStartDate, campus, subgroup, headcount, source FROM attendance_weekly WHERE subgroup = 'Volunteers' AND year = 2026 AND campus = 'Canton' ORDER BY weekNumber DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, weekNumber, weekStartDate, campus, subgroup, headcount, source FROM attendance_weekly WHERE subgroup = 'Volunteers' AND year = 2026 AND campus = 'Canton' ORDER BY weekNumber DESC LIMIT 5;",
+  "rows": [
+    {
+      "year": "2026",
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Canton",
+      "subgroup": "Volunteers",
+      "headcount": "97",
+      "source": "pco_services"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "campus": "Canton",
+      "subgroup": "Volunteers",
+      "headcount": "447",
+      "source": "pco_services"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "campus": "Canton",
+      "subgroup": "Volunteers",
+      "headcount": "422",
+      "source": "pco_services"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "17",
+      "weekStartDate": "2026-04-20",
+      "campus": "Canton",
+      "subgroup": "Volunteers",
+      "headcount": "425",
+      "source": "pco_services"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "16",
+      "weekStartDate": "2026-04-13",
+      "campus": "Canton",
+      "subgroup": "Volunteers",
+      "headcount": "438",
+      "source": "pco_services"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tweekNumber\tweekStartDate\tcampus\tsubgroup\theadcount\tsource\n2026\t20\t2026-05-11\tCanton\tVolunteers\t97\tpco_services\n2026\t19\t2026-05-04\tCanton\tVolunteers\t447\tpco_services\n2026\t18\t2026-04-27\tCanton\tVolunteers\t422\tpco_services\n2026\t17\t2026-04-20\tCanton\tVolunteers\t425\tpco_services\n2026\t16\t2026-04-13\tCanton\tVolunteers\t438\tpco_services\n",
+  "stderr": "",
+  "execution_time_ms": 274
+}
