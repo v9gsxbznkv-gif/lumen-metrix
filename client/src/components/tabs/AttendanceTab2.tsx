@@ -167,8 +167,8 @@ export default function AttendanceTab2() {
   const rawData = dataQuery.data;
 
   // ─── Detect which metrics have data ────────────────────────
-  // Exclude Young Adults from weekly view — YA is a monthly event, so showing it
-  // in the weekly table creates a mostly-empty column with dashes.
+  // Young Adults meets once/month, not weekly. Exclude from weekly table (mostly dashes)
+  // and don't divide by weekCount in monthly/yearly views (raw total = actual attendance).
   const MONTHLY_ONLY_METRICS = new Set(["youngAdults"]);
 
   const activeMetrics = useMemo(() => {
@@ -340,7 +340,7 @@ export default function AttendanceTab2() {
         students: m.avgWeeklyStudents,
         online: m.avgWeeklyOnline,
         volunteers: m.avgWeeklyVolunteers,
-        youngAdults: m.youngAdults > 0 ? Math.round(m.youngAdults / m.weekCount) : 0,
+        youngAdults: m.youngAdults > 0 ? m.youngAdults : 0,  // YA meets once/month — raw total IS the attendance
         ftg: m.ftg > 0 ? Math.round(m.ftg / m.weekCount) : 0,
       }));
     }
@@ -353,7 +353,7 @@ export default function AttendanceTab2() {
         students: y.avgWeeklyStudents,
         online: y.avgWeeklyOnline,
         volunteers: y.avgWeeklyVolunteers,
-        youngAdults: y.youngAdults > 0 ? Math.round(y.youngAdults / y.weekCount) : 0,
+        youngAdults: y.youngAdults > 0 ? Math.round(y.youngAdults / (y.weekCount / 4.33)) : 0,  // YA meets ~monthly, not weekly — divide by months, not weeks
         ftg: y.ftg > 0 ? Math.round(y.ftg / y.weekCount) : 0,
       }));
     }
@@ -638,7 +638,10 @@ export default function AttendanceTab2() {
                         <TableCell className="text-xs text-right font-mono">{formatNumber(m.total)}</TableCell>
                         {activeMetrics.filter(am => am.key !== "total").map(am => {
                           const avgKey = `avgWeekly${am.key.charAt(0).toUpperCase() + am.key.slice(1)}`;
-                          const val = m[avgKey] ?? (m[am.key] > 0 ? Math.round(m[am.key] / m.weekCount) : 0);
+                          // Monthly-only metrics (YA) should show raw total, not divided by weekCount
+                          const val = MONTHLY_ONLY_METRICS.has(am.key)
+                            ? (m[am.key] > 0 ? m[am.key] : 0)
+                            : (m[avgKey] ?? (m[am.key] > 0 ? Math.round(m[am.key] / m.weekCount) : 0));
                           return (
                             <TableCell key={am.key} className="text-xs text-right font-mono">
                               {val > 0 ? formatNumber(val) : "—"}
@@ -660,9 +663,16 @@ export default function AttendanceTab2() {
                           {formatNumber(monthlyData.reduce((s, m) => s + m.total, 0))}
                         </TableCell>
                         {activeMetrics.filter(am => am.key !== "total").map(am => {
-                          const avgKey = `avgWeekly${am.key.charAt(0).toUpperCase() + am.key.slice(1)}`;
-                          const vals = monthlyData.filter(m => (m[avgKey] ?? 0) > 0).map(m => m[avgKey] ?? 0);
-                          const avg = vals.length > 0 ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length) : 0;
+                          let avg: number;
+                          if (MONTHLY_ONLY_METRICS.has(am.key)) {
+                            // Monthly-only metrics: average of raw monthly totals (only months with data)
+                            const vals = monthlyData.filter(m => (m[am.key] ?? 0) > 0).map(m => m[am.key]);
+                            avg = vals.length > 0 ? Math.round(vals.reduce((s: number, v: number) => s + v, 0) / vals.length) : 0;
+                          } else {
+                            const avgKey = `avgWeekly${am.key.charAt(0).toUpperCase() + am.key.slice(1)}`;
+                            const vals = monthlyData.filter(m => (m[avgKey] ?? 0) > 0).map(m => m[avgKey] ?? 0);
+                            avg = vals.length > 0 ? Math.round(vals.reduce((s: number, v: number) => s + v, 0) / vals.length) : 0;
+                          }
                           return (
                             <TableCell key={am.key} className="text-xs text-right font-mono">
                               {avg > 0 ? formatNumber(avg) : "—"}
@@ -704,7 +714,10 @@ export default function AttendanceTab2() {
                           <TableCell className="text-xs text-right font-mono">{y.weekCount}</TableCell>
                           {activeMetrics.filter(m => m.key !== "total").map(m => {
                             const avgKey = `avgWeekly${m.key.charAt(0).toUpperCase() + m.key.slice(1)}`;
-                            const val = y[avgKey] ?? (y[m.key] > 0 ? Math.round(y[m.key] / y.weekCount) : 0);
+                            // Monthly-only metrics: divide by ~months, not weeks
+                            const val = MONTHLY_ONLY_METRICS.has(m.key)
+                              ? (y[m.key] > 0 ? Math.round(y[m.key] / Math.max(1, Math.round(y.weekCount / 4.33))) : 0)
+                              : (y[avgKey] ?? (y[m.key] > 0 ? Math.round(y[m.key] / y.weekCount) : 0));
                             return (
                               <TableCell key={m.key} className="text-xs text-right font-mono">
                                 {val > 0 ? formatNumber(val) : "—"}

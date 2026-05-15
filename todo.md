@@ -1392,4 +1392,9 @@
 - [x] Remove YA from weekly breakdown table (monthly event doesn't belong in weekly view)
 - [x] Ensure YA shows correctly in monthly view (kept in activeMetrics for monthly/yearly)
 - [x] Clean up duplicate YA rows in DB (deleted IDs 420925, 420922, 420920)
+- [x] Deploy fix
+
+## Bug: Young Adults monthly numbers showing ~16 instead of 60-80
+- [x] Root cause: monthly view divides YA total by weekCount (e.g. 64/4=16) but YA only meets once/month — raw total IS the monthly number
+- [x] Fix: don't divide youngAdults by weekCount in monthly table, yearly table, and chart data
 - [ ] Deploy fix
