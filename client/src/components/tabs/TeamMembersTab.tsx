@@ -83,20 +83,17 @@ export default function TeamMembersTab() {
   const rawData = dataQuery.data;
 
   // Detect if the data has real confirmed (check-in) data.
+  // hasConfirmedData = true → show dual Scheduled vs Checked In columns
+  // hasConfirmedData = false → show single "Team Members" column using total
+  // NOTE: We only show dual columns when CONFIRMED data exists (actual check-ins).
+  // When scheduled=total (same PCO Services source) showing two identical columns is misleading.
   const hasConfirmedData = useMemo(() => {
     if (!rawData) return false;
     const rows = rawData.data as any[];
     return rows.some(r => (r.confirmed || 0) > 0);
   }, [rawData]);
 
-  // Show dual Scheduled/Checked In columns when scheduled data exists (even if confirmed=0).
-  // This lets users see scheduled counts from PCO Services immediately,
-  // before a sync with check-in capture code has run.
-  const hasScheduledData = useMemo(() => {
-    if (!rawData) return false;
-    const rows = rawData.data as any[];
-    return rows.some(r => (r.scheduled || 0) > 0);
-  }, [rawData]);
+  const hasScheduledData = hasConfirmedData;
 
   // ─── Weekly ───────────────────────────────────────────────
   const weeklyData = useMemo(() => {

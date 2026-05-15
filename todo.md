@@ -1380,3 +1380,9 @@
 - [x] Add monthlyData to kpis useMemo dependency array
 - [x] Fix hasScheduledData to show Scheduled column when scheduled > 0 (not just when confirmed > 0)
 - [ ] Deploy fix
+
+## Bug: Team Members Scheduled = Checked In = same number, Show Rate 0%
+- [ ] Root cause: serving_weekly has total=scheduled=same value (from PCO Services), confirmed=0 everywhere. populateServingAndNextSteps copies "Volunteers" from attendance_weekly into total+scheduled but never populates confirmed from actual PCO Check-Ins data.
+- [ ] Fix sync: pull actual volunteer check-in counts from PCO Check-Ins API (volunteer location headcounts) and write to confirmed column
+- [ ] Fix frontend: show Scheduled (Services) vs Checked In (Check-Ins) with real distinct data
+- [ ] Deploy fix

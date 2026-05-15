@@ -1,0 +1,210 @@
+{
+  "query": "SELECT year, weekNumber, weekStartDate, campus, total, scheduled, confirmed, source FROM serving_weekly WHERE year = 2026 ORDER BY weekNumber DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, weekNumber, weekStartDate, campus, total, scheduled, confirmed, source FROM serving_weekly WHERE year = 2026 ORDER BY weekNumber DESC LIMIT 20;",
+  "rows": [
+    {
+      "year": "2026",
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Jasper",
+      "total": "57",
+      "scheduled": "57",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Canton",
+      "total": "437",
+      "scheduled": "437",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "campus": "Jasper",
+      "total": "157",
+      "scheduled": "157",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "campus": "Canton",
+      "total": "447",
+      "scheduled": "447",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "campus": "Jasper",
+      "total": "159",
+      "scheduled": "159",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "campus": "Canton",
+      "total": "422",
+      "scheduled": "422",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "17",
+      "weekStartDate": "2026-04-20",
+      "campus": "Jasper",
+      "total": "155",
+      "scheduled": "155",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "17",
+      "weekStartDate": "2026-04-20",
+      "campus": "Canton",
+      "total": "425",
+      "scheduled": "425",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "16",
+      "weekStartDate": "2026-04-13",
+      "campus": "Jasper",
+      "total": "162",
+      "scheduled": "162",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "16",
+      "weekStartDate": "2026-04-13",
+      "campus": "Canton",
+      "total": "438",
+      "scheduled": "438",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "15",
+      "weekStartDate": "2026-04-06",
+      "campus": "Jasper",
+      "total": "87",
+      "scheduled": "87",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "15",
+      "weekStartDate": "2026-04-06",
+      "campus": "Canton",
+      "total": "299",
+      "scheduled": "299",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "14",
+      "weekStartDate": "2026-03-30",
+      "campus": "Jasper",
+      "total": "232",
+      "scheduled": "232",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "14",
+      "weekStartDate": "2026-03-30",
+      "campus": "Canton",
+      "total": "582",
+      "scheduled": "582",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "13",
+      "weekStartDate": "2026-03-23",
+      "campus": "Jasper",
+      "total": "154",
+      "scheduled": "154",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "13",
+      "weekStartDate": "2026-03-23",
+      "campus": "Canton",
+      "total": "467",
+      "scheduled": "467",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "12",
+      "weekStartDate": "2026-03-16",
+      "campus": "Jasper",
+      "total": "162",
+      "scheduled": "162",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "12",
+      "weekStartDate": "2026-03-16",
+      "campus": "Canton",
+      "total": "435",
+      "scheduled": "435",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "11",
+      "weekStartDate": "2026-03-09",
+      "campus": "Jasper",
+      "total": "153",
+      "scheduled": "153",
+      "confirmed": "0",
+      "source": "pco"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "11",
+      "weekStartDate": "2026-03-09",
+      "campus": "Canton",
+      "total": "456",
+      "scheduled": "456",
+      "confirmed": "0",
+      "source": "pco"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tweekNumber\tweekStartDate\tcampus\ttotal\tscheduled\tconfirmed\tsource\n2026\t20\t2026-05-11\tJasper\t57\t57\t0\tpco\n2026\t20\t2026-05-11\tCanton\t437\t437\t0\tpco\n2026\t19\t2026-05-04\tJasper\t157\t157\t0\tpco\n2026\t19\t2026-05-04\tCanton\t447\t447\t0\tpco\n2026\t18\t2026-04-27\tJasper\t159\t159\t0\tpco\n2026\t18\t2026-04-27\tCanton\t422\t422\t0\tpco\n2026\t17\t2026-04-20\tJasper\t155\t155\t0\tpco\n2026\t17\t2026-04-20\tCanton\t425\t425\t0\tpco\n2026\t16\t2026-04-13\tJasper\t162\t162\t0\tpco\n2026\t16\t2026-04-13\tCanton\t438\t438\t0\tpco\n2026\t15\t2026-04-06\tJasper\t87\t87\t0\tpco\n2026\t15\t2026-04-06\tCanton\t299\t299\t0\tpco\n2026\t14\t2026-03-30\tJasper\t232\t232\t0\tpco\n2026\t14\t2026-03-30\tCanton\t582\t582\t0\tpco\n2026\t13\t2026-03-23\tJasper\t154\t154\t0\tpco\n2026\t13\t2026-03-23\tCanton\t467\t467\t0\tpco\n2026\t12\t2026-03-16\tJasper\t162\t162\t0\tpco\n2026\t12\t2026-03-16\tCanton\t435\t435\t0\tpco\n2026\t11\t2026-03-09\tJasper\t153\t153\t0\tpco\n2026\t11\t2026-03-09\tCanton\t456\t456\t0\tpco\n",
+  "stderr": "",
+  "execution_time_ms": 267
+}

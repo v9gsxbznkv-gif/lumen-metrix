@@ -1,0 +1,15 @@
+{
+  "query": "SELECT subgroup, source, COUNT(*) as cnt FROM attendance_weekly WHERE subgroup IN ('Volunteer Check-Ins', 'Volunteers') GROUP BY subgroup, source;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT subgroup, source, COUNT(*) as cnt FROM attendance_weekly WHERE subgroup IN ('Volunteer Check-Ins', 'Volunteers') GROUP BY subgroup, source;",
+  "rows": [
+    {
+      "subgroup": "Volunteers",
+      "source": "pco_services",
+      "cnt": "42"
+    }
+  ],
+  "messages": [],
+  "stdout": "subgroup\tsource\tcnt\nVolunteers\tpco_services\t42\n",
+  "stderr": "",
+  "execution_time_ms": 268
+}
