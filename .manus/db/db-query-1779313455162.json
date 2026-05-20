@@ -1,0 +1,52 @@
+{
+  "query": "SELECT weekNumber, campus, subgroup, headcount, updatedAt FROM attendance_weekly WHERE year=2026 AND weekNumber IN (19,20) AND subgroup IN ('Online', 'RevStudents Attendance') ORDER BY subgroup, campus, weekNumber;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekNumber, campus, subgroup, headcount, updatedAt FROM attendance_weekly WHERE year=2026 AND weekNumber IN (19,20) AND subgroup IN ('Online', 'RevStudents Attendance') ORDER BY subgroup, campus, weekNumber;",
+  "rows": [
+    {
+      "weekNumber": "19",
+      "campus": "Canton",
+      "subgroup": "Online",
+      "headcount": "445",
+      "updatedAt": "2026-05-20 04:51:34"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Canton",
+      "subgroup": "Online",
+      "headcount": "445",
+      "updatedAt": "2026-05-19 04:46:53"
+    },
+    {
+      "weekNumber": "19",
+      "campus": "Canton",
+      "subgroup": "RevStudents Attendance",
+      "headcount": "306",
+      "updatedAt": "2026-05-20 04:51:34"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Canton",
+      "subgroup": "RevStudents Attendance",
+      "headcount": "306",
+      "updatedAt": "2026-05-19 04:46:53"
+    },
+    {
+      "weekNumber": "19",
+      "campus": "Jasper",
+      "subgroup": "RevStudents Attendance",
+      "headcount": "66",
+      "updatedAt": "2026-05-20 04:51:34"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Jasper",
+      "subgroup": "RevStudents Attendance",
+      "headcount": "66",
+      "updatedAt": "2026-05-19 04:47:17"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\tcampus\tsubgroup\theadcount\tupdatedAt\n19\tCanton\tOnline\t445\t2026-05-20 04:51:34\n20\tCanton\tOnline\t445\t2026-05-19 04:46:53\n19\tCanton\tRevStudents Attendance\t306\t2026-05-20 04:51:34\n20\tCanton\tRevStudents Attendance\t306\t2026-05-19 04:46:53\n19\tJasper\tRevStudents Attendance\t66\t2026-05-20 04:51:34\n20\tJasper\tRevStudents Attendance\t66\t2026-05-19 04:47:17\n",
+  "stderr": "",
+  "execution_time_ms": 256
+}

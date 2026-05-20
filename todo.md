@@ -1422,8 +1422,11 @@
 - [x] Fix all call sites (getFullYear -> getUTCFullYear, etc.)
 - [x] Verify fix produces correct week numbers for May 7 (week 19) and May 14 (week 20)
 - [x] Build passes, all 154 tests pass
-- [ ] Deploy fix and trigger full re-sync to correct historical data
-- [ ] Verify weeks 19 and 20 show different attendance numbers
+- [x] Deploy fix and trigger full re-sync to correct historical data
+- [x] Verify weeks 19 and 20 show different attendance numbers (main check-in events confirmed different)
+- [x] Add partial fallback for missing categories (Online drill-down when pre-fetch doesn't match period event_times)
+- [x] Add clear-before-write logic to remove stale PCO-sourced rows that no longer have data in PCO
+- [x] Verified: 10 stale rows cleared (Online/RevStudents week 19 had no PCO source data — data team hasn't entered it)
 
 ## Feature: Kids % and Students % of total weekend attendance on dashboard
 

@@ -1,0 +1,114 @@
+{
+  "query": "SELECT DISTINCT subgroup, MAX(updatedAt) as lastUpdate FROM attendance_weekly WHERE year=2026 AND weekNumber IN (19,20) GROUP BY subgroup ORDER BY lastUpdate DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT subgroup, MAX(updatedAt) as lastUpdate FROM attendance_weekly WHERE year=2026 AND weekNumber IN (19,20) GROUP BY subgroup ORDER BY lastUpdate DESC;",
+  "rows": [
+    {
+      "subgroup": "Volunteers",
+      "lastUpdate": "2026-05-20 18:56:31"
+    },
+    {
+      "subgroup": "Kids: Canton Treehouse",
+      "lastUpdate": "2026-05-20 18:51:22"
+    },
+    {
+      "subgroup": "Kids: Canton Cove",
+      "lastUpdate": "2026-05-20 18:51:22"
+    },
+    {
+      "subgroup": "Volunteer Check-Ins",
+      "lastUpdate": "2026-05-20 18:51:22"
+    },
+    {
+      "subgroup": "Kids: Canton Babies",
+      "lastUpdate": "2026-05-20 18:51:22"
+    },
+    {
+      "subgroup": "Kids: Canton Campground",
+      "lastUpdate": "2026-05-20 18:51:22"
+    },
+    {
+      "subgroup": "Kids: Canton Toddlers",
+      "lastUpdate": "2026-05-20 18:50:48"
+    },
+    {
+      "subgroup": "Kids: Canton Nursery",
+      "lastUpdate": "2026-05-20 18:50:48"
+    },
+    {
+      "subgroup": "Kids: Canton Elementary",
+      "lastUpdate": "2026-05-20 18:50:48"
+    },
+    {
+      "subgroup": "FTG Adults",
+      "lastUpdate": "2026-05-20 18:41:24"
+    },
+    {
+      "subgroup": "Kids: Jasper Reruns",
+      "lastUpdate": "2026-05-20 18:41:24"
+    },
+    {
+      "subgroup": "Kids: Jasper Nursery",
+      "lastUpdate": "2026-05-20 18:41:24"
+    },
+    {
+      "subgroup": "Kids: Jasper Pre-K",
+      "lastUpdate": "2026-05-20 18:41:24"
+    },
+    {
+      "subgroup": "Kids: Jasper Treehouse",
+      "lastUpdate": "2026-05-20 18:41:24"
+    },
+    {
+      "subgroup": "Revolution Jasper Check-In",
+      "lastUpdate": "2026-05-20 18:41:24"
+    },
+    {
+      "subgroup": "FTG Kids",
+      "lastUpdate": "2026-05-20 18:41:24"
+    },
+    {
+      "subgroup": "Kids: Jasper Cove",
+      "lastUpdate": "2026-05-20 18:41:24"
+    },
+    {
+      "subgroup": "Kids",
+      "lastUpdate": "2026-05-20 18:41:24"
+    },
+    {
+      "subgroup": "Revolution Canton Check-In",
+      "lastUpdate": "2026-05-20 18:41:23"
+    },
+    {
+      "subgroup": "RevStudents Attendance",
+      "lastUpdate": "2026-05-20 04:51:34"
+    },
+    {
+      "subgroup": "RevStudents HS",
+      "lastUpdate": "2026-05-20 04:51:34"
+    },
+    {
+      "subgroup": "Online",
+      "lastUpdate": "2026-05-20 04:51:34"
+    },
+    {
+      "subgroup": "RevStudents MS",
+      "lastUpdate": "2026-05-20 04:51:34"
+    },
+    {
+      "subgroup": "RevStudents FTG",
+      "lastUpdate": "2026-05-20 04:51:34"
+    },
+    {
+      "subgroup": "YA Gathering",
+      "lastUpdate": "2026-05-09 21:23:14"
+    },
+    {
+      "subgroup": "YA FTG",
+      "lastUpdate": "2026-05-09 21:23:14"
+    }
+  ],
+  "messages": [],
+  "stdout": "subgroup\tlastUpdate\nVolunteers\t2026-05-20 18:56:31\nKids: Canton Treehouse\t2026-05-20 18:51:22\nKids: Canton Cove\t2026-05-20 18:51:22\nVolunteer Check-Ins\t2026-05-20 18:51:22\nKids: Canton Babies\t2026-05-20 18:51:22\nKids: Canton Campground\t2026-05-20 18:51:22\nKids: Canton Toddlers\t2026-05-20 18:50:48\nKids: Canton Nursery\t2026-05-20 18:50:48\nKids: Canton Elementary\t2026-05-20 18:50:48\nFTG Adults\t2026-05-20 18:41:24\nKids: Jasper Reruns\t2026-05-20 18:41:24\nKids: Jasper Nursery\t2026-05-20 18:41:24\nKids: Jasper Pre-K\t2026-05-20 18:41:24\nKids: Jasper Treehouse\t2026-05-20 18:41:24\nRevolution Jasper Check-In\t2026-05-20 18:41:24\nFTG Kids\t2026-05-20 18:41:24\nKids: Jasper Cove\t2026-05-20 18:41:24\nKids\t2026-05-20 18:41:24\nRevolution Canton Check-In\t2026-05-20 18:41:23\nRevStudents Attendance\t2026-05-20 04:51:34\nRevStudents HS\t2026-05-20 04:51:34\nOnline\t2026-05-20 04:51:34\nRevStudents MS\t2026-05-20 04:51:34\nRevStudents FTG\t2026-05-20 04:51:34\nYA Gathering\t2026-05-09 21:23:14\nYA FTG\t2026-05-09 21:23:14\n",
+  "stderr": "",
+  "execution_time_ms": 259
+}

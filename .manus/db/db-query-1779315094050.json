@@ -1,0 +1,80 @@
+{
+  "query": "SELECT weekNumber, weekStartDate, subgroup, headcount, updatedAt FROM attendance_weekly WHERE year=2026 AND weekNumber IN (18,19,20) AND subgroup IN ('Online', 'RevStudents HS', 'RevStudents MS') ORDER BY subgroup, weekNumber;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekNumber, weekStartDate, subgroup, headcount, updatedAt FROM attendance_weekly WHERE year=2026 AND weekNumber IN (18,19,20) AND subgroup IN ('Online', 'RevStudents HS', 'RevStudents MS') ORDER BY subgroup, weekNumber;",
+  "rows": [
+    {
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "subgroup": "Online",
+      "headcount": "506",
+      "updatedAt": "2026-05-09 21:23:12"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "subgroup": "Online",
+      "headcount": "445",
+      "updatedAt": "2026-05-19 04:46:53"
+    },
+    {
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "subgroup": "RevStudents HS",
+      "headcount": "114",
+      "updatedAt": "2026-05-09 21:23:12"
+    },
+    {
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "subgroup": "RevStudents HS",
+      "headcount": "37",
+      "updatedAt": "2026-05-09 21:23:13"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "subgroup": "RevStudents HS",
+      "headcount": "117",
+      "updatedAt": "2026-05-19 04:46:53"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "subgroup": "RevStudents HS",
+      "headcount": "35",
+      "updatedAt": "2026-05-19 04:47:17"
+    },
+    {
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "subgroup": "RevStudents MS",
+      "headcount": "213",
+      "updatedAt": "2026-05-09 21:23:12"
+    },
+    {
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "subgroup": "RevStudents MS",
+      "headcount": "29",
+      "updatedAt": "2026-05-09 21:23:13"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "subgroup": "RevStudents MS",
+      "headcount": "189",
+      "updatedAt": "2026-05-19 04:46:53"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "subgroup": "RevStudents MS",
+      "headcount": "31",
+      "updatedAt": "2026-05-19 04:47:17"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\tweekStartDate\tsubgroup\theadcount\tupdatedAt\n18\t2026-04-27\tOnline\t506\t2026-05-09 21:23:12\n20\t2026-05-11\tOnline\t445\t2026-05-19 04:46:53\n18\t2026-04-27\tRevStudents HS\t114\t2026-05-09 21:23:12\n18\t2026-04-27\tRevStudents HS\t37\t2026-05-09 21:23:13\n20\t2026-05-11\tRevStudents HS\t117\t2026-05-19 04:46:53\n20\t2026-05-11\tRevStudents HS\t35\t2026-05-19 04:47:17\n18\t2026-04-27\tRevStudents MS\t213\t2026-05-09 21:23:12\n18\t2026-04-27\tRevStudents MS\t29\t2026-05-09 21:23:13\n20\t2026-05-11\tRevStudents MS\t189\t2026-05-19 04:46:53\n20\t2026-05-11\tRevStudents MS\t31\t2026-05-19 04:47:17\n",
+  "stderr": "",
+  "execution_time_ms": 257
+}

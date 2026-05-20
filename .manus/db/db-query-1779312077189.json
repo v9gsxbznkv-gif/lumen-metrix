@@ -1,0 +1,43 @@
+{
+  "query": "SELECT DISTINCT subgroup FROM attendance_weekly WHERE subgroup LIKE '%RevStudents%' OR subgroup LIKE '%Student%' OR subgroup LIKE '%Online%' ORDER BY subgroup;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT subgroup FROM attendance_weekly WHERE subgroup LIKE '%RevStudents%' OR subgroup LIKE '%Student%' OR subgroup LIKE '%Online%' ORDER BY subgroup;",
+  "rows": [
+    {
+      "subgroup": "Online"
+    },
+    {
+      "subgroup": "RevStudents Attendance"
+    },
+    {
+      "subgroup": "RevStudents FTG"
+    },
+    {
+      "subgroup": "RevStudents HS"
+    },
+    {
+      "subgroup": "RevStudents MS"
+    },
+    {
+      "subgroup": "RevStudents Salvations"
+    },
+    {
+      "subgroup": "Students"
+    },
+    {
+      "subgroup": "Students: Canton HS"
+    },
+    {
+      "subgroup": "Students: Canton MS"
+    },
+    {
+      "subgroup": "Students: Jasper HS"
+    },
+    {
+      "subgroup": "Students: Jasper MS"
+    }
+  ],
+  "messages": [],
+  "stdout": "subgroup\nOnline\nRevStudents Attendance\nRevStudents FTG\nRevStudents HS\nRevStudents MS\nRevStudents Salvations\nStudents\nStudents: Canton HS\nStudents: Canton MS\nStudents: Jasper HS\nStudents: Jasper MS\n",
+  "stderr": "",
+  "execution_time_ms": 270
+}

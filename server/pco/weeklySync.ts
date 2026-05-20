@@ -739,11 +739,21 @@ export async function syncWeeklyAttendance(
             }
           }
 
-          // FALLBACK: If pre-fetch yielded NO data for THIS SPECIFIC period,
-          // drill down per-event_time. This handles the case where the pre-fetch
-          // has data (from older weeks) but none of its event_time IDs match
-          // the current period's event_times (common for recent weeks).
+          // FALLBACK: Check which categories are MISSING from the pre-fetch.
+          // The pre-fetch may have data for Adults/Kids but NOT for Online
+          // (because Online's event_time IDs don't match this period).
+          // Instead of only falling back when ALL categories are empty,
+          // we drill down for any MISSING categories individually.
+          const expectedCategories = new Set(Object.values(campusCategoryMap));
+          const missingCategories = new Set<string>();
+          for (const cat of Array.from(expectedCategories)) {
+            if (!categoryTotals.has(cat)) {
+              missingCategories.add(cat);
+            }
+          }
+
           if (categoryTotals.size === 0) {
+            // FULL fallback: no pre-fetch data matched at all
             console.log(`[PCO Weekly Sync] No pre-fetch match for ${eventName} period ${periodIdx + 1} (${weekStartDate}) — falling back to per-event_time drill-down`);
             const periodStartTime = Date.now();
             const PERIOD_TIMEOUT_MS = 60_000;
@@ -782,6 +792,47 @@ export async function syncWeeklyAttendance(
                   console.log(`[PCO Weekly Sync] Unknown attendance_type "${attTypeName}" for ${campus} — skipping`);
                   continue;
                 }
+                categoryTotals.set(category, (categoryTotals.get(category) || 0) + total);
+              }
+            }
+          } else if (missingCategories.size > 0) {
+            // PARTIAL fallback: some categories got data from pre-fetch but others didn't.
+            // Drill down per-event_time but ONLY collect the missing categories.
+            console.log(`[PCO Weekly Sync] Partial pre-fetch for ${eventName} period ${periodIdx + 1} (${weekStartDate}) — drilling down for missing: ${Array.from(missingCategories).join(', ')}`);
+            const periodStartTime = Date.now();
+            const PERIOD_TIMEOUT_MS = 60_000;
+
+            for (const eventTime of eventTimesResult.data) {
+              if (Date.now() - periodStartTime > PERIOD_TIMEOUT_MS) {
+                console.warn(`[PCO Weekly Sync] Period ${periodId} exceeded ${PERIOD_TIMEOUT_MS / 1000}s timeout — skipping remaining event_times`);
+                break;
+              }
+
+              const etId = (eventTime as any).id;
+              let headcountsResult;
+              try {
+                headcountsResult = await Promise.race([
+                  client.paginateAll(
+                    `/check-ins/v2/event_times/${etId}/headcounts`,
+                    { per_page: 25 }
+                  ),
+                  new Promise<never>((_, reject) =>
+                    setTimeout(() => reject(new Error(`Timeout fetching headcounts for event_time ${etId}`)), 15_000)
+                  ),
+                ]);
+              } catch (err: any) {
+                console.warn(`[PCO Weekly Sync] Skipping headcounts for event_time ${etId}: ${err.message}`);
+                continue;
+              }
+
+              for (const hc of headcountsResult.data) {
+                const total: number = (hc as any).attributes?.total || 0;
+                const attTypeId: string | undefined = (hc as any).relationships?.attendance_type?.data?.id;
+                const attTypeName = attTypeId ? await getAttTypeName(client, attTypeId) : null;
+                if (total === 0 || !attTypeId || !attTypeName) continue;
+
+                const category = campusCategoryMap[attTypeName];
+                if (!category || !missingCategories.has(category)) continue; // only collect missing
                 categoryTotals.set(category, (categoryTotals.get(category) || 0) + total);
               }
             }
@@ -1005,6 +1056,45 @@ export async function syncWeeklyAttendance(
         (r: any) => !lockedSet.has(`${r.year}|${r.weekNumber}|${r.campus}|${r.subgroup}`)
       );
       console.log(`[PCO Weekly Sync] ${lockedRows.length} locked rows skipped, writing ${rowsToWrite.length} rows...`);
+
+      // CLEAR STALE DATA: Delete existing PCO-sourced rows for weeks in the sync range
+      // that are NOT in the new data set. This removes ghost data left by the DST bug
+      // (e.g., Online headcount incorrectly assigned to week 19 from week 20's data).
+      const weeksInNewData = new Set(rowsToWrite.map((r: any) => `${r.year}|${r.weekNumber}`));
+      const newDataKeys = new Set(rowsToWrite.map((r: any) => `${r.year}|${r.weekNumber}|${r.campus}|${r.subgroup}`));
+      if (weeksInNewData.size > 0) {
+        // Get all existing rows for the same weeks that are PCO-sourced and not locked
+        const weekConditions = Array.from(weeksInNewData).map(w => {
+          const [y, wn] = w.split('|');
+          return { year: parseInt(y), weekNumber: parseInt(wn) };
+        });
+        // Build a query to find stale rows
+        let staleDeleted = 0;
+        for (const { year: wy, weekNumber: wn } of weekConditions) {
+          const existingRows = await freshDb
+            .select({ id: attendanceWeekly.id, year: attendanceWeekly.year, weekNumber: attendanceWeekly.weekNumber, campus: attendanceWeekly.campus, subgroup: attendanceWeekly.subgroup })
+            .from(attendanceWeekly)
+            .where(
+              and(
+                eq(attendanceWeekly.year, wy),
+                eq(attendanceWeekly.weekNumber, wn),
+                eq(attendanceWeekly.source, 'pco')
+              )
+            );
+          for (const row of existingRows) {
+            const key = `${row.year}|${row.weekNumber}|${row.campus}|${row.subgroup}`;
+            if (lockedSet.has(key)) continue; // don't delete locked rows
+            if (!newDataKeys.has(key)) {
+              // This row exists in DB but NOT in new sync data → stale, delete it
+              await freshDb.delete(attendanceWeekly).where(eq(attendanceWeekly.id, row.id));
+              staleDeleted++;
+            }
+          }
+        }
+        if (staleDeleted > 0) {
+          console.log(`[PCO Weekly Sync] Cleared ${staleDeleted} stale rows (no longer in PCO data)`);
+        }
+      }
 
       const CHUNK = 50;
       let written = 0;
