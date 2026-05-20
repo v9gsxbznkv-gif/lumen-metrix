@@ -1,0 +1,37 @@
+{
+  "query": "SELECT weekNumber, weekStartDate, campus, total, general, designated, donationCount FROM giving_weekly WHERE year = 2026 AND weekNumber = 20 ORDER BY campus;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekNumber, weekStartDate, campus, total, general, designated, donationCount FROM giving_weekly WHERE year = 2026 AND weekNumber = 20 ORDER BY campus;",
+  "rows": [
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "All Campuses",
+      "total": "7837.04",
+      "general": "0.00",
+      "designated": "7837.04",
+      "donationCount": "20"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Canton",
+      "total": "159606.44",
+      "general": "159606.44",
+      "designated": "0.00",
+      "donationCount": "446"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Jasper",
+      "total": "22381.43",
+      "general": "22381.43",
+      "designated": "0.00",
+      "donationCount": "83"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\tweekStartDate\tcampus\ttotal\tgeneral\tdesignated\tdonationCount\n20\t2026-05-11\tAll Campuses\t7837.04\t0.00\t7837.04\t20\n20\t2026-05-11\tCanton\t159606.44\t159606.44\t0.00\t446\n20\t2026-05-11\tJasper\t22381.43\t22381.43\t0.00\t83\n",
+  "stderr": "",
+  "execution_time_ms": 283
+}

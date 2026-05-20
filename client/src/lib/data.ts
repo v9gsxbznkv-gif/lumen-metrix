@@ -332,14 +332,19 @@ function computeGPCFromWeekly(data: DashboardData): GivingPerCapita[] {
   const results: GivingPerCapita[] = [];
   const campuses = ["Canton", "Jasper", "All Campuses"];
   const years = data.meta.years;
+  const currentYear = new Date().getFullYear();
 
   for (const year of years) {
+    // For current year, exclude partial current week to prevent dilution
+    const weekCap = year === currentYear ? getLastCompleteISOWeek() : 52;
+
     for (const campus of campuses) {
-      // Get total giving from weekly data
+      // Get total giving from weekly data (only complete weeks)
       let totalGiving = 0;
       const givingByWeek = new Map<number, number>();
       for (const r of data.giving_weekly) {
         if (r.year !== year) continue;
+        if (r.weekNumber > weekCap) continue;
         if (campus !== "All Campuses" && r.campus !== campus) continue;
         givingByWeek.set(r.weekNumber, (givingByWeek.get(r.weekNumber) || 0) + r.total);
       }
@@ -1100,10 +1105,16 @@ export function getWeeklyGivingPerCapita(
   year: number,
   campus: string
 ): number {
-  // Sum giving per week
+  // For the current year, cap at the last complete week to prevent partial-week
+  // giving data (early trickle-in donations) from diluting the average.
+  const currentYear = new Date().getFullYear();
+  const weekCap = year === currentYear ? getLastCompleteISOWeek() : 52;
+
+  // Sum giving per week (only complete weeks)
   const givingByWeek = new Map<number, number>();
   for (const r of data.giving_weekly) {
     if (r.year !== year) continue;
+    if (r.weekNumber > weekCap) continue;
     if (campus !== "All Campuses" && r.campus !== campus) continue;
     givingByWeek.set(r.weekNumber, (givingByWeek.get(r.weekNumber) || 0) + r.total);
   }

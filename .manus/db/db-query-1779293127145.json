@@ -1,0 +1,14 @@
+{
+  "query": "SELECT weekNumber, SUM(headcount) as total_headcount\nFROM attendance_weekly \nWHERE year = 2026 AND weekNumber = 20\n  AND (subgroup = 'Adults' OR subgroup = 'Revolution Canton Check-In' OR subgroup = 'Revolution Jasper Check-In' OR subgroup = 'Revolution Church Jasper' OR subgroup = 'Kids')\nGROUP BY weekNumber;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekNumber, SUM(headcount) as total_headcount\nFROM attendance_weekly \nWHERE year = 2026 AND weekNumber = 20\n  AND (subgroup = 'Adults' OR subgroup = 'Revolution Canton Check-In' OR subgroup = 'Revolution Jasper Check-In' OR subgroup = 'Revolution Church Jasper' OR subgroup = 'Kids')\nGROUP BY weekNumber;",
+  "rows": [
+    {
+      "weekNumber": "20",
+      "total_headcount": "3130"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\ttotal_headcount\n20\t3130\n",
+  "stderr": "",
+  "execution_time_ms": 275
+}

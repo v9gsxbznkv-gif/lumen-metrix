@@ -1,0 +1,86 @@
+{
+  "query": "SELECT weekNumber, \n  SUM(CAST(total AS DECIMAL(12,2))) as week_giving\nFROM giving_weekly \nWHERE year = 2026 AND weekNumber <= 19\nGROUP BY weekNumber\nORDER BY weekNumber;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekNumber, \n  SUM(CAST(total AS DECIMAL(12,2))) as week_giving\nFROM giving_weekly \nWHERE year = 2026 AND weekNumber <= 19\nGROUP BY weekNumber\nORDER BY weekNumber;",
+  "rows": [
+    {
+      "weekNumber": "1",
+      "week_giving": "168095.23"
+    },
+    {
+      "weekNumber": "2",
+      "week_giving": "157453.57"
+    },
+    {
+      "weekNumber": "3",
+      "week_giving": "219788.14"
+    },
+    {
+      "weekNumber": "4",
+      "week_giving": "194583.46"
+    },
+    {
+      "weekNumber": "5",
+      "week_giving": "235030.81"
+    },
+    {
+      "weekNumber": "6",
+      "week_giving": "161690.92"
+    },
+    {
+      "weekNumber": "7",
+      "week_giving": "220275.45"
+    },
+    {
+      "weekNumber": "8",
+      "week_giving": "147802.69"
+    },
+    {
+      "weekNumber": "9",
+      "week_giving": "283302.67"
+    },
+    {
+      "weekNumber": "10",
+      "week_giving": "199901.22"
+    },
+    {
+      "weekNumber": "11",
+      "week_giving": "130560.82"
+    },
+    {
+      "weekNumber": "12",
+      "week_giving": "173223.49"
+    },
+    {
+      "weekNumber": "13",
+      "week_giving": "308109.42"
+    },
+    {
+      "weekNumber": "14",
+      "week_giving": "136908.32"
+    },
+    {
+      "weekNumber": "15",
+      "week_giving": "162627.64"
+    },
+    {
+      "weekNumber": "16",
+      "week_giving": "155975.13"
+    },
+    {
+      "weekNumber": "17",
+      "week_giving": "226356.29"
+    },
+    {
+      "weekNumber": "18",
+      "week_giving": "186827.94"
+    },
+    {
+      "weekNumber": "19",
+      "week_giving": "177649.57"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\tweek_giving\n1\t168095.23\n2\t157453.57\n3\t219788.14\n4\t194583.46\n5\t235030.81\n6\t161690.92\n7\t220275.45\n8\t147802.69\n9\t283302.67\n10\t199901.22\n11\t130560.82\n12\t173223.49\n13\t308109.42\n14\t136908.32\n15\t162627.64\n16\t155975.13\n17\t226356.29\n18\t186827.94\n19\t177649.57\n",
+  "stderr": "",
+  "execution_time_ms": 271
+}

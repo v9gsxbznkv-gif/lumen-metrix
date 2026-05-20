@@ -1403,9 +1403,13 @@
 - [x] Root cause: sync only includes `succeeded` donations, but PCO dashboard includes `pending` ACH donations too ($118,862 succeeded + $70,962 pending = $189,824)
 - [x] Fix: update payment_status filter in syncWeeklyGiving to include both 'succeeded' and 'pending' (exclude only 'failed' and 'refunded')
 - [x] Fix applied to both primary fetch and retry fetch paths
-- [ ] Deploy fix and trigger fresh giving sync for week 20
-- [ ] Verify week 20 giving matches PCO (~$190K)
+- [x] Deploy fix and trigger fresh giving sync for week 20
+- [x] Verify week 20 giving matches PCO (~$190K) — confirmed: $189,824.91 total (Canton $159,606 + Jasper $22,381 + All Campuses $7,837)
 
 ## Scheduler/Router Cleanup
 - [x] Fix triggerNightlySync in router.ts to use runSyncInBackground instead of legacy runNightlySync scheduler path
 - [x] Fix midnight scheduler to use syncAllWeekly directly (removed dependency on legacy syncAll)
+
+## Bug: GPC shows $60 on dashboard but $57 on giving page
+- [x] Root cause: frontend getWeeklyGivingPerCapita() includes partial current week (week 21 has $8K giving but no attendance yet), diluting the average
+- [x] Fix: add weekCap to getWeeklyGivingPerCapita() and computeGPCFromWeekly() to exclude current partial week (same logic as backend getPerCapita)

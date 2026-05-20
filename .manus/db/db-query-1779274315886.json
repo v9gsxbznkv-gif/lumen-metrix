@@ -1,0 +1,70 @@
+{
+  "query": "SELECT * FROM sync_logs WHERE syncType LIKE '%giving%' ORDER BY startedAt DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT * FROM sync_logs WHERE syncType LIKE '%giving%' ORDER BY startedAt DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "720001",
+      "syncType": "weekly_giving",
+      "status": "completed",
+      "recordsProcessed": "1039",
+      "recordsCreated": "9",
+      "recordsUpdated": "4",
+      "errorMessage": "NULL",
+      "startedAt": "2026-05-20 10:49:04",
+      "completedAt": "2026-05-20 10:50:32",
+      "durationMs": "88144"
+    },
+    {
+      "id": "690014",
+      "syncType": "weekly_giving",
+      "status": "completed",
+      "recordsProcessed": "11403",
+      "recordsCreated": "66",
+      "recordsUpdated": "24",
+      "errorMessage": "NULL",
+      "startedAt": "2026-05-20 05:19:28",
+      "completedAt": "2026-05-20 05:28:06",
+      "durationMs": "518033"
+    },
+    {
+      "id": "690012",
+      "syncType": "weekly_giving",
+      "status": "completed",
+      "recordsProcessed": "442",
+      "recordsCreated": "442",
+      "recordsUpdated": "0",
+      "errorMessage": "NULL",
+      "startedAt": "2026-05-20 04:47:58",
+      "completedAt": "2026-05-20 04:48:35",
+      "durationMs": "37000"
+    },
+    {
+      "id": "690009",
+      "syncType": "weekly_giving",
+      "status": "completed",
+      "recordsProcessed": "11230",
+      "recordsCreated": "63",
+      "recordsUpdated": "20",
+      "errorMessage": "NULL",
+      "startedAt": "2026-05-20 04:26:19",
+      "completedAt": "2026-05-20 04:46:02",
+      "durationMs": "1182783"
+    },
+    {
+      "id": "690007",
+      "syncType": "weekly_giving",
+      "status": "completed",
+      "recordsProcessed": "555",
+      "recordsCreated": "3",
+      "recordsUpdated": "4",
+      "errorMessage": "NULL",
+      "startedAt": "2026-05-20 04:17:41",
+      "completedAt": "2026-05-20 04:18:42",
+      "durationMs": "60439"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsyncType\tstatus\trecordsProcessed\trecordsCreated\trecordsUpdated\terrorMessage\tstartedAt\tcompletedAt\tdurationMs\n720001\tweekly_giving\tcompleted\t1039\t9\t4\tNULL\t2026-05-20 10:49:04\t2026-05-20 10:50:32\t88144\n690014\tweekly_giving\tcompleted\t11403\t66\t24\tNULL\t2026-05-20 05:19:28\t2026-05-20 05:28:06\t518033\n690012\tweekly_giving\tcompleted\t442\t442\t0\tNULL\t2026-05-20 04:47:58\t2026-05-20 04:48:35\t37000\n690009\tweekly_giving\tcompleted\t11230\t63\t20\tNULL\t2026-05-20 04:26:19\t2026-05-20 04:46:02\t1182783\n690007\tweekly_giving\tcompleted\t555\t3\t4\tNULL\t2026-05-20 04:17:41\t2026-05-20 04:18:42\t60439\n",
+  "stderr": "",
+  "execution_time_ms": 263
+}

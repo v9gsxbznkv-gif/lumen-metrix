@@ -1,0 +1,14 @@
+{
+  "query": "SELECT \n  SUM(CAST(total AS DECIMAL(12,2))) as total_giving,\n  COUNT(DISTINCT weekNumber) as num_weeks\nFROM giving_weekly \nWHERE year = 2026 AND weekNumber <= 19;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT \n  SUM(CAST(total AS DECIMAL(12,2))) as total_giving,\n  COUNT(DISTINCT weekNumber) as num_weeks\nFROM giving_weekly \nWHERE year = 2026 AND weekNumber <= 19;",
+  "rows": [
+    {
+      "total_giving": "3646162.78",
+      "num_weeks": "19"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_giving\tnum_weeks\n3646162.78\t19\n",
+  "stderr": "",
+  "execution_time_ms": 268
+}

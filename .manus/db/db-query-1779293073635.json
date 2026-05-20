@@ -1,0 +1,14 @@
+{
+  "query": "SELECT \n  COUNT(DISTINCT weekNumber) as num_weeks,\n  SUM(headcount) as total_headcount\nFROM attendance_weekly \nWHERE year = 2026 \n  AND weekNumber <= 19\n  AND (subgroup = 'Adults' OR subgroup = 'Revolution Canton Check-In' OR subgroup = 'Revolution Jasper Check-In' OR subgroup = 'Revolution Church Jasper' OR subgroup = 'Kids');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT \n  COUNT(DISTINCT weekNumber) as num_weeks,\n  SUM(headcount) as total_headcount\nFROM attendance_weekly \nWHERE year = 2026 \n  AND weekNumber <= 19\n  AND (subgroup = 'Adults' OR subgroup = 'Revolution Canton Check-In' OR subgroup = 'Revolution Jasper Check-In' OR subgroup = 'Revolution Church Jasper' OR subgroup = 'Kids');",
+  "rows": [
+    {
+      "num_weeks": "19",
+      "total_headcount": "61302"
+    }
+  ],
+  "messages": [],
+  "stdout": "num_weeks\ttotal_headcount\n19\t61302\n",
+  "stderr": "",
+  "execution_time_ms": 276
+}

@@ -1,0 +1,14 @@
+{
+  "query": "SELECT weekNumber, SUM(CAST(total AS DECIMAL(12,2))) as week_giving\nFROM giving_weekly \nWHERE year = 2026 AND weekNumber = 20\nGROUP BY weekNumber;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekNumber, SUM(CAST(total AS DECIMAL(12,2))) as week_giving\nFROM giving_weekly \nWHERE year = 2026 AND weekNumber = 20\nGROUP BY weekNumber;",
+  "rows": [
+    {
+      "weekNumber": "20",
+      "week_giving": "189824.91"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\tweek_giving\n20\t189824.91\n",
+  "stderr": "",
+  "execution_time_ms": 261
+}
