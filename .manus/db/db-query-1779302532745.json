@@ -1,0 +1,74 @@
+{
+  "query": "SELECT weekNumber, campus, subgroup, headcount, weekStartDate, updatedAt FROM attendance_weekly WHERE year=2026 AND weekNumber IN (19,20) AND campus='Canton' AND subgroup IN ('Revolution Canton Check-In', 'Kids', 'Online', 'RevStudents HS') ORDER BY weekNumber, subgroup;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekNumber, campus, subgroup, headcount, weekStartDate, updatedAt FROM attendance_weekly WHERE year=2026 AND weekNumber IN (19,20) AND campus='Canton' AND subgroup IN ('Revolution Canton Check-In', 'Kids', 'Online', 'RevStudents HS') ORDER BY weekNumber, subgroup;",
+  "rows": [
+    {
+      "weekNumber": "19",
+      "campus": "Canton",
+      "subgroup": "Kids",
+      "headcount": "629",
+      "weekStartDate": "2026-05-04",
+      "updatedAt": "2026-05-20 18:41:23"
+    },
+    {
+      "weekNumber": "19",
+      "campus": "Canton",
+      "subgroup": "Online",
+      "headcount": "445",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-20 04:51:34"
+    },
+    {
+      "weekNumber": "19",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "2381",
+      "weekStartDate": "2026-05-04",
+      "updatedAt": "2026-05-20 18:41:23"
+    },
+    {
+      "weekNumber": "19",
+      "campus": "Canton",
+      "subgroup": "RevStudents HS",
+      "headcount": "117",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-20 04:51:34"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Canton",
+      "subgroup": "Kids",
+      "headcount": "446",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-18 04:56:05"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Canton",
+      "subgroup": "Online",
+      "headcount": "445",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-19 04:46:53"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "2142",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-18 04:56:05"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Canton",
+      "subgroup": "RevStudents HS",
+      "headcount": "117",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-19 04:46:53"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\tcampus\tsubgroup\theadcount\tweekStartDate\tupdatedAt\n19\tCanton\tKids\t629\t2026-05-04\t2026-05-20 18:41:23\n19\tCanton\tOnline\t445\t2026-05-11\t2026-05-20 04:51:34\n19\tCanton\tRevolution Canton Check-In\t2381\t2026-05-04\t2026-05-20 18:41:23\n19\tCanton\tRevStudents HS\t117\t2026-05-11\t2026-05-20 04:51:34\n20\tCanton\tKids\t446\t2026-05-11\t2026-05-18 04:56:05\n20\tCanton\tOnline\t445\t2026-05-11\t2026-05-19 04:46:53\n20\tCanton\tRevolution Canton Check-In\t2142\t2026-05-11\t2026-05-18 04:56:05\n20\tCanton\tRevStudents HS\t117\t2026-05-11\t2026-05-19 04:46:53\n",
+  "stderr": "",
+  "execution_time_ms": 268
+}

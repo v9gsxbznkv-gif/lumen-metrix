@@ -1424,3 +1424,9 @@
 - [x] Build passes, all 154 tests pass
 - [ ] Deploy fix and trigger full re-sync to correct historical data
 - [ ] Verify weeks 19 and 20 show different attendance numbers
+
+## Feature: Kids % and Students % of total weekend attendance on dashboard
+
+- [x] Add Kids % KPI to dashboard: # of Kids / Total Weekend Attendance (including kids), benchmark 30%
+- [x] Add Students % KPI to dashboard: # of Students / Total Weekend Attendance (including kids), benchmark 10%
+- [x] Show percentage with visual indicator comparing to benchmark (30% kids, 10% students)

@@ -1,0 +1,55 @@
+{
+  "query": "SELECT weekNumber, subgroup, headcount FROM attendance_weekly WHERE year=2026 AND weekNumber=20 AND campus='Canton' AND subgroup IN ('Revolution Canton Check-In', 'Kids', 'Online', 'RevStudents HS', 'RevStudents MS', 'RevStudents Attendance', 'Volunteers', 'FTG Adults', 'FTG Kids') ORDER BY subgroup;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekNumber, subgroup, headcount FROM attendance_weekly WHERE year=2026 AND weekNumber=20 AND campus='Canton' AND subgroup IN ('Revolution Canton Check-In', 'Kids', 'Online', 'RevStudents HS', 'RevStudents MS', 'RevStudents Attendance', 'Volunteers', 'FTG Adults', 'FTG Kids') ORDER BY subgroup;",
+  "rows": [
+    {
+      "weekNumber": "20",
+      "subgroup": "FTG Adults",
+      "headcount": "16"
+    },
+    {
+      "weekNumber": "20",
+      "subgroup": "FTG Kids",
+      "headcount": "15"
+    },
+    {
+      "weekNumber": "20",
+      "subgroup": "Kids",
+      "headcount": "446"
+    },
+    {
+      "weekNumber": "20",
+      "subgroup": "Online",
+      "headcount": "445"
+    },
+    {
+      "weekNumber": "20",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "2142"
+    },
+    {
+      "weekNumber": "20",
+      "subgroup": "RevStudents Attendance",
+      "headcount": "306"
+    },
+    {
+      "weekNumber": "20",
+      "subgroup": "RevStudents HS",
+      "headcount": "117"
+    },
+    {
+      "weekNumber": "20",
+      "subgroup": "RevStudents MS",
+      "headcount": "189"
+    },
+    {
+      "weekNumber": "20",
+      "subgroup": "Volunteers",
+      "headcount": "452"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\tsubgroup\theadcount\n20\tFTG Adults\t16\n20\tFTG Kids\t15\n20\tKids\t446\n20\tOnline\t445\n20\tRevolution Canton Check-In\t2142\n20\tRevStudents Attendance\t306\n20\tRevStudents HS\t117\n20\tRevStudents MS\t189\n20\tVolunteers\t452\n",
+  "stderr": "",
+  "execution_time_ms": 278
+}

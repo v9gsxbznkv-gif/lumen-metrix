@@ -120,6 +120,10 @@ export default function OverviewTab() {
     const students = Math.round(getAvgAttendanceFromWeekly(data, latestYear, campus, "Students"));
     const youngAdults = Math.round(getAvgAttendanceFromWeekly(data, latestYear, campus, "Young Adults"));
 
+    // Kids % and Students % of total weekend attendance (including kids)
+    const kidsPercent = attendance > 0 ? (kids / attendance) * 100 : 0;
+    const studentsPercent = attendance > 0 ? (students / attendance) * 100 : 0;
+
     // --- YoY changes (week-based for partial years) ---
     const attChange = partial
       ? getWeeklyYoYChange(data, latestYear, priorYear, (y, mw) =>
@@ -201,8 +205,10 @@ export default function OverviewTab() {
       baptismsChange: bapChange,
       kids,
       kidsChange,
+      kidsPercent,
       students,
       studentsChange,
+      studentsPercent,
       youngAdults,
       youngAdultsChange: yaChange,
     };
@@ -269,7 +275,7 @@ export default function OverviewTab() {
       </div>
 
       {/* Kids, Students & Young Adults KPI Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <KpiCard
           label="Avg Weekly Kids"
           value={formatNumber(kpis.kids)}
@@ -278,6 +284,37 @@ export default function OverviewTab() {
           icon={<Baby className="w-5 h-5" />}
           borderColor="#E8913A"
         />
+        <div
+          className="bg-card rounded-lg p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] border border-border/60 transition-all hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+          style={{ borderLeft: "3px solid #E8913A" }}
+        >
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="micro-label text-muted-foreground mb-2">Kids % of Total</p>
+              <p className="stat-value text-[1.75rem] text-card-foreground leading-none">
+                {kpis.kidsPercent.toFixed(1)}%
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-1.5">
+                Benchmark: 30%
+              </p>
+            </div>
+            <Baby className="w-5 h-5 text-muted-foreground/30 shrink-0" />
+          </div>
+          <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-border/40">
+            <div className="flex-1 h-2 rounded-full bg-border/40 overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all"
+                style={{
+                  width: `${Math.min(kpis.kidsPercent / 30 * 100, 100)}%`,
+                  backgroundColor: kpis.kidsPercent >= 30 ? "#4A7C59" : kpis.kidsPercent >= 20 ? "#D4A843" : "#C45B4A",
+                }}
+              />
+            </div>
+            <span className="text-[10px] font-semibold text-muted-foreground whitespace-nowrap">
+              {kpis.kidsPercent >= 30 ? "At/Above" : kpis.kidsPercent >= 20 ? "Near" : "Below"} benchmark
+            </span>
+          </div>
+        </div>
         <KpiCard
           label="Avg Weekly Students"
           value={formatNumber(kpis.students)}
@@ -286,6 +323,41 @@ export default function OverviewTab() {
           icon={<GraduationCap className="w-5 h-5" />}
           borderColor="#4A7FB5"
         />
+        <div
+          className="bg-card rounded-lg p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] border border-border/60 transition-all hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+          style={{ borderLeft: "3px solid #4A7FB5" }}
+        >
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="micro-label text-muted-foreground mb-2">Students % of Total</p>
+              <p className="stat-value text-[1.75rem] text-card-foreground leading-none">
+                {kpis.studentsPercent.toFixed(1)}%
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-1.5">
+                Benchmark: 10%
+              </p>
+            </div>
+            <GraduationCap className="w-5 h-5 text-muted-foreground/30 shrink-0" />
+          </div>
+          <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-border/40">
+            <div className="flex-1 h-2 rounded-full bg-border/40 overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all"
+                style={{
+                  width: `${Math.min(kpis.studentsPercent / 10 * 100, 100)}%`,
+                  backgroundColor: kpis.studentsPercent >= 10 ? "#4A7C59" : kpis.studentsPercent >= 7 ? "#D4A843" : "#C45B4A",
+                }}
+              />
+            </div>
+            <span className="text-[10px] font-semibold text-muted-foreground whitespace-nowrap">
+              {kpis.studentsPercent >= 10 ? "At/Above" : kpis.studentsPercent >= 7 ? "Near" : "Below"} benchmark
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Young Adults */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <KpiCard
           label="Avg Weekly Young Adults"
           value={formatNumber(kpis.youngAdults)}

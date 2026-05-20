@@ -1,0 +1,282 @@
+{
+  "query": "SELECT weekNumber, campus, subgroup, headcount, weekStartDate, updatedAt FROM attendance_weekly WHERE year=2026 AND weekNumber IN (19,20) AND campus='Canton' ORDER BY weekNumber, subgroup;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekNumber, campus, subgroup, headcount, weekStartDate, updatedAt FROM attendance_weekly WHERE year=2026 AND weekNumber IN (19,20) AND campus='Canton' ORDER BY weekNumber, subgroup;",
+  "rows": [
+    {
+      "weekNumber": "19",
+      "campus": "Canton",
+      "subgroup": "FTG Adults",
+      "headcount": "12",
+      "weekStartDate": "2026-05-04",
+      "updatedAt": "2026-05-20 18:41:23"
+    },
+    {
+      "weekNumber": "19",
+      "campus": "Canton",
+      "subgroup": "FTG Kids",
+      "headcount": "11",
+      "weekStartDate": "2026-05-04",
+      "updatedAt": "2026-05-20 18:41:23"
+    },
+    {
+      "weekNumber": "19",
+      "campus": "Canton",
+      "subgroup": "Kids",
+      "headcount": "629",
+      "weekStartDate": "2026-05-04",
+      "updatedAt": "2026-05-20 18:41:23"
+    },
+    {
+      "weekNumber": "19",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Babies",
+      "headcount": "9",
+      "weekStartDate": "2026-05-04",
+      "updatedAt": "2026-05-20 18:51:22"
+    },
+    {
+      "weekNumber": "19",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Campground",
+      "headcount": "42",
+      "weekStartDate": "2026-05-04",
+      "updatedAt": "2026-05-20 18:51:22"
+    },
+    {
+      "weekNumber": "19",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Cove",
+      "headcount": "126",
+      "weekStartDate": "2026-05-04",
+      "updatedAt": "2026-05-20 18:51:22"
+    },
+    {
+      "weekNumber": "19",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Elementary",
+      "headcount": "38",
+      "weekStartDate": "2026-05-04",
+      "updatedAt": "2026-05-20 18:50:48"
+    },
+    {
+      "weekNumber": "19",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Nursery",
+      "headcount": "4",
+      "weekStartDate": "2026-05-04",
+      "updatedAt": "2026-05-20 18:50:48"
+    },
+    {
+      "weekNumber": "19",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Toddlers",
+      "headcount": "8",
+      "weekStartDate": "2026-05-04",
+      "updatedAt": "2026-05-20 18:50:48"
+    },
+    {
+      "weekNumber": "19",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Treehouse",
+      "headcount": "99",
+      "weekStartDate": "2026-05-04",
+      "updatedAt": "2026-05-20 18:51:22"
+    },
+    {
+      "weekNumber": "19",
+      "campus": "Canton",
+      "subgroup": "Online",
+      "headcount": "445",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-20 04:51:34"
+    },
+    {
+      "weekNumber": "19",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "2381",
+      "weekStartDate": "2026-05-04",
+      "updatedAt": "2026-05-20 18:41:23"
+    },
+    {
+      "weekNumber": "19",
+      "campus": "Canton",
+      "subgroup": "RevStudents Attendance",
+      "headcount": "306",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-20 04:51:34"
+    },
+    {
+      "weekNumber": "19",
+      "campus": "Canton",
+      "subgroup": "RevStudents HS",
+      "headcount": "117",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-20 04:51:34"
+    },
+    {
+      "weekNumber": "19",
+      "campus": "Canton",
+      "subgroup": "RevStudents MS",
+      "headcount": "189",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-20 04:51:34"
+    },
+    {
+      "weekNumber": "19",
+      "campus": "Canton",
+      "subgroup": "Volunteer Check-Ins",
+      "headcount": "445",
+      "weekStartDate": "2026-05-04",
+      "updatedAt": "2026-05-20 18:51:22"
+    },
+    {
+      "weekNumber": "19",
+      "campus": "Canton",
+      "subgroup": "Volunteers",
+      "headcount": "447",
+      "weekStartDate": "2026-05-04",
+      "updatedAt": "2026-05-20 18:56:30"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Canton",
+      "subgroup": "FTG Adults",
+      "headcount": "16",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-19 04:46:53"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Canton",
+      "subgroup": "FTG Kids",
+      "headcount": "15",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-19 04:46:53"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Canton",
+      "subgroup": "Kids",
+      "headcount": "446",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-18 04:56:05"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Babies",
+      "headcount": "13",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-20 18:50:48"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Campground",
+      "headcount": "28",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-20 18:50:48"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Cove",
+      "headcount": "83",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-20 18:50:48"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Elementary",
+      "headcount": "30",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-15 01:07:58"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Nursery",
+      "headcount": "2",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-15 01:07:58"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Toddlers",
+      "headcount": "6",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-15 01:07:58"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Treehouse",
+      "headcount": "61",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-20 18:50:48"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Canton",
+      "subgroup": "Online",
+      "headcount": "445",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-19 04:46:53"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "2142",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-18 04:56:05"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Canton",
+      "subgroup": "RevStudents Attendance",
+      "headcount": "306",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-19 04:46:53"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Canton",
+      "subgroup": "RevStudents HS",
+      "headcount": "117",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-19 04:46:53"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Canton",
+      "subgroup": "RevStudents MS",
+      "headcount": "189",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-19 04:46:53"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Canton",
+      "subgroup": "Volunteer Check-Ins",
+      "headcount": "423",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-20 18:50:48"
+    },
+    {
+      "weekNumber": "20",
+      "campus": "Canton",
+      "subgroup": "Volunteers",
+      "headcount": "452",
+      "weekStartDate": "2026-05-11",
+      "updatedAt": "2026-05-20 18:56:31"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\tcampus\tsubgroup\theadcount\tweekStartDate\tupdatedAt\n19\tCanton\tFTG Adults\t12\t2026-05-04\t2026-05-20 18:41:23\n19\tCanton\tFTG Kids\t11\t2026-05-04\t2026-05-20 18:41:23\n19\tCanton\tKids\t629\t2026-05-04\t2026-05-20 18:41:23\n19\tCanton\tKids: Canton Babies\t9\t2026-05-04\t2026-05-20 18:51:22\n19\tCanton\tKids: Canton Campground\t42\t2026-05-04\t2026-05-20 18:51:22\n19\tCanton\tKids: Canton Cove\t126\t2026-05-04\t2026-05-20 18:51:22\n19\tCanton\tKids: Canton Elementary\t38\t2026-05-04\t2026-05-20 18:50:48\n19\tCanton\tKids: Canton Nursery\t4\t2026-05-04\t2026-05-20 18:50:48\n19\tCanton\tKids: Canton Toddlers\t8\t2026-05-04\t2026-05-20 18:50:48\n19\tCanton\tKids: Canton Treehouse\t99\t2026-05-04\t2026-05-20 18:51:22\n19\tCanton\tOnline\t445\t2026-05-11\t2026-05-20 04:51:34\n19\tCanton\tRevolution Canton Check-In\t2381\t2026-05-04\t2026-05-20 18:41:23\n19\tCanton\tRevStudents Attendance\t306\t2026-05-11\t2026-05-20 04:51:34\n19\tCanton\tRevStudents HS\t117\t2026-05-11\t2026-05-20 04:51:34\n19\tCanton\tRevStudents MS\t189\t2026-05-11\t2026-05-20 04:51:34\n19\tCanton\tVolunteer Check-Ins\t445\t2026-05-04\t2026-05-20 18:51:22\n19\tCanton\tVolunteers\t447\t2026-05-04\t2026-05-20 18:56:30\n20\tCanton\tFTG Adults\t16\t2026-05-11\t2026-05-19 04:46:53\n20\tCanton\tFTG Kids\t15\t2026-05-11\t2026-05-19 04:46:53\n20\tCanton\tKids\t446\t2026-05-11\t2026-05-18 04:56:05\n20\tCanton\tKids: Canton Babies\t13\t2026-05-11\t2026-05-20 18:50:48\n20\tCanton\tKids: Canton Campground\t28\t2026-05-11\t2026-05-20 18:50:48\n20\tCanton\tKids: Canton Cove\t83\t2026-05-11\t2026-05-20 18:50:48\n20\tCanton\tKids: Canton Elementary\t30\t2026-05-11\t2026-05-15 01:07:58\n20\tCanton\tKids: Canton Nursery\t2\t2026-05-11\t2026-05-15 01:07:58\n20\tCanton\tKids: Canton Toddlers\t6\t2026-05-11\t2026-05-15 01:07:58\n20\tCanton\tKids: Canton Treehouse\t61\t2026-05-11\t2026-05-20 18:50:48\n20\tCanton\tOnline\t445\t2026-05-11\t2026-05-19 04:46:53\n20\tCanton\tRevolution Canton Check-In\t2142\t2026-05-11\t2026-05-18 04:56:05\n20\tCanton\tRevStudents Attendance\t306\t2026-05-11\t2026-05-19 04:46:53\n20\tCanton\tRevStudents HS\t117\t2026-05-11\t2026-05-19 04:46:53\n20\tCanton\tRevStudents MS\t189\t2026-05-11\t2026-05-19 04:46:53\n20\tCanton\tVolunteer Check-Ins\t423\t2026-05-11\t2026-05-20 18:50:48\n20\tCanton\tVolunteers\t452\t2026-05-11\t2026-05-20 18:56:31\n",
+  "stderr": "",
+  "execution_time_ms": 261
+}
