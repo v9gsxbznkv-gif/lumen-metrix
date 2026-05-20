@@ -1,0 +1,24 @@
+{
+  "query": "SELECT weekNumber, subgroup, headcount, updatedAt, weekStartDate\nFROM attendance_weekly \nWHERE year = 2026 AND weekNumber IN (19, 20) AND campus = 'Canton' \n  AND subgroup = 'Revolution Canton Check-In'\nORDER BY weekNumber;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekNumber, subgroup, headcount, updatedAt, weekStartDate\nFROM attendance_weekly \nWHERE year = 2026 AND weekNumber IN (19, 20) AND campus = 'Canton' \n  AND subgroup = 'Revolution Canton Check-In'\nORDER BY weekNumber;",
+  "rows": [
+    {
+      "weekNumber": "19",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "2142",
+      "updatedAt": "2026-05-20 04:51:34",
+      "weekStartDate": "2026-05-04"
+    },
+    {
+      "weekNumber": "20",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "2142",
+      "updatedAt": "2026-05-18 04:56:05",
+      "weekStartDate": "2026-05-11"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\tsubgroup\theadcount\tupdatedAt\tweekStartDate\n19\tRevolution Canton Check-In\t2142\t2026-05-20 04:51:34\t2026-05-04\n20\tRevolution Canton Check-In\t2142\t2026-05-18 04:56:05\t2026-05-11\n",
+  "stderr": "",
+  "execution_time_ms": 259
+}

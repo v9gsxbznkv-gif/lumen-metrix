@@ -1413,3 +1413,14 @@
 ## Bug: GPC shows $60 on dashboard but $57 on giving page
 - [x] Root cause: frontend getWeeklyGivingPerCapita() includes partial current week (week 21 has $8K giving but no attendance yet), diluting the average
 - [x] Fix: add weekCap to getWeeklyGivingPerCapita() and computeGPCFromWeekly() to exclude current partial week (same logic as backend getPerCapita)
+
+## Bug: Attendance weeks 19 and 20 show identical numbers (DST bug)
+- [x] Diagnose root cause: getISOWeekNumber uses local Date arithmetic which is affected by DST spring-forward, causing week numbers to shift by -1 after March
+- [x] Fix getWeekStart to use Date.UTC() for all internal arithmetic
+- [x] Fix getISOWeekNumber to use getUTC* methods exclusively
+- [x] Fix formatDate to use getUTC* methods
+- [x] Fix all call sites (getFullYear -> getUTCFullYear, etc.)
+- [x] Verify fix produces correct week numbers for May 7 (week 19) and May 14 (week 20)
+- [x] Build passes, all 154 tests pass
+- [ ] Deploy fix and trigger full re-sync to correct historical data
+- [ ] Verify weeks 19 and 20 show different attendance numbers

@@ -1,0 +1,60 @@
+{
+  "query": "SELECT weekNumber, weekStartDate, campus, subgroup, headcount, source, createdAt, updatedAt\nFROM attendance_weekly \nWHERE year = 2026 AND weekNumber = 20 AND campus = 'Canton'\n  AND subgroup IN ('Revolution Canton Check-In', 'Kids', 'Online', 'RevStudents HS', 'RevStudents MS')\nORDER BY subgroup;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekNumber, weekStartDate, campus, subgroup, headcount, source, createdAt, updatedAt\nFROM attendance_weekly \nWHERE year = 2026 AND weekNumber = 20 AND campus = 'Canton'\n  AND subgroup IN ('Revolution Canton Check-In', 'Kids', 'Online', 'RevStudents HS', 'RevStudents MS')\nORDER BY subgroup;",
+  "rows": [
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Canton",
+      "subgroup": "Kids",
+      "headcount": "446",
+      "source": "pco",
+      "createdAt": "2026-05-18 04:56:05",
+      "updatedAt": "2026-05-18 04:56:05"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Canton",
+      "subgroup": "Online",
+      "headcount": "445",
+      "source": "pco",
+      "createdAt": "2026-05-19 04:46:53",
+      "updatedAt": "2026-05-19 04:46:53"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "2142",
+      "source": "pco",
+      "createdAt": "2026-05-15 01:07:58",
+      "updatedAt": "2026-05-18 04:56:05"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Canton",
+      "subgroup": "RevStudents HS",
+      "headcount": "117",
+      "source": "pco",
+      "createdAt": "2026-05-19 04:46:53",
+      "updatedAt": "2026-05-19 04:46:53"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Canton",
+      "subgroup": "RevStudents MS",
+      "headcount": "189",
+      "source": "pco",
+      "createdAt": "2026-05-19 04:46:53",
+      "updatedAt": "2026-05-19 04:46:53"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\tweekStartDate\tcampus\tsubgroup\theadcount\tsource\tcreatedAt\tupdatedAt\n20\t2026-05-11\tCanton\tKids\t446\tpco\t2026-05-18 04:56:05\t2026-05-18 04:56:05\n20\t2026-05-11\tCanton\tOnline\t445\tpco\t2026-05-19 04:46:53\t2026-05-19 04:46:53\n20\t2026-05-11\tCanton\tRevolution Canton Check-In\t2142\tpco\t2026-05-15 01:07:58\t2026-05-18 04:56:05\n20\t2026-05-11\tCanton\tRevStudents HS\t117\tpco\t2026-05-19 04:46:53\t2026-05-19 04:46:53\n20\t2026-05-11\tCanton\tRevStudents MS\t189\tpco\t2026-05-19 04:46:53\t2026-05-19 04:46:53\n",
+  "stderr": "",
+  "execution_time_ms": 269
+}

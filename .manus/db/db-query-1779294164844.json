@@ -1,0 +1,112 @@
+{
+  "query": "SELECT a.subgroup, a.headcount as wk19, b.headcount as wk20, \n  CASE WHEN a.headcount = b.headcount THEN 'SAME' ELSE 'DIFF' END as status\nFROM attendance_weekly a\nJOIN attendance_weekly b ON a.campus = b.campus AND a.subgroup = b.subgroup AND a.year = b.year\nWHERE a.year = 2026 AND a.weekNumber = 19 AND b.weekNumber = 20 AND a.campus = 'Canton'\nORDER BY a.subgroup;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT a.subgroup, a.headcount as wk19, b.headcount as wk20, \n  CASE WHEN a.headcount = b.headcount THEN 'SAME' ELSE 'DIFF' END as status\nFROM attendance_weekly a\nJOIN attendance_weekly b ON a.campus = b.campus AND a.subgroup = b.subgroup AND a.year = b.year\nWHERE a.year = 2026 AND a.weekNumber = 19 AND b.weekNumber = 20 AND a.campus = 'Canton'\nORDER BY a.subgroup;",
+  "rows": [
+    {
+      "subgroup": "FTG Adults",
+      "wk19": "16",
+      "wk20": "16",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "FTG Kids",
+      "wk19": "15",
+      "wk20": "15",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "Kids",
+      "wk19": "446",
+      "wk20": "446",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "Kids: Canton Babies",
+      "wk19": "13",
+      "wk20": "13",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "Kids: Canton Campground",
+      "wk19": "28",
+      "wk20": "28",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "Kids: Canton Cove",
+      "wk19": "83",
+      "wk20": "83",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "Kids: Canton Elementary",
+      "wk19": "30",
+      "wk20": "30",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "Kids: Canton Nursery",
+      "wk19": "2",
+      "wk20": "2",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "Kids: Canton Toddlers",
+      "wk19": "6",
+      "wk20": "6",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "Kids: Canton Treehouse",
+      "wk19": "61",
+      "wk20": "61",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "Online",
+      "wk19": "445",
+      "wk20": "445",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "Revolution Canton Check-In",
+      "wk19": "2142",
+      "wk20": "2142",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "RevStudents Attendance",
+      "wk19": "306",
+      "wk20": "306",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "RevStudents HS",
+      "wk19": "117",
+      "wk20": "117",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "RevStudents MS",
+      "wk19": "189",
+      "wk20": "189",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "Volunteer Check-Ins",
+      "wk19": "423",
+      "wk20": "423",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "Volunteers",
+      "wk19": "447",
+      "wk20": "452",
+      "status": "DIFF"
+    }
+  ],
+  "messages": [],
+  "stdout": "subgroup\twk19\twk20\tstatus\nFTG Adults\t16\t16\tSAME\nFTG Kids\t15\t15\tSAME\nKids\t446\t446\tSAME\nKids: Canton Babies\t13\t13\tSAME\nKids: Canton Campground\t28\t28\tSAME\nKids: Canton Cove\t83\t83\tSAME\nKids: Canton Elementary\t30\t30\tSAME\nKids: Canton Nursery\t2\t2\tSAME\nKids: Canton Toddlers\t6\t6\tSAME\nKids: Canton Treehouse\t61\t61\tSAME\nOnline\t445\t445\tSAME\nRevolution Canton Check-In\t2142\t2142\tSAME\nRevStudents Attendance\t306\t306\tSAME\nRevStudents HS\t117\t117\tSAME\nRevStudents MS\t189\t189\tSAME\nVolunteer Check-Ins\t423\t423\tSAME\nVolunteers\t447\t452\tDIFF\n",
+  "stderr": "",
+  "execution_time_ms": 268
+}

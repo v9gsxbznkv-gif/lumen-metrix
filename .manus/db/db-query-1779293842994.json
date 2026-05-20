@@ -1,0 +1,164 @@
+{
+  "query": "SELECT weekNumber, weekStartDate, campus, subgroup, headcount \nFROM attendance_weekly \nWHERE year = 2026 AND weekNumber IN (19, 20)\n  AND subgroup IN ('Revolution Canton Check-In', 'Revolution Jasper Check-In', 'Revolution Church Jasper', 'Kids', 'RevStudents HS', 'RevStudents MS', 'Online', 'Volunteers')\nORDER BY campus, subgroup, weekNumber;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekNumber, weekStartDate, campus, subgroup, headcount \nFROM attendance_weekly \nWHERE year = 2026 AND weekNumber IN (19, 20)\n  AND subgroup IN ('Revolution Canton Check-In', 'Revolution Jasper Check-In', 'Revolution Church Jasper', 'Kids', 'RevStudents HS', 'RevStudents MS', 'Online', 'Volunteers')\nORDER BY campus, subgroup, weekNumber;",
+  "rows": [
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "campus": "Canton",
+      "subgroup": "Kids",
+      "headcount": "446"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Canton",
+      "subgroup": "Kids",
+      "headcount": "446"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-11",
+      "campus": "Canton",
+      "subgroup": "Online",
+      "headcount": "445"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Canton",
+      "subgroup": "Online",
+      "headcount": "445"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "2142"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "2142"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-11",
+      "campus": "Canton",
+      "subgroup": "RevStudents HS",
+      "headcount": "117"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Canton",
+      "subgroup": "RevStudents HS",
+      "headcount": "117"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-11",
+      "campus": "Canton",
+      "subgroup": "RevStudents MS",
+      "headcount": "189"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Canton",
+      "subgroup": "RevStudents MS",
+      "headcount": "189"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "campus": "Canton",
+      "subgroup": "Volunteers",
+      "headcount": "447"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Canton",
+      "subgroup": "Volunteers",
+      "headcount": "452"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "campus": "Jasper",
+      "subgroup": "Kids",
+      "headcount": "104"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Jasper",
+      "subgroup": "Kids",
+      "headcount": "104"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "headcount": "438"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "headcount": "438"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-11",
+      "campus": "Jasper",
+      "subgroup": "RevStudents HS",
+      "headcount": "35"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Jasper",
+      "subgroup": "RevStudents HS",
+      "headcount": "35"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-11",
+      "campus": "Jasper",
+      "subgroup": "RevStudents MS",
+      "headcount": "31"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Jasper",
+      "subgroup": "RevStudents MS",
+      "headcount": "31"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "campus": "Jasper",
+      "subgroup": "Volunteers",
+      "headcount": "157"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Jasper",
+      "subgroup": "Volunteers",
+      "headcount": "168"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\tweekStartDate\tcampus\tsubgroup\theadcount\n19\t2026-05-04\tCanton\tKids\t446\n20\t2026-05-11\tCanton\tKids\t446\n19\t2026-05-11\tCanton\tOnline\t445\n20\t2026-05-11\tCanton\tOnline\t445\n19\t2026-05-04\tCanton\tRevolution Canton Check-In\t2142\n20\t2026-05-11\tCanton\tRevolution Canton Check-In\t2142\n19\t2026-05-11\tCanton\tRevStudents HS\t117\n20\t2026-05-11\tCanton\tRevStudents HS\t117\n19\t2026-05-11\tCanton\tRevStudents MS\t189\n20\t2026-05-11\tCanton\tRevStudents MS\t189\n19\t2026-05-04\tCanton\tVolunteers\t447\n20\t2026-05-11\tCanton\tVolunteers\t452\n19\t2026-05-04\tJasper\tKids\t104\n20\t2026-05-11\tJasper\tKids\t104\n19\t2026-05-04\tJasper\tRevolution Jasper Check-In\t438\n20\t2026-05-11\tJasper\tRevolution Jasper Check-In\t438\n19\t2026-05-11\tJasper\tRevStudents HS\t35\n20\t2026-05-11\tJasper\tRevStudents HS\t35\n19\t2026-05-11\tJasper\tRevStudents MS\t31\n20\t2026-05-11\tJasper\tRevStudents MS\t31\n19\t2026-05-04\tJasper\tVolunteers\t157\n20\t2026-05-11\tJasper\tVolunteers\t168\n",
+  "stderr": "",
+  "execution_time_ms": 262
+}

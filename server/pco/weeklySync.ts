@@ -79,6 +79,10 @@ async function createFreshDb(): Promise<{ db: ReturnType<typeof drizzle>; end: (
  * Wednesdays in Eastern Time, so we convert to ET first to avoid off-by-one
  * day errors.
  *
+ * IMPORTANT: All internal arithmetic uses Date.UTC() to avoid DST-induced
+ * off-by-one errors. The returned Date is a UTC-midnight date representing
+ * the calendar day (use formatDate() to extract YYYY-MM-DD).
+ *
  * Returns: a Date representing the week-start (Jan 1 for week 1, Monday for weeks 2+)
  */
 function getWeekStart(date: Date): Date {
@@ -92,19 +96,19 @@ function getWeekStart(date: Date): Date {
   const etYear = parseInt(etParts.find(p => p.type === 'year')!.value);
   const etMonth = parseInt(etParts.find(p => p.type === 'month')!.value) - 1;
   const etDay = parseInt(etParts.find(p => p.type === 'day')!.value);
-  // Build a local midnight date using ET wall-clock values
-  const d = new Date(etYear, etMonth, etDay, 0, 0, 0, 0);
+  // Build a UTC midnight date using ET wall-clock values (avoids DST issues)
+  const d = new Date(Date.UTC(etYear, etMonth, etDay));
 
   // Find the first Sunday of the year (end of week 1)
-  const jan1 = new Date(etYear, 0, 1, 0, 0, 0, 0);
-  const jan1Day = jan1.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  const jan1 = new Date(Date.UTC(etYear, 0, 1));
+  const jan1Day = jan1.getUTCDay(); // 0=Sun, 1=Mon, ..., 6=Sat
   const firstSunday = new Date(jan1);
   if (jan1Day === 0) {
     // Jan 1 is already Sunday — week 1 is just Jan 1
     // (no-op, firstSunday = Jan 1)
   } else {
     // First Sunday = Jan 1 + (7 - jan1Day) days
-    firstSunday.setDate(1 + (7 - jan1Day));
+    firstSunday.setUTCDate(1 + (7 - jan1Day));
   }
 
   // If date is within Jan 1 → first Sunday: it's week 1, start = Jan 1
@@ -113,9 +117,9 @@ function getWeekStart(date: Date): Date {
   }
 
   // Otherwise: standard Mon-Sun weeks starting the Monday after firstSunday
-  const day = d.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  const day = d.getUTCDay(); // 0=Sun, 1=Mon, ..., 6=Sat
   const daysToMonday = day === 0 ? 6 : day - 1;
-  d.setDate(d.getDate() - daysToMonday);
+  d.setUTCDate(d.getUTCDate() - daysToMonday);
   return d;
 }
 
@@ -125,9 +129,9 @@ function getSunday(date: Date): Date {
 }
 
 function formatDate(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
+  const y = date.getUTCFullYear();
+  const m = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(date.getUTCDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
 
@@ -138,21 +142,24 @@ function formatDate(date: Date): string {
  *   etc.
  *
  * The year is always the calendar year (not ISO week-year).
+ *
+ * IMPORTANT: Uses UTC methods exclusively to avoid DST-induced off-by-one
+ * errors when dividing millisecond differences by 86400000.
  */
 function getISOWeekNumber(date: Date): number {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
+  // Normalize to UTC midnight of the same calendar day
+  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
 
-  const year = d.getFullYear();
-  const jan1 = new Date(year, 0, 1, 0, 0, 0, 0);
-  const jan1Day = jan1.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  const year = d.getUTCFullYear();
+  const jan1 = new Date(Date.UTC(year, 0, 1));
+  const jan1Day = jan1.getUTCDay(); // 0=Sun, 1=Mon, ..., 6=Sat
 
   // First Sunday of the year
   let firstSunday: Date;
   if (jan1Day === 0) {
     firstSunday = new Date(jan1);
   } else {
-    firstSunday = new Date(year, 0, 1 + (7 - jan1Day), 0, 0, 0, 0);
+    firstSunday = new Date(Date.UTC(year, 0, 1 + (7 - jan1Day)));
   }
 
   // If date is within Jan 1 → first Sunday: week 1
@@ -162,7 +169,7 @@ function getISOWeekNumber(date: Date): number {
 
   // Week 2 starts the Monday after firstSunday
   const week2Start = new Date(firstSunday);
-  week2Start.setDate(firstSunday.getDate() + 1); // Monday after first Sunday
+  week2Start.setUTCDate(firstSunday.getUTCDate() + 1); // Monday after first Sunday
 
   const daysSinceWeek2 = Math.floor((d.getTime() - week2Start.getTime()) / 86400000);
   return 2 + Math.floor(daysSinceWeek2 / 7);
@@ -661,7 +668,7 @@ export async function syncWeeklyAttendance(
         const date = new Date(startsAt);
         const sunday = getSunday(date);
         const weekStartDate = formatDate(sunday);
-        const year = sunday.getFullYear();
+        const year = sunday.getUTCFullYear();
         const weekNumber = getISOWeekNumber(sunday);
 
         if (isMainCheckin) {
@@ -1234,7 +1241,7 @@ export async function syncWeeklyGiving(
           // This aligns giving weeks with attendance weeks.
           const weekStart = getSunday(donationDate);
           const weekStartStr = formatDate(weekStart);
-          const year = weekStart.getFullYear();
+          const year = weekStart.getUTCFullYear();
           const weekNum = getISOWeekNumber(weekStart);
 
           // Get designations for this donation
@@ -1329,7 +1336,7 @@ export async function syncWeeklyGiving(
               const donationDate = new Date(dateStr);
               const weekStart = getSunday(donationDate);
               const weekStartStr = formatDate(weekStart);
-              const year = weekStart.getFullYear();
+              const year = weekStart.getUTCFullYear();
               const weekNum = getISOWeekNumber(weekStart);
               const designationRefs = donation.relationships?.designations?.data || [];
               if (designationRefs.length === 0) {
@@ -1475,9 +1482,9 @@ export async function syncWeeklyGiving(
 
     const monthlyMap = new Map<string, { year: number; month: number; campus: string; total: number; general: number; designated: number }>();
     for (const row of allWeeklyRows) {
-      const date = new Date(row.weekStartDate);
-      const year = date.getFullYear();
-      const month = date.getMonth() + 1;
+      const date = new Date(row.weekStartDate + "T00:00:00Z");
+      const year = date.getUTCFullYear();
+      const month = date.getUTCMonth() + 1;
       const campus = row.campus;
       const key = `${year}-${month}-${campus}`;
       const existing = monthlyMap.get(key);
@@ -1680,12 +1687,12 @@ export async function syncVolunteersFromServices(
     const { db, end } = await createFreshDb();
     try {
       for (const [weekStart, campusMap] of Array.from(weekCampusVolunteers)) {
-        const weekDate = new Date(weekStart + "T00:00:00");
+        const weekDate = new Date(weekStart + "T00:00:00Z");
         if (weekDate > today) {
           console.log(`[Volunteer Sync] Skipping future week: ${weekStart}`);
           continue;
         }
-        const year = weekDate.getFullYear();
+        const year = weekDate.getUTCFullYear();
         const weekNumber = getISOWeekNumber(weekDate);
 
         for (const [campus, counts] of Array.from(campusMap)) {

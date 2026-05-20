@@ -1,0 +1,112 @@
+{
+  "query": "SELECT \n  a.subgroup,\n  a.headcount as week19_headcount,\n  b.headcount as week20_headcount,\n  CASE WHEN a.headcount = b.headcount THEN 'SAME' ELSE 'DIFFERENT' END as status\nFROM attendance_weekly a\nJOIN attendance_weekly b ON a.campus = b.campus AND a.subgroup = b.subgroup AND a.year = b.year\nWHERE a.year = 2026 AND a.weekNumber = 19 AND b.weekNumber = 20\n  AND a.campus = 'Canton'\nORDER BY a.subgroup;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT \n  a.subgroup,\n  a.headcount as week19_headcount,\n  b.headcount as week20_headcount,\n  CASE WHEN a.headcount = b.headcount THEN 'SAME' ELSE 'DIFFERENT' END as status\nFROM attendance_weekly a\nJOIN attendance_weekly b ON a.campus = b.campus AND a.subgroup = b.subgroup AND a.year = b.year\nWHERE a.year = 2026 AND a.weekNumber = 19 AND b.weekNumber = 20\n  AND a.campus = 'Canton'\nORDER BY a.subgroup;",
+  "rows": [
+    {
+      "subgroup": "FTG Adults",
+      "week19_headcount": "16",
+      "week20_headcount": "16",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "FTG Kids",
+      "week19_headcount": "15",
+      "week20_headcount": "15",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "Kids",
+      "week19_headcount": "446",
+      "week20_headcount": "446",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "Kids: Canton Babies",
+      "week19_headcount": "13",
+      "week20_headcount": "13",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "Kids: Canton Campground",
+      "week19_headcount": "28",
+      "week20_headcount": "28",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "Kids: Canton Cove",
+      "week19_headcount": "83",
+      "week20_headcount": "83",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "Kids: Canton Elementary",
+      "week19_headcount": "30",
+      "week20_headcount": "30",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "Kids: Canton Nursery",
+      "week19_headcount": "2",
+      "week20_headcount": "2",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "Kids: Canton Toddlers",
+      "week19_headcount": "6",
+      "week20_headcount": "6",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "Kids: Canton Treehouse",
+      "week19_headcount": "61",
+      "week20_headcount": "61",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "Online",
+      "week19_headcount": "445",
+      "week20_headcount": "445",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "Revolution Canton Check-In",
+      "week19_headcount": "2142",
+      "week20_headcount": "2142",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "RevStudents Attendance",
+      "week19_headcount": "306",
+      "week20_headcount": "306",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "RevStudents HS",
+      "week19_headcount": "117",
+      "week20_headcount": "117",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "RevStudents MS",
+      "week19_headcount": "189",
+      "week20_headcount": "189",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "Volunteer Check-Ins",
+      "week19_headcount": "423",
+      "week20_headcount": "423",
+      "status": "SAME"
+    },
+    {
+      "subgroup": "Volunteers",
+      "week19_headcount": "447",
+      "week20_headcount": "452",
+      "status": "DIFFERENT"
+    }
+  ],
+  "messages": [],
+  "stdout": "subgroup\tweek19_headcount\tweek20_headcount\tstatus\nFTG Adults\t16\t16\tSAME\nFTG Kids\t15\t15\tSAME\nKids\t446\t446\tSAME\nKids: Canton Babies\t13\t13\tSAME\nKids: Canton Campground\t28\t28\tSAME\nKids: Canton Cove\t83\t83\tSAME\nKids: Canton Elementary\t30\t30\tSAME\nKids: Canton Nursery\t2\t2\tSAME\nKids: Canton Toddlers\t6\t6\tSAME\nKids: Canton Treehouse\t61\t61\tSAME\nOnline\t445\t445\tSAME\nRevolution Canton Check-In\t2142\t2142\tSAME\nRevStudents Attendance\t306\t306\tSAME\nRevStudents HS\t117\t117\tSAME\nRevStudents MS\t189\t189\tSAME\nVolunteer Check-Ins\t423\t423\tSAME\nVolunteers\t447\t452\tDIFFERENT\n",
+  "stderr": "",
+  "execution_time_ms": 273
+}

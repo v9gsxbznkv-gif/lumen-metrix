@@ -1,0 +1,52 @@
+{
+  "query": "SELECT weekNumber, headcount, weekStartDate, createdAt, updatedAt\nFROM attendance_weekly \nWHERE year = 2026 AND weekNumber BETWEEN 15 AND 20\n  AND campus = 'Canton' AND subgroup = 'Revolution Canton Check-In'\nORDER BY weekNumber;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekNumber, headcount, weekStartDate, createdAt, updatedAt\nFROM attendance_weekly \nWHERE year = 2026 AND weekNumber BETWEEN 15 AND 20\n  AND campus = 'Canton' AND subgroup = 'Revolution Canton Check-In'\nORDER BY weekNumber;",
+  "rows": [
+    {
+      "weekNumber": "15",
+      "headcount": "2120",
+      "weekStartDate": "2026-04-06",
+      "createdAt": "2026-05-09 21:23:12",
+      "updatedAt": "2026-05-20 04:51:34"
+    },
+    {
+      "weekNumber": "16",
+      "headcount": "1961",
+      "weekStartDate": "2026-04-13",
+      "createdAt": "2026-05-09 21:23:12",
+      "updatedAt": "2026-05-20 04:51:34"
+    },
+    {
+      "weekNumber": "17",
+      "headcount": "2041",
+      "weekStartDate": "2026-04-20",
+      "createdAt": "2026-05-09 21:23:12",
+      "updatedAt": "2026-05-20 04:51:34"
+    },
+    {
+      "weekNumber": "18",
+      "headcount": "2381",
+      "weekStartDate": "2026-04-27",
+      "createdAt": "2026-05-09 21:23:12",
+      "updatedAt": "2026-05-20 04:51:34"
+    },
+    {
+      "weekNumber": "19",
+      "headcount": "2142",
+      "weekStartDate": "2026-05-04",
+      "createdAt": "2026-05-09 21:23:12",
+      "updatedAt": "2026-05-20 04:51:34"
+    },
+    {
+      "weekNumber": "20",
+      "headcount": "2142",
+      "weekStartDate": "2026-05-11",
+      "createdAt": "2026-05-15 01:07:58",
+      "updatedAt": "2026-05-18 04:56:05"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\theadcount\tweekStartDate\tcreatedAt\tupdatedAt\n15\t2120\t2026-04-06\t2026-05-09 21:23:12\t2026-05-20 04:51:34\n16\t1961\t2026-04-13\t2026-05-09 21:23:12\t2026-05-20 04:51:34\n17\t2041\t2026-04-20\t2026-05-09 21:23:12\t2026-05-20 04:51:34\n18\t2381\t2026-04-27\t2026-05-09 21:23:12\t2026-05-20 04:51:34\n19\t2142\t2026-05-04\t2026-05-09 21:23:12\t2026-05-20 04:51:34\n20\t2142\t2026-05-11\t2026-05-15 01:07:58\t2026-05-18 04:56:05\n",
+  "stderr": "",
+  "execution_time_ms": 271
+}
