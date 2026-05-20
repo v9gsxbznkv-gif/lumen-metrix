@@ -1,0 +1,8 @@
+{
+  "query": "SELECT 'giving_weekly' as tbl, MAX(updatedAt) as latest FROM giving_weekly UNION ALL SELECT 'attendance_weekly', MAX(updatedAt) FROM attendance_weekly UNION ALL SELECT 'giving_monthly', MAX(updatedAt) FROM giving_monthly;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT 'giving_weekly' as tbl, MAX(updatedAt) as latest FROM giving_weekly UNION ALL SELECT 'attendance_weekly', MAX(updatedAt) FROM attendance_weekly UNION ALL SELECT 'giving_monthly', MAX(updatedAt) FROM giving_monthly;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'updatedat' in 'field list'"
+  ]
+}

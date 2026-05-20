@@ -1,0 +1,52 @@
+{
+  "query": "SELECT weekNumber, weekStartDate, SUM(CAST(total AS DECIMAL(12,2))) as week_total, SUM(donationCount) as total_donations FROM giving_weekly WHERE year = 2026 AND weekNumber >= 15 GROUP BY weekNumber, weekStartDate ORDER BY weekNumber;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekNumber, weekStartDate, SUM(CAST(total AS DECIMAL(12,2))) as week_total, SUM(donationCount) as total_donations FROM giving_weekly WHERE year = 2026 AND weekNumber >= 15 GROUP BY weekNumber, weekStartDate ORDER BY weekNumber;",
+  "rows": [
+    {
+      "weekNumber": "15",
+      "weekStartDate": "2026-04-06",
+      "week_total": "136908.32",
+      "total_donations": "456"
+    },
+    {
+      "weekNumber": "16",
+      "weekStartDate": "2026-04-13",
+      "week_total": "162627.64",
+      "total_donations": "543"
+    },
+    {
+      "weekNumber": "17",
+      "weekStartDate": "2026-04-20",
+      "week_total": "155975.13",
+      "total_donations": "442"
+    },
+    {
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "week_total": "226356.29",
+      "total_donations": "722"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "week_total": "186827.94",
+      "total_donations": "481"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "week_total": "117623.68",
+      "total_donations": "345"
+    },
+    {
+      "weekNumber": "21",
+      "weekStartDate": "2026-05-18",
+      "week_total": "3733.95",
+      "total_donations": "12"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\tweekStartDate\tweek_total\ttotal_donations\n15\t2026-04-06\t136908.32\t456\n16\t2026-04-13\t162627.64\t543\n17\t2026-04-20\t155975.13\t442\n18\t2026-04-27\t226356.29\t722\n19\t2026-05-04\t186827.94\t481\n20\t2026-05-11\t117623.68\t345\n21\t2026-05-18\t3733.95\t12\n",
+  "stderr": "",
+  "execution_time_ms": 274
+}

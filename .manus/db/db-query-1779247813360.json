@@ -1,0 +1,28 @@
+{
+  "query": "SELECT campus, total, donationCount, updatedAt FROM giving_weekly WHERE weekStartDate = '2026-05-11' ORDER BY campus;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT campus, total, donationCount, updatedAt FROM giving_weekly WHERE weekStartDate = '2026-05-11' ORDER BY campus;",
+  "rows": [
+    {
+      "campus": "All Campuses",
+      "total": "4527.98",
+      "donationCount": "10",
+      "updatedAt": "2026-05-19 12:38:32"
+    },
+    {
+      "campus": "Canton",
+      "total": "103267.40",
+      "donationCount": "289",
+      "updatedAt": "2026-05-19 12:38:32"
+    },
+    {
+      "campus": "Jasper",
+      "total": "10798.90",
+      "donationCount": "49",
+      "updatedAt": "2026-05-19 05:08:31"
+    }
+  ],
+  "messages": [],
+  "stdout": "campus\ttotal\tdonationCount\tupdatedAt\nAll Campuses\t4527.98\t10\t2026-05-19 12:38:32\nCanton\t103267.40\t289\t2026-05-19 12:38:32\nJasper\t10798.90\t49\t2026-05-19 05:08:31\n",
+  "stderr": "",
+  "execution_time_ms": 272
+}

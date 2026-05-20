@@ -1397,4 +1397,15 @@
 ## Bug: Young Adults monthly numbers showing ~16 instead of 60-80
 - [x] Root cause: monthly view divides YA total by weekCount (e.g. 64/4=16) but YA only meets once/month — raw total IS the monthly number
 - [x] Fix: don't divide youngAdults by weekCount in monthly table, yearly table, and chart data
-- [ ] Deploy fix
+- [x] Deploy fix
+
+## Bug: Giving numbers off for week 20 (May 11-17) — $118K vs PCO's $190K
+- [x] Root cause: sync only includes `succeeded` donations, but PCO dashboard includes `pending` ACH donations too ($118,862 succeeded + $70,962 pending = $189,824)
+- [x] Fix: update payment_status filter in syncWeeklyGiving to include both 'succeeded' and 'pending' (exclude only 'failed' and 'refunded')
+- [x] Fix applied to both primary fetch and retry fetch paths
+- [ ] Deploy fix and trigger fresh giving sync for week 20
+- [ ] Verify week 20 giving matches PCO (~$190K)
+
+## Scheduler/Router Cleanup
+- [x] Fix triggerNightlySync in router.ts to use runSyncInBackground instead of legacy runNightlySync scheduler path
+- [x] Fix midnight scheduler to use syncAllWeekly directly (removed dependency on legacy syncAll)

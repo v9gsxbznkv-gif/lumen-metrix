@@ -564,30 +564,19 @@ export const pcoRouter = router({
    */
   triggerNightlySync: publicProcedure.mutation(async () => {
     // Create a job record so the UI can track progress
+    // Use the same runSyncInBackground path as triggerSync for reliable execution
+    const client = await createAuthenticatedPcoClient();
+    if (!client) {
+      throw new Error("Not connected to Planning Center. Go to Settings and reconnect your account.");
+    }
+
     const jobId = generateJobId();
     await createJob(jobId, "full");
-    console.log(`[Manual Sync] Job ${jobId} created, running nightly sync in background...`);
+    console.log(`[Manual Sync] Job ${jobId} created, running full sync in background...`);
 
-    // Fire-and-forget
-    (async () => {
-      try {
-        await updateJob(jobId, { status: "running", progress: 0, message: "Starting nightly sync..." });
-        await runNightlySync();
-        await updateJob(jobId, {
-          status: "completed",
-          progress: 100,
-          message: "Nightly sync completed successfully",
-          completedAt: new Date(),
-        });
-      } catch (err: any) {
-        console.error(`[Manual Sync] Error in job ${jobId}:`, err);
-        await updateJob(jobId, {
-          status: "failed",
-          error: err.message || "Unknown error",
-          completedAt: new Date(),
-        });
-      }
-    })();
+    // Fire-and-forget using the proven runSyncInBackground path
+    runSyncInBackground(jobId, "full", client)
+      .catch((err) => console.error(`[Manual Sync] Unhandled error in job ${jobId}:`, err));
 
     return { jobId };
   }),

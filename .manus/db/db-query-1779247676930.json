@@ -1,0 +1,15 @@
+{
+  "query": "SELECT id, createdAt, updatedAt FROM pco_tokens ORDER BY id DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT id, createdAt, updatedAt FROM pco_tokens ORDER BY id DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "840001",
+      "createdAt": "2026-05-20 03:27:04",
+      "updatedAt": "2026-05-20 03:27:04"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcreatedAt\tupdatedAt\n840001\t2026-05-20 03:27:04\t2026-05-20 03:27:04\n",
+  "stderr": "",
+  "execution_time_ms": 272
+}

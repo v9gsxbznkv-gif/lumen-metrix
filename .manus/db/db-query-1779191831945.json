@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, syncType, startedAt, results FROM sync_jobs WHERE id = 630006;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT id, syncType, startedAt, results FROM sync_jobs WHERE id = 630006;",
+  "rows": [
+    {
+      "id": "630006",
+      "syncType": "full",
+      "startedAt": "2026-05-15 10:16:23",
+      "results": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsyncType\tstartedAt\tresults\n630006\tfull\t2026-05-15 10:16:23\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 264
+}

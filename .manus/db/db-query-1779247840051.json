@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COUNT(*) as recent_updates FROM giving_weekly WHERE `updatedAt` > '2026-05-20 03:27:00';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT COUNT(*) as recent_updates FROM giving_weekly WHERE `updatedAt` > '2026-05-20 03:27:00';",
+  "rows": [
+    {
+      "recent_updates": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "recent_updates\n0\n",
+  "stderr": "",
+  "execution_time_ms": 266
+}

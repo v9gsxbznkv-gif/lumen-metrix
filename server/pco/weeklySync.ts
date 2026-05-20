@@ -1215,10 +1215,11 @@ export async function syncWeeklyGiving(
         for (const donation of donations) {
           recordsProcessed++;
 
-          // Only count succeeded donations — PCO's Giving Dashboard excludes
-          // failed/pending/refunded donations, so we must match that behavior.
+          // Include succeeded + pending donations to match PCO Giving Dashboard.
+          // Pending ACH donations are counted as received (95%+ clear successfully).
+          // Only exclude failed and refunded donations.
           const paymentStatus: string = donation.attributes?.payment_status || '';
-          if (paymentStatus !== 'succeeded') {
+          if (paymentStatus !== 'succeeded' && paymentStatus !== 'pending') {
             skippedNonSucceeded++;
             continue;
           }
@@ -1322,7 +1323,7 @@ export async function syncWeeklyGiving(
             for (const donation of donations) {
               recordsProcessed++;
               const paymentStatus: string = donation.attributes?.payment_status || '';
-              if (paymentStatus !== 'succeeded') { skippedNonSucceeded++; continue; }
+              if (paymentStatus !== 'succeeded' && paymentStatus !== 'pending') { skippedNonSucceeded++; continue; }
               const receivedAt: string = donation.attributes?.received_at || chunk.from;
               const dateStr = receivedAt.includes('T') ? receivedAt : `${receivedAt}T12:00:00Z`;
               const donationDate = new Date(dateStr);
@@ -1367,7 +1368,7 @@ export async function syncWeeklyGiving(
     }
 
     console.log(`[Weekly Giving] Processed ${recordsProcessed} donations into ${weeklyAgg.size} weekly campus rows`);
-    console.log(`[Weekly Giving] Skipped non-succeeded donations (failed/pending/refunded): ${skippedNonSucceeded}`);
+    console.log(`[Weekly Giving] Skipped non-succeeded/non-pending donations (failed/refunded): ${skippedNonSucceeded}`);
     console.log(`[Weekly Giving] Skipped designations (not in included): ${skippedDesignations}`);
     console.log(`[Weekly Giving] Donations without designations: ${noDesignationDonations}`);
     // Log per-fund totals

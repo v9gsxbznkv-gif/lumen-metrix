@@ -1,0 +1,9 @@
+{
+  "query": "SELECT year, weekNumber, weekStartDate, campus, subgroup, headcount FROM attendance_weekly WHERE year = 2026 AND weekNumber >= 19 AND subgroup LIKE '%tudent%' ORDER BY weekNumber DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, weekNumber, weekStartDate, campus, subgroup, headcount FROM attendance_weekly WHERE year = 2026 AND weekNumber >= 19 AND subgroup LIKE '%tudent%' ORDER BY weekNumber DESC;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 282
+}

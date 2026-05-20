@@ -1,0 +1,73 @@
+{
+  "query": "SELECT DISTINCT subgroup FROM attendance_weekly WHERE year = 2026 AND weekNumber = 19 ORDER BY subgroup;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT subgroup FROM attendance_weekly WHERE year = 2026 AND weekNumber = 19 ORDER BY subgroup;",
+  "rows": [
+    {
+      "subgroup": "FTG Adults"
+    },
+    {
+      "subgroup": "FTG Kids"
+    },
+    {
+      "subgroup": "Kids"
+    },
+    {
+      "subgroup": "Kids: Canton Babies"
+    },
+    {
+      "subgroup": "Kids: Canton Campground"
+    },
+    {
+      "subgroup": "Kids: Canton Cove"
+    },
+    {
+      "subgroup": "Kids: Canton Elementary"
+    },
+    {
+      "subgroup": "Kids: Canton Nursery"
+    },
+    {
+      "subgroup": "Kids: Canton Toddlers"
+    },
+    {
+      "subgroup": "Kids: Canton Treehouse"
+    },
+    {
+      "subgroup": "Kids: Jasper Cove"
+    },
+    {
+      "subgroup": "Kids: Jasper Nursery"
+    },
+    {
+      "subgroup": "Kids: Jasper Pre-K"
+    },
+    {
+      "subgroup": "Kids: Jasper Reruns"
+    },
+    {
+      "subgroup": "Kids: Jasper Treehouse"
+    },
+    {
+      "subgroup": "Revolution Canton Check-In"
+    },
+    {
+      "subgroup": "Revolution Jasper Check-In"
+    },
+    {
+      "subgroup": "Volunteer Check-Ins"
+    },
+    {
+      "subgroup": "Volunteers"
+    },
+    {
+      "subgroup": "YA FTG"
+    },
+    {
+      "subgroup": "YA Gathering"
+    }
+  ],
+  "messages": [],
+  "stdout": "subgroup\nFTG Adults\nFTG Kids\nKids\nKids: Canton Babies\nKids: Canton Campground\nKids: Canton Cove\nKids: Canton Elementary\nKids: Canton Nursery\nKids: Canton Toddlers\nKids: Canton Treehouse\nKids: Jasper Cove\nKids: Jasper Nursery\nKids: Jasper Pre-K\nKids: Jasper Reruns\nKids: Jasper Treehouse\nRevolution Canton Check-In\nRevolution Jasper Check-In\nVolunteer Check-Ins\nVolunteers\nYA FTG\nYA Gathering\n",
+  "stderr": "",
+  "execution_time_ms": 260
+}

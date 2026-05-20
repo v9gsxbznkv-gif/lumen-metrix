@@ -1,0 +1,110 @@
+{
+  "query": "SELECT year, weekNumber, weekStartDate, campus, total, general, designated, donationCount FROM giving_weekly WHERE year = 2026 ORDER BY weekNumber DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, weekNumber, weekStartDate, campus, total, general, designated, donationCount FROM giving_weekly WHERE year = 2026 ORDER BY weekNumber DESC LIMIT 10;",
+  "rows": [
+    {
+      "year": "2026",
+      "weekNumber": "21",
+      "weekStartDate": "2026-05-18",
+      "campus": "Jasper",
+      "total": "415.23",
+      "general": "415.23",
+      "designated": "0.00",
+      "donationCount": "3"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "21",
+      "weekStartDate": "2026-05-18",
+      "campus": "Canton",
+      "total": "2918.72",
+      "general": "2918.72",
+      "designated": "0.00",
+      "donationCount": "8"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "21",
+      "weekStartDate": "2026-05-18",
+      "campus": "All Campuses",
+      "total": "400.00",
+      "general": "0.00",
+      "designated": "400.00",
+      "donationCount": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Jasper",
+      "total": "10798.90",
+      "general": "10798.90",
+      "designated": "0.00",
+      "donationCount": "49"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Canton",
+      "total": "102796.80",
+      "general": "102796.80",
+      "designated": "0.00",
+      "donationCount": "287"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "All Campuses",
+      "total": "4027.98",
+      "general": "0.00",
+      "designated": "4027.98",
+      "donationCount": "9"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "campus": "Jasper",
+      "total": "41362.94",
+      "general": "41362.94",
+      "designated": "0.00",
+      "donationCount": "89"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "campus": "Canton",
+      "total": "123951.15",
+      "general": "123951.15",
+      "designated": "0.00",
+      "donationCount": "373"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "campus": "All Campuses",
+      "total": "21513.85",
+      "general": "0.00",
+      "designated": "21513.85",
+      "donationCount": "19"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "campus": "Jasper",
+      "total": "29604.70",
+      "general": "29604.70",
+      "designated": "0.00",
+      "donationCount": "122"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tweekNumber\tweekStartDate\tcampus\ttotal\tgeneral\tdesignated\tdonationCount\n2026\t21\t2026-05-18\tJasper\t415.23\t415.23\t0.00\t3\n2026\t21\t2026-05-18\tCanton\t2918.72\t2918.72\t0.00\t8\n2026\t21\t2026-05-18\tAll Campuses\t400.00\t0.00\t400.00\t1\n2026\t20\t2026-05-11\tJasper\t10798.90\t10798.90\t0.00\t49\n2026\t20\t2026-05-11\tCanton\t102796.80\t102796.80\t0.00\t287\n2026\t20\t2026-05-11\tAll Campuses\t4027.98\t0.00\t4027.98\t9\n2026\t19\t2026-05-04\tJasper\t41362.94\t41362.94\t0.00\t89\n2026\t19\t2026-05-04\tCanton\t123951.15\t123951.15\t0.00\t373\n2026\t19\t2026-05-04\tAll Campuses\t21513.85\t0.00\t21513.85\t19\n2026\t18\t2026-04-27\tJasper\t29604.70\t29604.70\t0.00\t122\n",
+  "stderr": "",
+  "execution_time_ms": 265
+}

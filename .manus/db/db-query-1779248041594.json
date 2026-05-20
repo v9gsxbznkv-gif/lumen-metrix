@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, createdAt, expiresAt, organizationName, scope FROM pco_tokens ORDER BY id DESC LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT id, createdAt, expiresAt, organizationName, scope FROM pco_tokens ORDER BY id DESC LIMIT 1;",
+  "rows": [
+    {
+      "id": "840001",
+      "createdAt": "2026-05-20 03:27:04",
+      "expiresAt": "2026-05-20 05:27:04",
+      "organizationName": "Revolution Church",
+      "scope": "check_ins giving groups calendar people services"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcreatedAt\texpiresAt\torganizationName\tscope\n840001\t2026-05-20 03:27:04\t2026-05-20 05:27:04\tRevolution Church\tcheck_ins giving groups calendar people services\n",
+  "stderr": "",
+  "execution_time_ms": 265
+}

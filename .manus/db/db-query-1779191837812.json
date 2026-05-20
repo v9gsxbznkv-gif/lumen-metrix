@@ -1,0 +1,15 @@
+{
+  "query": "SELECT MIN(weekStartDate) as earliest, MAX(weekStartDate) as latest, COUNT(*) as total_rows FROM giving_weekly WHERE year = 2026;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT MIN(weekStartDate) as earliest, MAX(weekStartDate) as latest, COUNT(*) as total_rows FROM giving_weekly WHERE year = 2026;",
+  "rows": [
+    {
+      "earliest": "2026-01-01",
+      "latest": "2026-05-18",
+      "total_rows": "63"
+    }
+  ],
+  "messages": [],
+  "stdout": "earliest\tlatest\ttotal_rows\n2026-01-01\t2026-05-18\t63\n",
+  "stderr": "",
+  "execution_time_ms": 274
+}

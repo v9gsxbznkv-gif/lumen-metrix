@@ -1,0 +1,250 @@
+{
+  "query": "SELECT year, weekNumber, weekStartDate, campus, subgroup, headcount FROM attendance_weekly WHERE year = 2026 AND subgroup LIKE '%tudent%' ORDER BY weekNumber DESC LIMIT 30;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, weekNumber, weekStartDate, campus, subgroup, headcount FROM attendance_weekly WHERE year = 2026 AND subgroup LIKE '%tudent%' ORDER BY weekNumber DESC LIMIT 30;",
+  "rows": [
+    {
+      "year": "2026",
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "campus": "Jasper",
+      "subgroup": "RevStudents MS",
+      "headcount": "29"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "campus": "Jasper",
+      "subgroup": "RevStudents HS",
+      "headcount": "37"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "campus": "Jasper",
+      "subgroup": "RevStudents FTG",
+      "headcount": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "campus": "Jasper",
+      "subgroup": "RevStudents Attendance",
+      "headcount": "66"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "campus": "Canton",
+      "subgroup": "RevStudents MS",
+      "headcount": "213"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "18",
+      "weekStartDate": "2026-04-27",
+      "campus": "Canton",
+      "subgroup": "RevStudents HS",
+      "headcount": "114"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "17",
+      "weekStartDate": "2026-04-20",
+      "campus": "Jasper",
+      "subgroup": "RevStudents MS",
+      "headcount": "29"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "17",
+      "weekStartDate": "2026-04-20",
+      "campus": "Jasper",
+      "subgroup": "RevStudents HS",
+      "headcount": "36"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "17",
+      "weekStartDate": "2026-04-27",
+      "campus": "Jasper",
+      "subgroup": "RevStudents FTG",
+      "headcount": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "17",
+      "weekStartDate": "2026-04-20",
+      "campus": "Jasper",
+      "subgroup": "RevStudents Attendance",
+      "headcount": "65"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "17",
+      "weekStartDate": "2026-04-20",
+      "campus": "Canton",
+      "subgroup": "RevStudents MS",
+      "headcount": "240"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "17",
+      "weekStartDate": "2026-04-20",
+      "campus": "Canton",
+      "subgroup": "RevStudents HS",
+      "headcount": "133"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "17",
+      "weekStartDate": "2026-04-20",
+      "campus": "Canton",
+      "subgroup": "RevStudents Attendance",
+      "headcount": "373"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "16",
+      "weekStartDate": "2026-04-13",
+      "campus": "Jasper",
+      "subgroup": "RevStudents MS",
+      "headcount": "32"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "16",
+      "weekStartDate": "2026-04-13",
+      "campus": "Jasper",
+      "subgroup": "RevStudents HS",
+      "headcount": "25"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "16",
+      "weekStartDate": "2026-04-13",
+      "campus": "Jasper",
+      "subgroup": "RevStudents FTG",
+      "headcount": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "16",
+      "weekStartDate": "2026-04-20",
+      "campus": "Jasper",
+      "subgroup": "RevStudents Attendance",
+      "headcount": "65"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "16",
+      "weekStartDate": "2026-04-13",
+      "campus": "Canton",
+      "subgroup": "RevStudents MS",
+      "headcount": "207"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "16",
+      "weekStartDate": "2026-04-13",
+      "campus": "Canton",
+      "subgroup": "RevStudents HS",
+      "headcount": "112"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "16",
+      "weekStartDate": "2026-04-13",
+      "campus": "Canton",
+      "subgroup": "RevStudents Attendance",
+      "headcount": "319"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "15",
+      "weekStartDate": "2026-04-13",
+      "campus": "Jasper",
+      "subgroup": "RevStudents MS",
+      "headcount": "32"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "15",
+      "weekStartDate": "2026-04-13",
+      "campus": "Jasper",
+      "subgroup": "RevStudents HS",
+      "headcount": "25"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "15",
+      "weekStartDate": "2026-04-13",
+      "campus": "Jasper",
+      "subgroup": "RevStudents FTG",
+      "headcount": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "15",
+      "weekStartDate": "2026-04-13",
+      "campus": "Canton",
+      "subgroup": "RevStudents MS",
+      "headcount": "207"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "15",
+      "weekStartDate": "2026-04-13",
+      "campus": "Canton",
+      "subgroup": "RevStudents HS",
+      "headcount": "112"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "15",
+      "weekStartDate": "2026-04-13",
+      "campus": "Canton",
+      "subgroup": "RevStudents Attendance",
+      "headcount": "319"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "14",
+      "weekStartDate": "2026-03-30",
+      "campus": "Jasper",
+      "subgroup": "RevStudents MS",
+      "headcount": "28"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "14",
+      "weekStartDate": "2026-03-30",
+      "campus": "Jasper",
+      "subgroup": "RevStudents HS",
+      "headcount": "31"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "14",
+      "weekStartDate": "2026-03-30",
+      "campus": "Jasper",
+      "subgroup": "RevStudents Attendance",
+      "headcount": "59"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "14",
+      "weekStartDate": "2026-03-30",
+      "campus": "Canton",
+      "subgroup": "RevStudents MS",
+      "headcount": "197"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tweekNumber\tweekStartDate\tcampus\tsubgroup\theadcount\n2026\t18\t2026-04-27\tJasper\tRevStudents MS\t29\n2026\t18\t2026-04-27\tJasper\tRevStudents HS\t37\n2026\t18\t2026-04-27\tJasper\tRevStudents FTG\t1\n2026\t18\t2026-04-27\tJasper\tRevStudents Attendance\t66\n2026\t18\t2026-04-27\tCanton\tRevStudents MS\t213\n2026\t18\t2026-04-27\tCanton\tRevStudents HS\t114\n2026\t17\t2026-04-20\tJasper\tRevStudents MS\t29\n2026\t17\t2026-04-20\tJasper\tRevStudents HS\t36\n2026\t17\t2026-04-27\tJasper\tRevStudents FTG\t1\n2026\t17\t2026-04-20\tJasper\tRevStudents Attendance\t65\n2026\t17\t2026-04-20\tCanton\tRevStudents MS\t240\n2026\t17\t2026-04-20\tCanton\tRevStudents HS\t133\n2026\t17\t2026-04-20\tCanton\tRevStudents Attendance\t373\n2026\t16\t2026-04-13\tJasper\tRevStudents MS\t32\n2026\t16\t2026-04-13\tJasper\tRevStudents HS\t25\n2026\t16\t2026-04-13\tJasper\tRevStudents FTG\t1\n2026\t16\t2026-04-20\tJasper\tRevStudents Attendance\t65\n2026\t16\t2026-04-13\tCanton\tRevStudents MS\t207\n2026\t16\t2026-04-13\tCanton\tRevStudents HS\t112\n2026\t16\t2026-04-13\tCanton\tRevStudents Attendance\t319\n2026\t15\t2026-04-13\tJasper\tRevStudents MS\t32\n2026\t15\t2026-04-13\tJasper\tRevStudents HS\t25\n2026\t15\t2026-04-13\tJasper\tRevStudents FTG\t1\n2026\t15\t2026-04-13\tCanton\tRevStudents MS\t207\n2026\t15\t2026-04-13\tCanton\tRevStudents HS\t112\n2026\t15\t2026-04-13\tCanton\tRevStudents Attendance\t319\n2026\t14\t2026-03-30\tJasper\tRevStudents MS\t28\n2026\t14\t2026-03-30\tJasper\tRevStudents HS\t31\n2026\t14\t2026-03-30\tJasper\tRevStudents Attendance\t59\n2026\t14\t2026-03-30\tCanton\tRevStudents MS\t197\n",
+  "stderr": "",
+  "execution_time_ms": 261
+}

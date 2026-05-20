@@ -1,0 +1,110 @@
+{
+  "query": "SELECT id, syncType, status, recordsProcessed, errorMessage, startedAt, completedAt, durationMs FROM sync_logs ORDER BY id DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT id, syncType, status, recordsProcessed, errorMessage, startedAt, completedAt, durationMs FROM sync_logs ORDER BY id DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "690005",
+      "syncType": "attendance",
+      "status": "completed",
+      "recordsProcessed": "594",
+      "errorMessage": "NULL",
+      "startedAt": "2026-05-20 03:27:35",
+      "completedAt": "2026-05-20 03:27:35",
+      "durationMs": "116"
+    },
+    {
+      "id": "690004",
+      "syncType": "volunteers",
+      "status": "completed",
+      "recordsProcessed": "396",
+      "errorMessage": "NULL",
+      "startedAt": "2026-05-19 12:39:20",
+      "completedAt": "2026-05-19 12:57:35",
+      "durationMs": "1095401"
+    },
+    {
+      "id": "690003",
+      "syncType": "weekly_giving",
+      "status": "completed",
+      "recordsProcessed": "11224",
+      "errorMessage": "NULL",
+      "startedAt": "2026-05-19 12:38:04",
+      "completedAt": "2026-05-19 12:57:35",
+      "durationMs": "1170824"
+    },
+    {
+      "id": "690002",
+      "syncType": "weekly_attendance",
+      "status": "completed",
+      "recordsProcessed": "87",
+      "errorMessage": "NULL",
+      "startedAt": "2026-05-19 12:37:49",
+      "completedAt": "2026-05-19 12:57:28",
+      "durationMs": "1178629"
+    },
+    {
+      "id": "690001",
+      "syncType": "attendance",
+      "status": "completed",
+      "recordsProcessed": "594",
+      "errorMessage": "NULL",
+      "startedAt": "2026-05-19 11:59:26",
+      "completedAt": "2026-05-19 11:59:26",
+      "durationMs": "237"
+    },
+    {
+      "id": "660004",
+      "syncType": "volunteers",
+      "status": "completed",
+      "recordsProcessed": "396",
+      "errorMessage": "NULL",
+      "startedAt": "2026-05-19 05:09:08",
+      "completedAt": "2026-05-19 05:26:45",
+      "durationMs": "1056800"
+    },
+    {
+      "id": "660003",
+      "syncType": "weekly_giving",
+      "status": "completed",
+      "recordsProcessed": "11219",
+      "errorMessage": "NULL",
+      "startedAt": "2026-05-19 05:05:21",
+      "completedAt": "2026-05-19 05:26:45",
+      "durationMs": "1283495"
+    },
+    {
+      "id": "660002",
+      "syncType": "weekly_attendance",
+      "status": "completed",
+      "recordsProcessed": "87",
+      "errorMessage": "NULL",
+      "startedAt": "2026-05-19 05:02:43",
+      "completedAt": "2026-05-19 05:26:40",
+      "durationMs": "1437604"
+    },
+    {
+      "id": "660001",
+      "syncType": "attendance",
+      "status": "completed",
+      "recordsProcessed": "581",
+      "errorMessage": "NULL",
+      "startedAt": "2026-05-19 04:23:09",
+      "completedAt": "2026-05-19 04:23:18",
+      "durationMs": "9000"
+    },
+    {
+      "id": "630026",
+      "syncType": "volunteers",
+      "status": "completed",
+      "recordsProcessed": "391",
+      "errorMessage": "NULL",
+      "startedAt": "2026-05-18 05:20:27",
+      "completedAt": "2026-05-18 05:42:28",
+      "durationMs": "1321100"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsyncType\tstatus\trecordsProcessed\terrorMessage\tstartedAt\tcompletedAt\tdurationMs\n690005\tattendance\tcompleted\t594\tNULL\t2026-05-20 03:27:35\t2026-05-20 03:27:35\t116\n690004\tvolunteers\tcompleted\t396\tNULL\t2026-05-19 12:39:20\t2026-05-19 12:57:35\t1095401\n690003\tweekly_giving\tcompleted\t11224\tNULL\t2026-05-19 12:38:04\t2026-05-19 12:57:35\t1170824\n690002\tweekly_attendance\tcompleted\t87\tNULL\t2026-05-19 12:37:49\t2026-05-19 12:57:28\t1178629\n690001\tattendance\tcompleted\t594\tNULL\t2026-05-19 11:59:26\t2026-05-19 11:59:26\t237\n660004\tvolunteers\tcompleted\t396\tNULL\t2026-05-19 05:09:08\t2026-05-19 05:26:45\t1056800\n660003\tweekly_giving\tcompleted\t11219\tNULL\t2026-05-19 05:05:21\t2026-05-19 05:26:45\t1283495\n660002\tweekly_attendance\tcompleted\t87\tNULL\t2026-05-19 05:02:43\t2026-05-19 05:26:40\t1437604\n660001\tattendance\tcompleted\t581\tNULL\t2026-05-19 04:23:09\t2026-05-19 04:23:18\t9000\n630026\tvolunteers\tcompleted\t391\tNULL\t2026-05-18 05:20:27\t2026-05-18 05:42:28\t1321100\n",
+  "stderr": "",
+  "execution_time_ms": 345
+}

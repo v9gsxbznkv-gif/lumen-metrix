@@ -1,0 +1,110 @@
+{
+  "query": "SELECT id, syncType, status, startedAt, completedAt, recordsProcessed, message, error FROM sync_jobs ORDER BY startedAt DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT id, syncType, status, startedAt, completedAt, recordsProcessed, message, error FROM sync_jobs ORDER BY startedAt DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "630006",
+      "syncType": "full",
+      "status": "completed",
+      "startedAt": "2026-05-15 10:16:23",
+      "completedAt": "2026-05-15 10:51:06",
+      "recordsProcessed": "442",
+      "message": "Sync complete — 442 records processed",
+      "error": "NULL"
+    },
+    {
+      "id": "630005",
+      "syncType": "full",
+      "status": "completed",
+      "startedAt": "2026-05-15 02:14:48",
+      "completedAt": "2026-05-15 02:50:21",
+      "recordsProcessed": "442",
+      "message": "Sync complete — 442 records processed",
+      "error": "NULL"
+    },
+    {
+      "id": "630004",
+      "syncType": "full",
+      "status": "failed",
+      "startedAt": "2026-05-15 00:53:09",
+      "completedAt": "2026-05-15 01:25:34",
+      "recordsProcessed": "10031",
+      "message": "Aggregating weekly giving into monthly totals...",
+      "error": "Sync timed out — the server may have restarted mid-sync. Please try again."
+    },
+    {
+      "id": "630003",
+      "syncType": "full",
+      "status": "completed",
+      "startedAt": "2026-05-15 00:50:22",
+      "completedAt": "2026-05-15 01:45:58",
+      "recordsProcessed": "442",
+      "message": "Sync complete — 442 records processed",
+      "error": "Job stalled — no progress update for 20 minutes. This usually means PCO rate limiting caused the sync to hang. Try again later or reduce the date range."
+    },
+    {
+      "id": "630002",
+      "syncType": "full",
+      "status": "completed",
+      "startedAt": "2026-05-14 21:41:12",
+      "completedAt": "2026-05-14 22:18:01",
+      "recordsProcessed": "442",
+      "message": "Sync complete — 442 records processed",
+      "error": "NULL"
+    },
+    {
+      "id": "630001",
+      "syncType": "full",
+      "status": "completed",
+      "startedAt": "2026-05-14 21:09:35",
+      "completedAt": "2026-05-14 21:31:40",
+      "recordsProcessed": "442",
+      "message": "Sync complete — 442 records processed",
+      "error": "NULL"
+    },
+    {
+      "id": "600003",
+      "syncType": "full",
+      "status": "completed",
+      "startedAt": "2026-05-12 18:09:43",
+      "completedAt": "2026-05-12 18:24:39",
+      "recordsProcessed": "0",
+      "message": "Nightly sync completed successfully",
+      "error": "NULL"
+    },
+    {
+      "id": "600002",
+      "syncType": "full",
+      "status": "completed",
+      "startedAt": "2026-05-12 17:46:24",
+      "completedAt": "2026-05-12 18:23:37",
+      "recordsProcessed": "0",
+      "message": "Nightly sync completed successfully",
+      "error": "Job stalled — no progress update for 20 minutes. This usually means PCO rate limiting caused the sync to hang. Try again later or reduce the date range."
+    },
+    {
+      "id": "600001",
+      "syncType": "full",
+      "status": "failed",
+      "startedAt": "2026-05-12 17:35:49",
+      "completedAt": "2026-05-12 17:56:44",
+      "recordsProcessed": "0",
+      "message": "Starting nightly sync...",
+      "error": "Job stalled — no progress update for 20 minutes. This usually means PCO rate limiting caused the sync to hang. Try again later or reduce the date range."
+    },
+    {
+      "id": "570001",
+      "syncType": "weekly_all",
+      "status": "completed",
+      "startedAt": "2026-05-12 16:45:50",
+      "completedAt": "2026-05-12 16:48:32",
+      "recordsProcessed": "724",
+      "message": "Sync complete — 724 records processed",
+      "error": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsyncType\tstatus\tstartedAt\tcompletedAt\trecordsProcessed\tmessage\terror\n630006\tfull\tcompleted\t2026-05-15 10:16:23\t2026-05-15 10:51:06\t442\tSync complete — 442 records processed\tNULL\n630005\tfull\tcompleted\t2026-05-15 02:14:48\t2026-05-15 02:50:21\t442\tSync complete — 442 records processed\tNULL\n630004\tfull\tfailed\t2026-05-15 00:53:09\t2026-05-15 01:25:34\t10031\tAggregating weekly giving into monthly totals...\tSync timed out — the server may have restarted mid-sync. Please try again.\n630003\tfull\tcompleted\t2026-05-15 00:50:22\t2026-05-15 01:45:58\t442\tSync complete — 442 records processed\tJob stalled — no progress update for 20 minutes. This usually means PCO rate limiting caused the sync to hang. Try again later or reduce the date range.\n630002\tfull\tcompleted\t2026-05-14 21:41:12\t2026-05-14 22:18:01\t442\tSync complete — 442 records processed\tNULL\n630001\tfull\tcompleted\t2026-05-14 21:09:35\t2026-05-14 21:31:40\t442\tSync complete — 442 records processed\tNULL\n600003\tfull\tcompleted\t2026-05-12 18:09:43\t2026-05-12 18:24:39\t0\tNightly sync completed successfully\tNULL\n600002\tfull\tcompleted\t2026-05-12 17:46:24\t2026-05-12 18:23:37\t0\tNightly sync completed successfully\tJob stalled — no progress update for 20 minutes. This usually means PCO rate limiting caused the sync to hang. Try again later or reduce the date range.\n600001\tfull\tfailed\t2026-05-12 17:35:49\t2026-05-12 17:56:44\t0\tStarting nightly sync...\tJob stalled — no progress update for 20 minutes. This usually means PCO rate limiting caused the sync to hang. Try again later or reduce the date range.\n570001\tweekly_all\tcompleted\t2026-05-12 16:45:50\t2026-05-12 16:48:32\t724\tSync complete — 724 records processed\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 271
+}

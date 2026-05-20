@@ -4,10 +4,8 @@
  * Uses setInterval with 30-minute checks to avoid drift.
  */
 import { createAuthenticatedPcoClient } from "./client";
-import { syncAll, logSyncResult } from "./sync";
+import { logSyncResult } from "./sync";
 import { syncAllWeekly } from "./weeklySync";
-import { getDb } from "../db";
-import { pcoSettings } from "../../drizzle/schema";
 
 let schedulerInterval: ReturnType<typeof setInterval> | null = null;
 let isRunning = false;
@@ -62,47 +60,27 @@ export async function runNightlySync(): Promise<void> {
       return;
     }
 
-    // Sync current year data
+    // Sync current year data using the weekly sync path (the reliable one)
+    // This pulls attendance, giving, and volunteers from PCO in one pass.
     const currentYear = new Date().getFullYear();
     const dateFrom = `${currentYear}-01-01`;
     const dateTo = `${currentYear}-12-31`;
 
-    const results = await syncAll(client, dateFrom, dateTo);
+    console.log(`[Scheduler] Running full weekly sync for ${currentYear}...`);
+    const weeklyResults = await syncAllWeekly(client, dateFrom, dateTo);
+    await logSyncResult(weeklyResults.attendance);
+    await logSyncResult(weeklyResults.giving);
+    await logSyncResult(weeklyResults.volunteers);
 
-    // Log monthly sync results
-    for (const result of results) {
-      await logSyncResult(result);
-    }
-
-    // Also run weekly sync (per-Sunday granularity)
-    try {
-      console.log(`[Scheduler] Starting weekly data sync for ${currentYear}...`);
-      const weeklyResults = await syncAllWeekly(client, dateFrom, dateTo);
-      await logSyncResult(weeklyResults.attendance);
-      await logSyncResult(weeklyResults.giving);
-      await logSyncResult(weeklyResults.volunteers);
-      const weeklyRecords = weeklyResults.attendance.recordsProcessed + weeklyResults.giving.recordsProcessed + weeklyResults.volunteers.recordsProcessed;
-      console.log(`[Scheduler] Weekly sync completed: ${weeklyRecords} records`);
-    } catch (weeklyErr: any) {
-      console.warn(`[Scheduler] Weekly sync failed (non-fatal): ${weeklyErr.message}`);
-    }
-
-    const totalRecords = results.reduce((sum, r) => sum + r.recordsProcessed, 0);
-    const failedModules = results.filter((r) => r.status === "failed");
+    const totalRecords = weeklyResults.attendance.recordsProcessed + weeklyResults.giving.recordsProcessed + weeklyResults.volunteers.recordsProcessed;
     const duration = Date.now() - startTime;
 
     // Track last successful sync time
     lastSyncAt = new Date();
 
-    if (failedModules.length > 0) {
-      console.warn(
-        `[Scheduler] Nightly sync completed with ${failedModules.length} failures: ${failedModules.map((f) => f.syncType).join(", ")} (${duration}ms)`
-      );
-    } else {
-      console.log(
-        `[Scheduler] Nightly sync completed successfully: ${totalRecords} records across ${results.length} modules (${duration}ms)`
-      );
-    }
+    console.log(
+      `[Scheduler] Nightly sync completed: ${totalRecords} records (${duration}ms)`
+    );
   } catch (error: any) {
     console.error("[Scheduler] Nightly sync error:", error.message);
   } finally {

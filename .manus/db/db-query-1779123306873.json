@@ -1,0 +1,210 @@
+{
+  "query": "SELECT DISTINCT weekNumber, weekStartDate, subgroup FROM attendance_weekly WHERE year = 2026 AND weekNumber >= 18 ORDER BY weekNumber DESC, subgroup LIMIT 40;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT weekNumber, weekStartDate, subgroup FROM attendance_weekly WHERE year = 2026 AND weekNumber >= 18 ORDER BY weekNumber DESC, subgroup LIMIT 40;",
+  "rows": [
+    {
+      "weekNumber": "21",
+      "weekStartDate": "2026-05-18",
+      "subgroup": "Volunteers"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "subgroup": "FTG Kids"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "subgroup": "Kids"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "subgroup": "Kids: Canton Babies"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "subgroup": "Kids: Canton Campground"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "subgroup": "Kids: Canton Cove"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "subgroup": "Kids: Canton Elementary"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "subgroup": "Kids: Canton Nursery"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "subgroup": "Kids: Canton Toddlers"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "subgroup": "Kids: Canton Treehouse"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "subgroup": "Kids: Jasper Cove"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "subgroup": "Kids: Jasper Nursery"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "subgroup": "Kids: Jasper Pre-K"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "subgroup": "Kids: Jasper Reruns"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "subgroup": "Kids: Jasper Treehouse"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "subgroup": "Revolution Canton Check-In"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "subgroup": "Revolution Jasper Check-In"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "subgroup": "Volunteer Check-Ins"
+    },
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "subgroup": "Volunteers"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "FTG Adults"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "FTG Kids"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "Kids"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "Kids: Canton Babies"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "Kids: Canton Campground"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "Kids: Canton Cove"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "Kids: Canton Elementary"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "Kids: Canton Nursery"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "Kids: Canton Toddlers"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "Kids: Canton Treehouse"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "Kids: Jasper Cove"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "Kids: Jasper Nursery"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "Kids: Jasper Pre-K"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "Kids: Jasper Reruns"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "Kids: Jasper Treehouse"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "Revolution Canton Check-In"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "Revolution Jasper Check-In"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "Volunteer Check-Ins"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "Volunteers"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "YA FTG"
+    },
+    {
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "subgroup": "YA Gathering"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\tweekStartDate\tsubgroup\n21\t2026-05-18\tVolunteers\n20\t2026-05-11\tFTG Kids\n20\t2026-05-11\tKids\n20\t2026-05-11\tKids: Canton Babies\n20\t2026-05-11\tKids: Canton Campground\n20\t2026-05-11\tKids: Canton Cove\n20\t2026-05-11\tKids: Canton Elementary\n20\t2026-05-11\tKids: Canton Nursery\n20\t2026-05-11\tKids: Canton Toddlers\n20\t2026-05-11\tKids: Canton Treehouse\n20\t2026-05-11\tKids: Jasper Cove\n20\t2026-05-11\tKids: Jasper Nursery\n20\t2026-05-11\tKids: Jasper Pre-K\n20\t2026-05-11\tKids: Jasper Reruns\n20\t2026-05-11\tKids: Jasper Treehouse\n20\t2026-05-11\tRevolution Canton Check-In\n20\t2026-05-11\tRevolution Jasper Check-In\n20\t2026-05-11\tVolunteer Check-Ins\n20\t2026-05-11\tVolunteers\n19\t2026-05-04\tFTG Adults\n19\t2026-05-04\tFTG Kids\n19\t2026-05-04\tKids\n19\t2026-05-04\tKids: Canton Babies\n19\t2026-05-04\tKids: Canton Campground\n19\t2026-05-04\tKids: Canton Cove\n19\t2026-05-04\tKids: Canton Elementary\n19\t2026-05-04\tKids: Canton Nursery\n19\t2026-05-04\tKids: Canton Toddlers\n19\t2026-05-04\tKids: Canton Treehouse\n19\t2026-05-04\tKids: Jasper Cove\n19\t2026-05-04\tKids: Jasper Nursery\n19\t2026-05-04\tKids: Jasper Pre-K\n19\t2026-05-04\tKids: Jasper Reruns\n19\t2026-05-04\tKids: Jasper Treehouse\n19\t2026-05-04\tRevolution Canton Check-In\n19\t2026-05-04\tRevolution Jasper Check-In\n19\t2026-05-04\tVolunteer Check-Ins\n19\t2026-05-04\tVolunteers\n19\t2026-05-04\tYA FTG\n19\t2026-05-04\tYA Gathering\n",
+  "stderr": "",
+  "execution_time_ms": 280
+}

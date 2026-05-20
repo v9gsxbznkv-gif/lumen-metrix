@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, status, recordsProcessed, message, error FROM sync_jobs WHERE id = 660002;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT id, status, recordsProcessed, message, error FROM sync_jobs WHERE id = 660002;",
+  "rows": [
+    {
+      "id": "660002",
+      "status": "running",
+      "recordsProcessed": "0",
+      "message": "Starting nightly sync...",
+      "error": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tstatus\trecordsProcessed\tmessage\terror\n660002\trunning\t0\tStarting nightly sync...\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 262
+}

@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE sync_jobs SET status = 'failed', error = 'Job stalled — production container recycled before sync could execute. Manually marked as failed.', completedAt = NOW() WHERE id = 660002 AND status = 'running';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute UPDATE sync_jobs SET status = 'failed', error = 'Job stalled — production container recycled before sync could execute. Manually marked as failed.', completedAt = NOW() WHERE id = 660002 AND status = 'running';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 265
+}

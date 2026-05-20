@@ -1,0 +1,118 @@
+{
+  "query": "SELECT id, year, weekNumber, weekStartDate, campus, total, general, designated, donationCount, updatedAt FROM giving_weekly WHERE year = 2026 AND weekNumber >= 19 ORDER BY weekNumber, campus;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT id, year, weekNumber, weekStartDate, campus, total, general, designated, donationCount, updatedAt FROM giving_weekly WHERE year = 2026 AND weekNumber >= 19 ORDER BY weekNumber, campus;",
+  "rows": [
+    {
+      "id": "210181",
+      "year": "2026",
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "campus": "All Campuses",
+      "total": "21513.85",
+      "general": "0.00",
+      "designated": "21513.85",
+      "donationCount": "19",
+      "updatedAt": "2026-05-14 21:25:29"
+    },
+    {
+      "id": "210182",
+      "year": "2026",
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "campus": "Canton",
+      "total": "123951.15",
+      "general": "123951.15",
+      "designated": "0.00",
+      "donationCount": "373",
+      "updatedAt": "2026-05-16 05:13:56"
+    },
+    {
+      "id": "210183",
+      "year": "2026",
+      "weekNumber": "19",
+      "weekStartDate": "2026-05-04",
+      "campus": "Jasper",
+      "total": "41362.94",
+      "general": "41362.94",
+      "designated": "0.00",
+      "donationCount": "89",
+      "updatedAt": "2026-05-14 21:25:29"
+    },
+    {
+      "id": "330121",
+      "year": "2026",
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "All Campuses",
+      "total": "4536.37",
+      "general": "0.00",
+      "designated": "4536.37",
+      "donationCount": "11",
+      "updatedAt": "2026-05-20 04:11:20"
+    },
+    {
+      "id": "330123",
+      "year": "2026",
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Canton",
+      "total": "103517.40",
+      "general": "103517.40",
+      "designated": "0.00",
+      "donationCount": "290",
+      "updatedAt": "2026-05-20 04:11:20"
+    },
+    {
+      "id": "330122",
+      "year": "2026",
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11",
+      "campus": "Jasper",
+      "total": "10808.90",
+      "general": "10808.90",
+      "designated": "0.00",
+      "donationCount": "50",
+      "updatedAt": "2026-05-20 04:11:20"
+    },
+    {
+      "id": "390062",
+      "year": "2026",
+      "weekNumber": "21",
+      "weekStartDate": "2026-05-18",
+      "campus": "All Campuses",
+      "total": "400.00",
+      "general": "0.00",
+      "designated": "400.00",
+      "donationCount": "1",
+      "updatedAt": "2026-05-19 05:08:31"
+    },
+    {
+      "id": "390061",
+      "year": "2026",
+      "weekNumber": "21",
+      "weekStartDate": "2026-05-18",
+      "campus": "Canton",
+      "total": "6683.30",
+      "general": "6683.30",
+      "designated": "0.00",
+      "donationCount": "14",
+      "updatedAt": "2026-05-20 04:11:20"
+    },
+    {
+      "id": "390063",
+      "year": "2026",
+      "weekNumber": "21",
+      "weekStartDate": "2026-05-18",
+      "campus": "Jasper",
+      "total": "926.52",
+      "general": "926.52",
+      "designated": "0.00",
+      "donationCount": "4",
+      "updatedAt": "2026-05-19 12:38:32"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tyear\tweekNumber\tweekStartDate\tcampus\ttotal\tgeneral\tdesignated\tdonationCount\tupdatedAt\n210181\t2026\t19\t2026-05-04\tAll Campuses\t21513.85\t0.00\t21513.85\t19\t2026-05-14 21:25:29\n210182\t2026\t19\t2026-05-04\tCanton\t123951.15\t123951.15\t0.00\t373\t2026-05-16 05:13:56\n210183\t2026\t19\t2026-05-04\tJasper\t41362.94\t41362.94\t0.00\t89\t2026-05-14 21:25:29\n330121\t2026\t20\t2026-05-11\tAll Campuses\t4536.37\t0.00\t4536.37\t11\t2026-05-20 04:11:20\n330123\t2026\t20\t2026-05-11\tCanton\t103517.40\t103517.40\t0.00\t290\t2026-05-20 04:11:20\n330122\t2026\t20\t2026-05-11\tJasper\t10808.90\t10808.90\t0.00\t50\t2026-05-20 04:11:20\n390062\t2026\t21\t2026-05-18\tAll Campuses\t400.00\t0.00\t400.00\t1\t2026-05-19 05:08:31\n390061\t2026\t21\t2026-05-18\tCanton\t6683.30\t6683.30\t0.00\t14\t2026-05-20 04:11:20\n390063\t2026\t21\t2026-05-18\tJasper\t926.52\t926.52\t0.00\t4\t2026-05-19 12:38:32\n",
+  "stderr": "",
+  "execution_time_ms": 267
+}
