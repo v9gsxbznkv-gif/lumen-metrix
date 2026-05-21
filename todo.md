@@ -1433,3 +1433,11 @@
 - [x] Add Kids % KPI to dashboard: # of Kids / Total Weekend Attendance (including kids), benchmark 30%
 - [x] Add Students % KPI to dashboard: # of Students / Total Weekend Attendance (including kids), benchmark 10%
 - [x] Show percentage with visual indicator comparing to benchmark (30% kids, 10% students)
+
+## Feature: Compare page — week-over-week across years
+- [x] Redesign Compare page to compare weeks instead of events
+- [x] Add week selector (pick week number, e.g. week 19)
+- [x] Add year comparison (compare week 19 of 2026 vs week 19 of 2025)
+- [x] Show attendance, giving, and key metrics side-by-side for selected weeks
+- [x] Support campus filter (All Campuses, Canton, Jasper)
+- [x] Build backend tRPC procedure for week comparison data

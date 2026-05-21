@@ -36,7 +36,7 @@ const TAB_META: Record<TabId, { title: string; subtitle: string }> = {
   assimilation: { title: "Assimilation", subtitle: "First-time guests, salvations, baptisms, and stewardship" },
   events: { title: "Events", subtitle: "Key church event performance and year-over-year comparisons" },
   campuses: { title: "Campuses", subtitle: "Side-by-side campus comparison and performance scorecards" },
-  compare: { title: "Compare", subtitle: "Side-by-side event and date comparisons across years" },
+  compare: { title: "Compare", subtitle: "Week-over-week comparison across years" },
   health: { title: "Health Metrics", subtitle: "Volunteer ratios, growth rates, and organizational health" },
   weeklyReport: { title: "Weekly Report", subtitle: "Snapshot of the most recent week with campus breakdown and comparisons" },
   annualReport: { title: "Annual Report", subtitle: "Comprehensive annual metrics with YoY comparison and CSV export" },

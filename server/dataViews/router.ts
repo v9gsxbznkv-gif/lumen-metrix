@@ -1198,6 +1198,191 @@ const nextStepsRouter = router({
 });
 
 // ============================================================
+// Compare Weeks — side-by-side week comparison across years
+// ============================================================
+const compareRouter = router({
+  getWeekData: publicProcedure
+    .input(z.object({
+      weekNumber: z.number().min(1).max(53),
+      yearA: z.number(),
+      yearB: z.number(),
+      campus: z.string().optional(), // "Canton", "Jasper", or undefined for all
+    }))
+    .query(async ({ input }) => {
+      const { weekNumber, yearA, yearB, campus } = input;
+      const d = await db();
+
+      // Fetch attendance for both years/week
+      const attRows = await d
+        .select()
+        .from(attendanceWeekly)
+        .where(and(
+          eq(attendanceWeekly.weekNumber, weekNumber),
+        ))
+        .orderBy(asc(attendanceWeekly.year));
+
+      // Filter to just the two years
+      const attFiltered = attRows.filter(r => r.year === yearA || r.year === yearB);
+      const normalizedAtt = normalizeAttendanceRows(attFiltered);
+      const campusFiltered = filterByCampus(normalizedAtt, campus || "all");
+
+      const weekA = campusFiltered.find(w => w.year === yearA) || null;
+      const weekB = campusFiltered.find(w => w.year === yearB) || null;
+
+      // Fetch giving for both years/week
+      const givingRows = await d
+        .select()
+        .from(givingWeekly)
+        .where(and(
+          eq(givingWeekly.weekNumber, weekNumber),
+        ))
+        .orderBy(asc(givingWeekly.year));
+
+      const givingFiltered = givingRows.filter(r => r.year === yearA || r.year === yearB);
+
+      // Aggregate giving by campus
+      function aggregateGiving(rows: typeof givingFiltered, year: number, campusFilter?: string) {
+        const yearRows = rows.filter(r => r.year === year);
+        let filtered = yearRows;
+        if (campusFilter && campusFilter !== "all") {
+          filtered = yearRows.filter(r => r.campus === campusFilter);
+        }
+        const total = filtered.reduce((s, r) => s + (parseFloat(r.total as any) || 0), 0);
+        const general = filtered.reduce((s, r) => s + (parseFloat(r.general as any) || 0), 0);
+        const designated = filtered.reduce((s, r) => s + (parseFloat(r.designated as any) || 0), 0);
+        const donationCount = filtered.reduce((s, r) => s + r.donationCount, 0);
+        return { total, general, designated, donationCount };
+      }
+
+      const givingA = aggregateGiving(givingFiltered, yearA, campus);
+      const givingB = aggregateGiving(givingFiltered, yearB, campus);
+
+      // Fetch serving for both years/week
+      const servingRows = await d
+        .select()
+        .from(servingWeekly)
+        .where(and(
+          eq(servingWeekly.weekNumber, weekNumber),
+        ))
+        .orderBy(asc(servingWeekly.year));
+
+      const servingFiltered = servingRows.filter(r => r.year === yearA || r.year === yearB);
+
+      function aggregateServing(rows: typeof servingFiltered, year: number, campusFilter?: string) {
+        const yearRows = rows.filter(r => r.year === year);
+        let filtered = yearRows;
+        if (campusFilter && campusFilter !== "all") {
+          filtered = yearRows.filter(r => r.campus === campusFilter);
+        }
+        return filtered.reduce((s, r) => s + r.total, 0);
+      }
+
+      const servingA = aggregateServing(servingFiltered, yearA, campus);
+      const servingB = aggregateServing(servingFiltered, yearB, campus);
+
+      // Fetch next steps for both years/week
+      const nsRows = await d
+        .select()
+        .from(nextStepsWeekly)
+        .where(and(
+          eq(nextStepsWeekly.weekNumber, weekNumber),
+        ))
+        .orderBy(asc(nextStepsWeekly.year));
+
+      const nsFiltered = nsRows.filter(r => r.year === yearA || r.year === yearB);
+
+      function aggregateNextSteps(rows: typeof nsFiltered, year: number, campusFilter?: string) {
+        const yearRows = rows.filter(r => r.year === year);
+        let filtered = yearRows;
+        if (campusFilter && campusFilter !== "all") {
+          filtered = yearRows.filter(r => r.campus === campusFilter);
+        }
+        const ftg = filtered.filter(r => r.metric === "FTG").reduce((s, r) => s + r.count, 0);
+        const salvations = filtered.filter(r => r.metric === "Salvations").reduce((s, r) => s + r.count, 0);
+        const baptisms = filtered.filter(r => r.metric === "Baptisms").reduce((s, r) => s + r.count, 0);
+        return { ftg, salvations, baptisms };
+      }
+
+      const nsA = aggregateNextSteps(nsFiltered, yearA, campus);
+      const nsB = aggregateNextSteps(nsFiltered, yearB, campus);
+
+      return {
+        weekNumber,
+        yearA: {
+          year: yearA,
+          weekStartDate: weekA?.weekStartDate || null,
+          attendance: {
+            total: weekA?.total || 0,
+            adults: weekA?.adults || 0,
+            kids: weekA?.kids || 0,
+            students: weekA?.students || 0,
+            online: weekA?.online || 0,
+            volunteers: weekA?.volunteers || 0,
+            youngAdults: weekA?.youngAdults || 0,
+            ftg: weekA?.ftg || 0,
+          },
+          giving: givingA,
+          serving: servingA,
+          nextSteps: nsA,
+        },
+        yearB: {
+          year: yearB,
+          weekStartDate: weekB?.weekStartDate || null,
+          attendance: {
+            total: weekB?.total || 0,
+            adults: weekB?.adults || 0,
+            kids: weekB?.kids || 0,
+            students: weekB?.students || 0,
+            online: weekB?.online || 0,
+            volunteers: weekB?.volunteers || 0,
+            youngAdults: weekB?.youngAdults || 0,
+            ftg: weekB?.ftg || 0,
+          },
+          giving: givingB,
+          serving: servingB,
+          nextSteps: nsB,
+        },
+      };
+    }),
+
+  getAvailableWeeks: publicProcedure
+    .input(z.object({ year: z.number() }))
+    .query(async ({ input }) => {
+      const d = await db();
+      const rows = await d
+        .selectDistinct({
+          weekNumber: attendanceWeekly.weekNumber,
+          weekStartDate: attendanceWeekly.weekStartDate,
+        })
+        .from(attendanceWeekly)
+        .where(eq(attendanceWeekly.year, input.year))
+        .orderBy(asc(attendanceWeekly.weekNumber));
+
+      // Deduplicate by weekNumber (take first weekStartDate)
+      const seen = new Map<number, string>();
+      for (const r of rows) {
+        if (!seen.has(r.weekNumber)) {
+          seen.set(r.weekNumber, r.weekStartDate);
+        }
+      }
+      return Array.from(seen.entries()).map(([weekNumber, weekStartDate]) => ({
+        weekNumber,
+        weekStartDate,
+      }));
+    }),
+
+  getAvailableYears: publicProcedure
+    .query(async () => {
+      const d = await db();
+      const rows = await d
+        .selectDistinct({ year: attendanceWeekly.year })
+        .from(attendanceWeekly)
+        .orderBy(desc(attendanceWeekly.year));
+      return rows.map(r => r.year);
+    }),
+});
+
+// ============================================================
 // Export combined router
 // ============================================================
 export const dataViewsRouter = router({
@@ -1205,4 +1390,5 @@ export const dataViewsRouter = router({
   giving: givingRouter,
   serving: servingRouter,
   nextSteps: nextStepsRouter,
+  compare: compareRouter,
 });
