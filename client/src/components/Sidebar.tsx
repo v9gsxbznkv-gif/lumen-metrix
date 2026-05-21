@@ -14,7 +14,6 @@ import {
   Users,
   DollarSign,
   UserCheck,
-  CalendarDays,
   Building2,
   FileText,
   Sparkles,
@@ -40,7 +39,6 @@ export type TabId =
   | "teamMembers"
   | "groups"
   | "assimilation"
-  | "events"
   | "campuses"
   | "compare"
   | "health"
@@ -57,8 +55,7 @@ const NAV_ITEMS: { id: TabId; label: string; icon: React.ElementType; section?: 
   { id: "teamMembers", label: "Team Members", icon: HeartHandshake },
   { id: "groups", label: "Groups", icon: UsersRound },
   { id: "assimilation", label: "Assimilation", icon: Footprints },
-  { id: "events", label: "Events", icon: CalendarDays, section: "Insights" },
-  { id: "campuses", label: "Campuses", icon: Building2 },
+  { id: "campuses", label: "Campuses", icon: Building2, section: "Insights" },
   { id: "compare", label: "Compare", icon: ArrowLeftRight },
   { id: "health", label: "Health", icon: Activity },
   { id: "weeklyReport", label: "Weekly Report", icon: CalendarClock, section: "Tools" },

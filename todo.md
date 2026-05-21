@@ -1441,3 +1441,8 @@
 - [x] Show attendance, giving, and key metrics side-by-side for selected weeks
 - [x] Support campus filter (All Campuses, Canton, Jasper)
 - [x] Build backend tRPC procedure for week comparison data
+
+## Cleanup: Remove Events tab
+- [x] Remove Events tab from sidebar navigation
+- [x] Remove Events tab rendering from Home.tsx
+- [x] Remove EventsTab import (keep component file for now in case needed later)
