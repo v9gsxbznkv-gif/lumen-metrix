@@ -1461,5 +1461,5 @@
 - [x] Migrate Home.tsx from old dashboardAuth.check to staffAuth.check
 - [x] Seed Chad as first admin user (chad@revolution.church)
 - [x] Write vitest tests for new auth procedures (6 tests)
-- [ ] Remove old shared password gate (dashboardAuth procedures) — kept as fallback until verified
+- [x] Remove old shared password gate (dashboardAuth procedures and test file)
 - [ ] Deploy and verify
