@@ -134,6 +134,13 @@
       "when": 1778791492670,
       "tag": "0018_supreme_magdalene",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "5",
+      "when": 1779451814567,
+      "tag": "0019_next_pixie",
+      "breakpoints": true
     }
   ]
 }

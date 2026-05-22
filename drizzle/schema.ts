@@ -512,3 +512,39 @@ export const nextStepsWeekly = mysqlTable("next_steps_weekly", {
 
 export type NextStepsWeeklyRow = typeof nextStepsWeekly.$inferSelect;
 export type InsertNextStepsWeekly = typeof nextStepsWeekly.$inferInsert;
+
+
+// ============================================================
+// Dashboard Users — individual staff accounts with email+password
+// ============================================================
+export const dashboardUsers = mysqlTable("dashboard_users", {
+  id: int("id").autoincrement().primaryKey(),
+  email: varchar("email", { length: 320 }).notNull().unique(),
+  name: varchar("name", { length: 255 }).notNull(),
+  passwordHash: varchar("passwordHash", { length: 255 }).notNull(),
+  role: mysqlEnum("role", ["admin", "user"]).default("user").notNull(),
+  status: mysqlEnum("status", ["active", "disabled"]).default("active").notNull(),
+  invitedBy: int("invitedBy"),
+  lastLoginAt: timestamp("lastLoginAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type DashboardUser = typeof dashboardUsers.$inferSelect;
+export type InsertDashboardUser = typeof dashboardUsers.$inferInsert;
+
+// ============================================================
+// Dashboard Invites — pending invitations sent by admin
+// ============================================================
+export const dashboardInvites = mysqlTable("dashboard_invites", {
+  id: int("id").autoincrement().primaryKey(),
+  email: varchar("email", { length: 320 }).notNull(),
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  invitedBy: int("invitedBy").notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  usedAt: timestamp("usedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type DashboardInvite = typeof dashboardInvites.$inferSelect;
+export type InsertDashboardInvite = typeof dashboardInvites.$inferInsert;

@@ -1,42 +1,42 @@
 /*
- * Lumen Metrix — Password Login Page
- * Single shared-password gate with on-brand design
+ * Lumen Metrix — Staff Login Page
+ * Email + password authentication
  */
 import { useState, useRef, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import LumenLogo from "@/components/LumenLogo";
-import { Loader2, Lock, Eye, EyeOff } from "lucide-react";
+import { Loader2, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 interface LoginPageProps {
   onAuthenticated: () => void;
 }
 
 export default function LoginPage({ onAuthenticated }: LoginPageProps) {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    inputRef.current?.focus();
+    emailRef.current?.focus();
   }, []);
 
-  const loginMutation = trpc.dashboardAuth.login.useMutation({
+  const loginMutation = trpc.staffAuth.login.useMutation({
     onSuccess: () => {
       onAuthenticated();
     },
     onError: (err) => {
-      setErrorMsg("Incorrect password. Please try again.");
+      setErrorMsg(err.message || "Invalid email or password");
       setPassword("");
-      inputRef.current?.focus();
     },
   });
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!password.trim()) return;
+    if (!email.trim() || !password.trim()) return;
     setErrorMsg("");
-    loginMutation.mutate({ password });
+    loginMutation.mutate({ email: email.trim(), password });
   }
 
   return (
@@ -72,18 +72,48 @@ export default function LoginPage({ onAuthenticated }: LoginPageProps) {
             className="text-[18px] font-semibold"
             style={{ color: "#1C1917", fontFamily: "'DM Sans', sans-serif" }}
           >
-            Enter Password
+            Sign In
           </h1>
           <p className="text-[13px] mt-1" style={{ color: "#9CA3AF" }}>
-            This dashboard is password-protected
+            Enter your credentials to access the dashboard
           </p>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Email */}
           <div className="relative">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#9CA3AF" }} />
             <input
-              ref={inputRef}
+              ref={emailRef}
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (errorMsg) setErrorMsg("");
+              }}
+              placeholder="Email address"
+              disabled={loginMutation.isPending}
+              className="w-full rounded-lg pl-10 pr-4 py-3 text-[14px] outline-none transition-all"
+              style={{
+                background: "#F9F7F4",
+                border: errorMsg ? "1.5px solid #EF4444" : "1.5px solid #E5E7EB",
+                color: "#1C1917",
+                fontFamily: "'DM Sans', sans-serif",
+              }}
+              onFocus={(e) => {
+                if (!errorMsg) e.currentTarget.style.border = "1.5px solid #E8913A";
+              }}
+              onBlur={(e) => {
+                if (!errorMsg) e.currentTarget.style.border = "1.5px solid #E5E7EB";
+              }}
+            />
+          </div>
+
+          {/* Password */}
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#9CA3AF" }} />
+            <input
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => {
@@ -92,22 +122,18 @@ export default function LoginPage({ onAuthenticated }: LoginPageProps) {
               }}
               placeholder="Password"
               disabled={loginMutation.isPending}
-              className="w-full rounded-lg px-4 py-3 pr-11 text-[14px] outline-none transition-all"
+              className="w-full rounded-lg pl-10 pr-11 py-3 text-[14px] outline-none transition-all"
               style={{
                 background: "#F9F7F4",
-                border: errorMsg
-                  ? "1.5px solid #EF4444"
-                  : "1.5px solid #E5E7EB",
+                border: errorMsg ? "1.5px solid #EF4444" : "1.5px solid #E5E7EB",
                 color: "#1C1917",
                 fontFamily: "'DM Sans', sans-serif",
               }}
               onFocus={(e) => {
-                if (!errorMsg)
-                  e.currentTarget.style.border = "1.5px solid #E8913A";
+                if (!errorMsg) e.currentTarget.style.border = "1.5px solid #E8913A";
               }}
               onBlur={(e) => {
-                if (!errorMsg)
-                  e.currentTarget.style.border = "1.5px solid #E5E7EB";
+                if (!errorMsg) e.currentTarget.style.border = "1.5px solid #E5E7EB";
               }}
             />
             <button
@@ -117,11 +143,7 @@ export default function LoginPage({ onAuthenticated }: LoginPageProps) {
               style={{ color: "#9CA3AF" }}
               tabIndex={-1}
             >
-              {showPassword ? (
-                <EyeOff className="w-4 h-4" />
-              ) : (
-                <Eye className="w-4 h-4" />
-              )}
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
 
@@ -131,20 +153,20 @@ export default function LoginPage({ onAuthenticated }: LoginPageProps) {
 
           <button
             type="submit"
-            disabled={loginMutation.isPending || !password.trim()}
+            disabled={loginMutation.isPending || !email.trim() || !password.trim()}
             className="w-full py-3 rounded-lg text-[14px] font-semibold transition-all flex items-center justify-center gap-2"
             style={{
               background:
-                loginMutation.isPending || !password.trim()
+                loginMutation.isPending || !email.trim() || !password.trim()
                   ? "#E5E7EB"
                   : "#E8913A",
               color:
-                loginMutation.isPending || !password.trim()
+                loginMutation.isPending || !email.trim() || !password.trim()
                   ? "#9CA3AF"
                   : "#FFFFFF",
               fontFamily: "'DM Sans', sans-serif",
               cursor:
-                loginMutation.isPending || !password.trim()
+                loginMutation.isPending || !email.trim() || !password.trim()
                   ? "not-allowed"
                   : "pointer",
             }}
@@ -152,10 +174,10 @@ export default function LoginPage({ onAuthenticated }: LoginPageProps) {
             {loginMutation.isPending ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Verifying…
+                Signing in…
               </>
             ) : (
-              "Access Dashboard"
+              "Sign In"
             )}
           </button>
         </form>

@@ -1446,3 +1446,20 @@
 - [x] Remove Events tab from sidebar navigation
 - [x] Remove Events tab rendering from Home.tsx
 - [x] Remove EventsTab import (keep component file for now in case needed later)
+
+## Feature: Individual user accounts (email + password)
+- [x] Add dashboard_users table (id, email, name, passwordHash, role: admin|user, status: active|disabled, invitedBy, createdAt)
+- [x] Add dashboard_invites table (id, email, token, expiresAt, usedAt, invitedBy, createdAt)
+- [x] Build auth procedures: login (email+password → session cookie), logout, check (current user)
+- [x] Build invite procedure: admin sends invite by email, generates token link
+- [x] Build register procedure: user clicks invite link, sets name + password
+- [x] Build user management procedures: list users, disable/enable user, remove user, toggle role (admin/user)
+- [x] Update login page: email + password fields instead of single password
+- [x] Build invite acceptance page: set name + password when clicking invite link
+- [x] Build user management panel in Settings: list users, invite button, disable/remove/promote actions
+- [x] Add /invite route to App.tsx for invite link handling
+- [x] Migrate Home.tsx from old dashboardAuth.check to staffAuth.check
+- [x] Seed Chad as first admin user (chad@revolution.church)
+- [x] Write vitest tests for new auth procedures (6 tests)
+- [ ] Remove old shared password gate (dashboardAuth procedures) — kept as fallback until verified
+- [ ] Deploy and verify

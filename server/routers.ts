@@ -11,6 +11,7 @@ import { groupsRouter } from "./groups/router";
 import { annualReportRouter } from "./annualReport/router";
 import { dataViewsRouter } from "./dataViews/router";
 import { demographicsRouter } from "./demographics/router";
+import { staffAuthRouter } from "./staffAuth/router";
 import { z } from "zod";
 
 // Cookie name for the simple dashboard password session
@@ -84,6 +85,9 @@ export const appRouter = router({
 
   // Demographics — member address sync, geocoding, and map data
   demographics: demographicsRouter,
+
+  // Staff authentication — individual email+password accounts
+  staffAuth: staffAuthRouter,
 });
 
 export type AppRouter = typeof appRouter;

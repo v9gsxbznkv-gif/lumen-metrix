@@ -50,15 +50,15 @@ export default function Home() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const utils = trpc.useUtils();
 
-  // Password gate — check session cookie via server
-  const authCheck = trpc.dashboardAuth.check.useQuery(undefined, {
+  // Staff auth — check session cookie via server
+  const authCheck = trpc.staffAuth.check.useQuery(undefined, {
     retry: false,
     refetchOnWindowFocus: false,
   });
 
-  const logoutDash = trpc.dashboardAuth.logout.useMutation({
+  const logoutMutation = trpc.staffAuth.logout.useMutation({
     onSuccess: () => {
-      utils.dashboardAuth.check.setData(undefined, { isAuthenticated: false });
+      utils.staffAuth.check.setData(undefined, { isAuthenticated: false, user: null });
     },
   });
 
@@ -78,9 +78,7 @@ export default function Home() {
   if (!authCheck.data?.isAuthenticated) {
     return (
       <LoginPage
-        onAuthenticated={() =>
-          utils.dashboardAuth.check.setData(undefined, { isAuthenticated: true })
-        }
+        onAuthenticated={() => utils.staffAuth.check.invalidate()}
       />
     );
   }
@@ -110,6 +108,7 @@ export default function Home() {
   }
 
   const meta = TAB_META[activeTab];
+  const currentUser = authCheck.data?.user;
 
   return (
     <div className="min-h-screen bg-background">
@@ -118,7 +117,7 @@ export default function Home() {
         onTabChange={setActiveTab}
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-        onLogout={() => logoutDash.mutate()}
+        onLogout={() => logoutMutation.mutate()}
         mobileOpen={mobileOpen}
         onMobileToggle={() => setMobileOpen(!mobileOpen)}
       />
@@ -149,7 +148,7 @@ export default function Home() {
           {activeTab === "annualReport" && <AnnualReportTab />}
           {activeTab === "reports" && <ReportsTab />}
           {activeTab === "ai" && <AIAnalystTab />}
-          {activeTab === "settings" && <SettingsTab />}
+          {activeTab === "settings" && <SettingsTab currentUser={currentUser} />}
         </div>
 
         {/* Footer */}

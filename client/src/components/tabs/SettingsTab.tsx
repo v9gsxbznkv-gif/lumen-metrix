@@ -24,6 +24,15 @@ import {
   Link2,
   Unlink,
   Play,
+  Users,
+  UserPlus,
+  Shield,
+  ShieldCheck,
+  Trash2,
+  Copy,
+  Ban,
+  CheckCircle,
+  Mail,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -839,8 +848,267 @@ function GivingEntrySection() {
   );
 }
 
+// ─── Team Management Section (Admin Only) ───────────────────────────────────
+function TeamManagementSection({ currentUser }: { currentUser: { id: number; email: string; name: string; role: string } | null | undefined }) {
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [showInviteForm, setShowInviteForm] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState("");
+
+  const utils = trpc.useUtils();
+
+  const { data: users, isLoading: usersLoading } = trpc.staffAuth.listUsers.useQuery(undefined, {
+    retry: false,
+  });
+
+  const { data: invites } = trpc.staffAuth.listInvites.useQuery(undefined, {
+    retry: false,
+  });
+
+  const inviteMutation = trpc.staffAuth.invite.useMutation({
+    onSuccess: (result) => {
+      toast.success(`Invite sent to ${result.email}`);
+      setCopiedUrl(result.inviteUrl);
+      setInviteEmail("");
+      setShowInviteForm(false);
+      utils.staffAuth.listInvites.invalidate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const toggleStatusMutation = trpc.staffAuth.toggleUserStatus.useMutation({
+    onSuccess: () => {
+      toast.success("User status updated");
+      utils.staffAuth.listUsers.invalidate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const deleteUserMutation = trpc.staffAuth.deleteUser.useMutation({
+    onSuccess: () => {
+      toast.success("User removed");
+      utils.staffAuth.listUsers.invalidate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const toggleRoleMutation = trpc.staffAuth.toggleRole.useMutation({
+    onSuccess: () => {
+      toast.success("User role updated");
+      utils.staffAuth.listUsers.invalidate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  function handleInvite(e: React.FormEvent) {
+    e.preventDefault();
+    if (!inviteEmail.trim()) return;
+    inviteMutation.mutate({ email: inviteEmail.trim() });
+  }
+
+  function copyToClipboard(url: string) {
+    navigator.clipboard.writeText(url);
+    setCopiedUrl(url);
+    toast.success("Invite link copied!");
+    setTimeout(() => setCopiedUrl(""), 3000);
+  }
+
+  const isAdmin = currentUser?.role === "admin";
+  if (!isAdmin) return null;
+
+  const pendingInvites = invites?.filter(i => !i.used && !i.expired) ?? [];
+
+  return (
+    <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Users className="w-4 h-4" style={{ color: "#E8913A" }} />
+          <h3 className="text-sm font-semibold">Team Members</h3>
+        </div>
+        <button
+          onClick={() => setShowInviteForm(!showInviteForm)}
+          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md text-white transition-colors hover:opacity-90"
+          style={{ backgroundColor: "#E8913A" }}
+        >
+          <UserPlus className="w-3 h-3" />
+          Invite
+        </button>
+      </div>
+
+      {/* Invite Form */}
+      {showInviteForm && (
+        <form onSubmit={handleInvite} className="mb-4 p-3 rounded-md bg-muted/20 border border-border/30">
+          <label className="text-[10px] text-muted-foreground uppercase tracking-wider block mb-1.5">Email Address</label>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Mail className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <input
+                type="email"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                placeholder="staff@revolution.church"
+                className="w-full rounded-md pl-8 pr-3 py-2 text-xs bg-background border border-border/60 outline-none focus:border-[#E8913A] transition-colors"
+                disabled={inviteMutation.isPending}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={inviteMutation.isPending || !inviteEmail.trim()}
+              className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-md text-white transition-colors hover:opacity-90 disabled:opacity-50"
+              style={{ backgroundColor: "#E8913A" }}
+            >
+              {inviteMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserPlus className="w-3 h-3" />}
+              Send
+            </button>
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-1.5">Invite expires in 7 days. User will create their own password.</p>
+        </form>
+      )}
+
+      {/* Copied URL banner */}
+      {copiedUrl && (
+        <div className="mb-4 p-3 rounded-md bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium mb-1">Invite Link (copy and send to user):</p>
+              <p className="text-[11px] font-mono text-emerald-800 dark:text-emerald-300 truncate">{copiedUrl}</p>
+            </div>
+            <button
+              onClick={() => copyToClipboard(copiedUrl)}
+              className="shrink-0 flex items-center gap-1 text-[10px] px-2 py-1 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 transition-colors"
+            >
+              <Copy className="w-3 h-3" /> Copy
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Users List */}
+      {usersLoading ? (
+        <div className="flex items-center justify-center py-6">
+          <Loader2 className="w-4 h-4 animate-spin" style={{ color: "#E8913A" }} />
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {users?.map((user) => (
+            <div
+              key={user.id}
+              className={`flex items-center justify-between p-3 rounded-md border transition-colors ${
+                user.status === "disabled" ? "border-red-200 dark:border-red-800/30 bg-red-50/50 dark:bg-red-950/10" : "border-border/30 bg-muted/10"
+              }`}
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${
+                  user.role === "admin" ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400" : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+                }`}>
+                  {user.name?.charAt(0)?.toUpperCase() || user.email.charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium truncate">{user.name || "Unnamed"}</span>
+                    {user.role === "admin" && (
+                      <span className="flex items-center gap-0.5 text-[9px] px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
+                        <ShieldCheck className="w-2.5 h-2.5" /> Admin
+                      </span>
+                    )}
+                    {user.status === "disabled" && (
+                      <span className="flex items-center gap-0.5 text-[9px] px-1.5 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
+                        <Ban className="w-2.5 h-2.5" /> Disabled
+                      </span>
+                    )}
+                    {user.id === currentUser?.id && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted/50 text-muted-foreground">You</span>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground truncate">{user.email}</p>
+                  {user.lastLoginAt && (
+                    <p className="text-[9px] text-muted-foreground/60">Last login: {formatDate(user.lastLoginAt)}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Actions (can't modify yourself) */}
+              {user.id !== currentUser?.id && (
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => {
+                      const newRole = user.role === "admin" ? "user" : "admin";
+                      if (confirm(`${newRole === "admin" ? "Promote" : "Demote"} ${user.name || user.email} to ${newRole}?`)) {
+                        toggleRoleMutation.mutate({ userId: user.id, role: newRole });
+                      }
+                    }}
+                    disabled={toggleRoleMutation.isPending}
+                    className="p-1.5 rounded-md hover:bg-muted/50 transition-colors"
+                    title={user.role === "admin" ? "Demote to user" : "Promote to admin"}
+                  >
+                    {user.role === "admin" ? (
+                      <Shield className="w-3.5 h-3.5 text-amber-500 hover:text-muted-foreground" />
+                    ) : (
+                      <Shield className="w-3.5 h-3.5 text-muted-foreground hover:text-amber-500" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      const newStatus = user.status === "active" ? "disabled" : "active";
+                      toggleStatusMutation.mutate({ userId: user.id, status: newStatus });
+                    }}
+                    disabled={toggleStatusMutation.isPending}
+                    className="p-1.5 rounded-md hover:bg-muted/50 transition-colors"
+                    title={user.status === "active" ? "Disable user" : "Enable user"}
+                  >
+                    {user.status === "active" ? (
+                      <Ban className="w-3.5 h-3.5 text-muted-foreground hover:text-red-500" />
+                    ) : (
+                      <CheckCircle className="w-3.5 h-3.5 text-muted-foreground hover:text-emerald-500" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (confirm(`Remove ${user.name || user.email}? This cannot be undone.`)) {
+                        deleteUserMutation.mutate({ userId: user.id });
+                      }
+                    }}
+                    disabled={deleteUserMutation.isPending}
+                    className="p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+                    title="Delete user"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-muted-foreground hover:text-red-500" />
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Pending Invites */}
+      {pendingInvites.length > 0 && (
+        <div className="mt-4 pt-4 border-t border-border/30">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Pending Invites</p>
+          <div className="space-y-1.5">
+            {pendingInvites.map((inv) => (
+              <div key={inv.id} className="flex items-center justify-between py-1.5 px-2 rounded bg-muted/10">
+                <div className="flex items-center gap-2">
+                  <Mail className="w-3 h-3 text-muted-foreground" />
+                  <span className="text-xs">{inv.email}</span>
+                </div>
+                <span className="text-[9px] text-muted-foreground">
+                  Expires {new Date(inv.expiresAt).toLocaleDateString()}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Settings Tab ────────────────────────────────────────────────────────
-export default function SettingsTab() {
+interface SettingsTabProps {
+  currentUser?: { id: number; email: string; name: string; role: string } | null;
+}
+
+export default function SettingsTab({ currentUser }: SettingsTabProps) {
   const { data } = useData();
 
   const years = data?.meta.years ?? [];
@@ -895,6 +1163,9 @@ export default function SettingsTab() {
           </div>
         </div>
       </div>
+
+      {/* Team Management (Admin Only) */}
+      <TeamManagementSection currentUser={currentUser} />
 
       {/* PCO Connection (OAuth) */}
       <PcoConnectionSection />
