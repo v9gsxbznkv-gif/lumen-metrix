@@ -1,5 +1,5 @@
 /**
- * DemographicMap — Google Maps showing campus locations + member dots
+ * DemographicMap — Leaflet/OpenStreetMap showing campus locations + member dots
  * Features:
  * - Every person shown as an individual colored dot (NO clustering)
  * - Deterministic jitter for people at the same address (so they don't perfectly overlap)
@@ -7,11 +7,12 @@
  * - Drive-time radius overlays (15/30 min approximate circles)
  */
 import { useRef, useState, useCallback, useEffect, useMemo } from "react";
-import { MapView } from "@/components/Map";
 import { trpc } from "@/lib/trpc";
 import { CAMPUS_COLORS } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { Loader2, MapPin, RefreshCw, Users, Building2, Clock } from "lucide-react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 // Dot colors matching CAMPUS_COLORS from the dashboard
 const CAMPUS_DOT_COLORS: Record<string, string> = {
@@ -99,26 +100,22 @@ function jitterPoints(
       result[group[0].idx] = { ...group[0].point };
     } else {
       const count = group.length;
-      // Spread scales with group size (in degrees, 1 degree ≈ 111km)
-      // With real street addresses, most groups will be small (household = 2-5)
-      // Larger groups only happen if geocoding still lands on same point
       let spread: number;
       if (count <= 3) {
-        spread = 0.0003; // ~33m (household members at same address)
+        spread = 0.0003;
       } else if (count <= 10) {
-        spread = 0.001; // ~110m (small cluster)
+        spread = 0.001;
       } else if (count <= 30) {
-        spread = 0.003; // ~330m
+        spread = 0.003;
       } else if (count <= 100) {
-        spread = 0.008; // ~890m
+        spread = 0.008;
       } else if (count <= 300) {
-        spread = 0.02; // ~2.2km
+        spread = 0.02;
       } else {
-        spread = 0.04; // ~4.4km — fallback for any remaining zip-centroid clusters
+        spread = 0.04;
       }
 
       for (let i = 0; i < count; i++) {
-        // Two independent hashes for x and y — completely different salt strings
         const dx = (seededRandom(`${groupKey}|X|${i}`) * 2 - 1) * spread;
         const dy = (seededRandom(`${groupKey}|Y|${i}`) * 2 - 1) * spread;
 
@@ -135,14 +132,16 @@ function jitterPoints(
 }
 
 export default function DemographicMap() {
-  const mapRef = useRef<google.maps.Map | null>(null);
-  const markersRef = useRef<Array<{ marker: google.maps.marker.AdvancedMarkerElement; campus: string }>>([]);
-  const campusPinsRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
-  const circlesRef = useRef<google.maps.Circle[]>([]);
+  const mapRef = useRef<L.Map | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const markersLayerRef = useRef<L.LayerGroup | null>(null);
+  const campusPinsLayerRef = useRef<L.LayerGroup | null>(null);
+  const circlesLayerRef = useRef<L.LayerGroup | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [backfilling, setBackfilling] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
   const [syncMessage, setSyncMessage] = useState("");
+  const [mapReady, setMapReady] = useState(false);
 
   // Campus filter state
   const [visibleCampuses, setVisibleCampuses] = useState<Set<string>>(
@@ -164,7 +163,6 @@ export default function DemographicMap() {
   const backfillCampus = trpc.demographics.backfillCampus.useMutation();
   const fetchAllAddresses = trpc.demographics.fetchAllAddresses.useMutation();
   const [fixingMap, setFixingMap] = useState(false);
-
 
   // Check if most dots are "Unknown" campus — suggest backfill
   const unknownCount = mapData?.points?.filter((p) => !p.campus || p.campus === "Unknown").length ?? 0;
@@ -205,17 +203,146 @@ export default function DemographicMap() {
     });
   }, []);
 
+  // Initialize Leaflet map
+  useEffect(() => {
+    if (!mapContainerRef.current || mapRef.current) return;
+
+    const map = L.map(mapContainerRef.current, {
+      center: [34.35, -84.46],
+      zoom: 10,
+      zoomControl: true,
+      attributionControl: true,
+    });
+
+    // Use CartoDB Positron for a clean, modern look
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: "abcd",
+      maxZoom: 19,
+    }).addTo(map);
+
+    // Create layer groups
+    markersLayerRef.current = L.layerGroup().addTo(map);
+    campusPinsLayerRef.current = L.layerGroup().addTo(map);
+    circlesLayerRef.current = L.layerGroup().addTo(map);
+
+    mapRef.current = map;
+    setMapReady(true);
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+      setMapReady(false);
+    };
+  }, []);
+
+  // Render campus pins
+  useEffect(() => {
+    if (!mapReady || !campusPinsLayerRef.current || !campuses) return;
+    campusPinsLayerRef.current.clearLayers();
+
+    for (const campus of campuses) {
+      const color = CAMPUS_PIN_COLORS[campus.name] || CAMPUS_DOT_COLORS.Canton;
+      const icon = L.divIcon({
+        className: "campus-pin-icon",
+        html: `
+          <div style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+          ">
+            <div style="
+              background: ${color};
+              color: white;
+              padding: 4px 10px;
+              border-radius: 6px;
+              font-size: 12px;
+              font-weight: 700;
+              font-family: 'DM Sans', sans-serif;
+              white-space: nowrap;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            ">${campus.name} Campus</div>
+            <div style="
+              width: 0;
+              height: 0;
+              border-left: 6px solid transparent;
+              border-right: 6px solid transparent;
+              border-top: 6px solid ${color};
+            "></div>
+          </div>
+        `,
+        iconSize: [100, 36],
+        iconAnchor: [50, 36],
+      });
+
+      L.marker([campus.lat, campus.lng], { icon, zIndexOffset: 1000 })
+        .addTo(campusPinsLayerRef.current!);
+    }
+  }, [mapReady, campuses]);
+
+  // Render member dots
+  useEffect(() => {
+    if (!mapReady || !markersLayerRef.current) return;
+    markersLayerRef.current.clearLayers();
+
+    for (const point of allJitteredPoints) {
+      const campus = point.campus || "Unknown";
+      if (!visibleCampuses.has(campus)) continue;
+
+      const color = CAMPUS_DOT_COLORS[campus] || CAMPUS_DOT_COLORS.Unknown;
+      const icon = L.divIcon({
+        className: "member-dot-icon",
+        html: `<div style="
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: ${color};
+          border: 1px solid rgba(255,255,255,0.7);
+          opacity: 0.75;
+        "></div>`,
+        iconSize: [8, 8],
+        iconAnchor: [4, 4],
+      });
+
+      L.marker([point.lat, point.lng], { icon })
+        .bindTooltip(`${campus} — ${point.city || point.zip}`, { direction: "top" })
+        .addTo(markersLayerRef.current!);
+    }
+  }, [mapReady, allJitteredPoints, visibleCampuses]);
+
+  // Render drive-time circles
+  useEffect(() => {
+    if (!mapReady || !circlesLayerRef.current) return;
+    circlesLayerRef.current.clearLayers();
+
+    if (showDriveTime === "off") return;
+
+    const radius = DRIVE_TIME_RADII[showDriveTime];
+
+    for (const [campusName, coords] of Object.entries(CAMPUS_COORDS)) {
+      const color = CAMPUS_DOT_COLORS[campusName] || "#999";
+      L.circle([coords.lat, coords.lng], {
+        radius,
+        color,
+        weight: 2,
+        opacity: 0.5,
+        fillColor: color,
+        fillOpacity: 0.08,
+      }).addTo(circlesLayerRef.current!);
+    }
+  }, [mapReady, showDriveTime]);
+
+  // Sync handlers (unchanged from original)
   const handleSync = useCallback(async () => {
     setSyncing(true);
     try {
-      // Phase 1: Sync people + campus from PCO
       setSyncMessage("Phase 1/3: Syncing active people from PCO...");
       const addrResult = await syncAddresses.mutateAsync();
       setSyncMessage(
         `Phase 1 done: ${addrResult.total} people synced. ${addrResult.noAddress} need addresses. Fetching...`
       );
 
-      // Phase 2: Fetch addresses in batches
       let addrRemaining = addrResult.noAddress;
       let totalAddrSynced = addrResult.synced;
       let addrBatch = 0;
@@ -232,7 +359,6 @@ export default function DemographicMap() {
 
       setSyncMessage(`Phase 2 done: ${totalAddrSynced} addresses. Geocoding...`);
 
-      // Phase 3: Geocode
       let totalGeocoded = 0;
       let totalFailed = 0;
       let geoRemaining = Infinity;
@@ -258,18 +384,11 @@ export default function DemographicMap() {
     }
   }, [syncAddresses, fetchAddressBatch, geocodeAddresses, refetchMapData, refetchStatus]);
 
-  /**
-   * Fix Map Data: purely additive pipeline (NO reset/destructive operations).
-   * Step 1: Fetch addresses from PCO for people who don't have one yet (zip IS NULL)
-   * Step 2: Geocode people who have an address but no lat/lng
-   * Safe to click multiple times — always resumes where it left off.
-   */
   const handleFixMapData = useCallback(async () => {
     setFixingMap(true);
     try {
       await refetchStatus();
 
-      // Step 1: Fetch addresses from PCO in batches (only for people with NULL zip)
       setSyncMessage("Step 1/2: Fetching addresses from PCO...");
       let addrRemaining = Infinity;
       let totalFetched = 0;
@@ -307,7 +426,6 @@ export default function DemographicMap() {
 
       setSyncMessage(`Addresses done: ${totalFetched} processed. Geocoding...`);
 
-      // Step 2: Geocode people who have address but no lat/lng
       let totalGeocoded = 0;
       let totalFailed = 0;
       let geoRemaining = Infinity;
@@ -369,7 +487,6 @@ export default function DemographicMap() {
     }
   }, [backfillCampus, refetchMapData]);
 
-  // Standalone geocode handler
   const handleGeocode = useCallback(async () => {
     setGeocoding(true);
     try {
@@ -400,156 +517,6 @@ export default function DemographicMap() {
       setGeocoding(false);
     }
   }, [geocodeAddresses, refetchMapData, refetchStatus]);
-
-  // Render drive-time circles
-  const renderCircles = useCallback((map: google.maps.Map) => {
-    for (const c of circlesRef.current) {
-      c.setMap(null);
-    }
-    circlesRef.current = [];
-
-    if (showDriveTime === "off") return;
-
-    const radius = DRIVE_TIME_RADII[showDriveTime];
-
-    for (const [campusName, coords] of Object.entries(CAMPUS_COORDS)) {
-      const color = CAMPUS_DOT_COLORS[campusName] || "#999";
-      const circle = new google.maps.Circle({
-        map,
-        center: coords,
-        radius,
-        fillColor: color,
-        fillOpacity: 0.08,
-        strokeColor: color,
-        strokeOpacity: 0.5,
-        strokeWeight: 2,
-        clickable: false,
-      });
-      circlesRef.current.push(circle);
-    }
-  }, [showDriveTime]);
-
-  // Render ALL markers once (campus pins + individual member dots)
-  const renderAllMarkers = useCallback(
-    (map: google.maps.Map) => {
-      // Clear existing markers
-      for (const { marker } of markersRef.current) {
-        marker.map = null;
-      }
-      markersRef.current = [];
-      for (const m of campusPinsRef.current) {
-        m.map = null;
-      }
-      campusPinsRef.current = [];
-
-      if (!campuses) return;
-
-      // Add campus location pins (always visible)
-      for (const campus of campuses) {
-        const pinEl = document.createElement("div");
-        pinEl.innerHTML = `
-          <div style="
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            cursor: pointer;
-          ">
-            <div style="
-              background: ${CAMPUS_PIN_COLORS[campus.name] || CAMPUS_DOT_COLORS.Canton};
-              color: white;
-              padding: 4px 10px;
-              border-radius: 6px;
-              font-size: 12px;
-              font-weight: 700;
-              font-family: 'DM Sans', sans-serif;
-              white-space: nowrap;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            ">${campus.name} Campus</div>
-            <div style="
-              width: 0;
-              height: 0;
-              border-left: 6px solid transparent;
-              border-right: 6px solid transparent;
-              border-top: 6px solid ${CAMPUS_PIN_COLORS[campus.name] || CAMPUS_DOT_COLORS.Canton};
-            "></div>
-          </div>
-        `;
-
-        const marker = new google.maps.marker.AdvancedMarkerElement({
-          map,
-          position: { lat: campus.lat, lng: campus.lng },
-          content: pinEl,
-          zIndex: 1000,
-        });
-        campusPinsRef.current.push(marker);
-      }
-
-      // Add every person as an individual colored dot
-      for (const point of allJitteredPoints) {
-        const campus = point.campus || "Unknown";
-        const color = CAMPUS_DOT_COLORS[campus] || CAMPUS_DOT_COLORS.Unknown;
-        const dotEl = document.createElement("div");
-        dotEl.style.cssText = `
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background: ${color};
-          border: 1px solid rgba(255,255,255,0.7);
-          opacity: 0.75;
-          cursor: pointer;
-        `;
-        dotEl.title = `${campus} — ${point.city || point.zip}`;
-
-        // Respect current campus visibility
-        const shouldShow = visibleCampuses.has(campus);
-        if (!shouldShow) {
-          dotEl.style.display = "none";
-        }
-
-        const marker = new google.maps.marker.AdvancedMarkerElement({
-          map,
-          position: { lat: point.lat, lng: point.lng },
-          content: dotEl,
-          zIndex: 100,
-        });
-        markersRef.current.push({ marker, campus });
-      }
-    },
-    [allJitteredPoints, campuses, visibleCampuses]
-  );
-
-  // Toggle marker visibility based on campus filter (no re-rendering, no repositioning)
-  useEffect(() => {
-    for (const { marker, campus } of markersRef.current) {
-      const shouldShow = visibleCampuses.has(campus);
-      if (marker.content instanceof HTMLElement) {
-        marker.content.style.display = shouldShow ? "" : "none";
-      }
-    }
-  }, [visibleCampuses]);
-
-  const handleMapReady = useCallback(
-    (map: google.maps.Map) => {
-      mapRef.current = map;
-      renderAllMarkers(map);
-      renderCircles(map);
-    },
-    [renderAllMarkers, renderCircles]
-  );
-
-  // Re-render markers when data changes (not when filter changes)
-  useEffect(() => {
-    if (mapRef.current && allJitteredPoints.length > 0) {
-      renderAllMarkers(mapRef.current);
-    }
-  }, [allJitteredPoints, campuses, renderAllMarkers]);
-
-  // Re-render circles when drive-time selection changes
-  useEffect(() => {
-    if (mapRef.current) {
-      renderCircles(mapRef.current);
-    }
-  }, [showDriveTime, renderCircles]);
 
   const hasData = mapData && mapData.points.length > 0;
 
@@ -618,8 +585,6 @@ export default function DemographicMap() {
           {syncMessage}
         </div>
       )}
-
-
 
       {/* Sync status bar */}
       {syncStatus && (
@@ -709,11 +674,10 @@ export default function DemographicMap() {
       </div>
 
       {/* Map */}
-      <MapView
-        className="h-[500px] rounded-lg overflow-hidden"
-        initialCenter={{ lat: 34.35, lng: -84.46 }}
-        initialZoom={10}
-        onMapReady={handleMapReady}
+      <div
+        ref={mapContainerRef}
+        className="h-[500px] rounded-lg overflow-hidden border border-border/40"
+        style={{ zIndex: 0 }}
       />
     </div>
   );

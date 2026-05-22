@@ -1471,4 +1471,10 @@
 - [x] Register Heartbeat cron to call endpoint every 30 minutes externally
 - [x] Keep in-memory setInterval as secondary fallback (belt and suspenders)
 - [x] Write vitest tests for heartbeat logic (6 tests)
-- [ ] Deploy and verify
+- [x] Deploy and verify
+
+## Bug: Campus page map not showing up / not populating
+- [x] Investigate why map is not rendering (Forge proxy origin validation blocks Google Maps JS API)
+- [x] Replace Google Maps JS with Leaflet/OpenStreetMap (eliminates dependency on Forge JS proxy)
+- [x] Preserve all features: colored dots, campus pins, drive-time circles, campus filters
+- [x] Build passes, 158 tests pass

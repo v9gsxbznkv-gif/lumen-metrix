@@ -331,6 +331,44 @@ async function startServer() {
     }
   });
 
+  // Google Maps JS API proxy — serves the Maps JS bundle using server-side credentials
+  // This bypasses the origin-check on the frontend Forge key
+  app.get("/api/maps-proxy/*", async (req, res) => {
+    try {
+      const { ENV } = await import("./env");
+      if (!ENV.forgeApiUrl || !ENV.forgeApiKey) {
+        return res.status(500).send("Maps proxy not configured");
+      }
+      // Strip /api/maps-proxy prefix and forward the rest to the Forge maps proxy
+      const path = req.path.replace("/api/maps-proxy", "");
+      const queryString = new URLSearchParams({
+        ...req.query as Record<string, string>,
+        key: ENV.forgeApiKey, // Use server-side key
+      }).toString();
+      const upstreamUrl = `${ENV.forgeApiUrl}/v1/maps/proxy${path}?${queryString}`;
+
+      const upstream = await fetch(upstreamUrl, {
+        headers: { "Accept": "*/*" },
+      });
+
+      if (!upstream.ok) {
+        const errText = await upstream.text();
+        console.error(`[Maps Proxy] Upstream ${upstream.status}: ${errText.substring(0, 200)}`);
+        return res.status(upstream.status).send(errText);
+      }
+
+      // Forward content-type and body
+      const contentType = upstream.headers.get("content-type") || "application/javascript";
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Cache-Control", "public, max-age=3600"); // Cache for 1 hour
+      const body = await upstream.arrayBuffer();
+      res.send(Buffer.from(body));
+    } catch (err: any) {
+      console.error("[Maps Proxy] Error:", err.message);
+      res.status(500).send("Maps proxy error");
+    }
+  });
+
   // tRPC API
   app.use(
     "/api/trpc",
