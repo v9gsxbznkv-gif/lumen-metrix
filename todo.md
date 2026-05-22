@@ -1484,3 +1484,9 @@
 - [x] Add automatic address fetch + geocode to heartbeat (50 addresses + 100 geocodes per 30-min heartbeat)
 - [x] Improve Fix Map Data resilience (batch cap at 20 iterations, larger batch sizes 50/100, graceful messaging)
 - [x] Build passes, 158 tests pass
+
+## Bug: Campus page radar chart - volunteers not showing up
+- [x] Root cause: Object.defineProperty trick for _weekSet in serving yearly aggregation fails — the Set never attaches to the map entry, so .add() throws on the second row
+- [x] Fix: Use separate Map<string, Set<number>> for week tracking instead of hidden property hack
+- [x] Also fixed same bug in monthly aggregation
+- [x] Canton 428/wk, Jasper 120/wk now returning correctly

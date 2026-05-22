@@ -967,6 +967,8 @@ const servingRouter = router({
           total: number; scheduled: number; confirmed: number; weekCount: number;
         }>();
 
+        const monthlyWeekSets = new Map<string, Set<number>>();
+
         for (const row of rows) {
           const month = getMonthFromDate(row.weekStartDate);
           const campusKey = (!campus || campus === "all") ? "All" : row.campus;
@@ -976,12 +978,13 @@ const servingRouter = router({
             existing.total += row.total;
             existing.scheduled += row.scheduled;
             existing.confirmed += row.confirmed;
-            // Use Set for distinct week counting (avoid double-counting when campus=all)
-            (existing as any)._weekSet.add(row.weekNumber);
-            existing.weekCount = (existing as any)._weekSet.size;
+            const ws = monthlyWeekSets.get(key)!;
+            ws.add(row.weekNumber);
+            existing.weekCount = ws.size;
           } else {
-            const _weekSet = new Set<number>();
-            _weekSet.add(row.weekNumber);
+            const ws = new Set<number>();
+            ws.add(row.weekNumber);
+            monthlyWeekSets.set(key, ws);
             monthly.set(key, {
               year: row.year,
               month,
@@ -990,7 +993,6 @@ const servingRouter = router({
               scheduled: row.scheduled,
               confirmed: row.confirmed,
               weekCount: 1,
-              ...(Object.defineProperty({}, '_weekSet', { value: _weekSet, enumerable: false }) as any),
             });
           }
         }
@@ -1011,6 +1013,8 @@ const servingRouter = router({
         total: number; scheduled: number; confirmed: number; weekCount: number;
       }>();
 
+      const yearlyWeekSets = new Map<string, Set<number>>();
+
       for (const row of rows) {
         const campusKey = (!campus || campus === "all") ? "All" : row.campus;
         const key = `${row.year}-${campusKey}`;
@@ -1019,12 +1023,13 @@ const servingRouter = router({
           existing.total += row.total;
           existing.scheduled += row.scheduled;
           existing.confirmed += row.confirmed;
-          // Use Set for distinct week counting (avoid double-counting when campus=all)
-          (existing as any)._weekSet.add(row.weekNumber);
-          existing.weekCount = (existing as any)._weekSet.size;
+          const ws = yearlyWeekSets.get(key)!;
+          ws.add(row.weekNumber);
+          existing.weekCount = ws.size;
         } else {
-          const _weekSet = new Set<number>();
-          _weekSet.add(row.weekNumber);
+          const ws = new Set<number>();
+          ws.add(row.weekNumber);
+          yearlyWeekSets.set(key, ws);
           yearly.set(key, {
             year: row.year,
             campus: campusKey === "All" ? "All Campuses" : row.campus,
@@ -1032,7 +1037,6 @@ const servingRouter = router({
             scheduled: row.scheduled,
             confirmed: row.confirmed,
             weekCount: 1,
-            ...(Object.defineProperty({}, '_weekSet', { value: _weekSet, enumerable: false }) as any),
           });
         }
       }

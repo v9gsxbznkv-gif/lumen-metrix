@@ -1,0 +1,38 @@
+{
+  "query": "SELECT year, campus, COUNT(*) as weeks, SUM(total) as total_volunteers, ROUND(SUM(total)/COUNT(*)) as avg_weekly FROM serving_weekly WHERE year >= 2025 GROUP BY year, campus ORDER BY year, campus;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, campus, COUNT(*) as weeks, SUM(total) as total_volunteers, ROUND(SUM(total)/COUNT(*)) as avg_weekly FROM serving_weekly WHERE year >= 2025 GROUP BY year, campus ORDER BY year, campus;",
+  "rows": [
+    {
+      "year": "2025",
+      "campus": "Canton",
+      "weeks": "51",
+      "total_volunteers": "21661",
+      "avg_weekly": "425"
+    },
+    {
+      "year": "2025",
+      "campus": "Jasper",
+      "weeks": "51",
+      "total_volunteers": "6139",
+      "avg_weekly": "120"
+    },
+    {
+      "year": "2026",
+      "campus": "Canton",
+      "weeks": "21",
+      "total_volunteers": "8943",
+      "avg_weekly": "426"
+    },
+    {
+      "year": "2026",
+      "campus": "Jasper",
+      "weeks": "21",
+      "total_volunteers": "2512",
+      "avg_weekly": "120"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tcampus\tweeks\ttotal_volunteers\tavg_weekly\n2025\tCanton\t51\t21661\t425\n2025\tJasper\t51\t6139\t120\n2026\tCanton\t21\t8943\t426\n2026\tJasper\t21\t2512\t120\n",
+  "stderr": "",
+  "execution_time_ms": 270
+}
