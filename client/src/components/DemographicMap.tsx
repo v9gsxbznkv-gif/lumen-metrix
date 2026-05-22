@@ -395,11 +395,12 @@ export default function DemographicMap() {
       let addrBatch = 0;
       let consecutiveErrors = 0;
       const MAX_RETRIES = 3;
+      const MAX_BATCHES = 20; // Cap at 20 batches per click (~1000 people) to avoid timeout
 
-      while (addrRemaining > 0) {
+      while (addrRemaining > 0 && addrBatch < MAX_BATCHES) {
         addrBatch++;
         try {
-          const batchResult = await fetchAllAddresses.mutateAsync({ batchSize: 25 });
+          const batchResult = await fetchAllAddresses.mutateAsync({ batchSize: 50 });
           totalFetched += batchResult.synced + batchResult.noAddress;
           addrRemaining = batchResult.remaining;
           consecutiveErrors = 0;
@@ -424,18 +425,23 @@ export default function DemographicMap() {
         }
       }
 
-      setSyncMessage(`Addresses done: ${totalFetched} processed. Geocoding...`);
+      if (addrRemaining > 0) {
+        setSyncMessage(`Addresses: ${totalFetched} processed, ${addrRemaining} remaining. Auto-processing continues in background. Geocoding...`);
+      } else {
+        setSyncMessage(`Addresses done: ${totalFetched} processed. Geocoding...`);
+      }
 
       let totalGeocoded = 0;
       let totalFailed = 0;
       let geoRemaining = Infinity;
       let geoBatch = 0;
       consecutiveErrors = 0;
+      const MAX_GEO_BATCHES = 20; // Cap geocoding too
 
-      while (geoRemaining > 0) {
+      while (geoRemaining > 0 && geoBatch < MAX_GEO_BATCHES) {
         geoBatch++;
         try {
-          const geoResult = await geocodeAddresses.mutateAsync({ batchSize: 50 });
+          const geoResult = await geocodeAddresses.mutateAsync({ batchSize: 100 });
           totalGeocoded += geoResult.geocoded;
           totalFailed += geoResult.failed;
           geoRemaining = geoResult.remaining;
@@ -461,7 +467,11 @@ export default function DemographicMap() {
         }
       }
 
-      setSyncMessage(`Done! ${totalGeocoded} geocoded, ${totalFailed} failed. Map updated.`);
+      if (geoRemaining > 0) {
+        setSyncMessage(`Progress: ${totalGeocoded} geocoded, ${geoRemaining} remaining. Auto-processing continues every 30 min via heartbeat.`);
+      } else {
+        setSyncMessage(`Done! ${totalGeocoded} geocoded, ${totalFailed} failed. Map updated.`);
+      }
       await refetchMapData();
       await refetchStatus();
     } catch (err: any) {

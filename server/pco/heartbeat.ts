@@ -14,6 +14,7 @@ import { getDb } from "../db";
 import { syncLogs, pcoTokens } from "../../drizzle/schema";
 import { getValidAccessToken } from "./client";
 import { runNightlySync } from "./scheduler";
+import { autoProcessDemographics, type AutoProcessResult } from "../demographics/autoProcess";
 
 /**
  * Get the current date string in Eastern Time (YYYY-MM-DD format).
@@ -141,7 +142,17 @@ export async function heartbeatHandler(req: Request, res: Response): Promise<voi
     return;
   }
 
-  // Step 2: Check if nightly sync is needed
+  // Step 2: Auto-process demographics (address fetch + geocode)
+  // Runs every heartbeat to chip away at the backlog
+  let demographicsResult: AutoProcessResult | null = null;
+  try {
+    demographicsResult = await autoProcessDemographics();
+    console.log(`[Heartbeat] Demographics: ${demographicsResult.addressesFetched} addresses fetched, ${demographicsResult.geocoded} geocoded, ${demographicsResult.addressRemaining} addr remaining, ${demographicsResult.geocodeRemaining} geo remaining`);
+  } catch (err: any) {
+    console.warn(`[Heartbeat] Demographics auto-process failed: ${err.message}`);
+  }
+
+  // Step 3: Check if nightly sync is needed
   // Run sync if: hour is between 0-5 (midnight to 5am ET) AND no sync completed today
   let syncStatus = "not_due";
   let syncMessage = "";
@@ -183,6 +194,14 @@ export async function heartbeatHandler(req: Request, res: Response): Promise<voi
       refreshedNow: tokenStatus.refreshedNow,
       expiresAt: tokenStatus.expiresAt,
     },
+    demographics: demographicsResult ? {
+      addressesFetched: demographicsResult.addressesFetched,
+      addressesNoData: demographicsResult.addressesNoData,
+      addressRemaining: demographicsResult.addressRemaining,
+      geocoded: demographicsResult.geocoded,
+      geocodeRemaining: demographicsResult.geocodeRemaining,
+      durationMs: demographicsResult.durationMs,
+    } : null,
     syncStatus,
     syncMessage,
     easternHour,

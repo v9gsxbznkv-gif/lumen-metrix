@@ -1478,3 +1478,9 @@
 - [x] Replace Google Maps JS with Leaflet/OpenStreetMap (eliminates dependency on Forge JS proxy)
 - [x] Preserve all features: colored dots, campus pins, drive-time circles, campus filters
 - [x] Build passes, 158 tests pass
+
+## Fix: Map data auto-processing (address fetch + geocode)
+- [x] Investigate why "Fix Map Data" times out (2178 people × 250ms/call = 9+ min, exceeds HTTP timeout)
+- [x] Add automatic address fetch + geocode to heartbeat (50 addresses + 100 geocodes per 30-min heartbeat)
+- [x] Improve Fix Map Data resilience (batch cap at 20 iterations, larger batch sizes 50/100, graceful messaging)
+- [x] Build passes, 158 tests pass
