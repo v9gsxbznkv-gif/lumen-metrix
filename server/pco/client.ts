@@ -194,8 +194,8 @@ export async function getValidAccessToken(): Promise<string | null> {
 
   const token = rows[0];
 
-  // Check if token is expired (with 5-minute buffer)
-  const bufferMs = 5 * 60 * 1000;
+  // Check if token is expired (with 30-minute buffer to handle container recycles)
+  const bufferMs = 30 * 60 * 1000;
   if (token.expiresAt && new Date(token.expiresAt).getTime() - bufferMs < Date.now()) {
     console.log("[PCO] Access token expired or expiring soon, refreshing...");
     try {

@@ -1462,4 +1462,13 @@
 - [x] Seed Chad as first admin user (chad@revolution.church)
 - [x] Write vitest tests for new auth procedures (6 tests)
 - [x] Remove old shared password gate (dashboardAuth procedures and test file)
+- [x] Deploy and verify
+
+## Fix: PCO Token Auto-Refresh & Scheduled Sync Reliability
+- [x] Increase token refresh buffer from 5 min to 30 min (catch expiry earlier)
+- [x] Add /api/heartbeat endpoint that proactively refreshes token + runs missed sync
+- [x] Make sync idempotent (track last successful sync date in DB, skip if already done today)
+- [x] Register Heartbeat cron to call endpoint every 30 minutes externally
+- [x] Keep in-memory setInterval as secondary fallback (belt and suspenders)
+- [x] Write vitest tests for heartbeat logic (6 tests)
 - [ ] Deploy and verify

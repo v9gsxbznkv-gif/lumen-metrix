@@ -93,6 +93,17 @@ async function startServer() {
       res.redirect(`/?tab=settings&pco=error&message=${encodeURIComponent(err.message)}`);
     }
   });
+  // GET /api/heartbeat — External cron-triggered health check + token refresh + missed sync recovery
+  app.get("/api/heartbeat", async (req, res) => {
+    try {
+      const { heartbeatHandler } = await import("../pco/heartbeat");
+      await heartbeatHandler(req, res);
+    } catch (err: any) {
+      console.error("[Heartbeat] Unhandled error:", err.message);
+      res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
   // POST /api/sync/flush — Phase 2 of two-phase sync architecture.
   // Uses a brand-new DB connection for ALL post-PCO-fetch DB work:
   //   1. Write attendance rows from rawData blob → attendance_weekly
