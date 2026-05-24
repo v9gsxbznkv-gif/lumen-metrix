@@ -1532,3 +1532,6 @@
 
 ## Bug Fix: Dashboard vs Attendance tab yearly avg mismatch
 - [x] Add weekCap filter to getAvgAttendanceFromWeekly (excludes current incomplete week, matching server-side behavior)
+
+## Bug Fix: Weekly report showing Monday date instead of Sunday
+- [x] Update weekLabel function to show Sunday (end of week, +6 days from Monday weekStartDate)

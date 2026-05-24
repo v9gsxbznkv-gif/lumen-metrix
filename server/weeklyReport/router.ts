@@ -86,9 +86,11 @@ function periodLabel(year: number, month: number, weekNum?: number): string {
   return `${monthName} ${year} (Week ${wk})`;
 }
 
-/** Build a label for a specific week date like "Apr 20, 2025 (Week 16)" */
+/** Build a label showing the Sunday date (end of week) like "Apr 26, 2025 (Week 16)" */
 function weekLabel(weekStartDate: string, weekNumber: number): string {
   const d = new Date(weekStartDate + "T00:00:00");
+  // weekStartDate is Monday; shift +6 days to get Sunday (service day / end of week)
+  d.setDate(d.getDate() + 6);
   const monthName = d.toLocaleString("en-US", { month: "short" });
   return `${monthName} ${d.getDate()}, ${d.getFullYear()} (Week ${weekNumber})`;
 }
