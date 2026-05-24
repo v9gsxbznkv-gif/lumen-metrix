@@ -1114,46 +1114,48 @@ export function getWeeklyGivingPerCapita(
   const currentYear = new Date().getFullYear();
   const weekCap = year === currentYear ? getLastCompleteISOWeek() : 52;
 
-  // Build set of cancelled week numbers (main service cancelled = no valid attendance for GPC)
-  const cancelledWeeks = new Set<number>();
-  for (const r of data.attendance_weekly) {
-    if (r.year !== year) continue;
-    if (campus !== "All Campuses" && r.campus !== campus) continue;
-    if (r.cancelled) cancelledWeeks.add(r.weekNumber);
-  }
-
-  // Sum giving per week (only complete, non-cancelled weeks)
-  const givingByWeek = new Map<number, number>();
+  // Total giving: ALL weeks count (people give online even when service is cancelled)
+  let totalGiving = 0;
   for (const r of data.giving_weekly) {
     if (r.year !== year) continue;
     if (r.weekNumber > weekCap) continue;
     if (campus !== "All Campuses" && r.campus !== campus) continue;
-    if (cancelledWeeks.has(r.weekNumber)) continue; // Skip giving for cancelled weeks
-    givingByWeek.set(r.weekNumber, (givingByWeek.get(r.weekNumber) || 0) + r.total);
+    totalGiving += r.total;
   }
-  if (givingByWeek.size === 0) return 0;
+  if (totalGiving === 0) return 0;
 
-  // Weighted average: total giving / total attendance (matches server-side getPerCapita)
-  const totalGiving = Array.from(givingByWeek.values()).reduce((s, v) => s + v, 0);
-
-  // Build attendance per week for the same non-cancelled weeks
-  const attByWeek = new Map<number, number>();
+  // Total attendance: only non-cancelled weeks (Adults + Kids)
+  let totalAtt = 0;
   for (const r of data.attendance_weekly) {
     if (r.cancelled) continue;
     if (r.year !== year) continue;
     if (r.weekNumber > weekCap) continue;
     if (campus !== "All Campuses" && r.campus !== campus) continue;
-    // Total = Adults + Kids
     const isAdult = r.subgroup === "Adults" || r.subgroup === "Revolution Canton Check-In" ||
                     r.subgroup === "Revolution Jasper Check-In" || r.subgroup === "Revolution Church Jasper";
     const isKids = r.subgroup === "Kids";
     if (!isAdult && !isKids) continue;
-    attByWeek.set(r.weekNumber, (attByWeek.get(r.weekNumber) || 0) + r.headcount);
+    totalAtt += r.headcount;
   }
-
-  const totalAtt = Array.from(attByWeek.values()).reduce((s, v) => s + v, 0);
   if (totalAtt === 0) return 0;
 
+  // Count weeks with valid attendance (for per-week normalization)
+  const attWeeks = new Set<number>();
+  for (const r of data.attendance_weekly) {
+    if (r.cancelled) continue;
+    if (r.year !== year) continue;
+    if (r.weekNumber > weekCap) continue;
+    if (campus !== "All Campuses" && r.campus !== campus) continue;
+    const isAdult = r.subgroup === "Adults" || r.subgroup === "Revolution Canton Check-In" ||
+                    r.subgroup === "Revolution Jasper Check-In" || r.subgroup === "Revolution Church Jasper";
+    const isKids = r.subgroup === "Kids";
+    if (isAdult || isKids) attWeeks.add(r.weekNumber);
+  }
+  const weekCount = attWeeks.size;
+  if (weekCount === 0) return 0;
+
+  // GPC = (total giving / weekCount) / (total attendance / weekCount) = total giving / total attendance
+  // But the key insight: giving includes ALL weeks, attendance only non-cancelled weeks
   return totalGiving / totalAtt;
 }
 
@@ -1166,28 +1168,17 @@ export function getWeeklyGivingPerCapitaRange(
   campus: string,
   maxWeek: number
 ): number {
-  // Build set of cancelled week numbers
-  const cancelledWeeks = new Set<number>();
-  for (const r of data.attendance_weekly) {
-    if (r.year !== year) continue;
-    if (campus !== "All Campuses" && r.campus !== campus) continue;
-    if (r.cancelled) cancelledWeeks.add(r.weekNumber);
-  }
-
-  const givingByWeek = new Map<number, number>();
+  // Total giving: ALL weeks count (people give online even when service is cancelled)
+  let totalGiving = 0;
   for (const r of data.giving_weekly) {
     if (r.year !== year || r.weekNumber > maxWeek) continue;
     if (campus !== "All Campuses" && r.campus !== campus) continue;
-    if (cancelledWeeks.has(r.weekNumber)) continue; // Skip giving for cancelled weeks
-    givingByWeek.set(r.weekNumber, (givingByWeek.get(r.weekNumber) || 0) + r.total);
+    totalGiving += r.total;
   }
-  if (givingByWeek.size === 0) return 0;
+  if (totalGiving === 0) return 0;
 
-  // Weighted average: total giving / total attendance
-  const totalGiving = Array.from(givingByWeek.values()).reduce((s, v) => s + v, 0);
-
-  // Build attendance for non-cancelled weeks
-  const attByWeek = new Map<number, number>();
+  // Total attendance: only non-cancelled weeks (Adults + Kids)
+  let totalAtt = 0;
   for (const r of data.attendance_weekly) {
     if (r.cancelled) continue;
     if (r.year !== year || r.weekNumber > maxWeek) continue;
@@ -1196,10 +1187,8 @@ export function getWeeklyGivingPerCapitaRange(
                     r.subgroup === "Revolution Jasper Check-In" || r.subgroup === "Revolution Church Jasper";
     const isKids = r.subgroup === "Kids";
     if (!isAdult && !isKids) continue;
-    attByWeek.set(r.weekNumber, (attByWeek.get(r.weekNumber) || 0) + r.headcount);
+    totalAtt += r.headcount;
   }
-
-  const totalAtt = Array.from(attByWeek.values()).reduce((s, v) => s + v, 0);
   if (totalAtt === 0) return 0;
 
   return totalGiving / totalAtt;

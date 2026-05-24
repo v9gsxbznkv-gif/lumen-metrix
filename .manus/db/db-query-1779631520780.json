@@ -1,0 +1,73 @@
+{
+  "query": "SELECT DISTINCT weekNumber FROM attendance_weekly WHERE year = 2026 ORDER BY weekNumber;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT weekNumber FROM attendance_weekly WHERE year = 2026 ORDER BY weekNumber;",
+  "rows": [
+    {
+      "weekNumber": "1"
+    },
+    {
+      "weekNumber": "2"
+    },
+    {
+      "weekNumber": "3"
+    },
+    {
+      "weekNumber": "4"
+    },
+    {
+      "weekNumber": "5"
+    },
+    {
+      "weekNumber": "6"
+    },
+    {
+      "weekNumber": "7"
+    },
+    {
+      "weekNumber": "8"
+    },
+    {
+      "weekNumber": "9"
+    },
+    {
+      "weekNumber": "10"
+    },
+    {
+      "weekNumber": "11"
+    },
+    {
+      "weekNumber": "12"
+    },
+    {
+      "weekNumber": "13"
+    },
+    {
+      "weekNumber": "14"
+    },
+    {
+      "weekNumber": "15"
+    },
+    {
+      "weekNumber": "16"
+    },
+    {
+      "weekNumber": "17"
+    },
+    {
+      "weekNumber": "18"
+    },
+    {
+      "weekNumber": "19"
+    },
+    {
+      "weekNumber": "20"
+    },
+    {
+      "weekNumber": "21"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n",
+  "stderr": "",
+  "execution_time_ms": 257
+}

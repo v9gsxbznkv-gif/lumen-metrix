@@ -927,23 +927,35 @@ const givingRouter = router({
       currentYearWeeks.sort((a, b) => a.weekNumber - b.weekNumber);
       priorYearData.sort((a, b) => a.weekNumber - b.weekNumber);
 
-      // Compute YTD averages
-      const avgGpc = (arr: typeof currentYearWeeks) => {
-        if (arr.length === 0) return 0;
-        const totalGiving = arr.reduce((s, w) => s + w.giving, 0);
-        const totalAtt = arr.reduce((s, w) => s + w.attendance, 0);
-        return totalAtt > 0 ? Math.round((totalGiving / totalAtt) * 100) / 100 : 0;
+      // Compute YTD averages — include ALL giving (even cancelled weeks) but only non-cancelled attendance
+      // Per Chad's rule: giving still happens during cancelled weeks (online/app), so it counts in the aggregate
+      const avgGpcWithAllGiving = (arr: typeof currentYearWeeks, allGivingForYear: number, totalAttForYear: number) => {
+        if (totalAttForYear === 0) return 0;
+        return Math.round((allGivingForYear / totalAttForYear) * 100) / 100;
       };
+
+      // Total giving for current year (ALL weeks, including cancelled)
+      const currentYearAllGiving = givingRows
+        .filter(r => r.year === year)
+        .reduce((s, r) => s + (parseFloat(r.total as any) || 0), 0);
+      // Total attendance for current year (only non-cancelled weeks)
+      const currentYearTotalAtt = currentYearWeeks.reduce((s, w) => s + w.attendance, 0);
 
       // For YoY comparison, limit prior year to same number of weeks
       const maxWeekCurrent = currentYearWeeks.length > 0 ? Math.max(...currentYearWeeks.map(w => w.weekNumber)) : 0;
       const priorYearSameWeeks = priorYearData.filter(w => w.weekNumber <= maxWeekCurrent);
 
+      // Prior year: all giving up to maxWeekCurrent, attendance only from non-cancelled weeks
+      const priorYearAllGiving = givingRows
+        .filter(r => r.year === priorYear && r.weekNumber <= maxWeekCurrent)
+        .reduce((s, r) => s + (parseFloat(r.total as any) || 0), 0);
+      const priorYearTotalAtt = priorYearSameWeeks.reduce((s, w) => s + w.attendance, 0);
+
       return {
         year,
         priorYear,
-        currentYearAvgGpc: avgGpc(currentYearWeeks),
-        priorYearAvgGpc: avgGpc(priorYearSameWeeks),
+        currentYearAvgGpc: avgGpcWithAllGiving(currentYearWeeks, currentYearAllGiving, currentYearTotalAtt),
+        priorYearAvgGpc: avgGpcWithAllGiving(priorYearSameWeeks, priorYearAllGiving, priorYearTotalAtt),
         currentYearWeeks: currentYearWeeks,
         priorYearWeeks: priorYearData,
       };
