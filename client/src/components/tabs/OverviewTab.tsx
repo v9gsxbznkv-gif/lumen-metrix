@@ -295,7 +295,7 @@ export default function OverviewTab() {
                 {kpis.kidsPercent.toFixed(1)}%
               </p>
               <p className="text-[11px] text-muted-foreground mt-1.5">
-                Benchmark: 30%
+                Benchmark: 20–30%
               </p>
             </div>
             <Baby className="w-5 h-5 text-muted-foreground/30 shrink-0" />
@@ -306,12 +306,12 @@ export default function OverviewTab() {
                 className="h-full rounded-full transition-all"
                 style={{
                   width: `${Math.min(kpis.kidsPercent / 30 * 100, 100)}%`,
-                  backgroundColor: kpis.kidsPercent >= 30 ? "#4A7C59" : kpis.kidsPercent >= 20 ? "#D4A843" : "#C45B4A",
+                  backgroundColor: kpis.kidsPercent >= 20 && kpis.kidsPercent <= 30 ? "#4A7C59" : kpis.kidsPercent > 30 ? "#4A7C59" : "#C45B4A",
                 }}
               />
             </div>
             <span className="text-[10px] font-semibold text-muted-foreground whitespace-nowrap">
-              {kpis.kidsPercent >= 30 ? "At/Above" : kpis.kidsPercent >= 20 ? "Near" : "Below"} benchmark
+              {kpis.kidsPercent >= 20 && kpis.kidsPercent <= 30 ? "In range" : kpis.kidsPercent > 30 ? "Above" : "Below"} (20–30%)
             </span>
           </div>
         </div>
