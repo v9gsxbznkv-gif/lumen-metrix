@@ -1521,3 +1521,11 @@
 - [x] Update toggleCancelledWeek mutation to accept a `target` param: "main" or "students"
 - [x] Update frontend to show two toggle buttons per row when campus is selected (one for main, one for students)
 - [x] Ensure normalizeAttendanceRows handles student-only cancellation correctly (tracks mainCancelledKeys vs studentCancelledKeys separately)
+
+## Bug Fix: Overview dashboard not excluding cancelled weeks
+- [x] Fix getAvgAttendanceFromWeekly to exclude cancelled rows (respecting main vs student cancellation)
+- [x] Fix getAvgAttendanceFromWeeklyRange to exclude cancelled rows
+- [x] Ensure students average only excludes weeks where student rows are cancelled (not main service)
+- [x] Fix GPC attendance lookup to exclude cancelled rows
+- [x] Add cancelled field to server→frontend data pipeline (PCO router + data.ts interfaces)
+- [x] Verify build passes and 163 tests pass

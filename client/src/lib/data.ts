@@ -79,6 +79,7 @@ interface RawAttendanceWeekly {
   regularCount: number;
   guestCount: number;
   volunteerCount: number;
+  cancelled?: boolean;
 }
 
 interface RawGivingWeekly {
@@ -231,6 +232,7 @@ export interface AttendanceWeekly {
   regularCount: number;
   guestCount: number;
   volunteerCount: number;
+  cancelled: boolean;
 }
 
 export interface GivingWeekly {
@@ -460,7 +462,7 @@ function transformRawData(raw: RawDashboard): DashboardData {
   const data: DashboardData = {
     attendance: raw.attendance,
     attendance_monthly: raw.attendance_monthly,
-    attendance_weekly: raw.attendance_weekly || [],
+    attendance_weekly: (raw.attendance_weekly || []).map(r => ({ ...r, cancelled: r.cancelled ?? false })),
     giving: raw.giving,
     giving_monthly: raw.giving_monthly,
     giving_weekly: raw.giving_weekly || [],
@@ -866,7 +868,9 @@ export function getAvgAttendanceFromWeekly(
   subgroup: string
 ): number {
   // Filter relevant rows — match BOTH old spreadsheet and new PCO subgroup names
+  // Also exclude cancelled rows
   const rows = data.attendance_weekly.filter((r) => {
+    if (r.cancelled) return false; // Skip cancelled rows
     if (r.year !== year) return false;
     if (campus !== "All Campuses" && r.campus !== campus) return false;
     if (subgroup === "Total") {
@@ -1181,6 +1185,7 @@ export function getWeeklyGpcTimeSeries(
   // Build attendance per week (Total = Adults + Kids)
   const attByWeek = new Map<number, number>();
   for (const r of data.attendance_weekly) {
+    if (r.cancelled) continue; // Skip cancelled rows
     if (r.year !== year) continue;
     if (campus !== "All Campuses" && r.campus !== campus) continue;
     // Only count Adults + Kids for Total (same logic as getAvgAttendanceFromWeekly "Total")
@@ -1244,6 +1249,7 @@ export function getAvgAttendanceFromWeeklyRange(
   maxWeek: number
 ): number {
   const rows = data.attendance_weekly.filter((r) => {
+    if (r.cancelled) return false; // Skip cancelled rows
     if (r.year !== year || r.weekNumber > maxWeek) return false;
     if (campus !== "All Campuses" && r.campus !== campus) return false;
     if (subgroup === "Total") {

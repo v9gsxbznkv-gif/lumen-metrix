@@ -468,6 +468,7 @@ export const pcoRouter = router({
         regularCount: r.regularCount,
         guestCount: r.guestCount,
         volunteerCount: r.volunteerCount,
+        cancelled: r.cancelled ?? false,
       })),
       giving_weekly: givingWeeklyRows.map((r) => ({
         year: r.year,

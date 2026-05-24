@@ -157,6 +157,8 @@ async function getWeeklySnapshot(
 
   // Query attendance by weekStartDate (Monday anchor) but giving by weekNumber+year
   // because giving_weekly uses a Sunday anchor — same week number but different weekStartDate.
+  // Note: We do NOT filter cancelled rows here because the weekly report shows
+  // the specific week's data as-is (if the week was cancelled, it won't be generated).
   const [attRows, givRows] = await Promise.all([
     db
       .select()
