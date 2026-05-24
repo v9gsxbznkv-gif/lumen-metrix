@@ -52,6 +52,7 @@ const TT = {
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");
+  d.setDate(d.getDate() + 6); // Monday → Sunday display
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
@@ -213,7 +214,7 @@ export default function TeamMembersTab() {
     if (hasScheduledData) {
       // Show Scheduled vs Checked In
       if (viewMode === "weekly") return weeklyData.slice().reverse().map(w => ({
-        label: w.weekStartDate.slice(5),
+        label: formatDate(w.weekStartDate),
         Scheduled: w.scheduled,
         "Checked In": w.confirmed,
       }));
@@ -230,7 +231,7 @@ export default function TeamMembersTab() {
     } else {
       // Legacy: just show Total
       if (viewMode === "weekly") return weeklyData.slice().reverse().map(w => ({
-        label: w.weekStartDate.slice(5),
+        label: formatDate(w.weekStartDate),
         "Team Members": w.total,
       }));
       if (viewMode === "monthly") return monthlyData.map(m => ({

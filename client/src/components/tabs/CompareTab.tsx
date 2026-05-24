@@ -49,6 +49,7 @@ function pctChange(a: number, b: number): number {
 function getWeekLabel(weekNumber: number, weekStartDate: string | null): string {
   if (!weekStartDate) return `Week ${weekNumber}`;
   const d = new Date(weekStartDate + "T00:00:00");
+  d.setDate(d.getDate() + 6); // Monday → Sunday display
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 

@@ -1490,3 +1490,13 @@
 - [x] Fix: Use separate Map<string, Set<number>> for week tracking instead of hidden property hack
 - [x] Also fixed same bug in monthly aggregation
 - [x] Canton 428/wk, Jasper 120/wk now returning correctly
+
+## Change: Display Sunday instead of Monday for week labels
+- [x] Created shared weekDisplay.ts utility (formatDate +6 days)
+- [x] Updated AttendanceTab2 formatDate (+6 days)
+- [x] Updated GivingTab2 formatDate (+6 days) + chart labels
+- [x] Updated TeamMembersTab formatDate (+6 days) + chart labels
+- [x] Updated AssimilationTab formatDate (+6 days) + chart labels
+- [x] Updated CompareTab getWeekLabel (+6 days)
+- [x] Backend storage and API calls unchanged
+- [x] Build passes, 158 tests pass

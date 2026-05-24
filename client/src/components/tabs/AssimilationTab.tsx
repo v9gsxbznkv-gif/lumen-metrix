@@ -64,6 +64,7 @@ const TT = {
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");
+  d.setDate(d.getDate() + 6); // Monday → Sunday display
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
@@ -206,7 +207,7 @@ export default function AssimilationTab() {
   const chartData = useMemo(() => {
     if (viewMode === "weekly") {
       return weeklyData.slice().reverse().map(w => {
-        const entry: any = { label: w.weekStartDate.slice(5) };
+        const entry: any = { label: formatDate(w.weekStartDate) };
         for (const m of activeMetrics) entry[METRIC_LABELS[m] || m] = w.metrics[m] || 0;
         return entry;
       });

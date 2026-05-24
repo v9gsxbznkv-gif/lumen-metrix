@@ -84,6 +84,7 @@ const TT = {
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");
+  d.setDate(d.getDate() + 6); // Monday → Sunday display
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 

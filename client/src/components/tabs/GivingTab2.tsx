@@ -68,6 +68,7 @@ function fmtDollarsFull(n: number): string {
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");
+  d.setDate(d.getDate() + 6); // Monday → Sunday display
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
@@ -325,7 +326,7 @@ export default function GivingTab2() {
         .slice()
         .reverse()
         .map((w) => ({
-          label: w.weekStartDate.slice(5),
+          label: formatDate(w.weekStartDate),
           Total: w.total,
           General: w.general,
           Designated: w.designated,
