@@ -1513,5 +1513,5 @@
 - [x] Exclude cancelled weeks from monthly/yearly aggregation denominators
 - [x] Students data preserved for cancelled weeks (RevStudents still met)
 - [x] 5 new vitest tests for cancelled weeks logic (163 total passing)
-- [ ] Add admin ability to mark/unmark weeks as cancelled from Settings or table UI
+- [x] Add admin ability to mark/unmark weeks as cancelled from Attendance table UI (inline Cancel/Restore toggle per row)
 - [x] Test and verify percentages correct after exclusion

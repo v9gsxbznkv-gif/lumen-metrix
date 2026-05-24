@@ -11,6 +11,7 @@
  */
 import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -29,7 +30,7 @@ import {
   TableFooter,
 } from "@/components/ui/table";
 import KpiCard from "@/components/KpiCard";
-import { Loader2 } from "lucide-react";
+import { Loader2, Ban, RotateCcw } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -102,6 +103,7 @@ export default function AttendanceTab2() {
   const [viewMode, setViewMode] = useState<ViewMode>("weekly");
   const [year, setYear] = useState<number>(2026);
   const [campus, setCampus] = useState<string>("all");
+  const utils = trpc.useUtils();
 
   const yearsQuery = trpc.dataViews.attendance.getYears.useQuery();
   const years = yearsQuery.data ?? [2026];
@@ -585,6 +587,7 @@ export default function AttendanceTab2() {
                       {activeMetrics.map(m => (
                         <TableHead key={m.key} className="text-xs text-right">{m.label}</TableHead>
                       ))}
+                      <TableHead className="text-xs text-center w-[70px]">Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -605,6 +608,17 @@ export default function AttendanceTab2() {
                             {w[m.key] > 0 ? formatNumber(w[m.key]) : "—"}
                           </TableCell>
                         ))}
+                        <TableCell className="text-center">
+                          <CancelToggleButton
+                            year={w.year}
+                            weekNumber={w.weekNumber}
+                            campus={campus === "all" ? w.campus : campus}
+                            cancelled={!!w.cancelled}
+                            onSuccess={() => {
+                              utils.dataViews.attendance.getData.invalidate();
+                            }}
+                          />
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -906,5 +920,74 @@ export default function AttendanceTab2() {
         </div>
       )}
     </div>
+  );
+}
+
+
+// ─── Cancel Toggle Button ───────────────────────────────────
+function CancelToggleButton({
+  year,
+  weekNumber,
+  campus,
+  cancelled,
+  onSuccess,
+}: {
+  year: number;
+  weekNumber: number;
+  campus: string;
+  cancelled: boolean;
+  onSuccess: () => void;
+}) {
+  const toggleMutation = trpc.dataViews.admin.toggleCancelledWeek.useMutation({
+    onSuccess: (data) => {
+      toast.success(
+        data.cancelled ? "Week marked as cancelled" : "Week restored",
+        { description: `${data.campus} Week ${data.weekNumber} (${data.year}) — ${data.updatedCount} rows updated` }
+      );
+      onSuccess();
+    },
+    onError: (err) => {
+      toast.error("Error", { description: err.message });
+    },
+  });
+
+  // Don't show toggle for "all" campus (would need to pick a specific campus)
+  if (!campus || campus === "all") return null;
+
+  return (
+    <button
+      onClick={() => {
+        if (cancelled) {
+          // Restore
+          toggleMutation.mutate({ year, weekNumber, campus, cancelled: false });
+        } else {
+          // Cancel
+          if (confirm(`Mark ${campus} Week ${weekNumber} (${year}) as cancelled? This will exclude it from all averages and growth calculations.`)) {
+            toggleMutation.mutate({ year, weekNumber, campus, cancelled: true });
+          }
+        }
+      }}
+      disabled={toggleMutation.isPending}
+      className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium transition-colors ${
+        cancelled
+          ? "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300"
+          : "bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400"
+      } ${toggleMutation.isPending ? "opacity-50 cursor-wait" : "cursor-pointer"}`}
+      title={cancelled ? "Restore this week" : "Mark as cancelled"}
+    >
+      {toggleMutation.isPending ? (
+        <Loader2 className="w-3 h-3 animate-spin" />
+      ) : cancelled ? (
+        <>
+          <RotateCcw className="w-3 h-3" />
+          Restore
+        </>
+      ) : (
+        <>
+          <Ban className="w-3 h-3" />
+          Cancel
+        </>
+      )}
+    </button>
   );
 }

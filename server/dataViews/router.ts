@@ -1423,6 +1423,107 @@ const compareRouter = router({
 });
 
 // ============================================================
+// Admin: Toggle cancelled status for a week
+// ============================================================
+const adminRouter = router({
+  toggleCancelledWeek: publicProcedure
+    .input(z.object({
+      year: z.number(),
+      weekNumber: z.number(),
+      campus: z.string(), // "Canton" or "Jasper"
+      cancelled: z.boolean(), // true = mark as cancelled, false = unmark
+    }))
+    .mutation(async ({ input }) => {
+      const { year, weekNumber, campus, cancelled } = input;
+      const d = await db();
+
+      // Update all attendance rows for this campus/week
+      // (Adults, Kids, Volunteers, FTG — but NOT students)
+      const MAIN_SERVICE_SUBGROUPS = [
+        "Adults",
+        "Kids",
+        "Volunteers",
+        "FTG Adults",
+        "FTG Kids",
+        "Online",
+        "Revolution Canton Check-In",
+        "Revolution Jasper Check-In",
+        "Revolution Online Check-In",
+      ];
+
+      // Get all rows for this week/campus
+      const rows = await d
+        .select()
+        .from(attendanceWeekly)
+        .where(
+          and(
+            eq(attendanceWeekly.year, year),
+            eq(attendanceWeekly.weekNumber, weekNumber),
+            eq(attendanceWeekly.campus, campus)
+          )
+        );
+
+      // Update main service subgroups (not students)
+      let updatedCount = 0;
+      for (const row of rows) {
+        const isStudent = row.subgroup.startsWith("RevStudents") ||
+          row.subgroup.startsWith("Students");
+        if (isStudent) continue; // Don't cancel student rows
+
+        await d
+          .update(attendanceWeekly)
+          .set({ cancelled })
+          .where(eq(attendanceWeekly.id, row.id));
+        updatedCount++;
+      }
+
+      return {
+        success: true,
+        updatedCount,
+        year,
+        weekNumber,
+        campus,
+        cancelled,
+      };
+    }),
+
+  // Get list of cancelled weeks for display
+  getCancelledWeeks: publicProcedure
+    .input(z.object({
+      year: z.number().optional(),
+    }))
+    .query(async ({ input }) => {
+      const d = await db();
+      const conditions: any[] = [eq(attendanceWeekly.cancelled, true)];
+      if (input.year) {
+        conditions.push(eq(attendanceWeekly.year, input.year));
+      }
+
+      const rows = await d
+        .select({
+          year: attendanceWeekly.year,
+          weekNumber: attendanceWeekly.weekNumber,
+          weekStartDate: attendanceWeekly.weekStartDate,
+          campus: attendanceWeekly.campus,
+        })
+        .from(attendanceWeekly)
+        .where(and(...conditions))
+        .orderBy(desc(attendanceWeekly.year), desc(attendanceWeekly.weekNumber));
+
+      // Deduplicate by year-weekNumber-campus
+      const seen = new Set<string>();
+      const unique = rows.filter(r => {
+        const key = `${r.year}-${r.weekNumber}-${r.campus}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+      return unique;
+    }),
+});
+
+// ============================================================
 // Export combined router
 // ============================================================
 export const dataViewsRouter = router({
@@ -1431,4 +1532,5 @@ export const dataViewsRouter = router({
   serving: servingRouter,
   nextSteps: nextStepsRouter,
   compare: compareRouter,
+  admin: adminRouter,
 });
