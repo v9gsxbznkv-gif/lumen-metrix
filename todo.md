@@ -1515,3 +1515,9 @@
 - [x] 5 new vitest tests for cancelled weeks logic (163 total passing)
 - [x] Add admin ability to mark/unmark weeks as cancelled from Attendance table UI (inline Cancel/Restore toggle per row)
 - [x] Test and verify percentages correct after exclusion
+
+## Feature: Separate student cancelled toggle
+- [x] Allow students to be cancelled independently from main service (separate toggle)
+- [x] Update toggleCancelledWeek mutation to accept a `target` param: "main" or "students"
+- [x] Update frontend to show two toggle buttons per row when campus is selected (one for main, one for students)
+- [x] Ensure normalizeAttendanceRows handles student-only cancellation correctly (tracks mainCancelledKeys vs studentCancelledKeys separately)

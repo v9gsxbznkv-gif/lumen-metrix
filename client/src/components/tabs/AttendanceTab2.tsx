@@ -592,13 +592,18 @@ export default function AttendanceTab2() {
                   </TableHeader>
                   <TableBody>
                     {weeklyData.map((w) => (
-                      <TableRow key={`${w.year}-${w.weekNumber}`} className={w.cancelled ? "opacity-50 bg-muted/30" : ""}>
+                      <TableRow key={`${w.year}-${w.weekNumber}`} className={w.cancelled && w.studentsCancelled ? "opacity-50 bg-muted/30" : w.cancelled ? "opacity-70 bg-muted/20" : ""}>
                         <TableCell className="text-xs font-medium">
-                          <span className="flex items-center gap-1.5">
+                          <span className="flex items-center gap-1.5 flex-wrap">
                             {formatDate(w.weekStartDate)}
                             {w.cancelled && (
                               <span className="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
-                                Cancelled
+                                Service Off
+                              </span>
+                            )}
+                            {w.studentsCancelled && (
+                              <span className="inline-flex items-center rounded-full bg-purple-100 px-1.5 py-0.5 text-[10px] font-medium text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                                Students Off
                               </span>
                             )}
                           </span>
@@ -609,15 +614,30 @@ export default function AttendanceTab2() {
                           </TableCell>
                         ))}
                         <TableCell className="text-center">
-                          <CancelToggleButton
-                            year={w.year}
-                            weekNumber={w.weekNumber}
-                            campus={campus === "all" ? w.campus : campus}
-                            cancelled={!!w.cancelled}
-                            onSuccess={() => {
-                              utils.dataViews.attendance.getData.invalidate();
-                            }}
-                          />
+                          <div className="flex flex-col gap-1 items-center">
+                            <CancelToggleButton
+                              year={w.year}
+                              weekNumber={w.weekNumber}
+                              campus={campus === "all" ? w.campus : campus}
+                              cancelled={!!w.cancelled}
+                              target="main"
+                              label="Service"
+                              onSuccess={() => {
+                                utils.dataViews.attendance.getData.invalidate();
+                              }}
+                            />
+                            <CancelToggleButton
+                              year={w.year}
+                              weekNumber={w.weekNumber}
+                              campus={campus === "all" ? w.campus : campus}
+                              cancelled={!!w.studentsCancelled}
+                              target="students"
+                              label="Students"
+                              onSuccess={() => {
+                                utils.dataViews.attendance.getData.invalidate();
+                              }}
+                            />
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -930,18 +950,23 @@ function CancelToggleButton({
   weekNumber,
   campus,
   cancelled,
+  target,
+  label,
   onSuccess,
 }: {
   year: number;
   weekNumber: number;
   campus: string;
   cancelled: boolean;
+  target: "main" | "students";
+  label: string;
   onSuccess: () => void;
 }) {
   const toggleMutation = trpc.dataViews.admin.toggleCancelledWeek.useMutation({
     onSuccess: (data) => {
+      const targetLabel = data.target === "students" ? "Students" : "Service";
       toast.success(
-        data.cancelled ? "Week marked as cancelled" : "Week restored",
+        data.cancelled ? `${targetLabel} marked as cancelled` : `${targetLabel} restored`,
         { description: `${data.campus} Week ${data.weekNumber} (${data.year}) — ${data.updatedCount} rows updated` }
       );
       onSuccess();
@@ -958,12 +983,10 @@ function CancelToggleButton({
     <button
       onClick={() => {
         if (cancelled) {
-          // Restore
-          toggleMutation.mutate({ year, weekNumber, campus, cancelled: false });
+          toggleMutation.mutate({ year, weekNumber, campus, cancelled: false, target });
         } else {
-          // Cancel
-          if (confirm(`Mark ${campus} Week ${weekNumber} (${year}) as cancelled? This will exclude it from all averages and growth calculations.`)) {
-            toggleMutation.mutate({ year, weekNumber, campus, cancelled: true });
+          if (confirm(`Mark ${campus} ${label} Week ${weekNumber} (${year}) as cancelled? This will exclude it from averages.`)) {
+            toggleMutation.mutate({ year, weekNumber, campus, cancelled: true, target });
           }
         }
       }}
@@ -973,19 +996,19 @@ function CancelToggleButton({
           ? "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300"
           : "bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400"
       } ${toggleMutation.isPending ? "opacity-50 cursor-wait" : "cursor-pointer"}`}
-      title={cancelled ? "Restore this week" : "Mark as cancelled"}
+      title={cancelled ? `Restore ${label}` : `Cancel ${label}`}
     >
       {toggleMutation.isPending ? (
         <Loader2 className="w-3 h-3 animate-spin" />
       ) : cancelled ? (
         <>
           <RotateCcw className="w-3 h-3" />
-          Restore
+          {label}
         </>
       ) : (
         <>
           <Ban className="w-3 h-3" />
-          Cancel
+          {label}
         </>
       )}
     </button>

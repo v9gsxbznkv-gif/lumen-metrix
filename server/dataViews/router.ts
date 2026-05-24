@@ -146,6 +146,7 @@ interface NormalizedWeek {
   ftg: number;
   total: number; // adults + kids (Canton), adults + kids (Jasper), varies by campus
   cancelled: boolean; // true if main service was cancelled (only students data remains)
+  studentsCancelled: boolean; // true if students were cancelled independently
 }
 
 function emptyMetrics() {
@@ -162,17 +163,16 @@ function normalizeAttendanceRows(rows: any[]): NormalizedWeek[] {
     adults: number; kids: number; students: number; online: number;
     volunteers: number; youngAdults: number; ftg: number;
     cancelled: boolean;
+    studentsCancelled: boolean;
   }>();
 
-  // Track which year+weekNumber+campus combos are fully cancelled
-  // (all rows for that combo have cancelled=1). If ANY row is cancelled=0,
-  // the week is NOT fully cancelled (e.g. students still met).
-  const cancelledWeekKeys = new Set<string>();
-  const nonCancelledWeekKeys = new Set<string>();
+  // Track which year+weekNumber+campus combos have cancelled main-service or student rows
+  const mainCancelledKeys = new Set<string>();
+  const studentCancelledKeys = new Set<string>();
 
   // First pass: detect which week+campus combos have HS or MS data
   // to avoid double-counting with "RevStudents Attendance" (which is HS+MS combined)
-  // Also track cancelled state per week+campus
+  // Also track cancelled state per week+campus, split by main vs student
   const hasHsMsSet = new Set<string>();
   for (const row of rows) {
     const campus = row.campus === "Other" ? "Other" : row.campus;
@@ -180,11 +180,15 @@ function normalizeAttendanceRows(rows: any[]): NormalizedWeek[] {
     if (row.subgroup === "RevStudents HS" || row.subgroup === "RevStudents MS") {
       hasHsMsSet.add(weekKey);
     }
-    // Track cancelled state
+    // Track cancelled state by target type
+    const isStudent = row.subgroup.startsWith("RevStudents") ||
+      row.subgroup.startsWith("Students") || row.subgroup === "Students";
     if (row.cancelled) {
-      cancelledWeekKeys.add(weekKey);
-    } else {
-      nonCancelledWeekKeys.add(weekKey);
+      if (isStudent) {
+        studentCancelledKeys.add(weekKey);
+      } else {
+        mainCancelledKeys.add(weekKey);
+      }
     }
   }
 
@@ -208,12 +212,8 @@ function normalizeAttendanceRows(rows: any[]): NormalizedWeek[] {
 
     let entry = weekMap.get(key);
     if (!entry) {
-      // A week+campus is "cancelled" if it has cancelled rows but no non-cancelled
-      // rows OTHER than the ones we're currently processing (students).
-      // We determine this by checking: cancelledWeekKeys has it AND nonCancelledWeekKeys has it
-      // means some rows are not cancelled (students met). The week is "partially cancelled"
-      // which for display purposes we still mark as cancelled.
-      const isCancelled = cancelledWeekKeys.has(key);
+      const isCancelled = mainCancelledKeys.has(key);
+      const isStudentsCancelled = studentCancelledKeys.has(key);
       entry = {
         year: row.year,
         weekNumber: row.weekNumber,
@@ -221,6 +221,7 @@ function normalizeAttendanceRows(rows: any[]): NormalizedWeek[] {
         campus,
         ...emptyMetrics(),
         cancelled: isCancelled,
+        studentsCancelled: isStudentsCancelled,
       };
       weekMap.set(key, entry);
     }
@@ -241,7 +242,7 @@ function normalizeAttendanceRows(rows: any[]): NormalizedWeek[] {
   for (const entry of Array.from(weekMap.values())) {
     // Total = adults + kids (the main service attendance metric)
     const total = entry.adults + entry.kids;
-    results.push({ ...entry, total });
+    results.push({ ...entry, total, studentsCancelled: entry.studentsCancelled });
   }
 
   results.sort((a, b) => {
@@ -276,6 +277,7 @@ function filterByCampus(weeks: NormalizedWeek[], campus?: string): NormalizedWee
         existing.total += w.total;
         // If ANY campus for this week is cancelled, mark the aggregate as cancelled
         if (w.cancelled) existing.cancelled = true;
+        if (w.studentsCancelled) existing.studentsCancelled = true;
       } else {
         weekMap.set(key, { ...w, campus: "All Campuses" });
       }
@@ -1432,24 +1434,11 @@ const adminRouter = router({
       weekNumber: z.number(),
       campus: z.string(), // "Canton" or "Jasper"
       cancelled: z.boolean(), // true = mark as cancelled, false = unmark
+      target: z.enum(["main", "students"]).default("main"), // which group to toggle
     }))
     .mutation(async ({ input }) => {
-      const { year, weekNumber, campus, cancelled } = input;
+      const { year, weekNumber, campus, cancelled, target } = input;
       const d = await db();
-
-      // Update all attendance rows for this campus/week
-      // (Adults, Kids, Volunteers, FTG — but NOT students)
-      const MAIN_SERVICE_SUBGROUPS = [
-        "Adults",
-        "Kids",
-        "Volunteers",
-        "FTG Adults",
-        "FTG Kids",
-        "Online",
-        "Revolution Canton Check-In",
-        "Revolution Jasper Check-In",
-        "Revolution Online Check-In",
-      ];
 
       // Get all rows for this week/campus
       const rows = await d
@@ -1463,12 +1452,14 @@ const adminRouter = router({
           )
         );
 
-      // Update main service subgroups (not students)
+      // Determine which rows to update based on target
       let updatedCount = 0;
       for (const row of rows) {
         const isStudent = row.subgroup.startsWith("RevStudents") ||
           row.subgroup.startsWith("Students");
-        if (isStudent) continue; // Don't cancel student rows
+
+        if (target === "main" && isStudent) continue;
+        if (target === "students" && !isStudent) continue;
 
         await d
           .update(attendanceWeekly)
@@ -1484,6 +1475,7 @@ const adminRouter = router({
         weekNumber,
         campus,
         cancelled,
+        target,
       };
     }),
 
