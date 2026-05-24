@@ -394,6 +394,7 @@ export const attendanceWeekly = mysqlTable("attendance_weekly", {
   volunteerCount: int("volunteerCount").default(0).notNull(),
   source: varchar("source", { length: 32 }).default("pco").notNull(),
   manualLock: boolean("manualLock").default(false).notNull(), // true = skip during auto-sync
+  cancelled: boolean("cancelled").default(false).notNull(), // true = week was cancelled (excluded from averages/growth)
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (t) => ({
@@ -419,6 +420,7 @@ export const givingWeekly = mysqlTable("giving_weekly", {
   donationCount: int("donationCount").default(0).notNull(),
   source: varchar("source", { length: 32 }).default("pco").notNull(),
   manualLock: boolean("manualLock").default(false).notNull(), // true = skip during auto-sync
+  cancelled: boolean("cancelled").default(false).notNull(), // true = week was cancelled (excluded from averages/growth)
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (table) => ([

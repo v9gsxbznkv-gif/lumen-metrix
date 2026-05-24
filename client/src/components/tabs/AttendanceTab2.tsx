@@ -231,32 +231,33 @@ export default function AttendanceTab2() {
       latestEnd.setDate(latestEnd.getDate() + 6); // Saturday of that week
       const isCurrentWeekPartial = now >= latestStart && now <= latestEnd;
 
-      const currentWeek = (isCurrentWeekPartial && weeklyData.length > 1)
-        ? weeklyData[1]  // skip partial current week
-        : weeklyData[0]; // latest week is fully complete
+      // Find the most recent non-cancelled week as "current"
+      const nonCancelledWeeks = weeklyData.filter(w => !w.cancelled);
+      const currentWeek = (isCurrentWeekPartial && nonCancelledWeeks.length > 1)
+        ? nonCancelledWeeks[1]  // skip partial current week
+        : nonCancelledWeeks[0] || weeklyData[0]; // latest non-cancelled week
 
-      // For averages and comparisons, exclude partial current week if applicable
-      const fullWeeksForAvg = isCurrentWeekPartial && weeklyData.length > 1
-        ? weeklyData.slice(1)
-        : weeklyData;
-      const avgTotal = Math.round(
-        fullWeeksForAvg.reduce((s, w) => s + w.total, 0) / fullWeeksForAvg.length
-      );
+      // For averages and comparisons, exclude partial current week AND cancelled weeks
+      const fullWeeksForAvg = (isCurrentWeekPartial && nonCancelledWeeks.length > 1
+        ? nonCancelledWeeks.slice(1)
+        : nonCancelledWeeks);
+      const avgTotal = fullWeeksForAvg.length > 0
+        ? Math.round(fullWeeksForAvg.reduce((s, w) => s + w.total, 0) / fullWeeksForAvg.length)
+        : 0;
       const maxWeekNum = fullWeeksForAvg[0]?.weekNumber ?? 52;
 
-      // YTD comparison: prior year same weeks (1 to maxWeekNum)
-      const priorSamePeriod = priorYearWeeklyData.filter(w => w.weekNumber <= maxWeekNum);
+      // YTD comparison: prior year same weeks (1 to maxWeekNum), exclude cancelled
+      const priorNonCancelled = priorYearWeeklyData.filter(w => !w.cancelled);
+      const priorSamePeriod = priorNonCancelled.filter(w => w.weekNumber <= maxWeekNum);
       const priorAvg = priorSamePeriod.length > 0
         ? Math.round(priorSamePeriod.reduce((s: number, w: any) => s + w.total, 0) / priorSamePeriod.length)
         : 0;
 
-      // Highest and lowest weeks — exclude partial current week
-      const fullWeeks = isCurrentWeekPartial && weeklyData.length > 1
-        ? weeklyData.slice(1)
-        : weeklyData;
+      // Highest and lowest weeks — exclude partial current week AND cancelled weeks
+      const fullWeeks = fullWeeksForAvg;
       const sorted = [...fullWeeks].sort((a, b) => b.total - a.total);
-      const highest = sorted[0];
-      const lowest = sorted[sorted.length - 1];
+      const highest = sorted[0] || { total: 0, weekStartDate: '' };
+      const lowest = sorted[sorted.length - 1] || { total: 0, weekStartDate: '' };
 
       return {
         currentWeekTotal: currentWeek.total,
@@ -320,7 +321,8 @@ export default function AttendanceTab2() {
   // ─── Chart Data ───────────────────────────────────────────
   const chartData = useMemo(() => {
     if (viewMode === "weekly") {
-      return weeklyData.slice().reverse().map(w => ({
+      // Exclude cancelled weeks from chart to avoid misleading dips
+      return weeklyData.filter(w => !w.cancelled).slice().reverse().map(w => ({
         label: formatDate(w.weekStartDate),
         total: w.total,
         adults: w.adults,
@@ -587,8 +589,17 @@ export default function AttendanceTab2() {
                   </TableHeader>
                   <TableBody>
                     {weeklyData.map((w) => (
-                      <TableRow key={`${w.year}-${w.weekNumber}`}>
-                        <TableCell className="text-xs font-medium">{formatDate(w.weekStartDate)}</TableCell>
+                      <TableRow key={`${w.year}-${w.weekNumber}`} className={w.cancelled ? "opacity-50 bg-muted/30" : ""}>
+                        <TableCell className="text-xs font-medium">
+                          <span className="flex items-center gap-1.5">
+                            {formatDate(w.weekStartDate)}
+                            {w.cancelled && (
+                              <span className="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                                Cancelled
+                              </span>
+                            )}
+                          </span>
+                        </TableCell>
                         {activeMetrics.map(m => (
                           <TableCell key={m.key} className={`text-xs text-right font-mono ${m.key === "total" ? "font-semibold" : ""}`}>
                             {w[m.key] > 0 ? formatNumber(w[m.key]) : "—"}
@@ -602,7 +613,9 @@ export default function AttendanceTab2() {
                       <TableRow>
                         <TableCell className="text-xs font-semibold">Average</TableCell>
                         {activeMetrics.map(m => {
-                          const vals = weeklyData.filter(w => w[m.key] > 0).map(w => w[m.key]);
+                          // Exclude cancelled weeks from the average calculation
+                          const nonCancelledWeeks = weeklyData.filter(w => !w.cancelled);
+                          const vals = nonCancelledWeeks.filter(w => w[m.key] > 0).map(w => w[m.key]);
                           const avg = vals.length > 0 ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length) : 0;
                           return (
                             <TableCell key={m.key} className={`text-xs text-right font-mono ${m.key === "total" ? "font-semibold" : ""}`}>

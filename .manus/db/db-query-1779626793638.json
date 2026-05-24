@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE giving_weekly SET cancelled = 0 WHERE year = 2026 AND weekNumber IN (4, 5);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute UPDATE giving_weekly SET cancelled = 0 WHERE year = 2026 AND weekNumber IN (4, 5);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 263
+}

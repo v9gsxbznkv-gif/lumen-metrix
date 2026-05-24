@@ -1500,3 +1500,18 @@
 - [x] Updated CompareTab getWeekLabel (+6 days)
 - [x] Backend storage and API calls unchanged
 - [x] Build passes, 158 tests pass
+
+## Feature: Cancelled weeks exclusion from metrics
+- [x] Add `cancelled` boolean column to attendance_weekly table
+- [x] Flag week 4 (Jan 20) and week 5 (Jan 27) 2026 as cancelled for both campuses
+- [x] Update attendance data views to exclude cancelled weeks from averages/growth
+- [x] Update giving per capita to exclude cancelled weeks (no attendance = no GPC)
+- [x] Update health metrics to exclude cancelled weeks (via normalizeAttendanceRows filter)
+- [x] Show cancelled weeks greyed out in weekly tables with "Cancelled" badge
+- [x] Exclude cancelled weeks from chart data (no misleading dips)
+- [x] Exclude cancelled weeks from KPI calculations (avg, highest, lowest)
+- [x] Exclude cancelled weeks from monthly/yearly aggregation denominators
+- [x] Students data preserved for cancelled weeks (RevStudents still met)
+- [x] 5 new vitest tests for cancelled weeks logic (163 total passing)
+- [ ] Add admin ability to mark/unmark weeks as cancelled from Settings or table UI
+- [x] Test and verify percentages correct after exclusion

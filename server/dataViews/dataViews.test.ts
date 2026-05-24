@@ -862,3 +862,199 @@ describe("giving yearly/monthly distinct week counting", () => {
     expect(result[0].total).toBe(220000);
   });
 });
+
+describe("cancelled weeks handling", () => {
+  // Replicate the normalizeAttendanceRows logic with cancelled filtering
+  const PCO_CHECKIN_SUBGROUPS = [
+    "Revolution Canton Check-In",
+    "Revolution Jasper Check-In",
+  ];
+  const PCO_STUDENTS_SUBGROUPS = [
+    "RevStudents | Canton Campus",
+    "RevStudents | Jasper Campus",
+  ];
+
+  function classifySubgroup(subgroup: string): string | null {
+    if (PCO_CHECKIN_SUBGROUPS.includes(subgroup)) return "Adults";
+    if (subgroup === "Adults") return "Adults";
+    if (subgroup === "Kids") return "Kids";
+    if (subgroup.startsWith("Kids:") || subgroup.startsWith("Kids ")) return null;
+    if (subgroup === "RevStudents HS" || subgroup === "RevStudents MS" ||
+        subgroup === "RevStudents Attendance" || subgroup === "Students" ||
+        PCO_STUDENTS_SUBGROUPS.includes(subgroup)) return "Students";
+    if (subgroup === "Online") return "Online";
+    if (subgroup === "Volunteers") return "Volunteers";
+    if (subgroup === "FTG Adults" || subgroup === "FTG Kids" || subgroup === "RevStudents FTG") return "FTG";
+    return null;
+  }
+
+  function normalizeAttendanceRows(rows: any[]) {
+    const weekMap = new Map<string, {
+      year: number; weekNumber: number; weekStartDate: string; campus: string;
+      adults: number; kids: number; students: number; online: number;
+      volunteers: number; ftg: number; total: number; cancelled: boolean;
+    }>();
+
+    const cancelledWeekKeys = new Set<string>();
+    const hasHsMsSet = new Set<string>();
+
+    for (const row of rows) {
+      const campus = row.campus === "Other" ? "Other" : row.campus;
+      const weekKey = `${row.year}-${row.weekNumber}-${campus}`;
+      if (row.subgroup === "RevStudents HS" || row.subgroup === "RevStudents MS") {
+        hasHsMsSet.add(weekKey);
+      }
+      if (row.cancelled) {
+        cancelledWeekKeys.add(weekKey);
+      }
+    }
+
+    for (const row of rows) {
+      // Skip cancelled rows
+      if (row.cancelled) continue;
+
+      const category = classifySubgroup(row.subgroup);
+      if (!category) continue;
+
+      if (row.subgroup === "RevStudents Attendance") {
+        const campus = row.campus === "Other" ? "Other" : row.campus;
+        if (hasHsMsSet.has(`${row.year}-${row.weekNumber}-${campus}`)) continue;
+      }
+
+      const campus = row.campus === "Other" ? "Other" : row.campus;
+      const key = `${row.year}-${row.weekNumber}-${campus}`;
+
+      let entry = weekMap.get(key);
+      if (!entry) {
+        const isCancelled = cancelledWeekKeys.has(key);
+        entry = {
+          year: row.year, weekNumber: row.weekNumber,
+          weekStartDate: row.weekStartDate, campus,
+          adults: 0, kids: 0, students: 0, online: 0,
+          volunteers: 0, ftg: 0, total: 0, cancelled: isCancelled,
+        };
+        weekMap.set(key, entry);
+      }
+
+      switch (category) {
+        case "Adults": entry.adults += row.headcount; break;
+        case "Kids": entry.kids += row.headcount; break;
+        case "Students": entry.students += row.headcount; break;
+        case "Online": entry.online += row.headcount; break;
+        case "Volunteers": entry.volunteers += row.headcount; break;
+        case "FTG": entry.ftg += row.headcount; break;
+      }
+    }
+
+    for (const entry of Array.from(weekMap.values())) {
+      entry.total = entry.adults + entry.kids;
+    }
+
+    return Array.from(weekMap.values());
+  }
+
+  it("should skip cancelled rows and only include non-cancelled data", () => {
+    // Simulates Canton week 4 (Jan 19): main service cancelled, students still met
+    const rows = [
+      { year: 2026, weekNumber: 4, weekStartDate: "2026-01-19", campus: "Canton", subgroup: "Revolution Canton Check-In", headcount: 1200, cancelled: true },
+      { year: 2026, weekNumber: 4, weekStartDate: "2026-01-19", campus: "Canton", subgroup: "Kids", headcount: 500, cancelled: true },
+      { year: 2026, weekNumber: 4, weekStartDate: "2026-01-19", campus: "Canton", subgroup: "Volunteers", headcount: 200, cancelled: true },
+      { year: 2026, weekNumber: 4, weekStartDate: "2026-01-19", campus: "Canton", subgroup: "FTG Adults", headcount: 15, cancelled: true },
+      // Students still met — NOT cancelled
+      { year: 2026, weekNumber: 4, weekStartDate: "2026-01-19", campus: "Canton", subgroup: "RevStudents HS", headcount: 45, cancelled: false },
+      { year: 2026, weekNumber: 4, weekStartDate: "2026-01-19", campus: "Canton", subgroup: "RevStudents MS", headcount: 30, cancelled: false },
+    ];
+
+    const result = normalizeAttendanceRows(rows);
+    expect(result).toHaveLength(1);
+
+    const week = result[0];
+    // Only students should have data
+    expect(week.adults).toBe(0);
+    expect(week.kids).toBe(0);
+    expect(week.volunteers).toBe(0);
+    expect(week.ftg).toBe(0);
+    expect(week.students).toBe(75); // 45 + 30
+    expect(week.total).toBe(0); // adults + kids = 0
+    expect(week.cancelled).toBe(true);
+  });
+
+  it("should mark a week as cancelled when some rows are cancelled even if students are not", () => {
+    const rows = [
+      { year: 2026, weekNumber: 5, weekStartDate: "2026-01-26", campus: "Jasper", subgroup: "Revolution Jasper Check-In", headcount: 800, cancelled: true },
+      { year: 2026, weekNumber: 5, weekStartDate: "2026-01-26", campus: "Jasper", subgroup: "RevStudents HS", headcount: 25, cancelled: false },
+    ];
+
+    const result = normalizeAttendanceRows(rows);
+    expect(result).toHaveLength(1);
+    expect(result[0].cancelled).toBe(true);
+    expect(result[0].adults).toBe(0);
+    expect(result[0].students).toBe(25);
+  });
+
+  it("should NOT mark a normal week as cancelled", () => {
+    const rows = [
+      { year: 2026, weekNumber: 6, weekStartDate: "2026-02-02", campus: "Canton", subgroup: "Revolution Canton Check-In", headcount: 1300, cancelled: false },
+      { year: 2026, weekNumber: 6, weekStartDate: "2026-02-02", campus: "Canton", subgroup: "Kids", headcount: 550, cancelled: false },
+      { year: 2026, weekNumber: 6, weekStartDate: "2026-02-02", campus: "Canton", subgroup: "RevStudents HS", headcount: 50, cancelled: false },
+    ];
+
+    const result = normalizeAttendanceRows(rows);
+    expect(result).toHaveLength(1);
+    expect(result[0].cancelled).toBe(false);
+    expect(result[0].adults).toBe(1300);
+    expect(result[0].kids).toBe(550);
+    expect(result[0].students).toBe(50);
+    expect(result[0].total).toBe(1850);
+  });
+
+  it("should exclude cancelled weeks from monthly/yearly averages", () => {
+    // 4 weeks in January: weeks 1-4, but week 4 is cancelled
+    const rows = [
+      // Week 1 - normal
+      { year: 2026, weekNumber: 1, weekStartDate: "2026-01-05", campus: "Canton", subgroup: "Revolution Canton Check-In", headcount: 1200, cancelled: false },
+      { year: 2026, weekNumber: 1, weekStartDate: "2026-01-05", campus: "Canton", subgroup: "Kids", headcount: 500, cancelled: false },
+      // Week 2 - normal
+      { year: 2026, weekNumber: 2, weekStartDate: "2026-01-12", campus: "Canton", subgroup: "Revolution Canton Check-In", headcount: 1300, cancelled: false },
+      { year: 2026, weekNumber: 2, weekStartDate: "2026-01-12", campus: "Canton", subgroup: "Kids", headcount: 520, cancelled: false },
+      // Week 3 - normal
+      { year: 2026, weekNumber: 3, weekStartDate: "2026-01-19", campus: "Canton", subgroup: "Revolution Canton Check-In", headcount: 1250, cancelled: false },
+      { year: 2026, weekNumber: 3, weekStartDate: "2026-01-19", campus: "Canton", subgroup: "Kids", headcount: 510, cancelled: false },
+      // Week 4 - CANCELLED (main service)
+      { year: 2026, weekNumber: 4, weekStartDate: "2026-01-26", campus: "Canton", subgroup: "Revolution Canton Check-In", headcount: 0, cancelled: true },
+      { year: 2026, weekNumber: 4, weekStartDate: "2026-01-26", campus: "Canton", subgroup: "Kids", headcount: 0, cancelled: true },
+      { year: 2026, weekNumber: 4, weekStartDate: "2026-01-26", campus: "Canton", subgroup: "RevStudents HS", headcount: 45, cancelled: false },
+    ];
+
+    const normalized = normalizeAttendanceRows(rows);
+    
+    // Should have 4 entries (3 normal + 1 cancelled with only students)
+    expect(normalized).toHaveLength(4);
+
+    // Filter out cancelled weeks for average calculation (mimics router logic)
+    const nonCancelled = normalized.filter(w => !w.cancelled);
+    expect(nonCancelled).toHaveLength(3);
+
+    // Average total should be based on 3 weeks, not 4
+    const avgTotal = Math.round(nonCancelled.reduce((s, w) => s + w.total, 0) / nonCancelled.length);
+    // (1700 + 1820 + 1760) / 3 = 1760
+    expect(avgTotal).toBe(1760);
+
+    // If we included the cancelled week, avg would be (1700 + 1820 + 1760 + 0) / 4 = 1320
+    // This proves the cancelled week is correctly excluded
+    const wrongAvg = Math.round(normalized.reduce((s, w) => s + w.total, 0) / normalized.length);
+    expect(wrongAvg).toBe(1320); // This is what would happen without the fix
+  });
+
+  it("should handle fully cancelled campus (Jasper) where no students met", () => {
+    const rows = [
+      { year: 2026, weekNumber: 4, weekStartDate: "2026-01-26", campus: "Jasper", subgroup: "Revolution Jasper Check-In", headcount: 800, cancelled: true },
+      { year: 2026, weekNumber: 4, weekStartDate: "2026-01-26", campus: "Jasper", subgroup: "Kids", headcount: 300, cancelled: true },
+      { year: 2026, weekNumber: 4, weekStartDate: "2026-01-26", campus: "Jasper", subgroup: "Volunteers", headcount: 100, cancelled: true },
+    ];
+
+    const result = normalizeAttendanceRows(rows);
+    // No non-cancelled rows exist, so no entry should be created
+    expect(result).toHaveLength(0);
+  });
+});

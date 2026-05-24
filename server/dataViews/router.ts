@@ -145,6 +145,7 @@ interface NormalizedWeek {
   youngAdults: number;
   ftg: number;
   total: number; // adults + kids (Canton), adults + kids (Jasper), varies by campus
+  cancelled: boolean; // true if main service was cancelled (only students data remains)
 }
 
 function emptyMetrics() {
@@ -160,19 +161,36 @@ function normalizeAttendanceRows(rows: any[]): NormalizedWeek[] {
     year: number; weekNumber: number; weekStartDate: string; campus: string;
     adults: number; kids: number; students: number; online: number;
     volunteers: number; youngAdults: number; ftg: number;
+    cancelled: boolean;
   }>();
+
+  // Track which year+weekNumber+campus combos are fully cancelled
+  // (all rows for that combo have cancelled=1). If ANY row is cancelled=0,
+  // the week is NOT fully cancelled (e.g. students still met).
+  const cancelledWeekKeys = new Set<string>();
+  const nonCancelledWeekKeys = new Set<string>();
 
   // First pass: detect which week+campus combos have HS or MS data
   // to avoid double-counting with "RevStudents Attendance" (which is HS+MS combined)
+  // Also track cancelled state per week+campus
   const hasHsMsSet = new Set<string>();
   for (const row of rows) {
+    const campus = row.campus === "Other" ? "Other" : row.campus;
+    const weekKey = `${row.year}-${row.weekNumber}-${campus}`;
     if (row.subgroup === "RevStudents HS" || row.subgroup === "RevStudents MS") {
-      const campus = row.campus === "Other" ? "Other" : row.campus;
-      hasHsMsSet.add(`${row.year}-${row.weekNumber}-${campus}`);
+      hasHsMsSet.add(weekKey);
+    }
+    // Track cancelled state
+    if (row.cancelled) {
+      cancelledWeekKeys.add(weekKey);
+    } else {
+      nonCancelledWeekKeys.add(weekKey);
     }
   }
 
   for (const row of rows) {
+    // Skip cancelled rows — they should not contribute to any metrics
+    if (row.cancelled) continue;
     const category = classifySubgroup(row.subgroup);
     if (!category) continue; // skip unrecognized
 
@@ -190,12 +208,19 @@ function normalizeAttendanceRows(rows: any[]): NormalizedWeek[] {
 
     let entry = weekMap.get(key);
     if (!entry) {
+      // A week+campus is "cancelled" if it has cancelled rows but no non-cancelled
+      // rows OTHER than the ones we're currently processing (students).
+      // We determine this by checking: cancelledWeekKeys has it AND nonCancelledWeekKeys has it
+      // means some rows are not cancelled (students met). The week is "partially cancelled"
+      // which for display purposes we still mark as cancelled.
+      const isCancelled = cancelledWeekKeys.has(key);
       entry = {
         year: row.year,
         weekNumber: row.weekNumber,
         weekStartDate: row.weekStartDate,
         campus,
         ...emptyMetrics(),
+        cancelled: isCancelled,
       };
       weekMap.set(key, entry);
     }
@@ -249,6 +274,8 @@ function filterByCampus(weeks: NormalizedWeek[], campus?: string): NormalizedWee
         existing.youngAdults += w.youngAdults;
         existing.ftg += w.ftg;
         existing.total += w.total;
+        // If ANY campus for this week is cancelled, mark the aggregate as cancelled
+        if (w.cancelled) existing.cancelled = true;
       } else {
         weekMap.set(key, { ...w, campus: "All Campuses" });
       }
@@ -333,6 +360,10 @@ const attendanceRouter = router({
         const monthly = new Map<string, NormalizedWeek & { weekCount: number }>();
 
         for (const w of filtered) {
+          // Skip cancelled weeks from monthly aggregation entirely
+          // (their main service data is already zeroed out; only students remain
+          //  which would distort the average if counted as a "week")
+          if (w.cancelled) continue;
           const month = getMonthFromDate(w.weekStartDate);
           const key = `${w.year}-${month}`;
           const existing = monthly.get(key);
@@ -379,6 +410,8 @@ const attendanceRouter = router({
       const yearly = new Map<string, NormalizedWeek & { weekCount: number }>();
 
       for (const w of filtered) {
+        // Skip cancelled weeks from yearly aggregation (same logic as monthly)
+        if (w.cancelled) continue;
         const key = `${w.year}`;
         const existing = yearly.get(key);
         if (existing) {
@@ -465,8 +498,8 @@ const attendanceRouter = router({
         .where(and(...conditions))
         .orderBy(asc(attendanceWeekly.weekNumber));
 
-      // Filter to only "Kids: *" subgroups (room-level)
-      const kidsRows = rows.filter(r => r.subgroup.startsWith("Kids: "));
+      // Filter to only "Kids: *" subgroups (room-level) and exclude cancelled rows
+      const kidsRows = rows.filter(r => r.subgroup.startsWith("Kids: ") && !r.cancelled);
 
       // Group by subgroup → compute average
       const subgroupMap = new Map<string, { total: number; weeks: number; campus: string }>(); 
@@ -533,14 +566,15 @@ const attendanceRouter = router({
 
       // Filter to "Students: *" subgroups (spreadsheet format) AND
       // "RevStudents MS"/"RevStudents HS" (PCO format)
+      // Note: student rows are NOT cancelled in DB (students still met), so no filter needed here
       const studentRows = rows.filter(r =>
-        r.subgroup.startsWith("Students: ") ||
+        (r.subgroup.startsWith("Students: ") ||
         r.subgroup === "RevStudents MS" ||
-        r.subgroup === "RevStudents HS"
+        r.subgroup === "RevStudents HS") && !r.cancelled
       );
 
-      // Also get aggregate "Students" rows for comparison
-      const aggStudentRows = rows.filter(r => r.subgroup === "Students" || r.subgroup === "RevStudents Attendance");
+      // Also get aggregate "Students" rows for comparison (exclude cancelled)
+      const aggStudentRows = rows.filter(r => (r.subgroup === "Students" || r.subgroup === "RevStudents Attendance") && !r.cancelled);
 
       // Normalize subgroup names to a consistent key: "{campus}|{level}"
       // "Students: Canton MS" → "Canton|Middle School"
@@ -840,8 +874,10 @@ const givingRouter = router({
       const filteredAtt = filterByCampus(normalizedAtt, campus);
 
       // Build attendance lookup: year-weekNumber -> total
+      // Skip cancelled weeks — they have no main service attendance so GPC is meaningless
       const attMap = new Map<string, number>();
       for (const w of filteredAtt) {
+        if (w.cancelled) continue;
         const key = `${w.year}-${w.weekNumber}`;
         attMap.set(key, (attMap.get(key) || 0) + w.total);
       }

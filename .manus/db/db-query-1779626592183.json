@@ -1,0 +1,52 @@
+{
+  "query": "UPDATE giving_weekly SET cancelled = 1 WHERE year = 2026 AND weekNumber IN (4, 5) AND campus IN ('Canton', 'Jasper');\nSELECT campus, weekNumber, weekStartDate, cancelled, total FROM giving_weekly WHERE year = 2026 AND weekNumber IN (4, 5);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute UPDATE giving_weekly SET cancelled = 1 WHERE year = 2026 AND weekNumber IN (4, 5) AND campus IN ('Canton', 'Jasper');\nSELECT campus, weekNumber, weekStartDate, cancelled, total FROM giving_weekly WHERE year = 2026 AND weekNumber IN (4, 5);",
+  "rows": [
+    {
+      "campus": "Canton",
+      "weekNumber": "4",
+      "weekStartDate": "2026-01-19",
+      "cancelled": "1",
+      "total": "180613.75"
+    },
+    {
+      "campus": "Jasper",
+      "weekNumber": "4",
+      "weekStartDate": "2026-01-19",
+      "cancelled": "1",
+      "total": "12700.15"
+    },
+    {
+      "campus": "All Campuses",
+      "weekNumber": "4",
+      "weekStartDate": "2026-01-19",
+      "cancelled": "0",
+      "total": "1269.56"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "5",
+      "weekStartDate": "2026-01-26",
+      "cancelled": "1",
+      "total": "200303.16"
+    },
+    {
+      "campus": "Jasper",
+      "weekNumber": "5",
+      "weekStartDate": "2026-01-26",
+      "cancelled": "1",
+      "total": "33721.61"
+    },
+    {
+      "campus": "All Campuses",
+      "weekNumber": "5",
+      "weekStartDate": "2026-01-26",
+      "cancelled": "0",
+      "total": "1006.04"
+    }
+  ],
+  "messages": [],
+  "stdout": "campus\tweekNumber\tweekStartDate\tcancelled\ttotal\nCanton\t4\t2026-01-19\t1\t180613.75\nJasper\t4\t2026-01-19\t1\t12700.15\nAll Campuses\t4\t2026-01-19\t0\t1269.56\nCanton\t5\t2026-01-26\t1\t200303.16\nJasper\t5\t2026-01-26\t1\t33721.61\nAll Campuses\t5\t2026-01-26\t0\t1006.04\n",
+  "stderr": "",
+  "execution_time_ms": 283
+}

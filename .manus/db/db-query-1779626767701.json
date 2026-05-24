@@ -1,0 +1,214 @@
+{
+  "query": "SELECT campus, weekNumber, subgroup, headcount FROM attendance_weekly WHERE year = 2026 AND weekNumber IN (4, 5) ORDER BY campus, weekNumber, subgroup;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT campus, weekNumber, subgroup, headcount FROM attendance_weekly WHERE year = 2026 AND weekNumber IN (4, 5) ORDER BY campus, weekNumber, subgroup;",
+  "rows": [
+    {
+      "campus": "Canton",
+      "weekNumber": "4",
+      "subgroup": "FTG Adults",
+      "headcount": "3"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "4",
+      "subgroup": "Kids",
+      "headcount": "65"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "4",
+      "subgroup": "Kids: Canton Elementary",
+      "headcount": "34"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "4",
+      "subgroup": "Kids: Canton Nursery",
+      "headcount": "7"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "4",
+      "subgroup": "Kids: Canton Toddlers",
+      "headcount": "13"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "4",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "366"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "4",
+      "subgroup": "RevStudents Attendance",
+      "headcount": "428"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "4",
+      "subgroup": "RevStudents HS",
+      "headcount": "177"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "4",
+      "subgroup": "RevStudents MS",
+      "headcount": "251"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "4",
+      "subgroup": "Volunteer Check-Ins",
+      "headcount": "94"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "4",
+      "subgroup": "Volunteers",
+      "headcount": "457"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "5",
+      "subgroup": "FTG Adults",
+      "headcount": "1"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "5",
+      "subgroup": "Kids",
+      "headcount": "56"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "5",
+      "subgroup": "Kids: Canton Elementary",
+      "headcount": "23"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "5",
+      "subgroup": "Kids: Canton Nursery",
+      "headcount": "6"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "5",
+      "subgroup": "Kids: Canton Toddlers",
+      "headcount": "7"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "5",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "439"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "5",
+      "subgroup": "RevStudents Attendance",
+      "headcount": "389"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "5",
+      "subgroup": "RevStudents HS",
+      "headcount": "144"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "5",
+      "subgroup": "RevStudents MS",
+      "headcount": "245"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "5",
+      "subgroup": "RevStudents Salvations",
+      "headcount": "1"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "5",
+      "subgroup": "Volunteer Check-Ins",
+      "headcount": "65"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "5",
+      "subgroup": "Volunteers",
+      "headcount": "459"
+    },
+    {
+      "campus": "Jasper",
+      "weekNumber": "4",
+      "subgroup": "RevStudents Attendance",
+      "headcount": "69"
+    },
+    {
+      "campus": "Jasper",
+      "weekNumber": "4",
+      "subgroup": "RevStudents FTG",
+      "headcount": "2"
+    },
+    {
+      "campus": "Jasper",
+      "weekNumber": "4",
+      "subgroup": "RevStudents HS",
+      "headcount": "37"
+    },
+    {
+      "campus": "Jasper",
+      "weekNumber": "4",
+      "subgroup": "RevStudents MS",
+      "headcount": "33"
+    },
+    {
+      "campus": "Jasper",
+      "weekNumber": "4",
+      "subgroup": "Volunteers",
+      "headcount": "148"
+    },
+    {
+      "campus": "Jasper",
+      "weekNumber": "5",
+      "subgroup": "RevStudents Attendance",
+      "headcount": "83"
+    },
+    {
+      "campus": "Jasper",
+      "weekNumber": "5",
+      "subgroup": "RevStudents FTG",
+      "headcount": "3"
+    },
+    {
+      "campus": "Jasper",
+      "weekNumber": "5",
+      "subgroup": "RevStudents HS",
+      "headcount": "47"
+    },
+    {
+      "campus": "Jasper",
+      "weekNumber": "5",
+      "subgroup": "RevStudents MS",
+      "headcount": "36"
+    },
+    {
+      "campus": "Jasper",
+      "weekNumber": "5",
+      "subgroup": "RevStudents Salvations",
+      "headcount": "1"
+    },
+    {
+      "campus": "Jasper",
+      "weekNumber": "5",
+      "subgroup": "Volunteers",
+      "headcount": "169"
+    }
+  ],
+  "messages": [],
+  "stdout": "campus\tweekNumber\tsubgroup\theadcount\nCanton\t4\tFTG Adults\t3\nCanton\t4\tKids\t65\nCanton\t4\tKids: Canton Elementary\t34\nCanton\t4\tKids: Canton Nursery\t7\nCanton\t4\tKids: Canton Toddlers\t13\nCanton\t4\tRevolution Canton Check-In\t366\nCanton\t4\tRevStudents Attendance\t428\nCanton\t4\tRevStudents HS\t177\nCanton\t4\tRevStudents MS\t251\nCanton\t4\tVolunteer Check-Ins\t94\nCanton\t4\tVolunteers\t457\nCanton\t5\tFTG Adults\t1\nCanton\t5\tKids\t56\nCanton\t5\tKids: Canton Elementary\t23\nCanton\t5\tKids: Canton Nursery\t6\nCanton\t5\tKids: Canton Toddlers\t7\nCanton\t5\tRevolution Canton Check-In\t439\nCanton\t5\tRevStudents Attendance\t389\nCanton\t5\tRevStudents HS\t144\nCanton\t5\tRevStudents MS\t245\nCanton\t5\tRevStudents Salvations\t1\nCanton\t5\tVolunteer Check-Ins\t65\nCanton\t5\tVolunteers\t459\nJasper\t4\tRevStudents Attendance\t69\nJasper\t4\tRevStudents FTG\t2\nJasper\t4\tRevStudents HS\t37\nJasper\t4\tRevStudents MS\t33\nJasper\t4\tVolunteers\t148\nJasper\t5\tRevStudents Attendance\t83\nJasper\t5\tRevStudents FTG\t3\nJasper\t5\tRevStudents HS\t47\nJasper\t5\tRevStudents MS\t36\nJasper\t5\tRevStudents Salvations\t1\nJasper\t5\tVolunteers\t169\n",
+  "stderr": "",
+  "execution_time_ms": 263
+}

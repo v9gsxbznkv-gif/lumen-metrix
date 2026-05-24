@@ -1,0 +1,122 @@
+{
+  "query": "UPDATE attendance_weekly SET cancelled = 0 WHERE year = 2026 AND weekNumber IN (4, 5) AND subgroup LIKE '%Student%';\nSELECT campus, weekNumber, subgroup, headcount, cancelled FROM attendance_weekly WHERE year = 2026 AND weekNumber IN (4, 5) AND subgroup LIKE '%Student%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute UPDATE attendance_weekly SET cancelled = 0 WHERE year = 2026 AND weekNumber IN (4, 5) AND subgroup LIKE '%Student%';\nSELECT campus, weekNumber, subgroup, headcount, cancelled FROM attendance_weekly WHERE year = 2026 AND weekNumber IN (4, 5) AND subgroup LIKE '%Student%';",
+  "rows": [
+    {
+      "campus": "Canton",
+      "weekNumber": "5",
+      "subgroup": "RevStudents HS",
+      "headcount": "144",
+      "cancelled": "0"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "5",
+      "subgroup": "RevStudents MS",
+      "headcount": "245",
+      "cancelled": "0"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "5",
+      "subgroup": "RevStudents Attendance",
+      "headcount": "389",
+      "cancelled": "0"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "5",
+      "subgroup": "RevStudents Salvations",
+      "headcount": "1",
+      "cancelled": "0"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "4",
+      "subgroup": "RevStudents MS",
+      "headcount": "251",
+      "cancelled": "0"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "4",
+      "subgroup": "RevStudents HS",
+      "headcount": "177",
+      "cancelled": "0"
+    },
+    {
+      "campus": "Canton",
+      "weekNumber": "4",
+      "subgroup": "RevStudents Attendance",
+      "headcount": "428",
+      "cancelled": "0"
+    },
+    {
+      "campus": "Jasper",
+      "weekNumber": "5",
+      "subgroup": "RevStudents Attendance",
+      "headcount": "83",
+      "cancelled": "0"
+    },
+    {
+      "campus": "Jasper",
+      "weekNumber": "5",
+      "subgroup": "RevStudents Salvations",
+      "headcount": "1",
+      "cancelled": "0"
+    },
+    {
+      "campus": "Jasper",
+      "weekNumber": "5",
+      "subgroup": "RevStudents MS",
+      "headcount": "36",
+      "cancelled": "0"
+    },
+    {
+      "campus": "Jasper",
+      "weekNumber": "5",
+      "subgroup": "RevStudents HS",
+      "headcount": "47",
+      "cancelled": "0"
+    },
+    {
+      "campus": "Jasper",
+      "weekNumber": "5",
+      "subgroup": "RevStudents FTG",
+      "headcount": "3",
+      "cancelled": "0"
+    },
+    {
+      "campus": "Jasper",
+      "weekNumber": "4",
+      "subgroup": "RevStudents Attendance",
+      "headcount": "69",
+      "cancelled": "0"
+    },
+    {
+      "campus": "Jasper",
+      "weekNumber": "4",
+      "subgroup": "RevStudents FTG",
+      "headcount": "2",
+      "cancelled": "0"
+    },
+    {
+      "campus": "Jasper",
+      "weekNumber": "4",
+      "subgroup": "RevStudents HS",
+      "headcount": "37",
+      "cancelled": "0"
+    },
+    {
+      "campus": "Jasper",
+      "weekNumber": "4",
+      "subgroup": "RevStudents MS",
+      "headcount": "33",
+      "cancelled": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "campus\tweekNumber\tsubgroup\theadcount\tcancelled\nCanton\t5\tRevStudents HS\t144\t0\nCanton\t5\tRevStudents MS\t245\t0\nCanton\t5\tRevStudents Attendance\t389\t0\nCanton\t5\tRevStudents Salvations\t1\t0\nCanton\t4\tRevStudents MS\t251\t0\nCanton\t4\tRevStudents HS\t177\t0\nCanton\t4\tRevStudents Attendance\t428\t0\nJasper\t5\tRevStudents Attendance\t83\t0\nJasper\t5\tRevStudents Salvations\t1\t0\nJasper\t5\tRevStudents MS\t36\t0\nJasper\t5\tRevStudents HS\t47\t0\nJasper\t5\tRevStudents FTG\t3\t0\nJasper\t4\tRevStudents Attendance\t69\t0\nJasper\t4\tRevStudents FTG\t2\t0\nJasper\t4\tRevStudents HS\t37\t0\nJasper\t4\tRevStudents MS\t33\t0\n",
+  "stderr": "",
+  "execution_time_ms": 382
+}
