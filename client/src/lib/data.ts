@@ -867,11 +867,16 @@ export function getAvgAttendanceFromWeekly(
   campus: string,
   subgroup: string
 ): number {
+  // Exclude partial current week for the current year (same as server-side)
+  const currentYear = new Date().getFullYear();
+  const weekCap = year === currentYear ? getLastCompleteISOWeek() : 52;
+
   // Filter relevant rows — match BOTH old spreadsheet and new PCO subgroup names
   // Also exclude cancelled rows
   const rows = data.attendance_weekly.filter((r) => {
     if (r.cancelled) return false; // Skip cancelled rows
     if (r.year !== year) return false;
+    if (r.weekNumber > weekCap) return false; // Exclude current incomplete week
     if (campus !== "All Campuses" && r.campus !== campus) return false;
     if (subgroup === "Total") {
       // Total = Adults + Kids (aggregate only, not Kids: detail rows)

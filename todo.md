@@ -1529,3 +1529,6 @@
 - [x] Fix GPC attendance lookup to exclude cancelled rows
 - [x] Add cancelled field to server→frontend data pipeline (PCO router + data.ts interfaces)
 - [x] Verify build passes and 163 tests pass
+
+## Bug Fix: Dashboard vs Attendance tab yearly avg mismatch
+- [x] Add weekCap filter to getAvgAttendanceFromWeekly (excludes current incomplete week, matching server-side behavior)
