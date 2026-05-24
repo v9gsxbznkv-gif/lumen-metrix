@@ -1017,8 +1017,13 @@ export function getAvgServingFromWeekly(
   year: number,
   campus: string
 ): number {
+  // Exclude partial current week for the current year (same as server-side)
+  const currentYear = new Date().getFullYear();
+  const weekCap = year === currentYear ? getLastCompleteISOWeek() : 52;
+
   const rows = data.serving_weekly.filter((r) => {
     if (r.year !== year) return false;
+    if (r.weekNumber > weekCap) return false; // Exclude current incomplete week
     if (campus === "All Campuses") return true;
     return r.campus === campus;
   });
