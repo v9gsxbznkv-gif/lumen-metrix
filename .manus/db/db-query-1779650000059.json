@@ -1,0 +1,108 @@
+{
+  "query": "SELECT year, weekNumber, campus, metric, count FROM next_steps_weekly WHERE year = 2026 AND metric IN ('Salvations', 'Baptisms', 'Stewardship') ORDER BY weekNumber, campus, metric LIMIT 30;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, weekNumber, campus, metric, count FROM next_steps_weekly WHERE year = 2026 AND metric IN ('Salvations', 'Baptisms', 'Stewardship') ORDER BY weekNumber, campus, metric LIMIT 30;",
+  "rows": [
+    {
+      "year": "2026",
+      "weekNumber": "2",
+      "campus": "Jasper",
+      "metric": "Salvations",
+      "count": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "5",
+      "campus": "Canton",
+      "metric": "Salvations",
+      "count": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "5",
+      "campus": "Jasper",
+      "metric": "Salvations",
+      "count": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "6",
+      "campus": "Canton",
+      "metric": "Salvations",
+      "count": "2"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "6",
+      "campus": "Jasper",
+      "metric": "Salvations",
+      "count": "2"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "7",
+      "campus": "Jasper",
+      "metric": "Salvations",
+      "count": "2"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "9",
+      "campus": "Jasper",
+      "metric": "Salvations",
+      "count": "2"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "10",
+      "campus": "Canton",
+      "metric": "Salvations",
+      "count": "6"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "10",
+      "campus": "Jasper",
+      "metric": "Salvations",
+      "count": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "10",
+      "campus": "Other",
+      "metric": "Salvations",
+      "count": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "11",
+      "campus": "Canton",
+      "metric": "Salvations",
+      "count": "6"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "11",
+      "campus": "Jasper",
+      "metric": "Salvations",
+      "count": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "11",
+      "campus": "Other",
+      "metric": "Salvations",
+      "count": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "12",
+      "campus": "Jasper",
+      "metric": "Salvations",
+      "count": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tweekNumber\tcampus\tmetric\tcount\n2026\t2\tJasper\tSalvations\t1\n2026\t5\tCanton\tSalvations\t1\n2026\t5\tJasper\tSalvations\t1\n2026\t6\tCanton\tSalvations\t2\n2026\t6\tJasper\tSalvations\t2\n2026\t7\tJasper\tSalvations\t2\n2026\t9\tJasper\tSalvations\t2\n2026\t10\tCanton\tSalvations\t6\n2026\t10\tJasper\tSalvations\t1\n2026\t10\tOther\tSalvations\t1\n2026\t11\tCanton\tSalvations\t6\n2026\t11\tJasper\tSalvations\t1\n2026\t11\tOther\tSalvations\t1\n2026\t12\tJasper\tSalvations\t1\n",
+  "stderr": "",
+  "execution_time_ms": 274
+}

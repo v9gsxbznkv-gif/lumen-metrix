@@ -1,0 +1,18 @@
+{
+  "query": "SELECT DISTINCT weekNumber, weekStartDate FROM attendance_weekly WHERE year = 2026 AND weekNumber >= 20 ORDER BY weekNumber;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT weekNumber, weekStartDate FROM attendance_weekly WHERE year = 2026 AND weekNumber >= 20 ORDER BY weekNumber;",
+  "rows": [
+    {
+      "weekNumber": "20",
+      "weekStartDate": "2026-05-11"
+    },
+    {
+      "weekNumber": "21",
+      "weekStartDate": "2026-05-18"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\tweekStartDate\n20\t2026-05-11\n21\t2026-05-18\n",
+  "stderr": "",
+  "execution_time_ms": 269
+}

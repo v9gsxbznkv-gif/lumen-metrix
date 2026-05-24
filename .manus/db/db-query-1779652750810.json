@@ -1,0 +1,20 @@
+{
+  "query": "SELECT weekNumber, COUNT(*) as total_rows, COUNT(DISTINCT CASE WHEN subgroup IN ('Revolution Canton Check-In', 'Revolution Jasper Check-In') THEN campus END) as checkin_campuses FROM attendance_weekly WHERE year = 2026 AND weekNumber IN (20, 21) GROUP BY weekNumber ORDER BY weekNumber DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekNumber, COUNT(*) as total_rows, COUNT(DISTINCT CASE WHEN subgroup IN ('Revolution Canton Check-In', 'Revolution Jasper Check-In') THEN campus END) as checkin_campuses FROM attendance_weekly WHERE year = 2026 AND weekNumber IN (20, 21) GROUP BY weekNumber ORDER BY weekNumber DESC;",
+  "rows": [
+    {
+      "weekNumber": "21",
+      "total_rows": "21",
+      "checkin_campuses": "2"
+    },
+    {
+      "weekNumber": "20",
+      "total_rows": "34",
+      "checkin_campuses": "2"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\ttotal_rows\tcheckin_campuses\n21\t21\t2\n20\t34\t2\n",
+  "stderr": "",
+  "execution_time_ms": 262
+}

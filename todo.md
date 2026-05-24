@@ -1535,3 +1535,19 @@
 
 ## Bug Fix: Weekly report showing Monday date instead of Sunday
 - [x] Update weekLabel function to show Sunday (end of week, +6 days from Monday weekStartDate)
+
+## Feature: PCO Headcount Sync (Salvations, Baptisms, Stewardship)
+- [ ] Understand PCO headcounts API endpoint structure
+- [ ] Build headcount sync function for both Canton and Jasper main service events
+- [ ] Map headcount types: 3-Salv. A + 3-Salv. K → Salvations, 5-Baptism A + 5-Baptism K + 5-Baptism S → Baptisms, 4-Stewards → Stewardship
+- [ ] Pull full 2026 year data and aggregate monthly into next_steps_monthly
+- [ ] Integrate into nightly heartbeat sync
+- [ ] Verify data appears correctly on dashboard
+
+## Headcount Sync Pipeline Fix (May 2026)
+- [x] Fix HEADCOUNT_CATEGORY_MAP: add actual PCO type names (3-Salv. A, 3-Salv. K, 4-Stewards, 5-Baptism A/K/S)
+- [x] Expand populateServingAndNextSteps to include main service Salvations + Baptisms + Stewardship
+- [x] Add monthly aggregation step (next_steps_weekly → next_steps_monthly with upsert)
+- [x] Add unique index on next_steps_monthly (year, month, campus, metric)
+- [x] Fix weekly report selecting current incomplete week (week 21 instead of week 20)
+- [x] Add getLastCompleteISOWeek guard to getLatestSnapshot in weekly report router

@@ -1,0 +1,31 @@
+{
+  "query": "SELECT weekNumber, weekStartDate, campus, subgroup, headcount FROM attendance_weekly WHERE year = 2026 AND weekNumber = 21 AND subgroup IN ('Revolution Canton Check-In', 'Revolution Jasper Check-In', 'Adults', 'Kids', 'RevStudents HS', 'RevStudents MS', 'Online') ORDER BY campus, subgroup;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekNumber, weekStartDate, campus, subgroup, headcount FROM attendance_weekly WHERE year = 2026 AND weekNumber = 21 AND subgroup IN ('Revolution Canton Check-In', 'Revolution Jasper Check-In', 'Adults', 'Kids', 'RevStudents HS', 'RevStudents MS', 'Online') ORDER BY campus, subgroup;",
+  "rows": [
+    {
+      "weekNumber": "21",
+      "weekStartDate": "2026-05-18",
+      "campus": "Canton",
+      "subgroup": "Kids",
+      "headcount": "359"
+    },
+    {
+      "weekNumber": "21",
+      "weekStartDate": "2026-05-18",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "headcount": "1948"
+    },
+    {
+      "weekNumber": "21",
+      "weekStartDate": "2026-05-18",
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "headcount": "415"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekNumber\tweekStartDate\tcampus\tsubgroup\theadcount\n21\t2026-05-18\tCanton\tKids\t359\n21\t2026-05-18\tCanton\tRevolution Canton Check-In\t1948\n21\t2026-05-18\tJasper\tRevolution Jasper Check-In\t415\n",
+  "stderr": "",
+  "execution_time_ms": 267
+}

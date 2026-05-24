@@ -1,0 +1,16 @@
+{
+  "query": "SELECT DISTINCT subgroup FROM attendance_weekly WHERE subgroup LIKE '%alvation%' OR subgroup LIKE '%aptism%' OR subgroup LIKE '%Salvation%' OR subgroup LIKE '%Baptism%'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT subgroup FROM attendance_weekly WHERE subgroup LIKE '%alvation%' OR subgroup LIKE '%aptism%' OR subgroup LIKE '%Salvation%' OR subgroup LIKE '%Baptism%'",
+  "rows": [
+    {
+      "subgroup": "RevStudents Salvations"
+    },
+    {
+      "subgroup": "YA Salvations"
+    }
+  ],
+  "messages": [],
+  "stdout": "subgroup\nRevStudents Salvations\nYA Salvations\n",
+  "stderr": "",
+  "execution_time_ms": 283
+}

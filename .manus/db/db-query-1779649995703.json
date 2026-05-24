@@ -1,0 +1,162 @@
+{
+  "query": "SELECT year, month, campus, metric, count, source FROM next_steps_monthly WHERE year = 2026 ORDER BY month, campus, metric;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, month, campus, metric, count, source FROM next_steps_monthly WHERE year = 2026 ORDER BY month, campus, metric;",
+  "rows": [
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "metric": "FTG",
+      "count": "193",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "metric": "Salvations",
+      "count": "2",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "metric": "Stewardship",
+      "count": "15",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Jasper",
+      "metric": "FTG",
+      "count": "14",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Jasper",
+      "metric": "Salvations",
+      "count": "3",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Jasper",
+      "metric": "Stewardship",
+      "count": "6",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "month": "2",
+      "campus": "Canton",
+      "metric": "Baptisms",
+      "count": "19",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "month": "2",
+      "campus": "Canton",
+      "metric": "FTG",
+      "count": "133",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "month": "2",
+      "campus": "Canton",
+      "metric": "Salvations",
+      "count": "2",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "month": "2",
+      "campus": "Canton",
+      "metric": "Stewardship",
+      "count": "8",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "month": "2",
+      "campus": "Jasper",
+      "metric": "FTG",
+      "count": "31",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "month": "2",
+      "campus": "Jasper",
+      "metric": "Salvations",
+      "count": "5",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "month": "3",
+      "campus": "Canton",
+      "metric": "Baptisms",
+      "count": "77",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "month": "3",
+      "campus": "Canton",
+      "metric": "FTG",
+      "count": "160",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "month": "3",
+      "campus": "Canton",
+      "metric": "Salvations",
+      "count": "10",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "month": "3",
+      "campus": "Canton",
+      "metric": "Stewardship",
+      "count": "6",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "month": "3",
+      "campus": "Jasper",
+      "metric": "Baptisms",
+      "count": "7",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "month": "3",
+      "campus": "Jasper",
+      "metric": "FTG",
+      "count": "62",
+      "source": "spreadsheet"
+    },
+    {
+      "year": "2026",
+      "month": "3",
+      "campus": "Jasper",
+      "metric": "Salvations",
+      "count": "2",
+      "source": "spreadsheet"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tmonth\tcampus\tmetric\tcount\tsource\n2026\t1\tCanton\tFTG\t193\tspreadsheet\n2026\t1\tCanton\tSalvations\t2\tspreadsheet\n2026\t1\tCanton\tStewardship\t15\tspreadsheet\n2026\t1\tJasper\tFTG\t14\tspreadsheet\n2026\t1\tJasper\tSalvations\t3\tspreadsheet\n2026\t1\tJasper\tStewardship\t6\tspreadsheet\n2026\t2\tCanton\tBaptisms\t19\tspreadsheet\n2026\t2\tCanton\tFTG\t133\tspreadsheet\n2026\t2\tCanton\tSalvations\t2\tspreadsheet\n2026\t2\tCanton\tStewardship\t8\tspreadsheet\n2026\t2\tJasper\tFTG\t31\tspreadsheet\n2026\t2\tJasper\tSalvations\t5\tspreadsheet\n2026\t3\tCanton\tBaptisms\t77\tspreadsheet\n2026\t3\tCanton\tFTG\t160\tspreadsheet\n2026\t3\tCanton\tSalvations\t10\tspreadsheet\n2026\t3\tCanton\tStewardship\t6\tspreadsheet\n2026\t3\tJasper\tBaptisms\t7\tspreadsheet\n2026\t3\tJasper\tFTG\t62\tspreadsheet\n2026\t3\tJasper\tSalvations\t2\tspreadsheet\n",
+  "stderr": "",
+  "execution_time_ms": 264
+}

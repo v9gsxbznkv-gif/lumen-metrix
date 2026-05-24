@@ -1,0 +1,9 @@
+{
+  "query": "SELECT * FROM next_steps_monthly WHERE year = 2026 AND month >= 4 ORDER BY month, campus",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT * FROM next_steps_monthly WHERE year = 2026 AND month >= 4 ORDER BY month, campus",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 266
+}

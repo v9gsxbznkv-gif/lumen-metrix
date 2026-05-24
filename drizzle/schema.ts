@@ -163,7 +163,9 @@ export const nextStepsMonthly = mysqlTable("next_steps_monthly", {
   metric: varchar("metric", { length: 64 }).notNull(),
   count: int("count").default(0).notNull(),
   source: varchar("source", { length: 32 }).default("spreadsheet").notNull(),
-});
+}, (t) => ([
+  uniqueIndex("next_steps_monthly_unique_idx").on(t.year, t.month, t.campus, t.metric),
+]));
 
 export type NextStepsMonthlyRow = typeof nextStepsMonthly.$inferSelect;
 export type InsertNextStepsMonthly = typeof nextStepsMonthly.$inferInsert;

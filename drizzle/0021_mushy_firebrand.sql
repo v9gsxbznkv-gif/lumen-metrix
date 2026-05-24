@@ -1,0 +1,1 @@
+ALTER TABLE `next_steps_monthly` ADD CONSTRAINT `next_steps_monthly_unique_idx` UNIQUE(`year`,`month`,`campus`,`metric`);

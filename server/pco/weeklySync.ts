@@ -36,7 +36,7 @@ import { eq, and, gte, lte, sql } from "drizzle-orm";
 import mysql from "mysql2";
 import { drizzle } from "drizzle-orm/mysql2";
 import { PcoClient } from "./client";
-import { attendanceWeekly, givingWeekly, givingMonthly, syncJobs, servingWeekly, nextStepsWeekly } from "../../drizzle/schema";
+import { attendanceWeekly, givingWeekly, givingMonthly, syncJobs, servingWeekly, nextStepsWeekly, nextStepsMonthly } from "../../drizzle/schema";
 import { getDb } from "../db";
 import type { SyncResult } from "./sync";
 import { notifyOwner } from "../_core/notification";
@@ -247,13 +247,19 @@ const HEADCOUNT_CATEGORY_MAP: Record<string, Record<string, string>> = {
     "2-FTG Adults":   "FTG Adults",
     "2-FTG Kids":     "FTG Kids",
     "6-Online":       "Online",
-    // Manual headcount form entries (salvations, baptisms)
+    // Salvations headcount types (actual PCO names)
+    "3-Salv. A":      "Salvations",
+    "3-Salv. K":      "Salvations",
     "Salvations":     "Salvations",
     "3-Salvations":   "Salvations",
-    "4-Salvations":   "Salvations",
+    // Stewardship headcount type
+    "4-Stewards":     "Stewardship",
+    // Baptisms headcount types (actual PCO names)
+    "5-Baptism A":    "Baptisms",
+    "5-Baptism K":    "Baptisms",
+    "5-Baptism S":    "Baptisms",
     "Baptisms":       "Baptisms",
     "3-Baptisms":     "Baptisms",
-    "4-Baptisms":     "Baptisms",
   },
   Jasper: {
     "1-Adults":       "Adults",
@@ -262,13 +268,19 @@ const HEADCOUNT_CATEGORY_MAP: Record<string, Record<string, string>> = {
     "2-FTG Adults":   "FTG Adults",
     "2-FTG 5/6th":    "FTG Adults", // 5th/6th FTG → FTG Adults
     "2-FTG Kids":     "FTG Kids",
-    // Manual headcount form entries (salvations, baptisms)
+    // Salvations headcount types (actual PCO names)
+    "3-Salv. A":      "Salvations",
+    "3-Salv. K":      "Salvations",
     "Salvations":     "Salvations",
     "3-Salvations":   "Salvations",
-    "4-Salvations":   "Salvations",
+    // Stewardship headcount type
+    "4-Stewards":     "Stewardship",
+    // Baptisms headcount types (actual PCO names)
+    "5-Baptism A":    "Baptisms",
+    "5-Baptism K":    "Baptisms",
+    "5-Baptism S":    "Baptisms",
     "Baptisms":       "Baptisms",
     "3-Baptisms":     "Baptisms",
-    "4-Baptisms":     "Baptisms",
   },
   // YA Gathering uses manual headcount categories
   "YA Gathering": {
@@ -1981,19 +1993,25 @@ async function populateServingAndNextSteps(): Promise<void> {
       console.log(`[populateServing] Wrote ${orphanCheckins.length} orphan check-in rows (no matching Services data)`);
     }
 
-    // ── Next Steps (FTG, Salvations) ──
+    // ── Next Steps (FTG, Salvations, Baptisms, Stewardship) ──
     // Subgroups that map to FTG metric
     const ftgSubgroups = ["FTG Adults", "FTG Kids", "RevStudents FTG", "YA FTG"];
-    // Subgroups that map to Salvations metric
-    const salvSubgroups = ["RevStudents Salvations", "YA Salvations"];
+    // Subgroups that map to Salvations metric (includes main service + students + YA)
+    const salvSubgroups = ["Salvations", "RevStudents Salvations", "YA Salvations"];
+    // Subgroups that map to Baptisms metric
+    const baptSubgroups = ["Baptisms"];
+    // Subgroups that map to Stewardship metric
+    const stewSubgroups = ["Stewardship"];
+
+    const allNextStepsSubgroups = [...ftgSubgroups, ...salvSubgroups, ...baptSubgroups, ...stewSubgroups];
 
     const nextStepsRows = await freshDb
       .select()
       .from(attendanceWeekly)
-      .where(sql`${attendanceWeekly.subgroup} IN (${sql.join([
-        ...ftgSubgroups.map(s => sql`${s}`),
-        ...salvSubgroups.map(s => sql`${s}`),
-      ], sql`, `)})`);
+      .where(sql`${attendanceWeekly.subgroup} IN (${sql.join(
+        allNextStepsSubgroups.map(s => sql`${s}`),
+        sql`, `
+      )})`);
 
     // Aggregate by year/week/campus/metric
     const nsMap = new Map<string, { year: number; weekNumber: number; weekStartDate: string; campus: string; metric: string; count: number }>();
@@ -2002,9 +2020,12 @@ async function populateServingAndNextSteps(): Promise<void> {
       let campus = row.campus;
       if (ftgSubgroups.includes(row.subgroup)) {
         metric = "FTG";
-        // Map "Other" campus (YA) to the appropriate campus or keep as-is
       } else if (salvSubgroups.includes(row.subgroup)) {
         metric = "Salvations";
+      } else if (baptSubgroups.includes(row.subgroup)) {
+        metric = "Baptisms";
+      } else if (stewSubgroups.includes(row.subgroup)) {
+        metric = "Stewardship";
       } else {
         continue;
       }
@@ -2047,6 +2068,61 @@ async function populateServingAndNextSteps(): Promise<void> {
           });
       }
       console.log(`[populateNextSteps] Wrote ${nsValues.length} next_steps_weekly rows`);
+    }
+
+    // ── Monthly Aggregation: next_steps_weekly → next_steps_monthly ──
+    // Sum weekly counts by year/month/campus/metric for all PCO-sourced weekly rows.
+    // Only overwrite PCO-sourced monthly rows (preserve spreadsheet data for months
+    // where PCO data doesn't exist yet).
+    const allWeeklyNS = await freshDb
+      .select()
+      .from(nextStepsWeekly)
+      .where(eq(nextStepsWeekly.source, "pco"));
+
+    // Derive month from weekStartDate (YYYY-MM-DD → month of that Monday)
+    const monthlyMap = new Map<string, { year: number; month: number; campus: string; metric: string; count: number }>();
+    for (const row of allWeeklyNS) {
+      // weekStartDate is "YYYY-MM-DD" — extract month from it
+      const parts = row.weekStartDate.split("-");
+      const wsYear = parseInt(parts[0]);
+      const wsMonth = parseInt(parts[1]);
+      const key = `${wsYear}-${wsMonth}-${row.campus}-${row.metric}`;
+      const existing = monthlyMap.get(key);
+      if (existing) {
+        existing.count += row.count;
+      } else {
+        monthlyMap.set(key, {
+          year: wsYear,
+          month: wsMonth,
+          campus: row.campus,
+          metric: row.metric,
+          count: row.count,
+        });
+      }
+    }
+
+    const monthlyValues = Array.from(monthlyMap.values());
+    if (monthlyValues.length > 0) {
+      const CHUNK = 50;
+      for (let i = 0; i < monthlyValues.length; i += CHUNK) {
+        const chunk = monthlyValues.slice(i, i + CHUNK);
+        await freshDb.insert(nextStepsMonthly).values(
+          chunk.map(r => ({
+            year: r.year,
+            month: r.month,
+            campus: r.campus,
+            metric: r.metric,
+            count: r.count,
+            source: "pco" as const,
+          }))
+        ).onDuplicateKeyUpdate({
+          set: {
+            count: sql`VALUES(count)`,
+            source: sql`VALUES(source)`,
+          },
+        });
+      }
+      console.log(`[populateNextSteps] Wrote ${monthlyValues.length} next_steps_monthly rows (aggregated from weekly)`);
     }
   } finally {
     await end();

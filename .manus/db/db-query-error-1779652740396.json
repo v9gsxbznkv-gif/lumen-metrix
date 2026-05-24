@@ -1,0 +1,8 @@
+{
+  "query": "SELECT weekNumber, weekStartDate, campus, subgroup, COUNT(*) as rows, SUM(headcount) as total FROM attendance_weekly WHERE year = 2026 AND weekNumber IN (20, 21) GROUP BY weekNumber, weekStartDate, campus, subgroup ORDER BY weekNumber DESC, campus, subgroup LIMIT 50;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT weekNumber, weekStartDate, campus, subgroup, COUNT(*) as rows, SUM(headcount) as total FROM attendance_weekly WHERE year = 2026 AND weekNumber IN (20, 21) GROUP BY weekNumber, weekStartDate, campus, subgroup ORDER BY weekNumber DESC, campus, subgroup LIMIT 50;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1064 (42000) at line 1: You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 1 column 68 near \"rows, SUM(headcount) as total FROM attendance_weekly WHERE year = 2026 AND weekNumber IN (20, 21) GROUP BY weekNumber, weekStartDate, campus, subgroup ORDER BY weekNumber DESC, campus, subgroup LIMIT 50\""
+  ]
+}

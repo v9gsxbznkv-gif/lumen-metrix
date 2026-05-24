@@ -1,0 +1,146 @@
+{
+  "query": "SELECT DISTINCT campus, subgroup FROM attendance_weekly WHERE year = 2026 AND weekNumber >= 14 ORDER BY campus, subgroup",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT campus, subgroup FROM attendance_weekly WHERE year = 2026 AND weekNumber >= 14 ORDER BY campus, subgroup",
+  "rows": [
+    {
+      "campus": "Canton",
+      "subgroup": "FTG Adults"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "FTG Kids"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Kids"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Babies"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Campground"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Cove"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Elementary"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Nursery"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Toddlers"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Treehouse"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Online"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "RevStudents Attendance"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "RevStudents HS"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "RevStudents MS"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Volunteer Check-Ins"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Volunteers"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "FTG Adults"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "FTG Kids"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Kids"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Kids: Jasper Cove"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Kids: Jasper Nursery"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Kids: Jasper Pre-K"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Kids: Jasper Reruns"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Kids: Jasper Treehouse"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "RevStudents Attendance"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "RevStudents FTG"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "RevStudents HS"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "RevStudents MS"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Volunteer Check-Ins"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Volunteers"
+    },
+    {
+      "campus": "Other",
+      "subgroup": "YA FTG"
+    },
+    {
+      "campus": "Other",
+      "subgroup": "YA Gathering"
+    }
+  ],
+  "messages": [],
+  "stdout": "campus\tsubgroup\nCanton\tFTG Adults\nCanton\tFTG Kids\nCanton\tKids\nCanton\tKids: Canton Babies\nCanton\tKids: Canton Campground\nCanton\tKids: Canton Cove\nCanton\tKids: Canton Elementary\nCanton\tKids: Canton Nursery\nCanton\tKids: Canton Toddlers\nCanton\tKids: Canton Treehouse\nCanton\tOnline\nCanton\tRevolution Canton Check-In\nCanton\tRevStudents Attendance\nCanton\tRevStudents HS\nCanton\tRevStudents MS\nCanton\tVolunteer Check-Ins\nCanton\tVolunteers\nJasper\tFTG Adults\nJasper\tFTG Kids\nJasper\tKids\nJasper\tKids: Jasper Cove\nJasper\tKids: Jasper Nursery\nJasper\tKids: Jasper Pre-K\nJasper\tKids: Jasper Reruns\nJasper\tKids: Jasper Treehouse\nJasper\tRevolution Jasper Check-In\nJasper\tRevStudents Attendance\nJasper\tRevStudents FTG\nJasper\tRevStudents HS\nJasper\tRevStudents MS\nJasper\tVolunteer Check-Ins\nJasper\tVolunteers\nOther\tYA FTG\nOther\tYA Gathering\n",
+  "stderr": "",
+  "execution_time_ms": 255
+}

@@ -1,0 +1,87 @@
+{
+  "query": "SELECT year, weekNumber, campus, subgroup, headcount FROM attendance_weekly WHERE subgroup IN ('RevStudents Salvations', 'YA Salvations') ORDER BY year DESC, weekNumber DESC LIMIT 20",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, weekNumber, campus, subgroup, headcount FROM attendance_weekly WHERE subgroup IN ('RevStudents Salvations', 'YA Salvations') ORDER BY year DESC, weekNumber DESC LIMIT 20",
+  "rows": [
+    {
+      "year": "2026",
+      "weekNumber": "12",
+      "campus": "Jasper",
+      "subgroup": "RevStudents Salvations",
+      "headcount": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "11",
+      "campus": "Other",
+      "subgroup": "YA Salvations",
+      "headcount": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "11",
+      "campus": "Canton",
+      "subgroup": "RevStudents Salvations",
+      "headcount": "6"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "10",
+      "campus": "Jasper",
+      "subgroup": "RevStudents Salvations",
+      "headcount": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "9",
+      "campus": "Jasper",
+      "subgroup": "RevStudents Salvations",
+      "headcount": "2"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "7",
+      "campus": "Jasper",
+      "subgroup": "RevStudents Salvations",
+      "headcount": "2"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "6",
+      "campus": "Jasper",
+      "subgroup": "RevStudents Salvations",
+      "headcount": "2"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "6",
+      "campus": "Canton",
+      "subgroup": "RevStudents Salvations",
+      "headcount": "2"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "5",
+      "campus": "Jasper",
+      "subgroup": "RevStudents Salvations",
+      "headcount": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "5",
+      "campus": "Canton",
+      "subgroup": "RevStudents Salvations",
+      "headcount": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "2",
+      "campus": "Jasper",
+      "subgroup": "RevStudents Salvations",
+      "headcount": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tweekNumber\tcampus\tsubgroup\theadcount\n2026\t12\tJasper\tRevStudents Salvations\t1\n2026\t11\tOther\tYA Salvations\t1\n2026\t11\tCanton\tRevStudents Salvations\t6\n2026\t10\tJasper\tRevStudents Salvations\t1\n2026\t9\tJasper\tRevStudents Salvations\t2\n2026\t7\tJasper\tRevStudents Salvations\t2\n2026\t6\tJasper\tRevStudents Salvations\t2\n2026\t6\tCanton\tRevStudents Salvations\t2\n2026\t5\tJasper\tRevStudents Salvations\t1\n2026\t5\tCanton\tRevStudents Salvations\t1\n2026\t2\tJasper\tRevStudents Salvations\t1\n",
+  "stderr": "",
+  "execution_time_ms": 270
+}

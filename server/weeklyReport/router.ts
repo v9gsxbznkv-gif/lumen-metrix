@@ -26,6 +26,21 @@ import { and, eq, ne, desc } from "drizzle-orm";
 import { notifyOwner } from "../_core/notification";
 import { invokeLLM } from "../_core/llm";
 
+/**
+ * Get the last fully completed ISO week number.
+ * A church week runs Mon-Sun. We consider a week complete once
+ * we've moved past its Sunday into the next week (i.e., it's now Monday or later).
+ * On Sunday itself, the current week is still in progress.
+ */
+function getLastCompleteISOWeek(): number {
+  const now = new Date();
+  const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const currentWeek = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  return currentWeek - 1; // exclude current partial week
+}
+
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 interface CampusWeeklyMetrics {
@@ -787,9 +802,13 @@ async function getLatestSnapshot(
     const sortedWeeks = Array.from(weekStats.entries())
       .sort((a, b) => b[1].weekNumber - a[1].weekNumber);
 
+    // Exclude the current incomplete week (today's service may have partial check-in data)
+    const lastCompleteWeek = getLastCompleteISOWeek();
+    const eligibleWeeks = sortedWeeks.filter(([, v]) => v.weekNumber <= lastCompleteWeek);
+
     // A week is "complete" when it has ≥2 campuses with main Check-In data AND ≥8 total rows.
-    // Fall back to the absolute latest week if none qualify.
-    const completeWeek = sortedWeeks.find(([, v]) => v.checkInCampuses.size >= 2 && v.count >= 8) ?? sortedWeeks[0];
+    // Fall back to the absolute latest eligible week if none qualify.
+    const completeWeek = eligibleWeeks.find(([, v]) => v.checkInCampuses.size >= 2 && v.count >= 8) ?? eligibleWeeks[0] ?? sortedWeeks[0];
     const [weekStartDate, { weekNumber }] = completeWeek;
 
     const snapshot = await getWeeklySnapshot(db, weekStartDate, weekNumber, year);
