@@ -1114,24 +1114,47 @@ export function getWeeklyGivingPerCapita(
   const currentYear = new Date().getFullYear();
   const weekCap = year === currentYear ? getLastCompleteISOWeek() : 52;
 
-  // Sum giving per week (only complete weeks)
+  // Build set of cancelled week numbers (main service cancelled = no valid attendance for GPC)
+  const cancelledWeeks = new Set<number>();
+  for (const r of data.attendance_weekly) {
+    if (r.year !== year) continue;
+    if (campus !== "All Campuses" && r.campus !== campus) continue;
+    if (r.cancelled) cancelledWeeks.add(r.weekNumber);
+  }
+
+  // Sum giving per week (only complete, non-cancelled weeks)
   const givingByWeek = new Map<number, number>();
   for (const r of data.giving_weekly) {
     if (r.year !== year) continue;
     if (r.weekNumber > weekCap) continue;
     if (campus !== "All Campuses" && r.campus !== campus) continue;
+    if (cancelledWeeks.has(r.weekNumber)) continue; // Skip giving for cancelled weeks
     givingByWeek.set(r.weekNumber, (givingByWeek.get(r.weekNumber) || 0) + r.total);
   }
   if (givingByWeek.size === 0) return 0;
 
+  // Weighted average: total giving / total attendance (matches server-side getPerCapita)
   const totalGiving = Array.from(givingByWeek.values()).reduce((s, v) => s + v, 0);
-  const avgWeeklyGiving = totalGiving / givingByWeek.size;
 
-  // Avg weekly attendance (already computed by existing helper)
-  const avgAtt = getAvgAttendanceFromWeekly(data, year, campus, "Total");
-  if (avgAtt === 0) return 0;
+  // Build attendance per week for the same non-cancelled weeks
+  const attByWeek = new Map<number, number>();
+  for (const r of data.attendance_weekly) {
+    if (r.cancelled) continue;
+    if (r.year !== year) continue;
+    if (r.weekNumber > weekCap) continue;
+    if (campus !== "All Campuses" && r.campus !== campus) continue;
+    // Total = Adults + Kids
+    const isAdult = r.subgroup === "Adults" || r.subgroup === "Revolution Canton Check-In" ||
+                    r.subgroup === "Revolution Jasper Check-In" || r.subgroup === "Revolution Church Jasper";
+    const isKids = r.subgroup === "Kids";
+    if (!isAdult && !isKids) continue;
+    attByWeek.set(r.weekNumber, (attByWeek.get(r.weekNumber) || 0) + r.headcount);
+  }
 
-  return avgWeeklyGiving / avgAtt;
+  const totalAtt = Array.from(attByWeek.values()).reduce((s, v) => s + v, 0);
+  if (totalAtt === 0) return 0;
+
+  return totalGiving / totalAtt;
 }
 
 /**
@@ -1143,21 +1166,43 @@ export function getWeeklyGivingPerCapitaRange(
   campus: string,
   maxWeek: number
 ): number {
+  // Build set of cancelled week numbers
+  const cancelledWeeks = new Set<number>();
+  for (const r of data.attendance_weekly) {
+    if (r.year !== year) continue;
+    if (campus !== "All Campuses" && r.campus !== campus) continue;
+    if (r.cancelled) cancelledWeeks.add(r.weekNumber);
+  }
+
   const givingByWeek = new Map<number, number>();
   for (const r of data.giving_weekly) {
     if (r.year !== year || r.weekNumber > maxWeek) continue;
     if (campus !== "All Campuses" && r.campus !== campus) continue;
+    if (cancelledWeeks.has(r.weekNumber)) continue; // Skip giving for cancelled weeks
     givingByWeek.set(r.weekNumber, (givingByWeek.get(r.weekNumber) || 0) + r.total);
   }
   if (givingByWeek.size === 0) return 0;
 
+  // Weighted average: total giving / total attendance
   const totalGiving = Array.from(givingByWeek.values()).reduce((s, v) => s + v, 0);
-  const avgWeeklyGiving = totalGiving / givingByWeek.size;
 
-  const avgAtt = getAvgAttendanceFromWeeklyRange(data, year, campus, "Total", maxWeek);
-  if (avgAtt === 0) return 0;
+  // Build attendance for non-cancelled weeks
+  const attByWeek = new Map<number, number>();
+  for (const r of data.attendance_weekly) {
+    if (r.cancelled) continue;
+    if (r.year !== year || r.weekNumber > maxWeek) continue;
+    if (campus !== "All Campuses" && r.campus !== campus) continue;
+    const isAdult = r.subgroup === "Adults" || r.subgroup === "Revolution Canton Check-In" ||
+                    r.subgroup === "Revolution Jasper Check-In" || r.subgroup === "Revolution Church Jasper";
+    const isKids = r.subgroup === "Kids";
+    if (!isAdult && !isKids) continue;
+    attByWeek.set(r.weekNumber, (attByWeek.get(r.weekNumber) || 0) + r.headcount);
+  }
 
-  return avgWeeklyGiving / avgAtt;
+  const totalAtt = Array.from(attByWeek.values()).reduce((s, v) => s + v, 0);
+  if (totalAtt === 0) return 0;
+
+  return totalGiving / totalAtt;
 }
 
 /**

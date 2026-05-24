@@ -1,0 +1,136 @@
+{
+  "query": "SELECT DISTINCT year, weekNumber, campus, subgroup, cancelled FROM attendance_weekly WHERE cancelled = 1 ORDER BY year, weekNumber, campus, subgroup LIMIT 30;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT year, weekNumber, campus, subgroup, cancelled FROM attendance_weekly WHERE cancelled = 1 ORDER BY year, weekNumber, campus, subgroup LIMIT 30;",
+  "rows": [
+    {
+      "year": "2026",
+      "weekNumber": "4",
+      "campus": "Canton",
+      "subgroup": "FTG Adults",
+      "cancelled": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "4",
+      "campus": "Canton",
+      "subgroup": "Kids",
+      "cancelled": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "4",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Elementary",
+      "cancelled": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "4",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Nursery",
+      "cancelled": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "4",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Toddlers",
+      "cancelled": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "4",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "cancelled": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "4",
+      "campus": "Canton",
+      "subgroup": "Volunteer Check-Ins",
+      "cancelled": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "4",
+      "campus": "Canton",
+      "subgroup": "Volunteers",
+      "cancelled": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "4",
+      "campus": "Jasper",
+      "subgroup": "Volunteers",
+      "cancelled": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "5",
+      "campus": "Canton",
+      "subgroup": "FTG Adults",
+      "cancelled": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "5",
+      "campus": "Canton",
+      "subgroup": "Kids",
+      "cancelled": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "5",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Elementary",
+      "cancelled": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "5",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Nursery",
+      "cancelled": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "5",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Toddlers",
+      "cancelled": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "5",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "cancelled": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "5",
+      "campus": "Canton",
+      "subgroup": "Volunteer Check-Ins",
+      "cancelled": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "5",
+      "campus": "Canton",
+      "subgroup": "Volunteers",
+      "cancelled": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "5",
+      "campus": "Jasper",
+      "subgroup": "Volunteers",
+      "cancelled": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tweekNumber\tcampus\tsubgroup\tcancelled\n2026\t4\tCanton\tFTG Adults\t1\n2026\t4\tCanton\tKids\t1\n2026\t4\tCanton\tKids: Canton Elementary\t1\n2026\t4\tCanton\tKids: Canton Nursery\t1\n2026\t4\tCanton\tKids: Canton Toddlers\t1\n2026\t4\tCanton\tRevolution Canton Check-In\t1\n2026\t4\tCanton\tVolunteer Check-Ins\t1\n2026\t4\tCanton\tVolunteers\t1\n2026\t4\tJasper\tVolunteers\t1\n2026\t5\tCanton\tFTG Adults\t1\n2026\t5\tCanton\tKids\t1\n2026\t5\tCanton\tKids: Canton Elementary\t1\n2026\t5\tCanton\tKids: Canton Nursery\t1\n2026\t5\tCanton\tKids: Canton Toddlers\t1\n2026\t5\tCanton\tRevolution Canton Check-In\t1\n2026\t5\tCanton\tVolunteer Check-Ins\t1\n2026\t5\tCanton\tVolunteers\t1\n2026\t5\tJasper\tVolunteers\t1\n",
+  "stderr": "",
+  "execution_time_ms": 290
+}

@@ -1,0 +1,87 @@
+{
+  "query": "SELECT DISTINCT year, weekNumber, campus, subgroup, cancelled FROM attendance_weekly WHERE year = 2026 AND weekNumber IN (4, 5) AND campus = 'Jasper' ORDER BY weekNumber, subgroup;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT year, weekNumber, campus, subgroup, cancelled FROM attendance_weekly WHERE year = 2026 AND weekNumber IN (4, 5) AND campus = 'Jasper' ORDER BY weekNumber, subgroup;",
+  "rows": [
+    {
+      "year": "2026",
+      "weekNumber": "4",
+      "campus": "Jasper",
+      "subgroup": "RevStudents Attendance",
+      "cancelled": "0"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "4",
+      "campus": "Jasper",
+      "subgroup": "RevStudents FTG",
+      "cancelled": "0"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "4",
+      "campus": "Jasper",
+      "subgroup": "RevStudents HS",
+      "cancelled": "0"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "4",
+      "campus": "Jasper",
+      "subgroup": "RevStudents MS",
+      "cancelled": "0"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "4",
+      "campus": "Jasper",
+      "subgroup": "Volunteers",
+      "cancelled": "1"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "5",
+      "campus": "Jasper",
+      "subgroup": "RevStudents Attendance",
+      "cancelled": "0"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "5",
+      "campus": "Jasper",
+      "subgroup": "RevStudents FTG",
+      "cancelled": "0"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "5",
+      "campus": "Jasper",
+      "subgroup": "RevStudents HS",
+      "cancelled": "0"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "5",
+      "campus": "Jasper",
+      "subgroup": "RevStudents MS",
+      "cancelled": "0"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "5",
+      "campus": "Jasper",
+      "subgroup": "RevStudents Salvations",
+      "cancelled": "0"
+    },
+    {
+      "year": "2026",
+      "weekNumber": "5",
+      "campus": "Jasper",
+      "subgroup": "Volunteers",
+      "cancelled": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tweekNumber\tcampus\tsubgroup\tcancelled\n2026\t4\tJasper\tRevStudents Attendance\t0\n2026\t4\tJasper\tRevStudents FTG\t0\n2026\t4\tJasper\tRevStudents HS\t0\n2026\t4\tJasper\tRevStudents MS\t0\n2026\t4\tJasper\tVolunteers\t1\n2026\t5\tJasper\tRevStudents Attendance\t0\n2026\t5\tJasper\tRevStudents FTG\t0\n2026\t5\tJasper\tRevStudents HS\t0\n2026\t5\tJasper\tRevStudents MS\t0\n2026\t5\tJasper\tRevStudents Salvations\t0\n2026\t5\tJasper\tVolunteers\t1\n",
+  "stderr": "",
+  "execution_time_ms": 262
+}
