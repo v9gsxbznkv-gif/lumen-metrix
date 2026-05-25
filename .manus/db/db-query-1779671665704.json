@@ -1,0 +1,30 @@
+{
+  "query": "SELECT * FROM groups_annual WHERE year = 2026;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT * FROM groups_annual WHERE year = 2026;",
+  "rows": [
+    {
+      "id": "13",
+      "year": "2026",
+      "campus": "Canton",
+      "activeGroups": "72",
+      "totalMembers": "910",
+      "totalLeaders": "108",
+      "avgAttendance": "725",
+      "source": "spreadsheet"
+    },
+    {
+      "id": "26",
+      "year": "2026",
+      "campus": "Jasper",
+      "activeGroups": "24",
+      "totalMembers": "270",
+      "totalLeaders": "36",
+      "avgAttendance": "210",
+      "source": "spreadsheet"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tyear\tcampus\tactiveGroups\ttotalMembers\ttotalLeaders\tavgAttendance\tsource\n13\t2026\tCanton\t72\t910\t108\t725\tspreadsheet\n26\t2026\tJasper\t24\t270\t36\t210\tspreadsheet\n",
+  "stderr": "",
+  "execution_time_ms": 263
+}

@@ -13,6 +13,8 @@ import {
   isPartialYear,
   getMaxMonth,
   getGivingForMonths,
+  getGivingFromWeekly,
+  getGivingFromWeeklyRange,
   CAMPUS_COLORS,
   MONTH_NAMES,
 } from "@/lib/data";
@@ -37,16 +39,7 @@ const TT = {
   fontFamily: "'Inter'",
 };
 
-function getGivingTotal(
-  giving: { year: number; campus: string; total: number }[],
-  year: number,
-  campus: string
-): number {
-  if (campus === "All Campuses") {
-    return giving.find((g) => g.year === year && g.campus === "All Campuses")?.total ?? 0;
-  }
-  return giving.find((g) => g.year === year && g.campus === campus)?.total ?? 0;
-}
+// Use getGivingFromWeekly from data.ts (sums giving_weekly) for consistency with Overview tab
 
 export default function GivingTab() {
   const { data, filters } = useData();
@@ -87,7 +80,7 @@ export default function GivingTab() {
     return filteredYears.map((year) => {
       const row: Record<string, number | string> = { year };
       ["Canton", "Jasper"].forEach((c) => {
-        row[c] = getGivingTotal(data.giving, year, c);
+        row[c] = getGivingFromWeekly(data, year, c);
       });
       return row;
     });
@@ -141,7 +134,7 @@ export default function GivingTab() {
     const campus =
       filters.campus === "All Campuses" ? "All Campuses" : filters.campus;
 
-    const giv = (y: number) => getGivingTotal(data.giving, y, campus);
+    const giv = (y: number) => getGivingFromWeekly(data, y, campus);
     const getGpc = (y: number) =>
       gpc.find((g) => g.year === y && g.campus === campus)
         ?.giving_per_capita ?? 0;
@@ -149,14 +142,15 @@ export default function GivingTab() {
     const weeks = partial ? maxMonth * 4.33 : 52;
     const weeklyAvg = giv(latestYear) / weeks;
 
-    // Partial-year-aware YoY
+    // Partial-year-aware YoY using weekly data for apples-to-apples comparison
     let givingChange;
     let gpcChange;
     let weeklyChange;
     if (partial) {
-      const compMonths = Array.from({ length: maxMonth }, (_, i) => i + 1);
-      const currGiv = getGivingForMonths(data, latestYear, filters.campus, compMonths);
-      const prevGiv = getGivingForMonths(data, priorYear, filters.campus, compMonths);
+      // Use weekly range for fair YoY (same number of weeks)
+      const maxWeek = Math.ceil(maxMonth * 4.33);
+      const currGiv = getGivingFromWeeklyRange(data, latestYear, campus, maxWeek);
+      const prevGiv = getGivingFromWeeklyRange(data, priorYear, campus, maxWeek);
       givingChange = getYoYChange(currGiv, prevGiv);
       gpcChange = getYoYChange(getGpc(latestYear), getGpc(priorYear)); // GPC already accounts for partial
       const prevWeeklyAvg = prevGiv / (maxMonth * 4.33);

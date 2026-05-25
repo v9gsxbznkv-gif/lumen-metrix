@@ -73,7 +73,8 @@ async function runSyncInBackground(
   syncType: string,
   client: any,
   dateFrom?: string,
-  dateTo?: string
+  dateTo?: string,
+  year?: number
 ): Promise<void> {
   try {
     await updateJob(jobId, { progress: 15, message: "Connected to PCO, starting sync..." });
@@ -162,8 +163,8 @@ async function runSyncInBackground(
           break;
         }
         case "groups_full_year": {
-          // Sync all months of the current year
-          const yearResults = await syncGroupsFullYear(client, undefined, (msg) => console.log(msg));
+          // Sync all months of the specified year (or current year)
+          const yearResults = await syncGroupsFullYear(client, year, (msg) => console.log(msg));
           result = yearResults[yearResults.length - 1] || { syncType: 'groups_attendance', status: 'completed', recordsProcessed: 0, recordsCreated: 0, recordsUpdated: 0, durationMs: 0 };
           break;
         }
@@ -279,6 +280,7 @@ export const pcoRouter = router({
         syncType: z.enum(["attendance", "giving", "groups", "events", "people", "weekly_attendance", "weekly_giving", "weekly_all", "full", "groups_attendance", "groups_full_year"]),
         dateFrom: z.string().optional(),
         dateTo: z.string().optional(),
+        year: z.number().optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -297,7 +299,7 @@ export const pcoRouter = router({
 
       // Fire-and-forget: run the actual sync without awaiting
       // The job writes progress to the DB; the UI polls getSyncJobStatus
-      runSyncInBackground(jobId, input.syncType, client, input.dateFrom, input.dateTo)
+      runSyncInBackground(jobId, input.syncType, client, input.dateFrom, input.dateTo, input.year)
         .catch((err) => console.error(`[PCO Sync] Unhandled error in job ${jobId}:`, err));
 
       return { jobId };

@@ -2,13 +2,15 @@
  * Groups tRPC Router
  * Provides groups metrics: active groups, total members, leaders, attendance,
  * participation rate, trends, and campus breakdown.
+ * 
+ * KPIs are derived from groups_monthly (real PCO data) — using the latest
+ * available month as the "current" snapshot.
  */
 import { z } from "zod";
-import { and, eq, gte, lte, ne } from "drizzle-orm";
+import { and, eq, ne, desc } from "drizzle-orm";
 import { publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import {
-  groupsAnnual,
   groupsMonthly,
   attendance,
 } from "../../drizzle/schema";
@@ -41,29 +43,24 @@ export const groupsRouter = router({
       const { year, campus } = input;
       const isAllCampuses = campus === "All Campuses";
 
-      // ── Annual data for current year ──────────────────────────
-      const annualRows = await db
+      // ── Monthly data for current year ────────────────────────────
+      const monthlyRows = await db
         .select()
-        .from(groupsAnnual)
-        .where(
-          and(
-            eq(groupsAnnual.year, year),
-            ne(groupsAnnual.campus, "All Campuses")
-          )
-        );
+        .from(groupsMonthly)
+        .where(eq(groupsMonthly.year, year));
 
-      // ── Annual data for prior year ────────────────────────────
-      const priorRows = await db
+      // ── Monthly data for prior year ──────────────────────────────
+      const priorMonthlyRows = await db
         .select()
-        .from(groupsAnnual)
-        .where(
-          and(
-            eq(groupsAnnual.year, year - 1),
-            ne(groupsAnnual.campus, "All Campuses")
-          )
-        );
+        .from(groupsMonthly)
+        .where(eq(groupsMonthly.year, year - 1));
 
-      // ── Attendance data for participation rate ────────────────
+      // ── All years monthly for trend chart ────────────────────────
+      const allMonthlyRows = await db
+        .select()
+        .from(groupsMonthly);
+
+      // ── Attendance data for participation rate ────────────────────
       const attRows = await db
         .select()
         .from(attendance)
@@ -84,40 +81,57 @@ export const groupsRouter = router({
           )
         );
 
-      // ── Monthly data for trends ───────────────────────────────
-      const monthlyRows = await db
-        .select()
-        .from(groupsMonthly)
-        .where(eq(groupsMonthly.year, year));
+      // ── Helper: get latest month's data as "current" KPI ─────────
+      function getLatestMonthMetrics(rows: typeof monthlyRows, campusFilter: string) {
+        const filtered = campusFilter === "All Campuses"
+          ? rows
+          : rows.filter((r) => r.campus === campusFilter);
 
-      // ── Prior year monthly for comparison ─────────────────────
-      const priorMonthlyRows = await db
-        .select()
-        .from(groupsMonthly)
-        .where(eq(groupsMonthly.year, year - 1));
-
-      // ── All years for trend chart ─────────────────────────────
-      const allAnnualRows = await db
-        .select()
-        .from(groupsAnnual)
-        .where(ne(groupsAnnual.campus, "All Campuses"));
-
-      // ── Aggregate helpers ─────────────────────────────────────
-      function aggregateCampus(rows: typeof annualRows, campusFilter: string) {
-        if (campusFilter === "All Campuses") {
-          return {
-            activeGroups: rows.reduce((s, r) => s + r.activeGroups, 0),
-            totalMembers: rows.reduce((s, r) => s + r.totalMembers, 0),
-            totalLeaders: rows.reduce((s, r) => s + r.totalLeaders, 0),
-            avgAttendance: rows.reduce((s, r) => s + r.avgAttendance, 0),
-          };
+        if (filtered.length === 0) {
+          return { activeGroups: 0, totalMembers: 0, totalLeaders: 0, avgAttendance: 0 };
         }
-        const filtered = rows.filter((r) => r.campus === campusFilter);
+
+        // Find the latest month with data
+        const latestMonth = Math.max(...filtered.map((r) => r.month));
+        const latestRows = filtered.filter((r) => r.month === latestMonth);
+
         return {
-          activeGroups: filtered.reduce((s, r) => s + r.activeGroups, 0),
-          totalMembers: filtered.reduce((s, r) => s + r.totalMembers, 0),
-          totalLeaders: filtered.reduce((s, r) => s + r.totalLeaders, 0),
-          avgAttendance: filtered.reduce((s, r) => s + r.avgAttendance, 0),
+          activeGroups: latestRows.reduce((s, r) => s + r.activeGroups, 0),
+          totalMembers: latestRows.reduce((s, r) => s + r.totalMembers, 0),
+          totalLeaders: latestRows.reduce((s, r) => s + r.totalLeaders, 0),
+          avgAttendance: latestRows.reduce((s, r) => s + r.avgAttendance, 0),
+        };
+      }
+
+      // ── Helper: get YTD average metrics for annual trend ──────────
+      function getYearAvgMetrics(rows: typeof monthlyRows, campusFilter: string) {
+        const filtered = campusFilter === "All Campuses"
+          ? rows
+          : rows.filter((r) => r.campus === campusFilter);
+
+        if (filtered.length === 0) {
+          return { activeGroups: 0, totalMembers: 0, totalLeaders: 0, avgAttendance: 0 };
+        }
+
+        // Get unique months
+        const months = Array.from(new Set(filtered.map((r) => r.month)));
+        const monthCount = months.length;
+
+        // For each month, sum across campuses, then average across months
+        let totalGroups = 0, totalMembers = 0, totalLeaders = 0, totalAttendance = 0;
+        for (const m of months) {
+          const mRows = filtered.filter((r) => r.month === m);
+          totalGroups += mRows.reduce((s, r) => s + r.activeGroups, 0);
+          totalMembers += mRows.reduce((s, r) => s + r.totalMembers, 0);
+          totalLeaders += mRows.reduce((s, r) => s + r.totalLeaders, 0);
+          totalAttendance += mRows.reduce((s, r) => s + r.avgAttendance, 0);
+        }
+
+        return {
+          activeGroups: Math.round(totalGroups / monthCount),
+          totalMembers: Math.round(totalMembers / monthCount),
+          totalLeaders: Math.round(totalLeaders / monthCount),
+          avgAttendance: Math.round(totalAttendance / monthCount),
         };
       }
 
@@ -132,27 +146,27 @@ export const groupsRouter = router({
           .reduce((s, r) => s + r.avgWeekly, 0);
       }
 
-      // ── Current year metrics ──────────────────────────────────
-      const current = aggregateCampus(annualRows, campus);
+      // ── Current year metrics (latest month) ───────────────────────
+      const current = getLatestMonthMetrics(monthlyRows, campus);
       const totalAtt = getAttendance(attRows, campus);
       const participationRate = totalAtt > 0
         ? Math.round((current.totalMembers / totalAtt) * 1000) / 10
         : 0;
 
-      // ── Prior year metrics ────────────────────────────────────
-      const prior = aggregateCampus(priorRows, campus);
+      // ── Prior year metrics (latest month of prior year) ───────────
+      const prior = getLatestMonthMetrics(priorMonthlyRows, campus);
       const priorAtt = getAttendance(priorAttRows, campus);
       const priorParticipationRate = priorAtt > 0
         ? Math.round((prior.totalMembers / priorAtt) * 1000) / 10
         : 0;
 
-      // ── Monthly trends ────────────────────────────────────────
+      // ── Monthly trends ────────────────────────────────────────────
       const monthlyAgg = Array.from({ length: 12 }, (_, i) => {
         const month = i + 1;
         const rows = monthlyRows.filter((r) =>
           r.month === month && (isAllCampuses || r.campus === campus)
         );
-        const priorMonthRows = priorMonthlyRows.filter((r) =>
+        const priorRows = priorMonthlyRows.filter((r) =>
           r.month === month && (isAllCampuses || r.campus === campus)
         );
         return {
@@ -161,17 +175,17 @@ export const groupsRouter = router({
           totalMembers: rows.reduce((s, r) => s + r.totalMembers, 0),
           totalLeaders: rows.reduce((s, r) => s + r.totalLeaders, 0),
           avgAttendance: rows.reduce((s, r) => s + r.avgAttendance, 0),
-          priorActiveGroups: priorMonthRows.reduce((s, r) => s + r.activeGroups, 0),
-          priorMembers: priorMonthRows.reduce((s, r) => s + r.totalMembers, 0),
+          priorActiveGroups: priorRows.reduce((s, r) => s + r.activeGroups, 0),
+          priorMembers: priorRows.reduce((s, r) => s + r.totalMembers, 0),
         };
       }).filter((m) => m.activeGroups > 0 || m.priorActiveGroups > 0);
 
-      // ── Campus breakdown ──────────────────────────────────────
-      const campuses = Array.from(new Set(annualRows.map((r) => r.campus)));
+      // ── Campus breakdown (latest month per campus) ────────────────
+      const campuses = Array.from(new Set(monthlyRows.map((r) => r.campus)));
       const campusBreakdown = campuses.map((c) => {
-        const cData = aggregateCampus(annualRows, c);
+        const cData = getLatestMonthMetrics(monthlyRows, c);
         const cAtt = getAttendance(attRows, c);
-        const cPrior = aggregateCampus(priorRows, c);
+        const cPrior = getLatestMonthMetrics(priorMonthlyRows, c);
         return {
           campus: c,
           ...cData,
@@ -185,11 +199,11 @@ export const groupsRouter = router({
         };
       });
 
-      // ── Yearly trend (all years) ──────────────────────────────
-      const years = Array.from(new Set(allAnnualRows.map((r) => r.year))).sort();
+      // ── Yearly trend (all years from groups_monthly) ──────────────
+      const years = Array.from(new Set(allMonthlyRows.map((r) => r.year))).sort();
       const yearlyTrend = years.map((y) => {
-        const yRows = allAnnualRows.filter((r) => r.year === y);
-        const agg = aggregateCampus(yRows, campus);
+        const yRows = allMonthlyRows.filter((r) => r.year === y);
+        const agg = getYearAvgMetrics(yRows, campus);
         return { year: y, ...agg };
       });
 

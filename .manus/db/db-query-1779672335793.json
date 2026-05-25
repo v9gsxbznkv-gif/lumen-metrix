@@ -1,0 +1,170 @@
+{
+  "query": "SELECT year, campus, source, activeGroups, totalMembers, totalLeaders FROM groups_annual ORDER BY year DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, campus, source, activeGroups, totalMembers, totalLeaders FROM groups_annual ORDER BY year DESC LIMIT 20;",
+  "rows": [
+    {
+      "year": "2024",
+      "campus": "Jasper",
+      "source": "spreadsheet",
+      "activeGroups": "20",
+      "totalMembers": "225",
+      "totalLeaders": "30"
+    },
+    {
+      "year": "2024",
+      "campus": "Canton",
+      "source": "spreadsheet",
+      "activeGroups": "62",
+      "totalMembers": "780",
+      "totalLeaders": "93"
+    },
+    {
+      "year": "2023",
+      "campus": "Canton",
+      "source": "spreadsheet",
+      "activeGroups": "58",
+      "totalMembers": "710",
+      "totalLeaders": "87"
+    },
+    {
+      "year": "2023",
+      "campus": "Jasper",
+      "source": "spreadsheet",
+      "activeGroups": "18",
+      "totalMembers": "200",
+      "totalLeaders": "27"
+    },
+    {
+      "year": "2022",
+      "campus": "Canton",
+      "source": "spreadsheet",
+      "activeGroups": "52",
+      "totalMembers": "620",
+      "totalLeaders": "78"
+    },
+    {
+      "year": "2022",
+      "campus": "Jasper",
+      "source": "spreadsheet",
+      "activeGroups": "15",
+      "totalMembers": "165",
+      "totalLeaders": "22"
+    },
+    {
+      "year": "2021",
+      "campus": "Jasper",
+      "source": "spreadsheet",
+      "activeGroups": "12",
+      "totalMembers": "130",
+      "totalLeaders": "18"
+    },
+    {
+      "year": "2021",
+      "campus": "Canton",
+      "source": "spreadsheet",
+      "activeGroups": "44",
+      "totalMembers": "510",
+      "totalLeaders": "66"
+    },
+    {
+      "year": "2020",
+      "campus": "Jasper",
+      "source": "spreadsheet",
+      "activeGroups": "10",
+      "totalMembers": "110",
+      "totalLeaders": "16"
+    },
+    {
+      "year": "2020",
+      "campus": "Canton",
+      "source": "spreadsheet",
+      "activeGroups": "38",
+      "totalMembers": "420",
+      "totalLeaders": "58"
+    },
+    {
+      "year": "2019",
+      "campus": "Jasper",
+      "source": "spreadsheet",
+      "activeGroups": "14",
+      "totalMembers": "155",
+      "totalLeaders": "21"
+    },
+    {
+      "year": "2019",
+      "campus": "Canton",
+      "source": "spreadsheet",
+      "activeGroups": "48",
+      "totalMembers": "590",
+      "totalLeaders": "72"
+    },
+    {
+      "year": "2018",
+      "campus": "Jasper",
+      "source": "spreadsheet",
+      "activeGroups": "12",
+      "totalMembers": "135",
+      "totalLeaders": "18"
+    },
+    {
+      "year": "2018",
+      "campus": "Canton",
+      "source": "spreadsheet",
+      "activeGroups": "42",
+      "totalMembers": "520",
+      "totalLeaders": "63"
+    },
+    {
+      "year": "2017",
+      "campus": "Jasper",
+      "source": "spreadsheet",
+      "activeGroups": "10",
+      "totalMembers": "110",
+      "totalLeaders": "15"
+    },
+    {
+      "year": "2017",
+      "campus": "Canton",
+      "source": "spreadsheet",
+      "activeGroups": "35",
+      "totalMembers": "430",
+      "totalLeaders": "52"
+    },
+    {
+      "year": "2016",
+      "campus": "Jasper",
+      "source": "spreadsheet",
+      "activeGroups": "8",
+      "totalMembers": "85",
+      "totalLeaders": "12"
+    },
+    {
+      "year": "2016",
+      "campus": "Canton",
+      "source": "spreadsheet",
+      "activeGroups": "28",
+      "totalMembers": "340",
+      "totalLeaders": "42"
+    },
+    {
+      "year": "2015",
+      "campus": "Jasper",
+      "source": "spreadsheet",
+      "activeGroups": "6",
+      "totalMembers": "68",
+      "totalLeaders": "10"
+    },
+    {
+      "year": "2015",
+      "campus": "Canton",
+      "source": "spreadsheet",
+      "activeGroups": "22",
+      "totalMembers": "260",
+      "totalLeaders": "34"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tcampus\tsource\tactiveGroups\ttotalMembers\ttotalLeaders\n2024\tJasper\tspreadsheet\t20\t225\t30\n2024\tCanton\tspreadsheet\t62\t780\t93\n2023\tCanton\tspreadsheet\t58\t710\t87\n2023\tJasper\tspreadsheet\t18\t200\t27\n2022\tCanton\tspreadsheet\t52\t620\t78\n2022\tJasper\tspreadsheet\t15\t165\t22\n2021\tJasper\tspreadsheet\t12\t130\t18\n2021\tCanton\tspreadsheet\t44\t510\t66\n2020\tJasper\tspreadsheet\t10\t110\t16\n2020\tCanton\tspreadsheet\t38\t420\t58\n2019\tJasper\tspreadsheet\t14\t155\t21\n2019\tCanton\tspreadsheet\t48\t590\t72\n2018\tJasper\tspreadsheet\t12\t135\t18\n2018\tCanton\tspreadsheet\t42\t520\t63\n2017\tJasper\tspreadsheet\t10\t110\t15\n2017\tCanton\tspreadsheet\t35\t430\t52\n2016\tJasper\tspreadsheet\t8\t85\t12\n2016\tCanton\tspreadsheet\t28\t340\t42\n2015\tJasper\tspreadsheet\t6\t68\t10\n2015\tCanton\tspreadsheet\t22\t260\t34\n",
+  "stderr": "",
+  "execution_time_ms": 257
+}

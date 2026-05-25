@@ -1559,6 +1559,9 @@
 - [x] Run full year sync — real data now in groups_monthly (Jan-May 2026)
 - [x] Delete fake seed data (source='spreadsheet' for 2026)
 - [x] Extend weekly report groups fallback to look back up to 3 months
-- [ ] Fix giving discrepancy (dashboard shows 4.0M, giving page shows 3.9M)
-- [ ] Fix TypeScript errors (weeklySyncDay, manualLock properties)
+- [x] Fix giving discrepancy (dashboard shows 4.0M, giving page shows 3.9M)
+- [x] Fix TypeScript errors (weeklySyncDay, manualLock properties) — confirmed tsc clean, health check was stale cache
 - [ ] Deploy with groups sync and all fixes
+- [x] Add leader count to groups sync (pull memberships with role=leader per group from PCO)
+- [x] Delete fake 2025 groups_annual data and backfill 2025 groups_monthly from PCO
+- [x] Rewrite Groups page router to derive KPIs from groups_monthly (not groups_annual)

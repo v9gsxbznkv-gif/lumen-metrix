@@ -34,6 +34,7 @@ interface GroupAttendanceData {
   eventsInMonth: number;
   totalAttended: number;
   memberCount: number;
+  leaderCount: number;
 }
 
 /**
@@ -129,14 +130,19 @@ export async function syncGroupsAttendance(
           }
         }
 
-        // Get member count
+        // Get member count and leader count
         let memberCount = 0;
+        let leaderCount = 0;
         try {
-          const membersResult = await client.get(
+          const membersResult = await client.paginateAll(
             `/groups/v2/groups/${groupId}/memberships`,
-            { per_page: 1 }
+            { per_page: 100 }
           );
-          memberCount = (membersResult as any).meta?.total_count || 0;
+          const memberships = membersResult.data as any[];
+          memberCount = memberships.length;
+          leaderCount = memberships.filter(
+            (m) => m.attributes?.role === "leader"
+          ).length;
         } catch (err: any) {
           // Fall back to 0
         }
@@ -148,6 +154,7 @@ export async function syncGroupsAttendance(
           eventsInMonth: events.length,
           totalAttended,
           memberCount,
+          leaderCount,
         });
       }
     }
@@ -157,6 +164,7 @@ export async function syncGroupsAttendance(
       const campusGroups = results.filter((r) => r.campus === campusName);
       const activeGroups = campusGroups.filter((g) => g.eventsInMonth > 0).length;
       const totalMembers = campusGroups.reduce((sum, g) => sum + g.memberCount, 0);
+      const totalLeaders = campusGroups.reduce((sum, g) => sum + g.leaderCount, 0);
       const totalAttendance = campusGroups.reduce((sum, g) => sum + g.totalAttended, 0);
       const totalEvents = campusGroups.reduce((sum, g) => sum + g.eventsInMonth, 0);
       const avgAttendance = totalEvents > 0 ? Math.round(totalAttendance / totalEvents * activeGroups) : 0;
@@ -168,7 +176,7 @@ export async function syncGroupsAttendance(
       const weeksInMonth = Math.ceil(totalEvents / Math.max(activeGroups, 1));
       const weeklyAvg = weeksInMonth > 0 ? Math.round(totalAttendance / weeksInMonth) : 0;
 
-      log(`  ${campusName}: ${activeGroups} active groups, ${totalMembers} members, ${weeklyAvg} avg weekly attendance`);
+      log(`  ${campusName}: ${activeGroups} active groups, ${totalMembers} members, ${totalLeaders} leaders, ${weeklyAvg} avg weekly attendance`);
 
       // Upsert into groups_monthly
       const existing = await db
@@ -189,7 +197,7 @@ export async function syncGroupsAttendance(
           .set({
             activeGroups,
             totalMembers,
-            totalLeaders: 0, // PCO doesn't distinguish leaders in this context
+            totalLeaders,
             avgAttendance: weeklyAvg,
             source: "pco",
           })
@@ -202,7 +210,7 @@ export async function syncGroupsAttendance(
           campus: campusName,
           activeGroups,
           totalMembers,
-          totalLeaders: 0,
+          totalLeaders,
           avgAttendance: weeklyAvg,
           source: "pco",
         });
