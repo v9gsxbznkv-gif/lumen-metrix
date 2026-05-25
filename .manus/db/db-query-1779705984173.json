@@ -1,0 +1,80 @@
+{
+  "query": "SELECT year, month, campus, totalGroups, activeGroups FROM groups_monthly WHERE year = 2026 ORDER BY month, campus;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, month, campus, totalGroups, activeGroups FROM groups_monthly WHERE year = 2026 ORDER BY month, campus;",
+  "rows": [
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "totalGroups": "0",
+      "activeGroups": "44"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Jasper",
+      "totalGroups": "0",
+      "activeGroups": "11"
+    },
+    {
+      "year": "2026",
+      "month": "2",
+      "campus": "Canton",
+      "totalGroups": "0",
+      "activeGroups": "50"
+    },
+    {
+      "year": "2026",
+      "month": "2",
+      "campus": "Jasper",
+      "totalGroups": "0",
+      "activeGroups": "13"
+    },
+    {
+      "year": "2026",
+      "month": "3",
+      "campus": "Canton",
+      "totalGroups": "0",
+      "activeGroups": "50"
+    },
+    {
+      "year": "2026",
+      "month": "3",
+      "campus": "Jasper",
+      "totalGroups": "0",
+      "activeGroups": "13"
+    },
+    {
+      "year": "2026",
+      "month": "4",
+      "campus": "Canton",
+      "totalGroups": "0",
+      "activeGroups": "49"
+    },
+    {
+      "year": "2026",
+      "month": "4",
+      "campus": "Jasper",
+      "totalGroups": "0",
+      "activeGroups": "13"
+    },
+    {
+      "year": "2026",
+      "month": "5",
+      "campus": "Canton",
+      "totalGroups": "0",
+      "activeGroups": "44"
+    },
+    {
+      "year": "2026",
+      "month": "5",
+      "campus": "Jasper",
+      "totalGroups": "0",
+      "activeGroups": "13"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tmonth\tcampus\ttotalGroups\tactiveGroups\n2026\t1\tCanton\t0\t44\n2026\t1\tJasper\t0\t11\n2026\t2\tCanton\t0\t50\n2026\t2\tJasper\t0\t13\n2026\t3\tCanton\t0\t50\n2026\t3\tJasper\t0\t13\n2026\t4\tCanton\t0\t49\n2026\t4\tJasper\t0\t13\n2026\t5\tCanton\t0\t44\n2026\t5\tJasper\t0\t13\n",
+  "stderr": "",
+  "execution_time_ms": 263
+}

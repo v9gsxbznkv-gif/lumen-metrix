@@ -60,14 +60,14 @@ export const groupsRouter = router({
         .select()
         .from(groupsMonthly);
 
-      // ── Attendance data for participation rate ────────────────────
+      // ── Attendance data for participation rate (Adults only, excludes Kids/Students) ──
       const attRows = await db
         .select()
         .from(attendance)
         .where(
           and(
             eq(attendance.year, year),
-            eq(attendance.subgroup, "Total")
+            eq(attendance.subgroup, "Adults")
           )
         );
 
@@ -77,7 +77,7 @@ export const groupsRouter = router({
         .where(
           and(
             eq(attendance.year, year - 1),
-            eq(attendance.subgroup, "Total")
+            eq(attendance.subgroup, "Adults")
           )
         );
 

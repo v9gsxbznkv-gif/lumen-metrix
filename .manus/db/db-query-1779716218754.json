@@ -1,0 +1,25 @@
+{
+  "query": "SELECT DISTINCT subgroup FROM attendance WHERE year = 2026 LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT subgroup FROM attendance WHERE year = 2026 LIMIT 20;",
+  "rows": [
+    {
+      "subgroup": "Kids"
+    },
+    {
+      "subgroup": "Adults"
+    },
+    {
+      "subgroup": "Students"
+    },
+    {
+      "subgroup": "Young Adults"
+    },
+    {
+      "subgroup": "Total"
+    }
+  ],
+  "messages": [],
+  "stdout": "subgroup\nKids\nAdults\nStudents\nYoung Adults\nTotal\n",
+  "stderr": "",
+  "execution_time_ms": 267
+}

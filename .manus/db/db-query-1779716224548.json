@@ -1,0 +1,20 @@
+{
+  "query": "SELECT campus, subgroup, avgWeekly FROM attendance WHERE year = 2026 AND campus = 'Canton' AND subgroup IN ('Adults', 'Total') ORDER BY subgroup;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT campus, subgroup, avgWeekly FROM attendance WHERE year = 2026 AND campus = 'Canton' AND subgroup IN ('Adults', 'Total') ORDER BY subgroup;",
+  "rows": [
+    {
+      "campus": "Canton",
+      "subgroup": "Adults",
+      "avgWeekly": "1944"
+    },
+    {
+      "campus": "Canton",
+      "subgroup": "Total",
+      "avgWeekly": "2789"
+    }
+  ],
+  "messages": [],
+  "stdout": "campus\tsubgroup\tavgWeekly\nCanton\tAdults\t1944\nCanton\tTotal\t2789\n",
+  "stderr": "",
+  "execution_time_ms": 267
+}

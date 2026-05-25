@@ -1573,6 +1573,9 @@
 - [x] Update GroupsTab.tsx: "Active Groups" KPI shows totalGroups (all PCO groups), new "Groups Reporting" KPI shows activeGroups
 - [x] Add "Reporting Rate" ratio card (activeGroups / totalGroups %)
 - [x] Campus breakdown table now shows Total Groups + Reporting columns
-- [ ] Re-run 2026 groups sync to populate totalGroups column
-- [ ] Re-run 2025 groups sync to populate totalGroups column
-- [ ] Deploy with totalGroups feature
+- [x] Re-run 2026 groups sync to populate totalGroups column
+- [x] Re-run 2025 groups sync to populate totalGroups column
+- [x] Deploy with totalGroups feature
+
+## Groups Participation Rate Fix (May 2026)
+- [x] Change participation rate to use Adults attendance instead of Total attendance (excludes Kids/Students)

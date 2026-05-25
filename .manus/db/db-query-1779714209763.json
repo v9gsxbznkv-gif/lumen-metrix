@@ -1,0 +1,24 @@
+{
+  "query": "SELECT year, month, campus, totalGroups, activeGroups FROM groups_monthly WHERE totalGroups > 0 LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, month, campus, totalGroups, activeGroups FROM groups_monthly WHERE totalGroups > 0 LIMIT 10;",
+  "rows": [
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "totalGroups": "74",
+      "activeGroups": "44"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Jasper",
+      "totalGroups": "15",
+      "activeGroups": "11"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tmonth\tcampus\ttotalGroups\tactiveGroups\n2026\t1\tCanton\t74\t44\n2026\t1\tJasper\t15\t11\n",
+  "stderr": "",
+  "execution_time_ms": 270
+}

@@ -1,0 +1,150 @@
+{
+  "query": "SELECT year, month, campus, totalGroups, activeGroups FROM groups_monthly WHERE year >= 2025 ORDER BY year DESC, month DESC, campus LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, month, campus, totalGroups, activeGroups FROM groups_monthly WHERE year >= 2025 ORDER BY year DESC, month DESC, campus LIMIT 20;",
+  "rows": [
+    {
+      "year": "2026",
+      "month": "5",
+      "campus": "Canton",
+      "totalGroups": "74",
+      "activeGroups": "44"
+    },
+    {
+      "year": "2026",
+      "month": "5",
+      "campus": "Jasper",
+      "totalGroups": "15",
+      "activeGroups": "13"
+    },
+    {
+      "year": "2026",
+      "month": "4",
+      "campus": "Canton",
+      "totalGroups": "74",
+      "activeGroups": "49"
+    },
+    {
+      "year": "2026",
+      "month": "4",
+      "campus": "Jasper",
+      "totalGroups": "15",
+      "activeGroups": "13"
+    },
+    {
+      "year": "2026",
+      "month": "3",
+      "campus": "Canton",
+      "totalGroups": "74",
+      "activeGroups": "50"
+    },
+    {
+      "year": "2026",
+      "month": "3",
+      "campus": "Jasper",
+      "totalGroups": "15",
+      "activeGroups": "13"
+    },
+    {
+      "year": "2026",
+      "month": "2",
+      "campus": "Canton",
+      "totalGroups": "74",
+      "activeGroups": "50"
+    },
+    {
+      "year": "2026",
+      "month": "2",
+      "campus": "Jasper",
+      "totalGroups": "15",
+      "activeGroups": "13"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "totalGroups": "74",
+      "activeGroups": "44"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Jasper",
+      "totalGroups": "15",
+      "activeGroups": "11"
+    },
+    {
+      "year": "2025",
+      "month": "12",
+      "campus": "Canton",
+      "totalGroups": "74",
+      "activeGroups": "46"
+    },
+    {
+      "year": "2025",
+      "month": "12",
+      "campus": "Jasper",
+      "totalGroups": "15",
+      "activeGroups": "11"
+    },
+    {
+      "year": "2025",
+      "month": "11",
+      "campus": "Canton",
+      "totalGroups": "74",
+      "activeGroups": "58"
+    },
+    {
+      "year": "2025",
+      "month": "11",
+      "campus": "Jasper",
+      "totalGroups": "15",
+      "activeGroups": "11"
+    },
+    {
+      "year": "2025",
+      "month": "10",
+      "campus": "Canton",
+      "totalGroups": "74",
+      "activeGroups": "55"
+    },
+    {
+      "year": "2025",
+      "month": "10",
+      "campus": "Jasper",
+      "totalGroups": "15",
+      "activeGroups": "10"
+    },
+    {
+      "year": "2025",
+      "month": "9",
+      "campus": "Canton",
+      "totalGroups": "74",
+      "activeGroups": "54"
+    },
+    {
+      "year": "2025",
+      "month": "9",
+      "campus": "Jasper",
+      "totalGroups": "15",
+      "activeGroups": "10"
+    },
+    {
+      "year": "2025",
+      "month": "8",
+      "campus": "Canton",
+      "totalGroups": "74",
+      "activeGroups": "36"
+    },
+    {
+      "year": "2025",
+      "month": "8",
+      "campus": "Jasper",
+      "totalGroups": "15",
+      "activeGroups": "6"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tmonth\tcampus\ttotalGroups\tactiveGroups\n2026\t5\tCanton\t74\t44\n2026\t5\tJasper\t15\t13\n2026\t4\tCanton\t74\t49\n2026\t4\tJasper\t15\t13\n2026\t3\tCanton\t74\t50\n2026\t3\tJasper\t15\t13\n2026\t2\tCanton\t74\t50\n2026\t2\tJasper\t15\t13\n2026\t1\tCanton\t74\t44\n2026\t1\tJasper\t15\t11\n2025\t12\tCanton\t74\t46\n2025\t12\tJasper\t15\t11\n2025\t11\tCanton\t74\t58\n2025\t11\tJasper\t15\t11\n2025\t10\tCanton\t74\t55\n2025\t10\tJasper\t15\t10\n2025\t9\tCanton\t74\t54\n2025\t9\tJasper\t15\t10\n2025\t8\tCanton\t74\t36\n2025\t8\tJasper\t15\t6\n",
+  "stderr": "",
+  "execution_time_ms": 264
+}
