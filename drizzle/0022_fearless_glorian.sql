@@ -1,0 +1,1 @@
+ALTER TABLE `groups_monthly` ADD `totalGroups` int DEFAULT 0 NOT NULL;

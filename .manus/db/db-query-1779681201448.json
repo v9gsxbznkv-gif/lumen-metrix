@@ -1,0 +1,100 @@
+{
+  "query": "SELECT year, month, campus, activeGroups, totalMembers, totalLeaders, avgAttendance FROM groups_monthly WHERE year = 2026 ORDER BY campus, month;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, month, campus, activeGroups, totalMembers, totalLeaders, avgAttendance FROM groups_monthly WHERE year = 2026 ORDER BY campus, month;",
+  "rows": [
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "activeGroups": "44",
+      "totalMembers": "643",
+      "totalLeaders": "95",
+      "avgAttendance": "194"
+    },
+    {
+      "year": "2026",
+      "month": "2",
+      "campus": "Canton",
+      "activeGroups": "50",
+      "totalMembers": "711",
+      "totalLeaders": "106",
+      "avgAttendance": "228"
+    },
+    {
+      "year": "2026",
+      "month": "3",
+      "campus": "Canton",
+      "activeGroups": "50",
+      "totalMembers": "705",
+      "totalLeaders": "106",
+      "avgAttendance": "303"
+    },
+    {
+      "year": "2026",
+      "month": "4",
+      "campus": "Canton",
+      "activeGroups": "49",
+      "totalMembers": "705",
+      "totalLeaders": "104",
+      "avgAttendance": "211"
+    },
+    {
+      "year": "2026",
+      "month": "5",
+      "campus": "Canton",
+      "activeGroups": "44",
+      "totalMembers": "650",
+      "totalLeaders": "93",
+      "avgAttendance": "136"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Jasper",
+      "activeGroups": "11",
+      "totalMembers": "148",
+      "totalLeaders": "23",
+      "avgAttendance": "68"
+    },
+    {
+      "year": "2026",
+      "month": "2",
+      "campus": "Jasper",
+      "activeGroups": "13",
+      "totalMembers": "172",
+      "totalLeaders": "27",
+      "avgAttendance": "65"
+    },
+    {
+      "year": "2026",
+      "month": "3",
+      "campus": "Jasper",
+      "activeGroups": "13",
+      "totalMembers": "172",
+      "totalLeaders": "27",
+      "avgAttendance": "89"
+    },
+    {
+      "year": "2026",
+      "month": "4",
+      "campus": "Jasper",
+      "activeGroups": "13",
+      "totalMembers": "172",
+      "totalLeaders": "27",
+      "avgAttendance": "58"
+    },
+    {
+      "year": "2026",
+      "month": "5",
+      "campus": "Jasper",
+      "activeGroups": "13",
+      "totalMembers": "172",
+      "totalLeaders": "27",
+      "avgAttendance": "43"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tmonth\tcampus\tactiveGroups\ttotalMembers\ttotalLeaders\tavgAttendance\n2026\t1\tCanton\t44\t643\t95\t194\n2026\t2\tCanton\t50\t711\t106\t228\n2026\t3\tCanton\t50\t705\t106\t303\n2026\t4\tCanton\t49\t705\t104\t211\n2026\t5\tCanton\t44\t650\t93\t136\n2026\t1\tJasper\t11\t148\t23\t68\n2026\t2\tJasper\t13\t172\t27\t65\n2026\t3\tJasper\t13\t172\t27\t89\n2026\t4\tJasper\t13\t172\t27\t58\n2026\t5\tJasper\t13\t172\t27\t43\n",
+  "stderr": "",
+  "execution_time_ms": 275
+}

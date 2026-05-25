@@ -1,6 +1,6 @@
 /**
  * Lumen Metrix — Groups Page
- * Active groups, total members, leaders, group attendance, participation rate
+ * Active groups (total in PCO), groups reporting, total members, leaders, group attendance, participation rate
  * Trend charts and campus breakdown
  */
 import { useMemo } from "react";
@@ -12,7 +12,7 @@ import {
   AreaChart, Area, LineChart, Line,
 } from "recharts";
 import { CHART_COLORS, formatNumber, MONTH_NAMES } from "@/lib/data";
-import { Users, UserCheck, Crown, Activity, Loader2 } from "lucide-react";
+import { Users, UserCheck, Crown, Activity, Loader2, ClipboardCheck } from "lucide-react";
 
 export default function GroupsTab() {
   const { filters } = useData();
@@ -55,26 +55,33 @@ export default function GroupsTab() {
     };
   }
 
-  const groupsChange = priorYear ? pctChange(current.activeGroups, priorYear.activeGroups) : undefined;
+  // totalGroups = all groups in PCO (the real "Active Groups" count)
+  // activeGroups = groups that reported attendance (secondary metric)
+  const totalGroupsVal = current.totalGroups ?? current.activeGroups;
+  const priorTotalGroupsVal = priorYear?.totalGroups ?? priorYear?.activeGroups ?? 0;
+
+  const groupsChange = priorYear ? pctChange(totalGroupsVal, priorTotalGroupsVal) : undefined;
+  const reportingChange = priorYear ? pctChange(current.activeGroups, priorYear.activeGroups) : undefined;
   const membersChange = priorYear ? pctChange(current.totalMembers, priorYear.totalMembers) : undefined;
   const leadersChange = priorYear ? pctChange(current.totalLeaders, priorYear.totalLeaders) : undefined;
   const attendanceChange = priorYear ? pctChange(current.avgAttendance, priorYear.avgAttendance) : undefined;
 
   // ── Monthly chart data ──────────────────────────────────────
-  const monthlyChartData = monthly.map((m) => ({
+  const monthlyChartData = monthly.map((m: any) => ({
     name: MONTH_NAMES[m.month - 1]?.substring(0, 3) || `M${m.month}`,
-    "Active Groups": m.activeGroups,
+    "Active Groups": m.totalGroups || m.activeGroups,
+    "Groups Reporting": m.activeGroups,
     "Total Members": m.totalMembers,
     "Leaders": m.totalLeaders,
     "Group Attendance": m.avgAttendance,
-    "Prior Year Groups": m.priorActiveGroups,
+    "Prior Year Groups": m.priorTotalGroups || m.priorActiveGroups,
     "Prior Year Members": m.priorMembers,
   }));
 
   // ── Yearly trend chart data ─────────────────────────────────
-  const trendData = yearlyTrend.map((y) => ({
+  const trendData = yearlyTrend.map((y: any) => ({
     name: String(y.year),
-    "Active Groups": y.activeGroups,
+    "Active Groups": y.totalGroups || y.activeGroups,
     "Total Members": y.totalMembers,
     "Leaders": y.totalLeaders,
     "Group Attendance": y.avgAttendance,
@@ -83,13 +90,22 @@ export default function GroupsTab() {
   return (
     <div className="space-y-6">
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         <KpiCard
           label="Active Groups"
-          value={formatNumber(current.activeGroups)}
+          value={formatNumber(totalGroupsVal)}
           change={groupsChange}
+          subtitle="All groups in PCO"
           borderColor="#E8913A"
           icon={<Users className="w-5 h-5" />}
+        />
+        <KpiCard
+          label="Groups Reporting"
+          value={formatNumber(current.activeGroups)}
+          change={reportingChange}
+          subtitle="Reported attendance"
+          borderColor="#D4A574"
+          icon={<ClipboardCheck className="w-5 h-5" />}
         />
         <KpiCard
           label="Total Members"
@@ -143,6 +159,7 @@ export default function GroupsTab() {
                 />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
                 <Bar dataKey="Active Groups" fill="#E8913A" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="Groups Reporting" fill="#D4A574" radius={[3, 3, 0, 0]} />
                 <Bar dataKey="Total Members" fill="#4A7FB5" radius={[3, 3, 0, 0]} />
                 <Bar dataKey="Group Attendance" fill="#8B6DAF" radius={[3, 3, 0, 0]} />
               </BarChart>
@@ -250,14 +267,17 @@ export default function GroupsTab() {
             Campus Breakdown — {latestYear}
           </h3>
           <div className="overflow-x-auto -mx-4 sm:mx-0">
-            <table className="w-full text-sm min-w-[600px]">
+            <table className="w-full text-sm min-w-[700px]">
               <thead>
                 <tr className="border-b border-border/60">
                   <th className="text-left py-2.5 px-3 text-muted-foreground font-medium text-xs uppercase tracking-wider">
                     Campus
                   </th>
                   <th className="text-right py-2.5 px-3 text-muted-foreground font-medium text-xs uppercase tracking-wider">
-                    Active Groups
+                    Total Groups
+                  </th>
+                  <th className="text-right py-2.5 px-3 text-muted-foreground font-medium text-xs uppercase tracking-wider">
+                    Reporting
                   </th>
                   <th className="text-right py-2.5 px-3 text-muted-foreground font-medium text-xs uppercase tracking-wider">
                     Members
@@ -272,18 +292,21 @@ export default function GroupsTab() {
                     Participation
                   </th>
                   <th className="text-right py-2.5 px-3 text-muted-foreground font-medium text-xs uppercase tracking-wider">
-                    YoY Groups
+                    YoY
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {campusBreakdown.map((row) => {
-                  const groupsYoY = row.priorActiveGroups > 0
-                    ? ((row.activeGroups - row.priorActiveGroups) / row.priorActiveGroups * 100).toFixed(1)
+                {campusBreakdown.map((row: any) => {
+                  const totalGroupsRow = row.totalGroups ?? row.activeGroups;
+                  const priorTotalGroupsRow = row.priorTotalGroups ?? row.priorActiveGroups;
+                  const groupsYoY = priorTotalGroupsRow > 0
+                    ? ((totalGroupsRow - priorTotalGroupsRow) / priorTotalGroupsRow * 100).toFixed(1)
                     : "N/A";
                   return (
                     <tr key={row.campus} className="border-b border-border/30 hover:bg-muted/30 transition-colors">
                       <td className="py-2.5 px-3 font-medium text-card-foreground">{row.campus}</td>
+                      <td className="py-2.5 px-3 text-right font-mono text-card-foreground">{formatNumber(totalGroupsRow)}</td>
                       <td className="py-2.5 px-3 text-right font-mono text-card-foreground">{formatNumber(row.activeGroups)}</td>
                       <td className="py-2.5 px-3 text-right font-mono text-card-foreground">{formatNumber(row.totalMembers)}</td>
                       <td className="py-2.5 px-3 text-right font-mono text-card-foreground">{formatNumber(row.totalLeaders)}</td>
@@ -306,24 +329,27 @@ export default function GroupsTab() {
                   <tr className="border-t-2 border-border/60 font-semibold bg-muted/20">
                     <td className="py-2.5 px-3 text-card-foreground">All Campuses</td>
                     <td className="py-2.5 px-3 text-right font-mono text-card-foreground">
-                      {formatNumber(campusBreakdown.reduce((s, r) => s + r.activeGroups, 0))}
+                      {formatNumber(campusBreakdown.reduce((s: number, r: any) => s + (r.totalGroups ?? r.activeGroups), 0))}
                     </td>
                     <td className="py-2.5 px-3 text-right font-mono text-card-foreground">
-                      {formatNumber(campusBreakdown.reduce((s, r) => s + r.totalMembers, 0))}
+                      {formatNumber(campusBreakdown.reduce((s: number, r: any) => s + r.activeGroups, 0))}
                     </td>
                     <td className="py-2.5 px-3 text-right font-mono text-card-foreground">
-                      {formatNumber(campusBreakdown.reduce((s, r) => s + r.totalLeaders, 0))}
+                      {formatNumber(campusBreakdown.reduce((s: number, r: any) => s + r.totalMembers, 0))}
                     </td>
                     <td className="py-2.5 px-3 text-right font-mono text-card-foreground">
-                      {formatNumber(campusBreakdown.reduce((s, r) => s + r.avgAttendance, 0))}
+                      {formatNumber(campusBreakdown.reduce((s: number, r: any) => s + r.totalLeaders, 0))}
+                    </td>
+                    <td className="py-2.5 px-3 text-right font-mono text-card-foreground">
+                      {formatNumber(campusBreakdown.reduce((s: number, r: any) => s + r.avgAttendance, 0))}
                     </td>
                     <td className="py-2.5 px-3 text-right font-mono text-card-foreground">
                       {current.participationRate}%
                     </td>
                     <td className="py-2.5 px-3 text-right font-mono">
                       {(() => {
-                        const totalPrior = campusBreakdown.reduce((s, r) => s + r.priorActiveGroups, 0);
-                        const totalNow = campusBreakdown.reduce((s, r) => s + r.activeGroups, 0);
+                        const totalPrior = campusBreakdown.reduce((s: number, r: any) => s + (r.priorTotalGroups ?? r.priorActiveGroups), 0);
+                        const totalNow = campusBreakdown.reduce((s: number, r: any) => s + (r.totalGroups ?? r.activeGroups), 0);
                         if (totalPrior === 0) return <span className="text-muted-foreground">N/A</span>;
                         const pct = ((totalNow - totalPrior) / totalPrior * 100).toFixed(1);
                         return (
@@ -346,11 +372,11 @@ export default function GroupsTab() {
         <h3 className="text-sm font-semibold text-card-foreground mb-4">
           Key Ratios
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div className="text-center p-4 rounded-lg bg-muted/30">
             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Members per Group</p>
             <p className="text-2xl font-mono font-bold text-card-foreground">
-              {current.activeGroups > 0 ? (current.totalMembers / current.activeGroups).toFixed(1) : "—"}
+              {totalGroupsVal > 0 ? (current.totalMembers / totalGroupsVal).toFixed(1) : "—"}
             </p>
           </div>
           <div className="text-center p-4 rounded-lg bg-muted/30">
@@ -362,7 +388,13 @@ export default function GroupsTab() {
           <div className="text-center p-4 rounded-lg bg-muted/30">
             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Leaders per Group</p>
             <p className="text-2xl font-mono font-bold text-card-foreground">
-              {current.activeGroups > 0 ? (current.totalLeaders / current.activeGroups).toFixed(1) : "—"}
+              {totalGroupsVal > 0 ? (current.totalLeaders / totalGroupsVal).toFixed(1) : "—"}
+            </p>
+          </div>
+          <div className="text-center p-4 rounded-lg bg-muted/30">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Reporting Rate</p>
+            <p className="text-2xl font-mono font-bold text-card-foreground">
+              {totalGroupsVal > 0 ? Math.round((current.activeGroups / totalGroupsVal) * 100) + "%" : "—"}
             </p>
           </div>
         </div>

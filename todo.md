@@ -1565,3 +1565,14 @@
 - [x] Add leader count to groups sync (pull memberships with role=leader per group from PCO)
 - [x] Delete fake 2025 groups_annual data and backfill 2025 groups_monthly from PCO
 - [x] Rewrite Groups page router to derive KPIs from groups_monthly (not groups_annual)
+
+## Total Groups Feature (May 2026)
+- [x] Add totalGroups column to groups_monthly schema (migration 0022 pushed)
+- [x] Update groupsSync.ts to fetch all groups per campus (not just those reporting attendance)
+- [x] Update groups router to include totalGroups in all metric functions
+- [x] Update GroupsTab.tsx: "Active Groups" KPI shows totalGroups (all PCO groups), new "Groups Reporting" KPI shows activeGroups
+- [x] Add "Reporting Rate" ratio card (activeGroups / totalGroups %)
+- [x] Campus breakdown table now shows Total Groups + Reporting columns
+- [ ] Re-run 2026 groups sync to populate totalGroups column
+- [ ] Re-run 2025 groups sync to populate totalGroups column
+- [ ] Deploy with totalGroups feature

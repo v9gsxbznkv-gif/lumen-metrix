@@ -88,7 +88,7 @@ export const groupsRouter = router({
           : rows.filter((r) => r.campus === campusFilter);
 
         if (filtered.length === 0) {
-          return { activeGroups: 0, totalMembers: 0, totalLeaders: 0, avgAttendance: 0 };
+          return { totalGroups: 0, activeGroups: 0, totalMembers: 0, totalLeaders: 0, avgAttendance: 0 };
         }
 
         // Find the latest month with data
@@ -96,6 +96,7 @@ export const groupsRouter = router({
         const latestRows = filtered.filter((r) => r.month === latestMonth);
 
         return {
+          totalGroups: latestRows.reduce((s, r) => s + r.totalGroups, 0),
           activeGroups: latestRows.reduce((s, r) => s + r.activeGroups, 0),
           totalMembers: latestRows.reduce((s, r) => s + r.totalMembers, 0),
           totalLeaders: latestRows.reduce((s, r) => s + r.totalLeaders, 0),
@@ -110,7 +111,7 @@ export const groupsRouter = router({
           : rows.filter((r) => r.campus === campusFilter);
 
         if (filtered.length === 0) {
-          return { activeGroups: 0, totalMembers: 0, totalLeaders: 0, avgAttendance: 0 };
+          return { totalGroups: 0, activeGroups: 0, totalMembers: 0, totalLeaders: 0, avgAttendance: 0 };
         }
 
         // Get unique months
@@ -118,17 +119,19 @@ export const groupsRouter = router({
         const monthCount = months.length;
 
         // For each month, sum across campuses, then average across months
-        let totalGroups = 0, totalMembers = 0, totalLeaders = 0, totalAttendance = 0;
+        let sumTotalGroups = 0, sumActiveGroups = 0, totalMembers = 0, totalLeaders = 0, totalAttendance = 0;
         for (const m of months) {
           const mRows = filtered.filter((r) => r.month === m);
-          totalGroups += mRows.reduce((s, r) => s + r.activeGroups, 0);
+          sumTotalGroups += mRows.reduce((s, r) => s + r.totalGroups, 0);
+          sumActiveGroups += mRows.reduce((s, r) => s + r.activeGroups, 0);
           totalMembers += mRows.reduce((s, r) => s + r.totalMembers, 0);
           totalLeaders += mRows.reduce((s, r) => s + r.totalLeaders, 0);
           totalAttendance += mRows.reduce((s, r) => s + r.avgAttendance, 0);
         }
 
         return {
-          activeGroups: Math.round(totalGroups / monthCount),
+          totalGroups: Math.round(sumTotalGroups / monthCount),
+          activeGroups: Math.round(sumActiveGroups / monthCount),
           totalMembers: Math.round(totalMembers / monthCount),
           totalLeaders: Math.round(totalLeaders / monthCount),
           avgAttendance: Math.round(totalAttendance / monthCount),
@@ -171,14 +174,16 @@ export const groupsRouter = router({
         );
         return {
           month,
+          totalGroups: rows.reduce((s, r) => s + r.totalGroups, 0),
           activeGroups: rows.reduce((s, r) => s + r.activeGroups, 0),
           totalMembers: rows.reduce((s, r) => s + r.totalMembers, 0),
           totalLeaders: rows.reduce((s, r) => s + r.totalLeaders, 0),
           avgAttendance: rows.reduce((s, r) => s + r.avgAttendance, 0),
+          priorTotalGroups: priorRows.reduce((s, r) => s + r.totalGroups, 0),
           priorActiveGroups: priorRows.reduce((s, r) => s + r.activeGroups, 0),
           priorMembers: priorRows.reduce((s, r) => s + r.totalMembers, 0),
         };
-      }).filter((m) => m.activeGroups > 0 || m.priorActiveGroups > 0);
+      }).filter((m) => m.totalGroups > 0 || m.activeGroups > 0 || m.priorActiveGroups > 0);
 
       // ── Campus breakdown (latest month per campus) ────────────────
       const campuses = Array.from(new Set(monthlyRows.map((r) => r.campus)));
@@ -192,6 +197,7 @@ export const groupsRouter = router({
           participationRate: cAtt > 0
             ? Math.round((cData.totalMembers / cAtt) * 1000) / 10
             : 0,
+          priorTotalGroups: cPrior.totalGroups,
           priorActiveGroups: cPrior.activeGroups,
           priorMembers: cPrior.totalMembers,
           priorLeaders: cPrior.totalLeaders,

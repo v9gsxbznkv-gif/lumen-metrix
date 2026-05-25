@@ -225,6 +225,7 @@ export const groupsMonthly = mysqlTable("groups_monthly", {
   year: int("year").notNull(),
   month: int("month").notNull(),
   campus: varchar("campus", { length: 64 }).notNull(),
+  totalGroups: int("totalGroups").default(0).notNull(),
   activeGroups: int("activeGroups").default(0).notNull(),
   totalMembers: int("totalMembers").default(0).notNull(),
   totalLeaders: int("totalLeaders").default(0).notNull(),

@@ -160,7 +160,14 @@ export async function syncGroupsAttendance(
     }
 
     // Aggregate by campus
-    for (const campusName of Object.values(CAMPUS_MAP)) {
+    for (const [campusId, campusName] of Object.entries(CAMPUS_MAP)) {
+      // totalGroups = ALL groups under this campus (regardless of events/attendance)
+      const allCampusGroups = (await client.paginateAll(
+        `/groups/v2/campuses/${campusId}/groups`,
+        { per_page: 100 }
+      )).data as any[];
+      const totalGroups = allCampusGroups.length;
+
       const campusGroups = results.filter((r) => r.campus === campusName);
       const activeGroups = campusGroups.filter((g) => g.eventsInMonth > 0).length;
       const totalMembers = campusGroups.reduce((sum, g) => sum + g.memberCount, 0);
@@ -195,6 +202,7 @@ export async function syncGroupsAttendance(
         await db
           .update(groupsMonthly)
           .set({
+            totalGroups,
             activeGroups,
             totalMembers,
             totalLeaders,
@@ -208,6 +216,7 @@ export async function syncGroupsAttendance(
           year,
           month,
           campus: campusName,
+          totalGroups,
           activeGroups,
           totalMembers,
           totalLeaders,

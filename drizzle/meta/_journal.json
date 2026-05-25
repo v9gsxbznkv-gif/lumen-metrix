@@ -155,6 +155,13 @@
       "when": 1779650104033,
       "tag": "0021_mushy_firebrand",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "5",
+      "when": 1779681252421,
+      "tag": "0022_fearless_glorian",
+      "breakpoints": true
     }
   ]
 }
