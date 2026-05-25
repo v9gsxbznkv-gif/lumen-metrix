@@ -1,0 +1,185 @@
+{
+  "query": "SELECT year, campus, COUNT(DISTINCT weekStartDate) as sundays_with_data, MIN(weekStartDate) as earliest, MAX(weekStartDate) as latest FROM attendance_weekly GROUP BY year, campus ORDER BY year, campus;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, campus, COUNT(DISTINCT weekStartDate) as sundays_with_data, MIN(weekStartDate) as earliest, MAX(weekStartDate) as latest FROM attendance_weekly GROUP BY year, campus ORDER BY year, campus;",
+  "rows": [
+    {
+      "year": "2013",
+      "campus": "Canton",
+      "sundays_with_data": "51",
+      "earliest": "2013-01-06",
+      "latest": "2013-12-22"
+    },
+    {
+      "year": "2014",
+      "campus": "Canton",
+      "sundays_with_data": "51",
+      "earliest": "2014-01-05",
+      "latest": "2014-12-21"
+    },
+    {
+      "year": "2015",
+      "campus": "Canton",
+      "sundays_with_data": "52",
+      "earliest": "2015-01-04",
+      "latest": "2015-12-27"
+    },
+    {
+      "year": "2016",
+      "campus": "Canton",
+      "sundays_with_data": "52",
+      "earliest": "2016-01-03",
+      "latest": "2016-12-25"
+    },
+    {
+      "year": "2017",
+      "campus": "Canton",
+      "sundays_with_data": "51",
+      "earliest": "2017-01-01",
+      "latest": "2017-12-17"
+    },
+    {
+      "year": "2017",
+      "campus": "Jasper",
+      "sundays_with_data": "11",
+      "earliest": "2017-04-16",
+      "latest": "2017-12-17"
+    },
+    {
+      "year": "2018",
+      "campus": "Canton",
+      "sundays_with_data": "51",
+      "earliest": "2018-01-07",
+      "latest": "2018-12-23"
+    },
+    {
+      "year": "2018",
+      "campus": "Jasper",
+      "sundays_with_data": "52",
+      "earliest": "2018-01-07",
+      "latest": "2018-12-30"
+    },
+    {
+      "year": "2019",
+      "campus": "Canton",
+      "sundays_with_data": "51",
+      "earliest": "2019-01-06",
+      "latest": "2019-12-22"
+    },
+    {
+      "year": "2019",
+      "campus": "Jasper",
+      "sundays_with_data": "51",
+      "earliest": "2019-01-06",
+      "latest": "2019-12-22"
+    },
+    {
+      "year": "2020",
+      "campus": "Canton",
+      "sundays_with_data": "44",
+      "earliest": "2020-01-05",
+      "latest": "2020-12-27"
+    },
+    {
+      "year": "2020",
+      "campus": "Jasper",
+      "sundays_with_data": "28",
+      "earliest": "2020-01-05",
+      "latest": "2020-12-20"
+    },
+    {
+      "year": "2021",
+      "campus": "Canton",
+      "sundays_with_data": "51",
+      "earliest": "2021-01-10",
+      "latest": "2021-12-26"
+    },
+    {
+      "year": "2021",
+      "campus": "Jasper",
+      "sundays_with_data": "52",
+      "earliest": "2021-01-03",
+      "latest": "2021-12-26"
+    },
+    {
+      "year": "2022",
+      "campus": "Canton",
+      "sundays_with_data": "52",
+      "earliest": "2022-01-02",
+      "latest": "2022-12-25"
+    },
+    {
+      "year": "2022",
+      "campus": "Jasper",
+      "sundays_with_data": "52",
+      "earliest": "2022-01-02",
+      "latest": "2022-12-25"
+    },
+    {
+      "year": "2023",
+      "campus": "Canton",
+      "sundays_with_data": "52",
+      "earliest": "2023-01-01",
+      "latest": "2023-12-24"
+    },
+    {
+      "year": "2023",
+      "campus": "Jasper",
+      "sundays_with_data": "51",
+      "earliest": "2023-01-08",
+      "latest": "2023-12-24"
+    },
+    {
+      "year": "2024",
+      "campus": "Canton",
+      "sundays_with_data": "51",
+      "earliest": "2024-01-07",
+      "latest": "2024-12-22"
+    },
+    {
+      "year": "2024",
+      "campus": "Jasper",
+      "sundays_with_data": "51",
+      "earliest": "2024-01-07",
+      "latest": "2024-12-22"
+    },
+    {
+      "year": "2025",
+      "campus": "Canton",
+      "sundays_with_data": "53",
+      "earliest": "2025-01-05",
+      "latest": "2025-12-29"
+    },
+    {
+      "year": "2025",
+      "campus": "Jasper",
+      "sundays_with_data": "53",
+      "earliest": "2025-01-05",
+      "latest": "2025-12-29"
+    },
+    {
+      "year": "2026",
+      "campus": "Canton",
+      "sundays_with_data": "22",
+      "earliest": "2026-01-01",
+      "latest": "2026-05-25"
+    },
+    {
+      "year": "2026",
+      "campus": "Jasper",
+      "sundays_with_data": "22",
+      "earliest": "2026-01-01",
+      "latest": "2026-05-25"
+    },
+    {
+      "year": "2026",
+      "campus": "Other",
+      "sundays_with_data": "5",
+      "earliest": "2026-01-12",
+      "latest": "2026-05-04"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tcampus\tsundays_with_data\tearliest\tlatest\n2013\tCanton\t51\t2013-01-06\t2013-12-22\n2014\tCanton\t51\t2014-01-05\t2014-12-21\n2015\tCanton\t52\t2015-01-04\t2015-12-27\n2016\tCanton\t52\t2016-01-03\t2016-12-25\n2017\tCanton\t51\t2017-01-01\t2017-12-17\n2017\tJasper\t11\t2017-04-16\t2017-12-17\n2018\tCanton\t51\t2018-01-07\t2018-12-23\n2018\tJasper\t52\t2018-01-07\t2018-12-30\n2019\tCanton\t51\t2019-01-06\t2019-12-22\n2019\tJasper\t51\t2019-01-06\t2019-12-22\n2020\tCanton\t44\t2020-01-05\t2020-12-27\n2020\tJasper\t28\t2020-01-05\t2020-12-20\n2021\tCanton\t51\t2021-01-10\t2021-12-26\n2021\tJasper\t52\t2021-01-03\t2021-12-26\n2022\tCanton\t52\t2022-01-02\t2022-12-25\n2022\tJasper\t52\t2022-01-02\t2022-12-25\n2023\tCanton\t52\t2023-01-01\t2023-12-24\n2023\tJasper\t51\t2023-01-08\t2023-12-24\n2024\tCanton\t51\t2024-01-07\t2024-12-22\n2024\tJasper\t51\t2024-01-07\t2024-12-22\n2025\tCanton\t53\t2025-01-05\t2025-12-29\n2025\tJasper\t53\t2025-01-05\t2025-12-29\n2026\tCanton\t22\t2026-01-01\t2026-05-25\n2026\tJasper\t22\t2026-01-01\t2026-05-25\n2026\tOther\t5\t2026-01-12\t2026-05-04\n",
+  "stderr": "",
+  "execution_time_ms": 333
+}

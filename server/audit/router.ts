@@ -267,14 +267,23 @@ export const auditRouter = router({
       const currentDate = new Date();
       const maxMonth = year < currentDate.getFullYear() ? 12 : currentDate.getMonth() + 1;
 
-      // ── 1. Missing Sundays in weekly attendance ──────────────────────────
+      // ── 1. Missing weeks in monthly attendance coverage ────────────────────
+      // Compare distinct weekStartDates per campus/month against expected Sunday count.
+      // This avoids false positives from week-start conventions straddling month boundaries.
       for (const c of campuses) {
         for (let m = 1; m <= maxMonth; m++) {
-          const sundays = sundaysInMonth(year, m);
+          const expectedSundays = sundaysInMonth(year, m);
           const monthStr = String(m).padStart(2, "0");
 
-          const rows = await db
-            .select({ weekStartDate: attendanceWeekly.weekStartDate })
+          // Count how many Sundays should have passed (for current month of current year, only count past Sundays)
+          let expectedCount = expectedSundays.length;
+          if (year === currentDate.getFullYear() && m === currentDate.getMonth() + 1) {
+            expectedCount = expectedSundays.filter((s) => new Date(s) < currentDate).length;
+          }
+
+          // Count distinct weekStartDates in this month range for this campus
+          const countResult = await db
+            .select({ cnt: sql<number>`COUNT(DISTINCT ${attendanceWeekly.weekStartDate})`.as("cnt") })
             .from(attendanceWeekly)
             .where(
               and(
@@ -285,21 +294,16 @@ export const auditRouter = router({
               )
             );
 
-          const presentDates = new Set(rows.map((r) => r.weekStartDate));
-          const checkSundays =
-            year === currentDate.getFullYear() && m === currentDate.getMonth() + 1
-              ? sundays.filter((s) => new Date(s) < currentDate)
-              : sundays;
+          const actualCount = Number(countResult[0]?.cnt ?? 0);
 
-          for (const sunday of checkSundays) {
-            if (!presentDates.has(sunday)) {
-              flags.push({
-                severity: "error",
-                category: "Missing Data",
-                message: `No attendance record for ${c} on ${sunday}`,
-                detail: `Expected Sunday data not found in attendance_weekly`,
-              });
-            }
+          if (actualCount < expectedCount && expectedCount > 0) {
+            const monthName = new Date(year, m - 1, 1).toLocaleString("default", { month: "long" });
+            flags.push({
+              severity: "error",
+              category: "Missing Data",
+              message: `${c} ${monthName}: only ${actualCount} of ${expectedCount} expected weeks have attendance data`,
+              detail: `Expected ${expectedCount} distinct weekStartDates in ${monthName} but found ${actualCount}`,
+            });
           }
         }
       }
