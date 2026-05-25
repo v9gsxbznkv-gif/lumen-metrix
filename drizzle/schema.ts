@@ -544,8 +544,10 @@ export type InsertDashboardUser = typeof dashboardUsers.$inferInsert;
 export const dashboardInvites = mysqlTable("dashboard_invites", {
   id: int("id").autoincrement().primaryKey(),
   email: varchar("email", { length: 320 }).notNull(),
+  role: mysqlEnum("role", ["admin", "user"]).default("user").notNull(),
   token: varchar("token", { length: 64 }).notNull().unique(),
   invitedBy: int("invitedBy").notNull(),
+  status: mysqlEnum("status", ["pending", "accepted", "revoked"]).default("pending").notNull(),
   expiresAt: timestamp("expiresAt").notNull(),
   usedAt: timestamp("usedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

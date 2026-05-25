@@ -13,6 +13,7 @@ import { getDb } from "../db";
 import { dashboardUsers, dashboardInvites } from "../../drizzle/schema";
 import { hashSync, compareSync } from "bcryptjs";
 import crypto from "crypto";
+import { Resend } from "resend";
 
 // Cookie name for staff sessions
 const STAFF_COOKIE = "lumen_staff_session";
@@ -135,16 +136,19 @@ export const staffAuthRouter = router({
         .where(eq(dashboardInvites.token, input.token)).limit(1);
 
       if (!invite) {
-        return { valid: false, email: null, error: "Invalid invite link" };
+        return { valid: false, email: null, role: null, error: "Invalid invite link" };
       }
-      if (invite.usedAt) {
-        return { valid: false, email: null, error: "This invite has already been used" };
+      if (invite.status === "revoked") {
+        return { valid: false, email: null, role: null, error: "This invite has been revoked" };
+      }
+      if (invite.status === "accepted" || invite.usedAt) {
+        return { valid: false, email: null, role: null, error: "This invite has already been used" };
       }
       if (new Date() > invite.expiresAt) {
-        return { valid: false, email: null, error: "This invite has expired" };
+        return { valid: false, email: null, role: null, error: "This invite has expired" };
       }
 
-      return { valid: true, email: invite.email, error: null };
+      return { valid: true, email: invite.email, role: invite.role, error: null };
     }),
 
   // Register — accept invite and create account
@@ -174,13 +178,14 @@ export const staffAuthRouter = router({
         throw new TRPCError({ code: "CONFLICT", message: "An account with this email already exists" });
       }
 
-      // Create user
+      // Create user with the role specified in the invite
       const passwordHash = hashSync(input.password, 10);
+      const assignedRole = invite.role || "user";
       const [result] = await db.insert(dashboardUsers).values({
         email: invite.email.toLowerCase().trim(),
         name: input.name.trim(),
         passwordHash,
-        role: "user",
+        role: assignedRole,
         status: "active",
         invitedBy: invite.invitedBy,
         lastLoginAt: new Date(),
@@ -188,18 +193,18 @@ export const staffAuthRouter = router({
 
       // Mark invite as used
       await db.update(dashboardInvites)
-        .set({ usedAt: new Date() })
+        .set({ usedAt: new Date(), status: "accepted" })
         .where(eq(dashboardInvites.id, invite.id));
 
       // Auto-login after registration
-      const token = await signStaffSession(result.id, invite.email, input.name, "user");
+      const token = await signStaffSession(result.id, invite.email, input.name, assignedRole);
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.cookie(STAFF_COOKIE, token, {
         ...cookieOptions,
         maxAge: 30 * 24 * 60 * 60 * 1000,
       });
 
-      return { success: true, user: { id: result.id, email: invite.email, name: input.name, role: "user" } };
+      return { success: true, user: { id: result.id, email: invite.email, name: input.name, role: assignedRole } };
     }),
 
   // ===== Admin-only procedures =====
@@ -229,7 +234,10 @@ export const staffAuthRouter = router({
 
   // Invite a new user (admin only)
   invite: publicProcedure
-    .input(z.object({ email: z.string().email() }))
+    .input(z.object({
+      email: z.string().email(),
+      role: z.enum(["admin", "user"]).default("user"),
+    }))
     .mutation(async ({ ctx, input }) => {
       const session = await getStaffUser(ctx.req.headers.cookie);
       if (!session || session.role !== "admin") {
@@ -255,8 +263,10 @@ export const staffAuthRouter = router({
 
       await db.insert(dashboardInvites).values({
         email,
+        role: input.role,
         token,
         invitedBy: session.userId,
+        status: "pending",
         expiresAt,
       });
 
@@ -265,7 +275,58 @@ export const staffAuthRouter = router({
       const host = ctx.req.headers["x-forwarded-host"] || ctx.req.headers.host || "lumenmetrix.com";
       const inviteUrl = `${protocol}://${host}/invite?token=${token}`;
 
-      return { success: true, inviteUrl, email, expiresIn: "7 days" };
+      // Send invite email via Resend
+      const roleName = input.role === "admin" ? "Administrator" : "Team Member";
+      try {
+        const resend = new Resend(ENV.resendApiKey);
+        await resend.emails.send({
+          from: "Lumen Metrix <noreply@lumenmetrix.com>",
+          to: email,
+          subject: `You're invited to Lumen Metrix`,
+          html: `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+              <div style="text-align: center; margin-bottom: 32px;">
+                <h1 style="font-size: 24px; font-weight: 700; color: #1a1a1a; margin: 0;">LUMEN METRIX</h1>
+                <p style="color: #666; margin-top: 4px; font-size: 14px;">Church Analytics Dashboard</p>
+              </div>
+              <div style="background: #ffffff; border: 1px solid #e5e5e5; border-radius: 12px; padding: 32px;">
+                <h2 style="font-size: 20px; color: #1a1a1a; margin: 0 0 16px;">You've been invited!</h2>
+                <p style="color: #444; line-height: 1.6; margin: 0 0 8px;">You've been invited to join <strong>Lumen Metrix</strong> as a <strong>${roleName}</strong>.</p>
+                <p style="color: #444; line-height: 1.6; margin: 0 0 24px;">Click the button below to create your account and get started.</p>
+                <div style="text-align: center; margin: 32px 0;">
+                  <a href="${inviteUrl}" style="display: inline-block; background: #D97706; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">Accept Invitation</a>
+                </div>
+                <p style="color: #888; font-size: 13px; margin: 0;">This invite expires in 7 days. If you didn't expect this invitation, you can safely ignore this email.</p>
+              </div>
+              <p style="text-align: center; color: #aaa; font-size: 12px; margin-top: 24px;">&copy; ${new Date().getFullYear()} Lumen Metrix. All rights reserved.</p>
+            </div>
+          `,
+        });
+      } catch (emailErr) {
+        console.error("[Invite] Failed to send email via Resend:", emailErr);
+        // Don't fail the invite creation — URL is still valid
+      }
+
+      return { success: true, inviteUrl, email, role: input.role, expiresIn: "7 days" };
+    }),
+
+  // Revoke a pending invite (admin only)
+  revokeInvite: publicProcedure
+    .input(z.object({ inviteId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const session = await getStaffUser(ctx.req.headers.cookie);
+      if (!session || session.role !== "admin") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Admin access required" });
+      }
+
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      await db.update(dashboardInvites)
+        .set({ status: "revoked" })
+        .where(eq(dashboardInvites.id, input.inviteId));
+
+      return { success: true };
     }),
 
   // Disable/enable a user (admin only)
@@ -352,8 +413,10 @@ export const staffAuthRouter = router({
     return invites.map(inv => ({
       id: inv.id,
       email: inv.email,
+      role: inv.role,
+      status: inv.status,
       used: !!inv.usedAt,
-      expired: new Date() > inv.expiresAt,
+      expired: new Date() > inv.expiresAt && inv.status === "pending",
       createdAt: inv.createdAt,
       expiresAt: inv.expiresAt,
     }));

@@ -73,6 +73,7 @@ interface SidebarProps {
   onLogout?: () => void;
   mobileOpen: boolean;
   onMobileToggle: () => void;
+  userRole?: "admin" | "user";
 }
 
 export default function Sidebar({
@@ -83,8 +84,15 @@ export default function Sidebar({
   onLogout,
   mobileOpen,
   onMobileToggle,
+  userRole,
 }: SidebarProps) {
   let lastSection = "";
+
+  // Filter nav items based on role — Settings is admin-only
+  const visibleNavItems = NAV_ITEMS.filter((item) => {
+    if (item.id === "settings" && userRole !== "admin") return false;
+    return true;
+  });
 
   // Lock body scroll when mobile drawer is open
   useEffect(() => {
@@ -140,7 +148,7 @@ export default function Sidebar({
 
       {/* Navigation */}
       <nav className="flex-1 px-2 space-y-0.5 overflow-y-auto">
-        {NAV_ITEMS.map((item) => {
+        {visibleNavItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
           const showSection = item.section && item.section !== lastSection;

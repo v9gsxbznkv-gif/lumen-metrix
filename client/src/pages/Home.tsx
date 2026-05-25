@@ -120,6 +120,7 @@ export default function Home() {
         onLogout={() => logoutMutation.mutate()}
         mobileOpen={mobileOpen}
         onMobileToggle={() => setMobileOpen(!mobileOpen)}
+        userRole={currentUser?.role as "admin" | "user" | undefined}
       />
 
       {/* Main content area — offset by sidebar on desktop, full-width on mobile */}

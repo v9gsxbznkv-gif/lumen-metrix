@@ -1579,3 +1579,20 @@
 
 ## Groups Participation Rate Fix (May 2026)
 - [x] Change participation rate to use Adults attendance instead of Total attendance (excludes Kids/Students)
+
+## Invite System (May 2026)
+- [x] Set up Resend API key secret
+- [x] Install Resend SDK
+- [x] Create invites table in schema (email, role, token, status, invitedBy, expiresAt)
+- [x] Ensure user table has role field (admin/user)
+- [x] Build tRPC procedure: createInvite (admin-only, sends email via Resend)
+- [x] Build tRPC procedure: listInvites (admin-only, shows pending/accepted)
+- [x] Build tRPC procedure: revokeInvite (admin-only)
+- [x] Build tRPC procedure: acceptInvite (public, validates token, creates user session)
+- [x] Design invite email template (no Manus branding, Lumen Metrix branded)
+- [x] Build invite accept page (frontend route /invite/:token)
+- [x] Add invite management UI to Settings page (admin-only)
+- [x] Hide Settings tab from non-admin users in sidebar
+- [x] Viewers can access all data tabs + make/schedule reports
+- [x] Write vitest tests for invite flow
+- [ ] Deploy invite system

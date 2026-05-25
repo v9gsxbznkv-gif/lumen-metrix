@@ -162,6 +162,13 @@
       "when": 1779681252421,
       "tag": "0022_fearless_glorian",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "5",
+      "when": 1779741612244,
+      "tag": "0023_handy_fabian_cortez",
+      "breakpoints": true
     }
   ]
 }

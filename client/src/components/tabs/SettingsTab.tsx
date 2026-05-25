@@ -851,6 +851,7 @@ function GivingEntrySection() {
 // ─── Team Management Section (Admin Only) ───────────────────────────────────
 function TeamManagementSection({ currentUser }: { currentUser: { id: number; email: string; name: string; role: string } | null | undefined }) {
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<"admin" | "user">("user");
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState("");
 
@@ -899,10 +900,18 @@ function TeamManagementSection({ currentUser }: { currentUser: { id: number; ema
     onError: (err) => toast.error(err.message),
   });
 
+  const revokeMutation = trpc.staffAuth.revokeInvite.useMutation({
+    onSuccess: () => {
+      toast.success("Invite revoked");
+      utils.staffAuth.listInvites.invalidate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
   function handleInvite(e: React.FormEvent) {
     e.preventDefault();
     if (!inviteEmail.trim()) return;
-    inviteMutation.mutate({ email: inviteEmail.trim() });
+    inviteMutation.mutate({ email: inviteEmail.trim(), role: inviteRole });
   }
 
   function copyToClipboard(url: string) {
@@ -950,6 +959,15 @@ function TeamManagementSection({ currentUser }: { currentUser: { id: number; ema
                 disabled={inviteMutation.isPending}
               />
             </div>
+            <select
+              value={inviteRole}
+              onChange={(e) => setInviteRole(e.target.value as "admin" | "user")}
+              className="rounded-md px-2 py-2 text-xs bg-background border border-border/60 outline-none focus:border-[#E8913A] transition-colors"
+              disabled={inviteMutation.isPending}
+            >
+              <option value="user">Team Member</option>
+              <option value="admin">Admin</option>
+            </select>
             <button
               type="submit"
               disabled={inviteMutation.isPending || !inviteEmail.trim()}
@@ -957,10 +975,10 @@ function TeamManagementSection({ currentUser }: { currentUser: { id: number; ema
               style={{ backgroundColor: "#E8913A" }}
             >
               {inviteMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserPlus className="w-3 h-3" />}
-              Send
+              Send Invite
             </button>
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1.5">Invite expires in 7 days. User will create their own password.</p>
+          <p className="text-[10px] text-muted-foreground mt-1.5">Invite expires in 7 days. User will create their own password. An email will be sent via Resend.</p>
         </form>
       )}
 
@@ -1090,10 +1108,31 @@ function TeamManagementSection({ currentUser }: { currentUser: { id: number; ema
                 <div className="flex items-center gap-2">
                   <Mail className="w-3 h-3 text-muted-foreground" />
                   <span className="text-xs">{inv.email}</span>
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${
+                    (inv as any).role === "admin"
+                      ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
+                      : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+                  }`}>
+                    {(inv as any).role === "admin" ? "Admin" : "Member"}
+                  </span>
                 </div>
-                <span className="text-[9px] text-muted-foreground">
-                  Expires {new Date(inv.expiresAt).toLocaleDateString()}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] text-muted-foreground">
+                    Expires {new Date(inv.expiresAt).toLocaleDateString()}
+                  </span>
+                  <button
+                    onClick={() => {
+                      if (confirm(`Revoke invite for ${inv.email}?`)) {
+                        revokeMutation.mutate({ inviteId: inv.id });
+                      }
+                    }}
+                    disabled={revokeMutation.isPending}
+                    className="text-[9px] px-1.5 py-0.5 rounded text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+                    title="Revoke invite"
+                  >
+                    Revoke
+                  </button>
+                </div>
               </div>
             ))}
           </div>

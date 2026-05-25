@@ -1,0 +1,2 @@
+ALTER TABLE `dashboard_invites` ADD `role` enum('admin','user') DEFAULT 'user' NOT NULL;--> statement-breakpoint
+ALTER TABLE `dashboard_invites` ADD `status` enum('pending','accepted','revoked') DEFAULT 'pending' NOT NULL;

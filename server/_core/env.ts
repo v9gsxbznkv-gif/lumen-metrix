@@ -11,6 +11,8 @@ export const ENV = {
   pcoAppId: process.env.PCO_APP_ID ?? "",
   pcoSecret: process.env.PCO_SECRET ?? "",
   pcoRedirectUri: process.env.PCO_REDIRECT_URI ?? "https://churchdash-emzmxpmc.manus.space/api/pco/callback",
+  // Resend email API
+  resendApiKey: process.env.RESEND_API_KEY ?? "",
   // Dashboard password gate
   dashboardPassword: process.env.DASHBOARD_PASSWORD ?? "Test123",
 };
