@@ -10,6 +10,7 @@ import { annualReportRouter } from "./annualReport/router";
 import { dataViewsRouter } from "./dataViews/router";
 import { demographicsRouter } from "./demographics/router";
 import { staffAuthRouter } from "./staffAuth/router";
+import { auditRouter } from "./audit/router";
 
 export const appRouter = router({
   system: systemRouter,
@@ -47,6 +48,9 @@ export const appRouter = router({
 
   // Staff authentication — individual email+password accounts
   staffAuth: staffAuthRouter,
+
+  // Data Audit — raw records, health flags, cross-tab consistency (admin-only)
+  audit: auditRouter,
 });
 
 export type AppRouter = typeof appRouter;

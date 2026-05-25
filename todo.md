@@ -1595,4 +1595,15 @@
 - [x] Hide Settings tab from non-admin users in sidebar
 - [x] Viewers can access all data tabs + make/schedule reports
 - [x] Write vitest tests for invite flow
-- [ ] Deploy invite system
+- [x] Deploy invite system
+
+## Data Audit Page (May 2026)
+- [x] Build tRPC audit router: raw attendance records (filterable by campus/month/subgroup)
+- [x] Build tRPC audit router: raw giving records (filterable by campus/month/fund)
+- [x] Build tRPC audit router: raw groups records (filterable by campus/month)
+- [x] Build tRPC audit router: sync health flags (missing Sundays, zeros, duplicates, spikes)
+- [x] Build tRPC audit router: cross-tab consistency check (same metric across all tabs)
+- [x] Build Data Audit frontend page with Attendance/Giving/Groups/Health tabs
+- [x] Add audit page to sidebar (admin-only, under Settings section)
+- [ ] Write vitest tests for audit procedures
+- [x] Deploy Data Audit page

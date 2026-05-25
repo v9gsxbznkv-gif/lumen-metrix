@@ -22,6 +22,7 @@ import AnnualReportTab from "@/components/tabs/AnnualReportTab";
 import ReportsTab from "@/components/tabs/ReportsTab";
 import AIAnalystTab from "@/components/tabs/AIAnalystTab";
 import SettingsTab from "@/components/tabs/SettingsTab";
+import DataAudit from "@/pages/DataAudit";
 import LumenLogo from "@/components/LumenLogo";
 import LoginPage from "@/pages/LoginPage";
 import { Loader2 } from "lucide-react";
@@ -41,6 +42,7 @@ const TAB_META: Record<TabId, { title: string; subtitle: string }> = {
   reports: { title: "Reports", subtitle: "Build, schedule, and export custom executive reports" },
   ai: { title: "AI Analyst", subtitle: "Ask questions about your data in natural language" },
   settings: { title: "Settings", subtitle: "Church profile, data sources, and dashboard configuration" },
+  dataAudit: { title: "Data Audit", subtitle: "Verify dashboard numbers against raw PCO records — admin only" },
 };
 
 export default function Home() {
@@ -150,6 +152,7 @@ export default function Home() {
           {activeTab === "reports" && <ReportsTab />}
           {activeTab === "ai" && <AIAnalystTab />}
           {activeTab === "settings" && <SettingsTab currentUser={currentUser} />}
+          {activeTab === "dataAudit" && <DataAudit />}
         </div>
 
         {/* Footer */}

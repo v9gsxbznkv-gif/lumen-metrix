@@ -30,6 +30,7 @@ import {
   UsersRound,
   Footprints,
   HeartHandshake,
+  ShieldCheck,
 } from "lucide-react";
 
 export type TabId =
@@ -46,7 +47,8 @@ export type TabId =
   | "annualReport"
   | "reports"
   | "ai"
-  | "settings";
+  | "settings"
+  | "dataAudit";
 
 const NAV_ITEMS: { id: TabId; label: string; icon: React.ElementType; section?: string }[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, section: "Overview" },
@@ -63,6 +65,7 @@ const NAV_ITEMS: { id: TabId; label: string; icon: React.ElementType; section?: 
   { id: "reports", label: "Reports", icon: FileText },
   { id: "ai", label: "AI Analyst", icon: Sparkles },
   { id: "settings", label: "Settings", icon: Settings },
+  { id: "dataAudit", label: "Data Audit", icon: ShieldCheck },
 ];
 
 interface SidebarProps {
@@ -91,6 +94,7 @@ export default function Sidebar({
   // Filter nav items based on role — Settings is admin-only
   const visibleNavItems = NAV_ITEMS.filter((item) => {
     if (item.id === "settings" && userRole !== "admin") return false;
+    if (item.id === "dataAudit" && userRole !== "admin") return false;
     return true;
   });
 
