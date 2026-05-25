@@ -1,0 +1,22 @@
+{
+  "query": "SELECT groupType, COUNT(*) as cnt FROM pco_groups WHERE isArchived = 0 GROUP BY groupType ORDER BY cnt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT groupType, COUNT(*) as cnt FROM pco_groups WHERE isArchived = 0 GROUP BY groupType ORDER BY cnt DESC;",
+  "rows": [
+    {
+      "groupType": "Community Groups",
+      "cnt": "88"
+    },
+    {
+      "groupType": "Care Groups",
+      "cnt": "6"
+    },
+    {
+      "groupType": "Young Adults Community Groups",
+      "cnt": "5"
+    }
+  ],
+  "messages": [],
+  "stdout": "groupType\tcnt\nCommunity Groups\t88\nCare Groups\t6\nYoung Adults Community Groups\t5\n",
+  "stderr": "",
+  "execution_time_ms": 262
+}

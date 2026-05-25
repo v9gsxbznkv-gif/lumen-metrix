@@ -1,0 +1,45 @@
+{
+  "query": "SELECT year, campus, total, general, designated FROM giving WHERE year = 2026 ORDER BY campus;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, campus, total, general, designated FROM giving WHERE year = 2026 ORDER BY campus;",
+  "rows": [
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "total": "2266798.85",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2026",
+      "campus": "All Campuses",
+      "total": "14136.16",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2026",
+      "campus": "Canton",
+      "total": "1937190.89",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2026",
+      "campus": "Canton",
+      "total": "14136.16",
+      "general": "0.00",
+      "designated": "0.00"
+    },
+    {
+      "year": "2026",
+      "campus": "Jasper",
+      "total": "329607.96",
+      "general": "0.00",
+      "designated": "0.00"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tcampus\ttotal\tgeneral\tdesignated\n2026\tAll Campuses\t2266798.85\t0.00\t0.00\n2026\tAll Campuses\t14136.16\t0.00\t0.00\n2026\tCanton\t1937190.89\t0.00\t0.00\n2026\tCanton\t14136.16\t0.00\t0.00\n2026\tJasper\t329607.96\t0.00\t0.00\n",
+  "stderr": "",
+  "execution_time_ms": 262
+}

@@ -1,0 +1,405 @@
+{
+  "query": "SELECT campus, COUNT(*) as groups_count, SUM(membersCount) as total_members FROM pco_groups WHERE isArchived = 0 GROUP BY campus ORDER BY campus;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT campus, COUNT(*) as groups_count, SUM(membersCount) as total_members FROM pco_groups WHERE isArchived = 0 GROUP BY campus ORDER BY campus;",
+  "rows": [
+    {
+      "campus": "NULL",
+      "groups_count": "12",
+      "total_members": "0"
+    },
+    {
+      "campus": "Akins' Home",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Anthony Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Ball Ground",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Barber Home",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Bearden Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Berryman Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Bojangles Hickory Flat",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Bonomo Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Briegel - Wellness Chiropractic Center",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Brummel Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Butler Residence",
+      "groups_count": "4",
+      "total_members": "0"
+    },
+    {
+      "campus": "Chalkley Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Christy's House",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Clark Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Cooley Residence, subject to change",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Cox Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Crane Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Doug & Lisa’s house",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Dwyer Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Ellard Home",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Elliott Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Fireside Room - Bent Tree",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Gaddis Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Garrard Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Godfrey Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Gralnik Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Graziano Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Hardee Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Hatten Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Hickory Flat Library Community Room",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Hostetter Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Hubbell Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "IHOP ",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "IHOP, Canton",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "J&S Office",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Jax Coffee Company",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Jones Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Jones' Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Kathy O's Home",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Kendall Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Kolb House",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Lancaster Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Landrum Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Laurel canyon, Soleil",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Levin Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Light Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Lindsey Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Livergood Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Lolli’s House",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Miller Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Mizzell Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Murchison Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Myers Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Panera Bread in Downtown Canton",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Parks' Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Pasho-Coughlin Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Pickens County Library",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Private Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Red Bean Harvest",
+      "groups_count": "2",
+      "total_members": "0"
+    },
+    {
+      "campus": "Revolution Church",
+      "groups_count": "2",
+      "total_members": "0"
+    },
+    {
+      "campus": "Revolution Church - Jasper Campus",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Revolution Church, Canton",
+      "groups_count": "3",
+      "total_members": "0"
+    },
+    {
+      "campus": "Revolution Church, Canton.",
+      "groups_count": "3",
+      "total_members": "0"
+    },
+    {
+      "campus": "Revolution Jasper",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Roper Park",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Rosas Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Sibaja's House ",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Sims' Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Skinner Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Slaten's Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Stark Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Stitch Coffee",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Teece Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Tucker Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Walker Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Walters Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Watson Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    },
+    {
+      "campus": "Whitaker Residence",
+      "groups_count": "1",
+      "total_members": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "campus\tgroups_count\ttotal_members\nNULL\t12\t0\nAkins' Home\t1\t0\nAnthony Residence\t1\t0\nBall Ground\t1\t0\nBarber Home\t1\t0\nBearden Residence\t1\t0\nBerryman Residence\t1\t0\nBojangles Hickory Flat\t1\t0\nBonomo Residence\t1\t0\nBriegel - Wellness Chiropractic Center\t1\t0\nBrummel Residence\t1\t0\nButler Residence\t4\t0\nChalkley Residence\t1\t0\nChristy's House\t1\t0\nClark Residence\t1\t0\nCooley Residence, subject to change\t1\t0\nCox Residence\t1\t0\nCrane Residence\t1\t0\nDoug & Lisa’s house\t1\t0\nDwyer Residence\t1\t0\nEllard Home\t1\t0\nElliott Residence\t1\t0\nFireside Room - Bent Tree\t1\t0\nGaddis Residence\t1\t0\nGarrard Residence\t1\t0\nGodfrey Residence\t1\t0\nGralnik Residence\t1\t0\nGraziano Residence\t1\t0\nHardee Residence\t1\t0\nHatten Residence\t1\t0\nHickory Flat Library Community Room\t1\t0\nHostetter Residence\t1\t0\nHubbell Residence\t1\t0\nIHOP \t1\t0\nIHOP, Canton\t1\t0\nJ&S Office\t1\t0\nJax Coffee Company\t1\t0\nJones Residence\t1\t0\nJones' Residence\t1\t0\nKathy O's Home\t1\t0\nKendall Residence\t1\t0\nKolb House\t1\t0\nLancaster Residence\t1\t0\nLandrum Residence\t1\t0\nLaurel canyon, Soleil\t1\t0\nLevin Residence\t1\t0\nLight Residence\t1\t0\nLindsey Residence\t1\t0\nLivergood Residence\t1\t0\nLolli’s House\t1\t0\nMiller Residence\t1\t0\nMizzell Residence\t1\t0\nMurchison Residence\t1\t0\nMyers Residence\t1\t0\nPanera Bread in Downtown Canton\t1\t0\nParks' Residence\t1\t0\nPasho-Coughlin Residence\t1\t0\nPickens County Library\t1\t0\nPrivate Residence\t1\t0\nRed Bean Harvest\t2\t0\nRevolution Church\t2\t0\nRevolution Church - Jasper Campus\t1\t0\nRevolution Church, Canton\t3\t0\nRevolution Church, Canton.\t3\t0\nRevolution Jasper\t1\t0\nRoper Park\t1\t0\nRosas Residence\t1\t0\nSibaja's House \t1\t0\nSims' Residence\t1\t0\nSkinner Residence\t1\t0\nSlaten's Residence\t1\t0\nStark Residence\t1\t0\nStitch Coffee\t1\t0\nTeece Residence\t1\t0\nTucker Residence\t1\t0\nWalker Residence\t1\t0\nWalters Residence\t1\t0\nWatson Residence\t1\t0\nWhitaker Residence\t1\t0\n",
+  "stderr": "",
+  "execution_time_ms": 265
+}

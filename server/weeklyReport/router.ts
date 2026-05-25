@@ -194,29 +194,22 @@ async function getWeeklySnapshot(
 
   if (attRows.length === 0 && givRows.length === 0) return null;
 
-  // Groups: no weekly table, fall back to monthly (current month, then previous month)
-  let grpRowsFallback = await db
-    .select()
-    .from(groupsMonthly)
-    .where(
-      and(
-        eq(groupsMonthly.year, year),
-        eq(groupsMonthly.month, month)
-      )
-    );
-  if (grpRowsFallback.length === 0) {
-    // Try previous month (handles early-month weeks where current month data isn't entered yet)
-    const prevMonth = month === 1 ? 12 : month - 1;
-    const prevYear = month === 1 ? year - 1 : year;
+  // Groups: no weekly table, fall back to monthly (current month, then up to 3 months back)
+  let grpRowsFallback: typeof groupsMonthly.$inferSelect[] = [];
+  for (let offset = 0; offset <= 3; offset++) {
+    let targetMonth = month - offset;
+    let targetYear = year;
+    while (targetMonth <= 0) { targetMonth += 12; targetYear--; }
     grpRowsFallback = await db
       .select()
       .from(groupsMonthly)
       .where(
         and(
-          eq(groupsMonthly.year, prevYear),
-          eq(groupsMonthly.month, prevMonth)
+          eq(groupsMonthly.year, targetYear),
+          eq(groupsMonthly.month, targetMonth)
         )
       );
+    if (grpRowsFallback.length > 0) break;
   }
   const grpRows = grpRowsFallback;
 

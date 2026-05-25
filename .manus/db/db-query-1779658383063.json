@@ -1,0 +1,32 @@
+{
+  "query": "SELECT * FROM groups_monthly WHERE year = 2026 AND month = 3 LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT * FROM groups_monthly WHERE year = 2026 AND month = 3 LIMIT 5;",
+  "rows": [
+    {
+      "id": "51",
+      "year": "2026",
+      "month": "3",
+      "campus": "Canton",
+      "activeGroups": "68",
+      "totalMembers": "865",
+      "totalLeaders": "103",
+      "avgAttendance": "689",
+      "source": "spreadsheet"
+    },
+    {
+      "id": "102",
+      "year": "2026",
+      "month": "3",
+      "campus": "Jasper",
+      "activeGroups": "23",
+      "totalMembers": "257",
+      "totalLeaders": "34",
+      "avgAttendance": "200",
+      "source": "spreadsheet"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tyear\tmonth\tcampus\tactiveGroups\ttotalMembers\ttotalLeaders\tavgAttendance\tsource\n51\t2026\t3\tCanton\t68\t865\t103\t689\tspreadsheet\n102\t2026\t3\tJasper\t23\t257\t34\t200\tspreadsheet\n",
+  "stderr": "",
+  "execution_time_ms": 271
+}

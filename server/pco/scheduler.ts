@@ -6,6 +6,7 @@
 import { createAuthenticatedPcoClient } from "./client";
 import { logSyncResult } from "./sync";
 import { syncAllWeekly } from "./weeklySync";
+import { syncGroupsAttendance } from "./groupsSync";
 
 let schedulerInterval: ReturnType<typeof setInterval> | null = null;
 let isRunning = false;
@@ -72,7 +73,13 @@ export async function runNightlySync(): Promise<void> {
     await logSyncResult(weeklyResults.giving);
     await logSyncResult(weeklyResults.volunteers);
 
-    const totalRecords = weeklyResults.attendance.recordsProcessed + weeklyResults.giving.recordsProcessed + weeklyResults.volunteers.recordsProcessed;
+    // Sync groups attendance for the current month
+    console.log(`[Scheduler] Running groups attendance sync for current month...`);
+    const now = new Date();
+    const groupsResult = await syncGroupsAttendance(client, now.getFullYear(), now.getMonth() + 1);
+    await logSyncResult(groupsResult);
+
+    const totalRecords = weeklyResults.attendance.recordsProcessed + weeklyResults.giving.recordsProcessed + weeklyResults.volunteers.recordsProcessed + groupsResult.recordsProcessed;
     const duration = Date.now() - startTime;
 
     // Track last successful sync time

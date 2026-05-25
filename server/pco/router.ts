@@ -55,6 +55,7 @@ import {
   syncVolunteersFromServices,
 } from "./weeklySync";
 import { getSchedulerStatus, updateSyncDay, runNightlySync } from "./scheduler";
+import { syncGroupsAttendance, syncGroupsFullYear } from "./groupsSync";
 import {
   generateJobId,
   createJob,
@@ -154,6 +155,18 @@ async function runSyncInBackground(
         case "weekly_giving":
           result = await syncWeeklyGiving(client, dateFrom, dateTo);
           break;
+        case "groups_attendance": {
+          // Sync current month's groups attendance from PCO Groups API
+          const now = new Date();
+          result = await syncGroupsAttendance(client, now.getFullYear(), now.getMonth() + 1);
+          break;
+        }
+        case "groups_full_year": {
+          // Sync all months of the current year
+          const yearResults = await syncGroupsFullYear(client, undefined, (msg) => console.log(msg));
+          result = yearResults[yearResults.length - 1] || { syncType: 'groups_attendance', status: 'completed', recordsProcessed: 0, recordsCreated: 0, recordsUpdated: 0, durationMs: 0 };
+          break;
+        }
         default:
           throw new Error(`Unknown sync type: ${syncType}`);
       }
@@ -263,7 +276,7 @@ export const pcoRouter = router({
   triggerSync: publicProcedure
     .input(
       z.object({
-        syncType: z.enum(["attendance", "giving", "groups", "events", "people", "weekly_attendance", "weekly_giving", "weekly_all", "full"]),
+        syncType: z.enum(["attendance", "giving", "groups", "events", "people", "weekly_attendance", "weekly_giving", "weekly_all", "full", "groups_attendance", "groups_full_year"]),
         dateFrom: z.string().optional(),
         dateTo: z.string().optional(),
       })

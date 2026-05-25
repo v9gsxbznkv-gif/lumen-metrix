@@ -1,0 +1,15 @@
+{
+  "query": "SELECT COUNT(*) as total, SUM(CASE WHEN isArchived = 0 THEN 1 ELSE 0 END) as active, SUM(CASE WHEN isArchived = 1 THEN 1 ELSE 0 END) as archived FROM pco_groups;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT COUNT(*) as total, SUM(CASE WHEN isArchived = 0 THEN 1 ELSE 0 END) as active, SUM(CASE WHEN isArchived = 1 THEN 1 ELSE 0 END) as archived FROM pco_groups;",
+  "rows": [
+    {
+      "total": "99",
+      "active": "99",
+      "archived": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\tactive\tarchived\n99\t99\t0\n",
+  "stderr": "",
+  "execution_time_ms": 265
+}

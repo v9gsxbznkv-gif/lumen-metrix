@@ -1,0 +1,13 @@
+{
+  "query": "SELECT SUM(total) as grand_total FROM giving_weekly WHERE year = 2026;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT SUM(total) as grand_total FROM giving_weekly WHERE year = 2026;",
+  "rows": [
+    {
+      "grand_total": "3976366.94"
+    }
+  ],
+  "messages": [],
+  "stdout": "grand_total\n3976366.94\n",
+  "stderr": "",
+  "execution_time_ms": 262
+}

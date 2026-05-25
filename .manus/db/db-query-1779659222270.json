@@ -1,0 +1,31 @@
+{
+  "query": "SELECT DISTINCT campus FROM pco_groups WHERE campus LIKE '%Canton%' OR campus LIKE '%Jasper%' OR campus LIKE '%Revolution%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT campus FROM pco_groups WHERE campus LIKE '%Canton%' OR campus LIKE '%Jasper%' OR campus LIKE '%Revolution%';",
+  "rows": [
+    {
+      "campus": "IHOP, Canton"
+    },
+    {
+      "campus": "Revolution Jasper"
+    },
+    {
+      "campus": "Revolution Church, Canton."
+    },
+    {
+      "campus": "Revolution Church - Jasper Campus"
+    },
+    {
+      "campus": "Panera Bread in Downtown Canton"
+    },
+    {
+      "campus": "Revolution Church"
+    },
+    {
+      "campus": "Revolution Church, Canton"
+    }
+  ],
+  "messages": [],
+  "stdout": "campus\nIHOP, Canton\nRevolution Jasper\nRevolution Church, Canton.\nRevolution Church - Jasper Campus\nPanera Bread in Downtown Canton\nRevolution Church\nRevolution Church, Canton\n",
+  "stderr": "",
+  "execution_time_ms": 264
+}

@@ -1,0 +1,22 @@
+{
+  "query": "SELECT campus, SUM(CAST(total AS DECIMAL(12,2))) as total FROM giving_weekly WHERE year = 2026 GROUP BY campus ORDER BY campus;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT campus, SUM(CAST(total AS DECIMAL(12,2))) as total FROM giving_weekly WHERE year = 2026 GROUP BY campus ORDER BY campus;",
+  "rows": [
+    {
+      "campus": "All Campuses",
+      "total": "73524.04"
+    },
+    {
+      "campus": "Canton",
+      "total": "3334090.62"
+    },
+    {
+      "campus": "Jasper",
+      "total": "568752.28"
+    }
+  ],
+  "messages": [],
+  "stdout": "campus\ttotal\nAll Campuses\t73524.04\nCanton\t3334090.62\nJasper\t568752.28\n",
+  "stderr": "",
+  "execution_time_ms": 272
+}

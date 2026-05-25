@@ -1538,11 +1538,11 @@
 
 ## Feature: PCO Headcount Sync (Salvations, Baptisms, Stewardship)
 - [ ] Understand PCO headcounts API endpoint structure
-- [ ] Build headcount sync function for both Canton and Jasper main service events
-- [ ] Map headcount types: 3-Salv. A + 3-Salv. K → Salvations, 5-Baptism A + 5-Baptism K + 5-Baptism S → Baptisms, 4-Stewards → Stewardship
-- [ ] Pull full 2026 year data and aggregate monthly into next_steps_monthly
-- [ ] Integrate into nightly heartbeat sync
-- [ ] Verify data appears correctly on dashboard
+- [x] Build headcount sync function for both Canton and Jasper main service events
+- [x] Map headcount types: 3-Salv. A + 3-Salv. K → Salvations, 5-Baptism A + 5-Baptism K + 5-Baptism S → Baptisms, 4-Stewards → Stewardship
+- [x] Pull full 2026 year data and aggregate monthly into next_steps_monthly
+- [x] Integrate into nightly heartbeat sync
+- [x] Verify data appears correctly on dashboard
 
 ## Headcount Sync Pipeline Fix (May 2026)
 - [x] Fix HEADCOUNT_CATEGORY_MAP: add actual PCO type names (3-Salv. A, 3-Salv. K, 4-Stewards, 5-Baptism A/K/S)
@@ -1551,3 +1551,14 @@
 - [x] Add unique index on next_steps_monthly (year, month, campus, metric)
 - [x] Fix weekly report selecting current incomplete week (week 21 instead of week 20)
 - [x] Add getLastCompleteISOWeek guard to getLatestSnapshot in weekly report router
+
+## Real Groups Sync from PCO (May 2026)
+- [x] Explore PCO Groups API attendance endpoints (campuses, events, attendances)
+- [x] Build groupsSync.ts — pulls real attendance data from PCO Groups API per campus/month
+- [x] Integrate into nightly sync scheduler and router (groups_attendance, groups_full_year sync types)
+- [x] Run full year sync — real data now in groups_monthly (Jan-May 2026)
+- [x] Delete fake seed data (source='spreadsheet' for 2026)
+- [x] Extend weekly report groups fallback to look back up to 3 months
+- [ ] Fix giving discrepancy (dashboard shows 4.0M, giving page shows 3.9M)
+- [ ] Fix TypeScript errors (weeklySyncDay, manualLock properties)
+- [ ] Deploy with groups sync and all fixes

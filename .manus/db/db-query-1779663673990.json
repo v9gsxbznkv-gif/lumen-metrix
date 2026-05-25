@@ -1,0 +1,55 @@
+{
+  "query": "SELECT * FROM giving WHERE year = 2026 ORDER BY campus;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT * FROM giving WHERE year = 2026 ORDER BY campus;",
+  "rows": [
+    {
+      "id": "58",
+      "year": "2026",
+      "campus": "All Campuses",
+      "general": "0.00",
+      "designated": "0.00",
+      "total": "2266798.85",
+      "source": "spreadsheet"
+    },
+    {
+      "id": "59",
+      "year": "2026",
+      "campus": "All Campuses",
+      "general": "0.00",
+      "designated": "0.00",
+      "total": "14136.16",
+      "source": "spreadsheet"
+    },
+    {
+      "id": "55",
+      "year": "2026",
+      "campus": "Canton",
+      "general": "0.00",
+      "designated": "0.00",
+      "total": "1937190.89",
+      "source": "spreadsheet"
+    },
+    {
+      "id": "56",
+      "year": "2026",
+      "campus": "Canton",
+      "general": "0.00",
+      "designated": "0.00",
+      "total": "14136.16",
+      "source": "spreadsheet"
+    },
+    {
+      "id": "57",
+      "year": "2026",
+      "campus": "Jasper",
+      "general": "0.00",
+      "designated": "0.00",
+      "total": "329607.96",
+      "source": "spreadsheet"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tyear\tcampus\tgeneral\tdesignated\ttotal\tsource\n58\t2026\tAll Campuses\t0.00\t0.00\t2266798.85\tspreadsheet\n59\t2026\tAll Campuses\t0.00\t0.00\t14136.16\tspreadsheet\n55\t2026\tCanton\t0.00\t0.00\t1937190.89\tspreadsheet\n56\t2026\tCanton\t0.00\t0.00\t14136.16\tspreadsheet\n57\t2026\tJasper\t0.00\t0.00\t329607.96\tspreadsheet\n",
+  "stderr": "",
+  "execution_time_ms": 260
+}

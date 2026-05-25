@@ -1,0 +1,80 @@
+{
+  "query": "SELECT name, groupType, membersCount, campus, lastSyncedAt FROM pco_groups LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT name, groupType, membersCount, campus, lastSyncedAt FROM pco_groups LIMIT 10;",
+  "rows": [
+    {
+      "name": "Greg & Laura Bandemer | General",
+      "groupType": "Community Groups",
+      "membersCount": "0",
+      "campus": "NULL",
+      "lastSyncedAt": "2026-04-24 01:02:44"
+    },
+    {
+      "name": "Garry and Gene | Men's Group",
+      "groupType": "Community Groups",
+      "membersCount": "0",
+      "campus": "Red Bean Harvest",
+      "lastSyncedAt": "2026-04-24 01:02:49"
+    },
+    {
+      "name": "Jim and Tanya Akins | Married Group",
+      "groupType": "Community Groups",
+      "membersCount": "0",
+      "campus": "Akins' Home",
+      "lastSyncedAt": "2026-04-24 01:03:05"
+    },
+    {
+      "name": "Foster, Respite and Adoptive Family",
+      "groupType": "Care Groups",
+      "membersCount": "0",
+      "campus": "Revolution Church, Canton",
+      "lastSyncedAt": "2026-04-24 01:03:06"
+    },
+    {
+      "name": "Divorce Care",
+      "groupType": "Care Groups",
+      "membersCount": "0",
+      "campus": "Revolution Church, Canton",
+      "lastSyncedAt": "2026-04-24 01:03:07"
+    },
+    {
+      "name": "GriefShare - Canton",
+      "groupType": "Care Groups",
+      "membersCount": "0",
+      "campus": "Revolution Church, Canton",
+      "lastSyncedAt": "2026-04-24 01:03:08"
+    },
+    {
+      "name": "Men's Recovery",
+      "groupType": "Care Groups",
+      "membersCount": "0",
+      "campus": "Revolution Church, Canton.",
+      "lastSyncedAt": "2026-04-24 01:03:11"
+    },
+    {
+      "name": "Barbara Dwyer and Lauren Lodwick | Women's.  AGE group 60+",
+      "groupType": "Community Groups",
+      "membersCount": "0",
+      "campus": "Laurel canyon, Soleil",
+      "lastSyncedAt": "2026-04-24 01:03:13"
+    },
+    {
+      "name": "Bryan and Kelly Kolb | Married 50+",
+      "groupType": "Community Groups",
+      "membersCount": "0",
+      "campus": "Kolb House",
+      "lastSyncedAt": "2026-04-24 01:03:16"
+    },
+    {
+      "name": "Kurt and Elizabeth Jones | 50+",
+      "groupType": "Community Groups",
+      "membersCount": "0",
+      "campus": "Jones Residence",
+      "lastSyncedAt": "2026-04-24 01:03:21"
+    }
+  ],
+  "messages": [],
+  "stdout": "name\tgroupType\tmembersCount\tcampus\tlastSyncedAt\nGreg & Laura Bandemer | General\tCommunity Groups\t0\tNULL\t2026-04-24 01:02:44\nGarry and Gene | Men's Group\tCommunity Groups\t0\tRed Bean Harvest\t2026-04-24 01:02:49\nJim and Tanya Akins | Married Group\tCommunity Groups\t0\tAkins' Home\t2026-04-24 01:03:05\nFoster, Respite and Adoptive Family\tCare Groups\t0\tRevolution Church, Canton\t2026-04-24 01:03:06\nDivorce Care\tCare Groups\t0\tRevolution Church, Canton\t2026-04-24 01:03:07\nGriefShare - Canton\tCare Groups\t0\tRevolution Church, Canton\t2026-04-24 01:03:08\nMen's Recovery\tCare Groups\t0\tRevolution Church, Canton.\t2026-04-24 01:03:11\nBarbara Dwyer and Lauren Lodwick | Women's.  AGE group 60+\tCommunity Groups\t0\tLaurel canyon, Soleil\t2026-04-24 01:03:13\nBryan and Kelly Kolb | Married 50+\tCommunity Groups\t0\tKolb House\t2026-04-24 01:03:16\nKurt and Elizabeth Jones | 50+\tCommunity Groups\t0\tJones Residence\t2026-04-24 01:03:21\n",
+  "stderr": "",
+  "execution_time_ms": 266
+}

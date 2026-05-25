@@ -1,0 +1,8 @@
+{
+  "query": "SELECT year, campus, total, general, designated FROM giving_annual WHERE year = 2026 ORDER BY campus;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, campus, total, general, designated FROM giving_annual WHERE year = 2026 ORDER BY campus;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 1: Table 'emzmxpmcwkqz2bikerl4cm.giving_annual' doesn't exist"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "query": "SELECT name, groupType, membersCount, campus, lastSyncedAt FROM pco_groups WHERE membersCount > 0 LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT name, groupType, membersCount, campus, lastSyncedAt FROM pco_groups WHERE membersCount > 0 LIMIT 10;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 260
+}
