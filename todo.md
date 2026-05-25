@@ -1605,5 +1605,5 @@
 - [x] Build tRPC audit router: cross-tab consistency check (same metric across all tabs)
 - [x] Build Data Audit frontend page with Attendance/Giving/Groups/Health tabs
 - [x] Add audit page to sidebar (admin-only, under Settings section)
-- [ ] Write vitest tests for audit procedures
+- [x] Write vitest tests for audit procedures (18 tests passing)
 - [x] Deploy Data Audit page
