@@ -358,52 +358,57 @@ export const auditRouter = router({
         });
       }
 
-      // ── 4. Monthly totals vs weekly sum variance >5% ──────────────────────
+      // ── 4. Data presence consistency (weekly vs monthly) ────────────────────
+      // Flags months where one table has data but the other doesn't.
+      // We do NOT compare numeric totals because:
+      //   - Monthly table stores both raw subgroups AND derived roll-ups (double-counted totals)
+      //   - Weekly table excludes cancelled weeks; monthly includes them
+      //   - Subgroup names differ between tables (raw PCO events vs derived categories)
       for (const c of campuses) {
         for (let m = 1; m <= maxMonth; m++) {
           const monthStr = String(m).padStart(2, "0");
 
-          const weeklyResult = await db
-            .select({ weeklyTotal: sql<number>`coalesce(sum(${attendanceWeekly.headcount}), 0)`.as("weeklyTotal") })
+          const weeklyCountResult = await db
+            .select({ cnt: sql<number>`COUNT(*)`.as("cnt") })
             .from(attendanceWeekly)
             .where(
               and(
                 eq(attendanceWeekly.year, year),
                 eq(attendanceWeekly.campus, c),
-                eq(attendanceWeekly.cancelled, false),
                 gte(attendanceWeekly.weekStartDate, `${year}-${monthStr}-01`) as any,
                 lte(attendanceWeekly.weekStartDate, `${year}-${monthStr}-31`) as any
               )
             );
 
-          const monthlyResult = await db
-            .select({ monthlyTotal: attendanceMonthly.total })
+          const monthlyCountResult = await db
+            .select({ cnt: sql<number>`COUNT(*)`.as("cnt") })
             .from(attendanceMonthly)
             .where(
               and(
                 eq(attendanceMonthly.year, year),
                 eq(attendanceMonthly.month, m),
-                eq(attendanceMonthly.campus, c),
-                eq(attendanceMonthly.subgroup, "Adults")
+                eq(attendanceMonthly.campus, c)
               )
-            )
-            .limit(1);
+            );
 
-          const weeklyTotal = Number(weeklyResult[0]?.weeklyTotal ?? 0);
-          const monthlyTotal = Number(monthlyResult[0]?.monthlyTotal ?? 0);
+          const weeklyCount = Number(weeklyCountResult[0]?.cnt ?? 0);
+          const monthlyCount = Number(monthlyCountResult[0]?.cnt ?? 0);
+          const monthName = new Date(year, m - 1, 1).toLocaleString("default", { month: "long" });
 
-          if (monthlyTotal > 0 && weeklyTotal > 0) {
-            const variance = Math.abs(weeklyTotal - monthlyTotal);
-            const pct = (variance / monthlyTotal) * 100;
-            if (pct > 5) {
-              const monthName = new Date(year, m - 1, 1).toLocaleString("default", { month: "long" });
-              flags.push({
-                severity: "warning",
-                category: "Consistency",
-                message: `${c} ${monthName} Adults: weekly sum=${weeklyTotal}, monthly aggregate=${monthlyTotal} (${pct.toFixed(1)}% variance)`,
-                detail: `Weekly records and monthly aggregate don't match — one may be stale`,
-              });
-            }
+          if (weeklyCount > 0 && monthlyCount === 0) {
+            flags.push({
+              severity: "warning",
+              category: "Consistency",
+              message: `${c} ${monthName}: has ${weeklyCount} weekly records but no monthly aggregate`,
+              detail: `Monthly rollup may not have run for this period`,
+            });
+          } else if (weeklyCount === 0 && monthlyCount > 0) {
+            flags.push({
+              severity: "warning",
+              category: "Consistency",
+              message: `${c} ${monthName}: has monthly aggregate but no weekly records`,
+              detail: `Monthly data exists without supporting weekly detail — may be legacy import`,
+            });
           }
         }
       }

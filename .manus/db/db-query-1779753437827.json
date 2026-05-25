@@ -1,0 +1,15 @@
+{
+  "query": "SELECT \n  (SELECT SUM(headcount) FROM attendance_weekly WHERE year = 2026 AND campus = 'Canton' AND subgroup = 'Revolution Canton Check-In' AND weekStartDate BETWEEN '2026-01-01' AND '2026-01-31' AND cancelled = 0) as weekly_main_checkin,\n  (SELECT total FROM attendance_monthly WHERE year = 2026 AND month = 1 AND campus = 'Canton' AND subgroup = 'Revolution Canton Check-In') as monthly_main_checkin,\n  (SELECT total FROM attendance_monthly WHERE year = 2026 AND month = 1 AND campus = 'Canton' AND subgroup = 'Adults') as monthly_adults;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT \n  (SELECT SUM(headcount) FROM attendance_weekly WHERE year = 2026 AND campus = 'Canton' AND subgroup = 'Revolution Canton Check-In' AND weekStartDate BETWEEN '2026-01-01' AND '2026-01-31' AND cancelled = 0) as weekly_main_checkin,\n  (SELECT total FROM attendance_monthly WHERE year = 2026 AND month = 1 AND campus = 'Canton' AND subgroup = 'Revolution Canton Check-In') as monthly_main_checkin,\n  (SELECT total FROM attendance_monthly WHERE year = 2026 AND month = 1 AND campus = 'Canton' AND subgroup = 'Adults') as monthly_adults;",
+  "rows": [
+    {
+      "weekly_main_checkin": "7885",
+      "monthly_main_checkin": "8690",
+      "monthly_adults": "8251"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekly_main_checkin\tmonthly_main_checkin\tmonthly_adults\n7885\t8690\t8251\n",
+  "stderr": "",
+  "execution_time_ms": 265
+}

@@ -1,0 +1,90 @@
+{
+  "query": "SELECT subgroup, SUM(headcount) as weekly_sum FROM attendance_weekly WHERE year = 2026 AND campus = 'Canton' AND weekStartDate BETWEEN '2026-01-01' AND '2026-01-31' GROUP BY subgroup ORDER BY weekly_sum DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT subgroup, SUM(headcount) as weekly_sum FROM attendance_weekly WHERE year = 2026 AND campus = 'Canton' AND weekStartDate BETWEEN '2026-01-01' AND '2026-01-31' GROUP BY subgroup ORDER BY weekly_sum DESC;",
+  "rows": [
+    {
+      "subgroup": "Revolution Canton Check-In",
+      "weekly_sum": "8690"
+    },
+    {
+      "subgroup": "Volunteers",
+      "weekly_sum": "2073"
+    },
+    {
+      "subgroup": "Kids",
+      "weekly_sum": "2009"
+    },
+    {
+      "subgroup": "Volunteer Check-Ins",
+      "weekly_sum": "1484"
+    },
+    {
+      "subgroup": "RevStudents Attendance",
+      "weekly_sum": "1303"
+    },
+    {
+      "subgroup": "RevStudents MS",
+      "weekly_sum": "1041"
+    },
+    {
+      "subgroup": "RevStudents HS",
+      "weekly_sum": "767"
+    },
+    {
+      "subgroup": "Kids: Canton Cove",
+      "weekly_sum": "442"
+    },
+    {
+      "subgroup": "Kids: Canton Treehouse",
+      "weekly_sum": "335"
+    },
+    {
+      "subgroup": "Kids: Canton Campground",
+      "weekly_sum": "159"
+    },
+    {
+      "subgroup": "Kids: Canton Elementary",
+      "weekly_sum": "131"
+    },
+    {
+      "subgroup": "FTG Kids",
+      "weekly_sum": "62"
+    },
+    {
+      "subgroup": "FTG Adults",
+      "weekly_sum": "53"
+    },
+    {
+      "subgroup": "Kids: Canton Toddlers",
+      "weekly_sum": "37"
+    },
+    {
+      "subgroup": "Kids: Canton Babies",
+      "weekly_sum": "32"
+    },
+    {
+      "subgroup": "Kids: Canton Nursery",
+      "weekly_sum": "19"
+    },
+    {
+      "subgroup": "Baptisms",
+      "weekly_sum": "17"
+    },
+    {
+      "subgroup": "Stewardship",
+      "weekly_sum": "15"
+    },
+    {
+      "subgroup": "RevStudents Salvations",
+      "weekly_sum": "1"
+    },
+    {
+      "subgroup": "Salvations",
+      "weekly_sum": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "subgroup\tweekly_sum\nRevolution Canton Check-In\t8690\nVolunteers\t2073\nKids\t2009\nVolunteer Check-Ins\t1484\nRevStudents Attendance\t1303\nRevStudents MS\t1041\nRevStudents HS\t767\nKids: Canton Cove\t442\nKids: Canton Treehouse\t335\nKids: Canton Campground\t159\nKids: Canton Elementary\t131\nFTG Kids\t62\nFTG Adults\t53\nKids: Canton Toddlers\t37\nKids: Canton Babies\t32\nKids: Canton Nursery\t19\nBaptisms\t17\nStewardship\t15\nRevStudents Salvations\t1\nSalvations\t1\n",
+  "stderr": "",
+  "execution_time_ms": 264
+}

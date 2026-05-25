@@ -1,0 +1,70 @@
+{
+  "query": "SELECT DISTINCT subgroup FROM attendance_weekly WHERE year = 2026 AND campus = 'Canton' AND weekStartDate BETWEEN '2026-01-01' AND '2026-01-31';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT subgroup FROM attendance_weekly WHERE year = 2026 AND campus = 'Canton' AND weekStartDate BETWEEN '2026-01-01' AND '2026-01-31';",
+  "rows": [
+    {
+      "subgroup": "RevStudents MS"
+    },
+    {
+      "subgroup": "FTG Adults"
+    },
+    {
+      "subgroup": "Kids: Canton Elementary"
+    },
+    {
+      "subgroup": "Kids"
+    },
+    {
+      "subgroup": "Kids: Canton Nursery"
+    },
+    {
+      "subgroup": "Salvations"
+    },
+    {
+      "subgroup": "RevStudents HS"
+    },
+    {
+      "subgroup": "Kids: Canton Campground"
+    },
+    {
+      "subgroup": "RevStudents Salvations"
+    },
+    {
+      "subgroup": "Kids: Canton Toddlers"
+    },
+    {
+      "subgroup": "Kids: Canton Babies"
+    },
+    {
+      "subgroup": "Baptisms"
+    },
+    {
+      "subgroup": "Volunteer Check-Ins"
+    },
+    {
+      "subgroup": "Stewardship"
+    },
+    {
+      "subgroup": "RevStudents Attendance"
+    },
+    {
+      "subgroup": "Revolution Canton Check-In"
+    },
+    {
+      "subgroup": "FTG Kids"
+    },
+    {
+      "subgroup": "Kids: Canton Treehouse"
+    },
+    {
+      "subgroup": "Kids: Canton Cove"
+    },
+    {
+      "subgroup": "Volunteers"
+    }
+  ],
+  "messages": [],
+  "stdout": "subgroup\nRevStudents MS\nFTG Adults\nKids: Canton Elementary\nKids\nKids: Canton Nursery\nSalvations\nRevStudents HS\nKids: Canton Campground\nRevStudents Salvations\nKids: Canton Toddlers\nKids: Canton Babies\nBaptisms\nVolunteer Check-Ins\nStewardship\nRevStudents Attendance\nRevolution Canton Check-In\nFTG Kids\nKids: Canton Treehouse\nKids: Canton Cove\nVolunteers\n",
+  "stderr": "",
+  "execution_time_ms": 269
+}

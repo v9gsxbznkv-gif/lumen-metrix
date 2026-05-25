@@ -1,0 +1,130 @@
+{
+  "query": "SELECT subgroup, total FROM attendance_monthly WHERE year = 2026 AND month = 1 AND campus = 'Canton' ORDER BY total DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT subgroup, total FROM attendance_monthly WHERE year = 2026 AND month = 1 AND campus = 'Canton' ORDER BY total DESC;",
+  "rows": [
+    {
+      "subgroup": "Revolution Canton Check-In",
+      "total": "8690"
+    },
+    {
+      "subgroup": "Adults",
+      "total": "8251"
+    },
+    {
+      "subgroup": "RevStudents | Canton Campus",
+      "total": "4356"
+    },
+    {
+      "subgroup": "Volunteers",
+      "total": "2073"
+    },
+    {
+      "subgroup": "Kids",
+      "total": "2009"
+    },
+    {
+      "subgroup": "Students",
+      "total": "1808"
+    },
+    {
+      "subgroup": "Volunteer Check-Ins",
+      "total": "1474"
+    },
+    {
+      "subgroup": "RevStudents Attendance",
+      "total": "1303"
+    },
+    {
+      "subgroup": "RevStudents MS",
+      "total": "1041"
+    },
+    {
+      "subgroup": "RevStudents HS",
+      "total": "767"
+    },
+    {
+      "subgroup": "Treehouse",
+      "total": "443"
+    },
+    {
+      "subgroup": "Cove",
+      "total": "442"
+    },
+    {
+      "subgroup": "Kids: Canton Cove",
+      "total": "442"
+    },
+    {
+      "subgroup": "Pre-K",
+      "total": "417"
+    },
+    {
+      "subgroup": "Kids: Canton Treehouse",
+      "total": "335"
+    },
+    {
+      "subgroup": "Toddlers",
+      "total": "333"
+    },
+    {
+      "subgroup": "Campground",
+      "total": "159"
+    },
+    {
+      "subgroup": "Kids: Canton Campground",
+      "total": "159"
+    },
+    {
+      "subgroup": "Kids: Canton Elementary",
+      "total": "131"
+    },
+    {
+      "subgroup": "Babies",
+      "total": "115"
+    },
+    {
+      "subgroup": "Young Adults",
+      "total": "81"
+    },
+    {
+      "subgroup": "Kids: Canton Pre-K",
+      "total": "67"
+    },
+    {
+      "subgroup": "FTG Kids",
+      "total": "62"
+    },
+    {
+      "subgroup": "FTG Adults",
+      "total": "53"
+    },
+    {
+      "subgroup": "Reruns",
+      "total": "44"
+    },
+    {
+      "subgroup": "Kids: Canton Toddlers",
+      "total": "37"
+    },
+    {
+      "subgroup": "Kids: Canton Babies",
+      "total": "32"
+    },
+    {
+      "subgroup": "Childcare | Canton Campus",
+      "total": "32"
+    },
+    {
+      "subgroup": "Kids: Canton Nursery",
+      "total": "19"
+    },
+    {
+      "subgroup": "RevStudents Salvations",
+      "total": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "subgroup\ttotal\nRevolution Canton Check-In\t8690\nAdults\t8251\nRevStudents | Canton Campus\t4356\nVolunteers\t2073\nKids\t2009\nStudents\t1808\nVolunteer Check-Ins\t1474\nRevStudents Attendance\t1303\nRevStudents MS\t1041\nRevStudents HS\t767\nTreehouse\t443\nCove\t442\nKids: Canton Cove\t442\nPre-K\t417\nKids: Canton Treehouse\t335\nToddlers\t333\nCampground\t159\nKids: Canton Campground\t159\nKids: Canton Elementary\t131\nBabies\t115\nYoung Adults\t81\nKids: Canton Pre-K\t67\nFTG Kids\t62\nFTG Adults\t53\nReruns\t44\nKids: Canton Toddlers\t37\nKids: Canton Babies\t32\nChildcare | Canton Campus\t32\nKids: Canton Nursery\t19\nRevStudents Salvations\t1\n",
+  "stderr": "",
+  "execution_time_ms": 261
+}

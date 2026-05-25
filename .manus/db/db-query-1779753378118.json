@@ -1,0 +1,250 @@
+{
+  "query": "SELECT year, month, campus, subgroup, total, avgWeekly FROM attendance_monthly WHERE year = 2026 AND month = 1 AND campus = 'Canton';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT year, month, campus, subgroup, total, avgWeekly FROM attendance_monthly WHERE year = 2026 AND month = 1 AND campus = 'Canton';",
+  "rows": [
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Adults",
+      "total": "8251",
+      "avgWeekly": "2063"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Babies",
+      "total": "115",
+      "avgWeekly": "29"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Toddlers",
+      "total": "333",
+      "avgWeekly": "83"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Pre-K",
+      "total": "417",
+      "avgWeekly": "104"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Campground",
+      "total": "159",
+      "avgWeekly": "53"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Treehouse",
+      "total": "443",
+      "avgWeekly": "111"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Cove",
+      "total": "442",
+      "avgWeekly": "147"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Reruns",
+      "total": "44",
+      "avgWeekly": "15"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Students",
+      "total": "1808",
+      "avgWeekly": "452"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Young Adults",
+      "total": "81",
+      "avgWeekly": "81"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "RevStudents | Canton Campus",
+      "total": "4356",
+      "avgWeekly": "545"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "total": "8690",
+      "avgWeekly": "1738"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Childcare | Canton Campus",
+      "total": "32",
+      "avgWeekly": "8"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Pre-K",
+      "total": "67",
+      "avgWeekly": "17"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Toddlers",
+      "total": "37",
+      "avgWeekly": "9"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Nursery",
+      "total": "19",
+      "avgWeekly": "5"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Elementary",
+      "total": "131",
+      "avgWeekly": "33"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Kids",
+      "total": "2009",
+      "avgWeekly": "402"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Treehouse",
+      "total": "335",
+      "avgWeekly": "112"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Cove",
+      "total": "442",
+      "avgWeekly": "147"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Campground",
+      "total": "159",
+      "avgWeekly": "53"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Kids: Canton Babies",
+      "total": "32",
+      "avgWeekly": "11"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "FTG Adults",
+      "total": "53",
+      "avgWeekly": "11"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "FTG Kids",
+      "total": "62",
+      "avgWeekly": "21"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "RevStudents HS",
+      "total": "767",
+      "avgWeekly": "192"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "RevStudents MS",
+      "total": "1041",
+      "avgWeekly": "260"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "RevStudents Attendance",
+      "total": "1303",
+      "avgWeekly": "434"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "RevStudents Salvations",
+      "total": "1",
+      "avgWeekly": "1"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Volunteers",
+      "total": "2073",
+      "avgWeekly": "415"
+    },
+    {
+      "year": "2026",
+      "month": "1",
+      "campus": "Canton",
+      "subgroup": "Volunteer Check-Ins",
+      "total": "1474",
+      "avgWeekly": "295"
+    }
+  ],
+  "messages": [],
+  "stdout": "year\tmonth\tcampus\tsubgroup\ttotal\tavgWeekly\n2026\t1\tCanton\tAdults\t8251\t2063\n2026\t1\tCanton\tBabies\t115\t29\n2026\t1\tCanton\tToddlers\t333\t83\n2026\t1\tCanton\tPre-K\t417\t104\n2026\t1\tCanton\tCampground\t159\t53\n2026\t1\tCanton\tTreehouse\t443\t111\n2026\t1\tCanton\tCove\t442\t147\n2026\t1\tCanton\tReruns\t44\t15\n2026\t1\tCanton\tStudents\t1808\t452\n2026\t1\tCanton\tYoung Adults\t81\t81\n2026\t1\tCanton\tRevStudents | Canton Campus\t4356\t545\n2026\t1\tCanton\tRevolution Canton Check-In\t8690\t1738\n2026\t1\tCanton\tChildcare | Canton Campus\t32\t8\n2026\t1\tCanton\tKids: Canton Pre-K\t67\t17\n2026\t1\tCanton\tKids: Canton Toddlers\t37\t9\n2026\t1\tCanton\tKids: Canton Nursery\t19\t5\n2026\t1\tCanton\tKids: Canton Elementary\t131\t33\n2026\t1\tCanton\tKids\t2009\t402\n2026\t1\tCanton\tKids: Canton Treehouse\t335\t112\n2026\t1\tCanton\tKids: Canton Cove\t442\t147\n2026\t1\tCanton\tKids: Canton Campground\t159\t53\n2026\t1\tCanton\tKids: Canton Babies\t32\t11\n2026\t1\tCanton\tFTG Adults\t53\t11\n2026\t1\tCanton\tFTG Kids\t62\t21\n2026\t1\tCanton\tRevStudents HS\t767\t192\n2026\t1\tCanton\tRevStudents MS\t1041\t260\n2026\t1\tCanton\tRevStudents Attendance\t1303\t434\n2026\t1\tCanton\tRevStudents Salvations\t1\t1\n2026\t1\tCanton\tVolunteers\t2073\t415\n2026\t1\tCanton\tVolunteer Check-Ins\t1474\t295\n",
+  "stderr": "",
+  "execution_time_ms": 276
+}

@@ -1,0 +1,15 @@
+{
+  "query": "SELECT \n  (SELECT SUM(headcount) FROM attendance_weekly WHERE year = 2026 AND campus = 'Canton' AND weekStartDate BETWEEN '2026-01-01' AND '2026-01-31' AND cancelled = 0) as weekly_total_all_subgroups,\n  (SELECT SUM(total) FROM attendance_monthly WHERE year = 2026 AND month = 1 AND campus = 'Canton') as monthly_total_all_subgroups,\n  (SELECT total FROM attendance_monthly WHERE year = 2026 AND month = 1 AND campus = 'Canton' AND subgroup = 'Adults') as monthly_adults_only;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT \n  (SELECT SUM(headcount) FROM attendance_weekly WHERE year = 2026 AND campus = 'Canton' AND weekStartDate BETWEEN '2026-01-01' AND '2026-01-31' AND cancelled = 0) as weekly_total_all_subgroups,\n  (SELECT SUM(total) FROM attendance_monthly WHERE year = 2026 AND month = 1 AND campus = 'Canton') as monthly_total_all_subgroups,\n  (SELECT total FROM attendance_monthly WHERE year = 2026 AND month = 1 AND campus = 'Canton' AND subgroup = 'Adults') as monthly_adults_only;",
+  "rows": [
+    {
+      "weekly_total_all_subgroups": "16677",
+      "monthly_total_all_subgroups": "35176",
+      "monthly_adults_only": "8251"
+    }
+  ],
+  "messages": [],
+  "stdout": "weekly_total_all_subgroups\tmonthly_total_all_subgroups\tmonthly_adults_only\n16677\t35176\t8251\n",
+  "stderr": "",
+  "execution_time_ms": 269
+}
