@@ -131,7 +131,7 @@ export default function GroupsTab() {
         <KpiCard
           label="Participation Rate"
           value={`${current.participationRate}%`}
-          subtitle="Group members as % of church attendance"
+          subtitle="Group members as % of adult attendance"
           borderColor="#C45B4A"
         />
       </div>
