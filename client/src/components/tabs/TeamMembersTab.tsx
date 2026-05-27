@@ -337,7 +337,7 @@ export default function TeamMembersTab() {
 
       {/* Roster KPIs — Total Active Team Members & % of Adult Attendance */}
       {roster && roster.totalVolunteers > 0 && (
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
           <KpiCard
             label="Active Team Members"
             value={formatNumber(roster.totalVolunteers)}
@@ -350,12 +350,7 @@ export default function TeamMembersTab() {
             subtitle={`÷ ${formatNumber(roster.avgWeeklyAdultAttendance)} avg adults (${roster.year})`}
             borderColor="#E8913A"
           />
-          <KpiCard
-            label="Avg Adult Attendance"
-            value={formatNumber(roster.avgWeeklyAdultAttendance)}
-            subtitle={`weekly avg ${roster.year} (excl. kids)`}
-            borderColor="#4A7FB5"
-          />
+
         </div>
       )}
 
