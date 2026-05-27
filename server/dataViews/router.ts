@@ -1161,8 +1161,9 @@ const servingRouter = router({
           )
         );
 
-      // Filter to adult subgroups and optionally by campus
+      // Filter to adult subgroups, exclude cancelled, and optionally by campus
       const adultRows = attendanceRows.filter(r => {
+        if (r.cancelled) return false;
         if (!adultSubgroups.includes(r.subgroup)) return false;
         if (campus && campus !== "all") {
           // Map subgroup to campus

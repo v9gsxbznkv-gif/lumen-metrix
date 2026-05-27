@@ -1,0 +1,24 @@
+{
+  "query": "SELECT * FROM volunteer_roster ORDER BY syncedAt DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT * FROM volunteer_roster ORDER BY syncedAt DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "2",
+      "campus": "Jasper",
+      "uniqueVolunteers": "319",
+      "totalTeams": "66",
+      "syncedAt": "2026-05-27 18:44:47"
+    },
+    {
+      "id": "1",
+      "campus": "Canton",
+      "uniqueVolunteers": "797",
+      "totalTeams": "62",
+      "syncedAt": "2026-05-27 18:44:47"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcampus\tuniqueVolunteers\ttotalTeams\tsyncedAt\n2\tJasper\t319\t66\t2026-05-27 18:44:47\n1\tCanton\t797\t62\t2026-05-27 18:44:47\n",
+  "stderr": "",
+  "execution_time_ms": 262
+}

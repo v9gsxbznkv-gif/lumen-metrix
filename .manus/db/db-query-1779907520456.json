@@ -1,0 +1,20 @@
+{
+  "query": "SELECT campus, subgroup, AVG(headcount) as avgWeekly FROM attendance_weekly WHERE year = 2026 AND subgroup IN ('Revolution Canton Check-In', 'Revolution Jasper Check-In') AND cancelled = 0 GROUP BY campus, subgroup;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT campus, subgroup, AVG(headcount) as avgWeekly FROM attendance_weekly WHERE year = 2026 AND subgroup IN ('Revolution Canton Check-In', 'Revolution Jasper Check-In') AND cancelled = 0 GROUP BY campus, subgroup;",
+  "rows": [
+    {
+      "campus": "Canton",
+      "subgroup": "Revolution Canton Check-In",
+      "avgWeekly": "2327.0526"
+    },
+    {
+      "campus": "Jasper",
+      "subgroup": "Revolution Jasper Check-In",
+      "avgWeekly": "477.0526"
+    }
+  ],
+  "messages": [],
+  "stdout": "campus\tsubgroup\tavgWeekly\nCanton\tRevolution Canton Check-In\t2327.0526\nJasper\tRevolution Jasper Check-In\t477.0526\n",
+  "stderr": "",
+  "execution_time_ms": 263
+}
