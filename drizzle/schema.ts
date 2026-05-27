@@ -555,3 +555,20 @@ export const dashboardInvites = mysqlTable("dashboard_invites", {
 
 export type DashboardInvite = typeof dashboardInvites.$inferSelect;
 export type InsertDashboardInvite = typeof dashboardInvites.$inferInsert;
+
+// ============================================================
+// Volunteer Roster — unique active team members from PCO Services
+// Updated during nightly sync by pulling all teams and counting distinct people
+// ============================================================
+export const volunteerRoster = mysqlTable("volunteer_roster", {
+  id: int("id").autoincrement().primaryKey(),
+  campus: varchar("campus", { length: 64 }).notNull(),
+  uniqueVolunteers: int("uniqueVolunteers").default(0).notNull(),
+  totalTeams: int("totalTeams").default(0).notNull(),
+  syncedAt: timestamp("syncedAt").defaultNow().notNull(),
+}, (t) => ([
+  uniqueIndex("volunteer_roster_campus_idx").on(t.campus),
+]));
+
+export type VolunteerRosterRow = typeof volunteerRoster.$inferSelect;
+export type InsertVolunteerRoster = typeof volunteerRoster.$inferInsert;

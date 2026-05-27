@@ -12,9 +12,10 @@ import { Request, Response } from "express";
 import { desc, eq, and, gte } from "drizzle-orm";
 import { getDb } from "../db";
 import { syncLogs, pcoTokens } from "../../drizzle/schema";
-import { getValidAccessToken } from "./client";
+import { getValidAccessToken, PcoClient } from "./client";
 import { runNightlySync } from "./scheduler";
 import { autoProcessDemographics, type AutoProcessResult } from "../demographics/autoProcess";
+import { syncVolunteerRoster } from "./rosterSync";
 
 /**
  * Get the current date string in Eastern Time (YYYY-MM-DD format).
@@ -152,6 +153,27 @@ export async function heartbeatHandler(req: Request, res: Response): Promise<voi
     console.warn(`[Heartbeat] Demographics auto-process failed: ${err.message}`);
   }
 
+  // Step 2b: Volunteer roster sync (runs once per heartbeat during sync window OR if roster is empty)
+  let rosterResult: any = null;
+  try {
+    const db2 = await getDb();
+    if (db2) {
+      const { volunteerRoster } = await import("../../drizzle/schema");
+      const existing = await db2.select().from(volunteerRoster).limit(1);
+      // Run roster sync if: during sync window OR roster table is empty (first run)
+      if (existing.length === 0 || (easternHour >= 0 && easternHour <= 5)) {
+        const accessToken = await getValidAccessToken();
+        if (accessToken) {
+          const client = new PcoClient(accessToken);
+          rosterResult = await syncVolunteerRoster(client);
+          console.log(`[Heartbeat] Roster sync: ${rosterResult.status}, ${rosterResult.recordsProcessed} processed`);
+        }
+      }
+    }
+  } catch (err: any) {
+    console.warn(`[Heartbeat] Roster sync failed: ${err.message}`);
+  }
+
   // Step 3: Check if nightly sync is needed
   // Run sync if: hour is between 0-5 (midnight to 5am ET) AND no sync completed today
   let syncStatus = "not_due";
@@ -194,6 +216,11 @@ export async function heartbeatHandler(req: Request, res: Response): Promise<voi
       refreshedNow: tokenStatus.refreshedNow,
       expiresAt: tokenStatus.expiresAt,
     },
+    roster: rosterResult ? {
+      status: rosterResult.status,
+      recordsProcessed: rosterResult.recordsProcessed,
+      durationMs: rosterResult.durationMs,
+    } : null,
     demographics: demographicsResult ? {
       addressesFetched: demographicsResult.addressesFetched,
       addressesNoData: demographicsResult.addressesNoData,

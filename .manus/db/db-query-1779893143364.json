@@ -1,0 +1,90 @@
+{
+  "query": "SELECT * FROM serving ORDER BY year DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT * FROM serving ORDER BY year DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "32",
+      "year": "2026",
+      "campus": "All Campuses",
+      "total": "6499",
+      "avgWeekly": "1625",
+      "source": "spreadsheet"
+    },
+    {
+      "id": "30",
+      "year": "2026",
+      "campus": "Canton",
+      "total": "5018",
+      "avgWeekly": "418",
+      "source": "spreadsheet"
+    },
+    {
+      "id": "31",
+      "year": "2026",
+      "campus": "Jasper",
+      "total": "1481",
+      "avgWeekly": "123",
+      "source": "spreadsheet"
+    },
+    {
+      "id": "29",
+      "year": "2025",
+      "campus": "All Campuses",
+      "total": "27982",
+      "avgWeekly": "5596",
+      "source": "spreadsheet"
+    },
+    {
+      "id": "27",
+      "year": "2025",
+      "campus": "Canton",
+      "total": "21823",
+      "avgWeekly": "428",
+      "source": "spreadsheet"
+    },
+    {
+      "id": "28",
+      "year": "2025",
+      "campus": "Jasper",
+      "total": "6159",
+      "avgWeekly": "121",
+      "source": "spreadsheet"
+    },
+    {
+      "id": "24",
+      "year": "2024",
+      "campus": "Canton",
+      "total": "20505",
+      "avgWeekly": "402",
+      "source": "spreadsheet"
+    },
+    {
+      "id": "26",
+      "year": "2024",
+      "campus": "All Campuses",
+      "total": "26199",
+      "avgWeekly": "5240",
+      "source": "spreadsheet"
+    },
+    {
+      "id": "25",
+      "year": "2024",
+      "campus": "Jasper",
+      "total": "5694",
+      "avgWeekly": "112",
+      "source": "spreadsheet"
+    },
+    {
+      "id": "22",
+      "year": "2023",
+      "campus": "Jasper",
+      "total": "5383",
+      "avgWeekly": "106",
+      "source": "spreadsheet"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tyear\tcampus\ttotal\tavgWeekly\tsource\n32\t2026\tAll Campuses\t6499\t1625\tspreadsheet\n30\t2026\tCanton\t5018\t418\tspreadsheet\n31\t2026\tJasper\t1481\t123\tspreadsheet\n29\t2025\tAll Campuses\t27982\t5596\tspreadsheet\n27\t2025\tCanton\t21823\t428\tspreadsheet\n28\t2025\tJasper\t6159\t121\tspreadsheet\n24\t2024\tCanton\t20505\t402\tspreadsheet\n26\t2024\tAll Campuses\t26199\t5240\tspreadsheet\n25\t2024\tJasper\t5694\t112\tspreadsheet\n22\t2023\tJasper\t5383\t106\tspreadsheet\n",
+  "stderr": "",
+  "execution_time_ms": 256
+}

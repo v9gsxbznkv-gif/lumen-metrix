@@ -70,6 +70,12 @@ export default function TeamMembersTab() {
   const yearsQuery = trpc.dataViews.serving.getYears.useQuery();
   const years = yearsQuery.data ?? [2026];
 
+  // Roster data: total unique active team members + % of adult attendance
+  const rosterQuery = trpc.dataViews.serving.getRoster.useQuery(
+    { campus: campus === "all" ? undefined : campus },
+  );
+  const roster = rosterQuery.data;
+
   const campusFilter = campus === "all" ? undefined : campus;
 
   const dataQuery = trpc.dataViews.serving.getData.useQuery({
@@ -326,6 +332,30 @@ export default function TeamMembersTab() {
       {isLoading && (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-5 h-5 animate-spin" style={{ color: "#E8913A" }} />
+        </div>
+      )}
+
+      {/* Roster KPIs — Total Active Team Members & % of Adult Attendance */}
+      {roster && roster.totalVolunteers > 0 && (
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
+          <KpiCard
+            label="Active Team Members"
+            value={formatNumber(roster.totalVolunteers)}
+            subtitle="unique people on serving teams"
+            borderColor="#7C3AED"
+          />
+          <KpiCard
+            label="% of Adult Attendance"
+            value={`${roster.percentOfAdultAttendance}%`}
+            subtitle={`÷ ${formatNumber(roster.avgWeeklyAdultAttendance)} avg adults (${roster.year})`}
+            borderColor="#E8913A"
+          />
+          <KpiCard
+            label="Avg Adult Attendance"
+            value={formatNumber(roster.avgWeeklyAdultAttendance)}
+            subtitle={`weekly avg ${roster.year} (excl. kids)`}
+            borderColor="#4A7FB5"
+          />
         </div>
       )}
 

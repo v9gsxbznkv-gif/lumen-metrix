@@ -1607,3 +1607,11 @@
 - [x] Add audit page to sidebar (admin-only, under Settings section)
 - [x] Write vitest tests for audit procedures (18 tests passing)
 - [x] Deploy Data Audit page
+
+## Volunteers Tab Enhancement (May 2026)
+- [x] Research PCO Services API for team people endpoints
+- [x] Build sync function to pull unique people across all serving teams from PCO
+- [x] Add volunteer_roster table to store unique team member counts per campus
+- [x] Add tRPC procedure to expose roster count to frontend
+- [x] Add "Total Active Team Members" KPI card (unique people on any serving team)
+- [x] Add "% of Adult Attendance" KPI card (active volunteers ÷ avg weekly adult attendance excluding kids)

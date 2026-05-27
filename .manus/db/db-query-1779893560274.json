@@ -1,0 +1,73 @@
+{
+  "query": "SELECT DISTINCT subgroup FROM attendance_weekly WHERE year = 2026 AND campus = 'Canton' ORDER BY subgroup;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT subgroup FROM attendance_weekly WHERE year = 2026 AND campus = 'Canton' ORDER BY subgroup;",
+  "rows": [
+    {
+      "subgroup": "Baptisms"
+    },
+    {
+      "subgroup": "FTG Adults"
+    },
+    {
+      "subgroup": "FTG Kids"
+    },
+    {
+      "subgroup": "Kids"
+    },
+    {
+      "subgroup": "Kids: Canton Babies"
+    },
+    {
+      "subgroup": "Kids: Canton Campground"
+    },
+    {
+      "subgroup": "Kids: Canton Cove"
+    },
+    {
+      "subgroup": "Kids: Canton Elementary"
+    },
+    {
+      "subgroup": "Kids: Canton Nursery"
+    },
+    {
+      "subgroup": "Kids: Canton Toddlers"
+    },
+    {
+      "subgroup": "Kids: Canton Treehouse"
+    },
+    {
+      "subgroup": "Online"
+    },
+    {
+      "subgroup": "Revolution Canton Check-In"
+    },
+    {
+      "subgroup": "RevStudents Attendance"
+    },
+    {
+      "subgroup": "RevStudents HS"
+    },
+    {
+      "subgroup": "RevStudents MS"
+    },
+    {
+      "subgroup": "RevStudents Salvations"
+    },
+    {
+      "subgroup": "Salvations"
+    },
+    {
+      "subgroup": "Stewardship"
+    },
+    {
+      "subgroup": "Volunteer Check-Ins"
+    },
+    {
+      "subgroup": "Volunteers"
+    }
+  ],
+  "messages": [],
+  "stdout": "subgroup\nBaptisms\nFTG Adults\nFTG Kids\nKids\nKids: Canton Babies\nKids: Canton Campground\nKids: Canton Cove\nKids: Canton Elementary\nKids: Canton Nursery\nKids: Canton Toddlers\nKids: Canton Treehouse\nOnline\nRevolution Canton Check-In\nRevStudents Attendance\nRevStudents HS\nRevStudents MS\nRevStudents Salvations\nSalvations\nStewardship\nVolunteer Check-Ins\nVolunteers\n",
+  "stderr": "",
+  "execution_time_ms": 270
+}

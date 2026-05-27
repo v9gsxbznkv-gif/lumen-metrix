@@ -1,0 +1,16 @@
+{
+  "query": "SELECT DISTINCT subgroup FROM attendance_weekly WHERE year = 2026 AND campus = 'Jasper' AND subgroup LIKE '%Check%' ORDER BY subgroup;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT DISTINCT subgroup FROM attendance_weekly WHERE year = 2026 AND campus = 'Jasper' AND subgroup LIKE '%Check%' ORDER BY subgroup;",
+  "rows": [
+    {
+      "subgroup": "Revolution Jasper Check-In"
+    },
+    {
+      "subgroup": "Volunteer Check-Ins"
+    }
+  ],
+  "messages": [],
+  "stdout": "subgroup\nRevolution Jasper Check-In\nVolunteer Check-Ins\n",
+  "stderr": "",
+  "execution_time_ms": 261
+}

@@ -1,0 +1,24 @@
+{
+  "query": "SELECT campus, scheduled, confirmed, total, weekStartDate FROM serving_weekly WHERE weekStartDate = (SELECT MAX(weekStartDate) FROM serving_weekly);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 389WXeUiqLtF2L4.1e2e846f063a --database EmzMXpmCwkQz2biKeRL4cm --execute SELECT campus, scheduled, confirmed, total, weekStartDate FROM serving_weekly WHERE weekStartDate = (SELECT MAX(weekStartDate) FROM serving_weekly);",
+  "rows": [
+    {
+      "campus": "Canton",
+      "scheduled": "306",
+      "confirmed": "0",
+      "total": "306",
+      "weekStartDate": "2026-05-25"
+    },
+    {
+      "campus": "Jasper",
+      "scheduled": "111",
+      "confirmed": "0",
+      "total": "111",
+      "weekStartDate": "2026-05-25"
+    }
+  ],
+  "messages": [],
+  "stdout": "campus\tscheduled\tconfirmed\ttotal\tweekStartDate\nCanton\t306\t0\t306\t2026-05-25\nJasper\t111\t0\t111\t2026-05-25\n",
+  "stderr": "",
+  "execution_time_ms": 268
+}

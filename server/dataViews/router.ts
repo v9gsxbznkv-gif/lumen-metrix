@@ -38,6 +38,7 @@ import {
   givingWeekly,
   servingWeekly,
   nextStepsWeekly,
+  volunteerRoster,
 } from "../../drizzle/schema";
 
 // ============================================================
@@ -1118,6 +1119,87 @@ const servingRouter = router({
       .orderBy(asc(servingWeekly.campus));
     return result.map(r => r.campus);
   }),
+
+  /**
+   * Get volunteer roster data: unique active team members per campus
+   * and avg weekly adult attendance for computing the % metric.
+   */
+  getRoster: publicProcedure
+    .input(z.object({ campus: z.string().optional() }).optional())
+    .query(async ({ input }) => {
+      const d = await db();
+      const campus = input?.campus;
+
+      // Get roster counts
+      const rosterRows = await d.select().from(volunteerRoster);
+
+      let totalVolunteers = 0;
+      const byCampus: Record<string, { uniqueVolunteers: number; totalTeams: number; syncedAt: Date | null }> = {};
+
+      for (const row of rosterRows) {
+        if (campus && campus !== "all" && row.campus !== campus) continue;
+        totalVolunteers += row.uniqueVolunteers;
+        byCampus[row.campus] = {
+          uniqueVolunteers: row.uniqueVolunteers,
+          totalTeams: row.totalTeams,
+          syncedAt: row.syncedAt,
+        };
+      }
+
+      // Get avg weekly adult attendance (excluding kids)
+      // Adults = "Revolution Canton Check-In" + "Revolution Jasper Check-In"
+      const currentYear = new Date().getFullYear();
+      const adultSubgroups = ["Revolution Canton Check-In", "Revolution Jasper Check-In"];
+
+      const attendanceRows = await d
+        .select()
+        .from(attendanceWeekly)
+        .where(
+          and(
+            eq(attendanceWeekly.year, currentYear),
+            // We'll filter subgroups in JS since drizzle doesn't have inArray for all dialects easily
+          )
+        );
+
+      // Filter to adult subgroups and optionally by campus
+      const adultRows = attendanceRows.filter(r => {
+        if (!adultSubgroups.includes(r.subgroup)) return false;
+        if (campus && campus !== "all") {
+          // Map subgroup to campus
+          if (campus === "Canton" && r.subgroup !== "Revolution Canton Check-In") return false;
+          if (campus === "Jasper" && r.subgroup !== "Revolution Jasper Check-In") return false;
+        }
+        return true;
+      });
+
+      // Calculate avg weekly adult attendance
+      let avgWeeklyAdultAttendance = 0;
+      if (adultRows.length > 0) {
+        // Group by week to get per-week totals, then average
+        const weekTotals = new Map<string, number>();
+        for (const row of adultRows) {
+          const key = `${row.year}-${row.weekNumber}`;
+          weekTotals.set(key, (weekTotals.get(key) || 0) + row.headcount);
+        }
+        const weekValues = Array.from(weekTotals.values());
+        avgWeeklyAdultAttendance = Math.round(
+          weekValues.reduce((s, v) => s + v, 0) / weekValues.length
+        );
+      }
+
+      // Calculate percentage
+      const percentOfAdultAttendance = avgWeeklyAdultAttendance > 0
+        ? Math.round((totalVolunteers / avgWeeklyAdultAttendance) * 1000) / 10
+        : 0;
+
+      return {
+        totalVolunteers,
+        byCampus,
+        avgWeeklyAdultAttendance,
+        percentOfAdultAttendance,
+        year: currentYear,
+      };
+    }),
 });
 
 // ============================================================
