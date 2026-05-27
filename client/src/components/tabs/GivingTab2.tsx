@@ -100,6 +100,12 @@ export default function GivingTab2() {
     endYear: viewMode === "yearly" ? Math.max(...years) : undefined,
   });
 
+  // Prior year data for YTD comparison (weekly view only)
+  const priorYearQuery = trpc.dataViews.giving.getData.useQuery(
+    { viewMode: "weekly", campus: campusFilter, year: year - 1 },
+    { enabled: viewMode === "weekly" }
+  );
+
   // Per capita data (always fetched for the selected year)
   const perCapitaQuery = trpc.dataViews.giving.getPerCapita.useQuery({
     year,
@@ -256,7 +262,19 @@ export default function GivingTab2() {
       const currentWeek = weeklyTableData[currentWeekIdx];
       const priorWeek = weeklyTableData[currentWeekIdx + 1];
 
-      return { latest: currentWeek, prior: priorWeek, ytdTotal, avgWeekly, weekCount: weeklyTableData.length };
+      // Prior year same-period YTD comparison
+      let ytdChange: { label: string; positive: boolean; value: number } | undefined;
+      if (priorYearQuery.data && priorYearQuery.data.viewMode === "weekly") {
+        const priorRows = priorYearQuery.data.data as any[];
+        const maxWeekNum = weeklyTableData[0]?.weekNumber ?? 52;
+        const priorSamePeriod = priorRows.filter((w: any) => w.weekNumber <= maxWeekNum);
+        const priorYtdTotal = priorSamePeriod.reduce((s: number, w: any) => s + (w.total || 0), 0);
+        if (priorYtdTotal > 0) {
+          ytdChange = getYoYChange(ytdTotal, priorYtdTotal);
+        }
+      }
+
+      return { latest: currentWeek, prior: priorWeek, ytdTotal, avgWeekly, weekCount: weeklyTableData.length, ytdChange };
     }
 
     if (viewMode === "yearly" && yearlyTableData.length > 0) {
@@ -272,7 +290,7 @@ export default function GivingTab2() {
     }
 
     return null;
-  }, [rawData, viewMode, weeklyTableData, yearlyTableData, monthlyTableData]);
+  }, [rawData, viewMode, weeklyTableData, yearlyTableData, monthlyTableData, priorYearQuery.data]);
 
   // ─── Per Capita KPI ───────────────────────────────────────
   const perCapitaKpi = useMemo(() => {
@@ -422,6 +440,8 @@ export default function GivingTab2() {
                     value={formatCurrency(kpis.ytdTotal)}
                     subtitle={`${kpis.weekCount} weeks`}
                     borderColor="#E8913A"
+                    change={(kpis as any).ytdChange}
+                    changeLabel={`vs same period ${year - 1}`}
                   />
                   <KpiCard
                     label="Avg Weekly"
