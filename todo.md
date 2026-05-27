@@ -1615,3 +1615,6 @@
 - [x] Add tRPC procedure to expose roster count to frontend
 - [x] Add "Total Active Team Members" KPI card (unique people on any serving team)
 - [x] Add "% of Adult Attendance" KPI card (active volunteers ÷ avg weekly adult attendance excluding kids)
+## Attendance Page Bugs (May 2026)
+- [x] Fix "exclude cancelled weeks" toggle not filtering data on Attendance page
+- [x] Flip color coding: cancelled weeks should be red, active weeks should be green

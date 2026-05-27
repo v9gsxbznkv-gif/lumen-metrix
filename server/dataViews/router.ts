@@ -1535,17 +1535,19 @@ const adminRouter = router({
       const { year, weekNumber, campus, cancelled, target } = input;
       const d = await db();
 
-      // Get all rows for this week/campus
+      // Get all rows for this week — if campus is "All Campuses" or "all", update ALL campuses
+      const isAllCampuses = campus === "All Campuses" || campus === "all";
+      const conditions: any[] = [
+        eq(attendanceWeekly.year, year),
+        eq(attendanceWeekly.weekNumber, weekNumber),
+      ];
+      if (!isAllCampuses) {
+        conditions.push(eq(attendanceWeekly.campus, campus));
+      }
       const rows = await d
         .select()
         .from(attendanceWeekly)
-        .where(
-          and(
-            eq(attendanceWeekly.year, year),
-            eq(attendanceWeekly.weekNumber, weekNumber),
-            eq(attendanceWeekly.campus, campus)
-          )
-        );
+        .where(and(...conditions));
 
       // Determine which rows to update based on target
       let updatedCount = 0;

@@ -976,25 +976,19 @@ function CancelToggleButton({
     },
   });
 
-  // Don't show toggle for "all" campus (would need to pick a specific campus)
-  if (!campus || campus === "all") return null;
+  // Don't show toggle for empty campus
+  if (!campus) return null;
 
   return (
     <button
       onClick={() => {
-        if (cancelled) {
-          toggleMutation.mutate({ year, weekNumber, campus, cancelled: false, target });
-        } else {
-          if (confirm(`Mark ${campus} ${label} Week ${weekNumber} (${year}) as cancelled? This will exclude it from averages.`)) {
-            toggleMutation.mutate({ year, weekNumber, campus, cancelled: true, target });
-          }
-        }
+        toggleMutation.mutate({ year, weekNumber, campus, cancelled: !cancelled, target });
       }}
       disabled={toggleMutation.isPending}
       className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium transition-colors ${
         cancelled
-          ? "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300"
-          : "bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400"
+          ? "bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400"
+          : "bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-300"
       } ${toggleMutation.isPending ? "opacity-50 cursor-wait" : "cursor-pointer"}`}
       title={cancelled ? `Restore ${label}` : `Cancel ${label}`}
     >
