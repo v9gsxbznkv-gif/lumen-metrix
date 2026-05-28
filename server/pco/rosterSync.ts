@@ -142,7 +142,7 @@ export async function syncVolunteerRoster(
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
-    for (const [campus, personIds] of campusPersonIds) {
+    for (const [campus, personIds] of Array.from(campusPersonIds)) {
       const uniqueCount = personIds.size;
       const teamCount = campusTeamCount.get(campus) || 0;
 

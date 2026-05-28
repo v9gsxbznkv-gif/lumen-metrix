@@ -425,13 +425,32 @@ const CANTON_ROOM_MAP: Record<string, string> = {
   "Porcupine": "Toddlers",
   // Thursday RevKids Pre-K
   "Room 4 - Pre-K": "Pre-K",
+  "Room 3 - Pre-K": "Pre-K",
   // Thursday RevKids Elementary
   "Treehouse - K-5th": "Elementary",
-  // Sunday RevKids rooms
+  // Sunday RevKids Babies (under Sunday RevKids Preschool > Babies)
   "The Nest": "Babies",
+  "Owls": "Babies",
+  "Turtles": "Babies",
+  // Sunday RevKids Toddlers (Young Toddlers + Older Toddlers)
+  "Bears": "Toddlers",
+  "Squirrels": "Toddlers",
+  "Moose": "Toddlers",
+  "Porcupines": "Toddlers",
+  "Woodpeckers": "Toddlers",
+  // Sunday RevKids Pre-K
+  "Room 1": "Pre-K",
+  "Room 2": "Pre-K",
+  "Room 3": "Pre-K",
+  "Room 4": "Pre-K",
+  // Sunday RevKids Nursery (Jasper-style names appearing in Canton)
+  "Fox": "Nursery",
+  "Raccoons": "Nursery",
+  // Sunday RevKids Elementary
   "The Campground": "Campground",
   "The Treehouse": "Treehouse",
   "The Cove": "Cove",
+  "ReRuns": "Elementary",
 };
 
 // Jasper room → category mapping
@@ -481,8 +500,14 @@ function mapLocationToCategory(locationName: string, campus: string): string | n
   if (lower === "pre-k (must be potty-trained)") return null;
   if (lower === "pre-k") return null;
   if (lower === "toddlers") return null;
+  if (lower === "young toddlers") return null;
+  if (lower === "babies") return null;
+  if (lower === "sunday revkids preschool") return null;
+  if (lower === "sunday revkids elementary") return null;
+  if (lower === "revkids welcome team") return null;
   if (lower === "revstudents 5th & 6th") return null;
   if (lower === "old locations (do not delete)") return null;
+  if (lower === "old locations - do not use or delete!") return null;
   if (lower === "team member") return null;
 
   if (campus === "Canton") {

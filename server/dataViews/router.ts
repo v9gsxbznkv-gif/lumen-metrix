@@ -544,6 +544,46 @@ const attendanceRouter = router({
         };
       });
 
+      // Also compute the aggregate "Kids" total per campus to find unassigned
+      const aggregateKidsRows = rows.filter(r => r.subgroup === "Kids" && !r.cancelled);
+      let filteredAggRows = aggregateKidsRows;
+      if (month && !weekNumber) {
+        filteredAggRows = filteredAggRows.filter(r => {
+          const m = parseInt(r.weekStartDate.split("-")[1], 10);
+          return m === month;
+        });
+      }
+      // Group aggregate by campus
+      const aggByCampus = new Map<string, { total: number; weeks: number }>();
+      for (const row of filteredAggRows) {
+        const existing = aggByCampus.get(row.campus);
+        if (existing) {
+          existing.total += row.headcount;
+          existing.weeks += 1;
+        } else {
+          aggByCampus.set(row.campus, { total: row.headcount, weeks: 1 });
+        }
+      }
+
+      // For each campus, compute unassigned = aggregate avg - sum of room-level avgs
+      for (const [campusName, aggData] of Array.from(aggByCampus)) {
+        const aggAvg = Math.round(aggData.total / aggData.weeks);
+        const roomTotal = result
+          .filter(r => r.campus === campusName)
+          .reduce((sum, r) => sum + r.avgWeekly, 0);
+        const unassigned = aggAvg - roomTotal;
+        if (unassigned > 0) {
+          result.push({
+            subgroup: `Kids: ${campusName} General`,
+            campus: campusName,
+            room: "General",
+            avgWeekly: unassigned,
+            totalHeadcount: aggData.total - result.filter(r => r.campus === campusName).reduce((s, r) => s + r.totalHeadcount, 0),
+            weekCount: aggData.weeks,
+          });
+        }
+      }
+
       // Sort by campus then by avg descending
       result.sort((a, b) => {
         if (a.campus !== b.campus) return a.campus.localeCompare(b.campus);

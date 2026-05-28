@@ -1625,3 +1625,9 @@
 - [x] Both show per-month avg in monthly view
 - [x] Both show yearly avg in yearly view (existing behavior)
 - [x] Headers updated to show period context (Week X, Month, Year Avg)
+
+## Kids Room Map Fix (May 28)
+- [x] Updated CANTON_ROOM_MAP with 15+ missing room names (Owls, Turtles, Bears, Squirrels, Moose, Porcupines, Woodpeckers, Fox, Raccoons, Room 1-4, ReRuns)
+- [x] Full re-sync completed: 605 rows written to DB with correct room mappings
+- [x] Room totals now match Kids aggregate (e.g., Jan 5: rooms sum = 722 = Kids aggregate 722)
+- [x] Deploy room map fix to production
