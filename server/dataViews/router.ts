@@ -482,9 +482,11 @@ const attendanceRouter = router({
     .input(z.object({
       year: z.number(),
       campus: z.string().optional(), // "Canton", "Jasper", or undefined for all
+      weekNumber: z.number().optional(), // specific week (weekly view)
+      month: z.number().optional(), // specific month 1-12 (monthly view)
     }))
     .query(async ({ input }) => {
-      const { year, campus } = input;
+      const { year, campus, weekNumber, month } = input;
       const d = await db();
 
       // Fetch all "Kids: *" subgroup rows for the given year
@@ -494,6 +496,9 @@ const attendanceRouter = router({
       if (campus && campus !== "all") {
         conditions.push(eq(attendanceWeekly.campus, campus));
       }
+      if (weekNumber) {
+        conditions.push(eq(attendanceWeekly.weekNumber, weekNumber));
+      }
 
       const rows = await d
         .select()
@@ -502,9 +507,17 @@ const attendanceRouter = router({
         .orderBy(asc(attendanceWeekly.weekNumber));
 
       // Filter to only "Kids: *" subgroups (room-level) and exclude cancelled rows
-      const kidsRows = rows.filter(r => r.subgroup.startsWith("Kids: ") && !r.cancelled);
+      let kidsRows = rows.filter(r => r.subgroup.startsWith("Kids: ") && !r.cancelled);
 
-      // Group by subgroup → compute average
+      // If month filter, filter by month from weekStartDate
+      if (month && !weekNumber) {
+        kidsRows = kidsRows.filter(r => {
+          const m = parseInt(r.weekStartDate.split("-")[1], 10);
+          return m === month;
+        });
+      }
+
+      // Group by subgroup → compute average (or just headcount for single week)
       const subgroupMap = new Map<string, { total: number; weeks: number; campus: string }>(); 
       for (const row of kidsRows) {
         const existing = subgroupMap.get(row.subgroup);
@@ -549,9 +562,11 @@ const attendanceRouter = router({
     .input(z.object({
       year: z.number(),
       campus: z.string().optional(),
+      weekNumber: z.number().optional(), // specific week (weekly view)
+      month: z.number().optional(), // specific month 1-12 (monthly view)
     }))
     .query(async ({ input }) => {
-      const { year, campus } = input;
+      const { year, campus, weekNumber, month } = input;
       const d = await db();
 
       const conditions: any[] = [
@@ -559,6 +574,9 @@ const attendanceRouter = router({
       ];
       if (campus && campus !== "all") {
         conditions.push(eq(attendanceWeekly.campus, campus));
+      }
+      if (weekNumber) {
+        conditions.push(eq(attendanceWeekly.weekNumber, weekNumber));
       }
 
       const rows = await d
@@ -570,14 +588,24 @@ const attendanceRouter = router({
       // Filter to "Students: *" subgroups (spreadsheet format) AND
       // "RevStudents MS"/"RevStudents HS" (PCO format)
       // Note: student rows are NOT cancelled in DB (students still met), so no filter needed here
-      const studentRows = rows.filter(r =>
+      let studentRows = rows.filter(r =>
         (r.subgroup.startsWith("Students: ") ||
         r.subgroup === "RevStudents MS" ||
         r.subgroup === "RevStudents HS") && !r.cancelled
       );
 
       // Also get aggregate "Students" rows for comparison (exclude cancelled)
-      const aggStudentRows = rows.filter(r => (r.subgroup === "Students" || r.subgroup === "RevStudents Attendance") && !r.cancelled);
+      let aggStudentRows = rows.filter(r => (r.subgroup === "Students" || r.subgroup === "RevStudents Attendance") && !r.cancelled);
+
+      // If month filter, filter by month from weekStartDate
+      if (month && !weekNumber) {
+        const monthFilter = (r: { weekStartDate: string }) => {
+          const m = parseInt(r.weekStartDate.split("-")[1], 10);
+          return m === month;
+        };
+        studentRows = studentRows.filter(monthFilter);
+        aggStudentRows = aggStudentRows.filter(monthFilter);
+      }
 
       // Normalize subgroup names to a consistent key: "{campus}|{level}"
       // "Students: Canton MS" → "Canton|Middle School"

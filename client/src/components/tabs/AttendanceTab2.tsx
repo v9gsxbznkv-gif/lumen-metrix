@@ -126,11 +126,38 @@ export default function AttendanceTab2() {
     { enabled: viewMode === "weekly" }
   );
 
-  // Kids room breakdown — try selected year first, fallback to most recent year with data
+  // Move rawData up so breakdown queries can reference it
+  const isLoading = dataQuery.isLoading;
+  const rawData = dataQuery.data;
+
+  // Kids room breakdown & Students breakdown
+  // Determine time-period params based on viewMode
   const primaryKidsYear = viewMode === "yearly" ? Math.max(...years) : year;
+  const primaryStudentsYear = viewMode === "yearly" ? Math.max(...years) : year;
+
+  // We'll compute the latest weekNumber and month from rawData to pass to breakdowns
+  const breakdownPeriod = useMemo(() => {
+    if (!rawData) return { weekNumber: undefined as number | undefined, month: undefined as number | undefined };
+    const data = rawData.data as any[];
+    if (viewMode === "weekly" && data.length > 0) {
+      // Sort descending by weekNumber, find latest non-cancelled
+      const sorted = [...data].sort((a, b) => b.weekNumber - a.weekNumber);
+      const latest = sorted.find((w: any) => !w.cancelled) || sorted[0];
+      return { weekNumber: latest?.weekNumber as number | undefined, month: undefined as number | undefined };
+    }
+    if (viewMode === "monthly" && data.length > 0) {
+      // Use the latest month
+      const sorted = [...data].sort((a, b) => b.month - a.month);
+      return { weekNumber: undefined as number | undefined, month: sorted[0]?.month as number | undefined };
+    }
+    return { weekNumber: undefined as number | undefined, month: undefined as number | undefined };
+  }, [rawData, viewMode]);
+
   const primaryKidsRoomQuery = trpc.dataViews.attendance.getKidsRoomBreakdown.useQuery({
     year: primaryKidsYear,
     campus: campus === "all" ? undefined : campus,
+    weekNumber: breakdownPeriod.weekNumber,
+    month: breakdownPeriod.month,
   });
 
   // If primary year has no data, try 2025 as fallback (most recent spreadsheet year)
@@ -149,10 +176,11 @@ export default function AttendanceTab2() {
   const kidsIsFallback = needsFallback && (fallbackKidsRoomQuery.data?.length ?? 0) > 0;
 
   // Students breakdown — same fallback logic
-  const primaryStudentsYear = viewMode === "yearly" ? Math.max(...years) : year;
   const primaryStudentsQuery = trpc.dataViews.attendance.getStudentsBreakdown.useQuery({
     year: primaryStudentsYear,
     campus: campus === "all" ? undefined : campus,
+    weekNumber: breakdownPeriod.weekNumber,
+    month: breakdownPeriod.month,
   });
   const studentsNeedsFallback = !primaryStudentsQuery.isLoading && !primaryStudentsQuery.data?.hasBreakdown && primaryStudentsYear !== 2025;
   const fallbackStudentsQuery = trpc.dataViews.attendance.getStudentsBreakdown.useQuery(
@@ -165,9 +193,6 @@ export default function AttendanceTab2() {
   const studentsYear = primaryStudentsQuery.data?.hasBreakdown ? primaryStudentsYear : 2025;
   const studentsLoading = primaryStudentsQuery.isLoading || (studentsNeedsFallback && fallbackStudentsQuery.isLoading);
   const studentsIsFallback = studentsNeedsFallback && fallbackStudentsQuery.data?.hasBreakdown;
-
-  const isLoading = dataQuery.isLoading;
-  const rawData = dataQuery.data;
 
   // ─── Detect which metrics have data ────────────────────────
   // Young Adults meets once/month, not weekly. Exclude from weekly table (mostly dashes)
@@ -795,7 +820,7 @@ export default function AttendanceTab2() {
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div>
                 <h3 className="text-sm font-semibold" style={{ fontFamily: "'DM Sans'" }}>
-                  Kids Room Breakdown — {kidsYear} Avg
+                  Kids Room Breakdown — {breakdownPeriod.weekNumber ? `Week ${breakdownPeriod.weekNumber}, ${kidsYear}` : breakdownPeriod.month ? `${["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][breakdownPeriod.month - 1]} ${kidsYear} Avg` : `${kidsYear} Avg`}
                 </h3>
                 {kidsIsFallback && (
                   <p className="text-[10px] text-muted-foreground mt-0.5">
@@ -861,7 +886,7 @@ export default function AttendanceTab2() {
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div>
                 <h3 className="text-sm font-semibold" style={{ fontFamily: "'DM Sans'" }}>
-                  Students Breakdown — {studentsYear} Avg
+                  Students Breakdown — {breakdownPeriod.weekNumber ? `Week ${breakdownPeriod.weekNumber}, ${studentsYear}` : breakdownPeriod.month ? `${["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][breakdownPeriod.month - 1]} ${studentsYear} Avg` : `${studentsYear} Avg`}
                 </h3>
                 {studentsIsFallback && (
                   <p className="text-[10px] text-muted-foreground mt-0.5">

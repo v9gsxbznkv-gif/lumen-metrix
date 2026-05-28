@@ -1618,3 +1618,10 @@
 ## Attendance Page Bugs (May 2026)
 - [x] Fix "exclude cancelled weeks" toggle not filtering data on Attendance page
 - [x] Flip color coding: cancelled weeks should be red, active weeks should be green
+
+## Attendance Breakdown Per-Period (May 28)
+- [x] Kids Room Breakdown shows per-week data in weekly view (not annual avg)
+- [x] Students Breakdown shows per-week data in weekly view (not annual avg)
+- [x] Both show per-month avg in monthly view
+- [x] Both show yearly avg in yearly view (existing behavior)
+- [x] Headers updated to show period context (Week X, Month, Year Avg)
