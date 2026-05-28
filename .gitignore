@@ -118,3 +118,4 @@ client/public/__manus__/version.json
 # Local church data files (large, served from CDN)
 church_data/
 *.xlsx
+.project-config.json
