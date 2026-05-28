@@ -626,17 +626,19 @@ export default function AttendanceTab2() {
                                 utils.dataViews.attendance.getData.invalidate();
                               }}
                             />
-                            <CancelToggleButton
-                              year={w.year}
-                              weekNumber={w.weekNumber}
-                              campus={campus === "all" ? w.campus : campus}
-                              cancelled={!!w.studentsCancelled}
-                              target="students"
-                              label="Students"
-                              onSuccess={() => {
-                                utils.dataViews.attendance.getData.invalidate();
-                              }}
-                            />
+                            {(w.students > 0 || w.studentsCancelled) && (
+                              <CancelToggleButton
+                                year={w.year}
+                                weekNumber={w.weekNumber}
+                                campus={campus === "all" ? w.campus : campus}
+                                cancelled={!!w.studentsCancelled}
+                                target="students"
+                                label="Students"
+                                onSuccess={() => {
+                                  utils.dataViews.attendance.getData.invalidate();
+                                }}
+                              />
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
