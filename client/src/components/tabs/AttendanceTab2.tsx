@@ -30,7 +30,7 @@ import {
   TableFooter,
 } from "@/components/ui/table";
 import KpiCard from "@/components/KpiCard";
-import { Loader2, Ban, RotateCcw } from "lucide-react";
+import { Loader2, Ban, RotateCcw, Baby, GraduationCap, Sparkles } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -446,6 +446,89 @@ export default function AttendanceTab2() {
     return Math.max(...allAvgs, 1);
   }, [studentsSections]);
 
+  // ─── Demographic KPI Cards (Kids, Students, Young Adults) ──────────
+  const demographicKpis = useMemo(() => {
+    if (viewMode === "weekly" && weeklyData.length > 0) {
+      // Compute average from non-cancelled weeks with data
+      const nonCancelled = weeklyData.filter(w => !w.cancelled);
+      const kidsWeeks = nonCancelled.filter(w => w.kids > 0);
+      const studentsWeeks = nonCancelled.filter(w => !w.studentsCancelled && w.students > 0);
+      const yaWeeks = nonCancelled.filter(w => w.youngAdults > 0);
+
+      const kids = kidsWeeks.length > 0 ? Math.round(kidsWeeks.reduce((s: number, w: any) => s + w.kids, 0) / kidsWeeks.length) : 0;
+      const students = studentsWeeks.length > 0 ? Math.round(studentsWeeks.reduce((s: number, w: any) => s + w.students, 0) / studentsWeeks.length) : 0;
+      const youngAdults = yaWeeks.length > 0 ? Math.round(yaWeeks.reduce((s: number, w: any) => s + w.youngAdults, 0) / yaWeeks.length) : 0;
+
+      // Prior year comparison
+      const priorNonCancelled = priorYearWeeklyData.filter(w => !w.cancelled);
+      const priorKids = priorNonCancelled.filter(w => w.kids > 0);
+      const priorStudents = priorNonCancelled.filter(w => !w.studentsCancelled && w.students > 0);
+      const priorYA = priorNonCancelled.filter(w => w.youngAdults > 0);
+
+      const priorKidsAvg = priorKids.length > 0 ? Math.round(priorKids.reduce((s: number, w: any) => s + w.kids, 0) / priorKids.length) : 0;
+      const priorStudentsAvg = priorStudents.length > 0 ? Math.round(priorStudents.reduce((s: number, w: any) => s + w.students, 0) / priorStudents.length) : 0;
+      const priorYAAvg = priorYA.length > 0 ? Math.round(priorYA.reduce((s: number, w: any) => s + w.youngAdults, 0) / priorYA.length) : 0;
+
+      return {
+        kids,
+        students,
+        youngAdults,
+        kidsSubtitle: `Avg across ${kidsWeeks.length} weeks`,
+        studentsSubtitle: `Avg across ${studentsWeeks.length} weeks`,
+        youngAdultsSubtitle: yaWeeks.length > 0 ? `Avg across ${yaWeeks.length} weeks` : "Meets monthly",
+        kidsChange: priorKidsAvg > 0 ? getYoYChange(kids, priorKidsAvg) : undefined,
+        studentsChange: priorStudentsAvg > 0 ? getYoYChange(students, priorStudentsAvg) : undefined,
+        youngAdultsChange: priorYAAvg > 0 ? getYoYChange(youngAdults, priorYAAvg) : undefined,
+      };
+    }
+    if (viewMode === "monthly" && monthlyData.length > 0) {
+      const kidsMonths = monthlyData.filter(m => m.avgWeeklyKids > 0);
+      const studentsMonths = monthlyData.filter(m => m.avgWeeklyStudents > 0);
+      const yaMonths = monthlyData.filter(m => (m.youngAdults ?? 0) > 0);
+
+      const kids = kidsMonths.length > 0 ? Math.round(kidsMonths.reduce((s: number, m: any) => s + m.avgWeeklyKids, 0) / kidsMonths.length) : 0;
+      const students = studentsMonths.length > 0 ? Math.round(studentsMonths.reduce((s: number, m: any) => s + m.avgWeeklyStudents, 0) / studentsMonths.length) : 0;
+      const youngAdults = yaMonths.length > 0 ? Math.round(yaMonths.reduce((s: number, m: any) => s + m.youngAdults, 0) / yaMonths.length) : 0;
+
+      return {
+        kids,
+        students,
+        youngAdults,
+        kidsSubtitle: `Avg across ${kidsMonths.length} months`,
+        studentsSubtitle: `Avg across ${studentsMonths.length} months`,
+        youngAdultsSubtitle: yaMonths.length > 0 ? `Avg across ${yaMonths.length} months` : "Meets monthly",
+        kidsChange: undefined,
+        studentsChange: undefined,
+        youngAdultsChange: undefined,
+      };
+    }
+    if (viewMode === "yearly" && yearlyData.length > 0) {
+      const latest = yearlyData[0];
+      const prior = yearlyData[1];
+
+      const kids = latest.avgWeeklyKids ?? 0;
+      const students = latest.avgWeeklyStudents ?? 0;
+      const youngAdults = latest.youngAdults > 0 ? Math.round(latest.youngAdults / Math.max(1, Math.round(latest.weekCount / 4.33))) : 0;
+
+      const priorKids = prior?.avgWeeklyKids ?? 0;
+      const priorStudents = prior?.avgWeeklyStudents ?? 0;
+      const priorYA = prior?.youngAdults > 0 ? Math.round(prior.youngAdults / Math.max(1, Math.round(prior.weekCount / 4.33))) : 0;
+
+      return {
+        kids,
+        students,
+        youngAdults,
+        kidsSubtitle: `${latest.year} avg weekly`,
+        studentsSubtitle: `${latest.year} avg weekly`,
+        youngAdultsSubtitle: `${latest.year} avg per gathering`,
+        kidsChange: priorKids > 0 ? getYoYChange(kids, priorKids) : undefined,
+        studentsChange: priorStudents > 0 ? getYoYChange(students, priorStudents) : undefined,
+        youngAdultsChange: priorYA > 0 ? getYoYChange(youngAdults, priorYA) : undefined,
+      };
+    }
+    return { kids: 0, students: 0, youngAdults: 0, kidsSubtitle: "", studentsSubtitle: "", youngAdultsSubtitle: "", kidsChange: undefined, studentsChange: undefined, youngAdultsChange: undefined };
+  }, [viewMode, weeklyData, monthlyData, yearlyData, priorYearWeeklyData]);
+
   return (
     <div className="space-y-5">
       {/* Controls Bar */}
@@ -529,6 +612,39 @@ export default function AttendanceTab2() {
                   />
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Demographic Cards — Kids, Students, Young Adults */}
+          {kpis && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <KpiCard
+                label={viewMode === "weekly" ? "Avg Weekly Kids" : viewMode === "monthly" ? "Avg Monthly Kids" : "Avg Weekly Kids"}
+                value={formatNumber(demographicKpis.kids)}
+                subtitle={demographicKpis.kidsSubtitle}
+                borderColor="#E8913A"
+                icon={<Baby className="w-5 h-5" />}
+                change={demographicKpis.kidsChange}
+                changeLabel="vs prior year"
+              />
+              <KpiCard
+                label={viewMode === "weekly" ? "Avg Weekly Students" : viewMode === "monthly" ? "Avg Monthly Students" : "Avg Weekly Students"}
+                value={formatNumber(demographicKpis.students)}
+                subtitle={demographicKpis.studentsSubtitle}
+                borderColor="#4A7FB5"
+                icon={<GraduationCap className="w-5 h-5" />}
+                change={demographicKpis.studentsChange}
+                changeLabel="vs prior year"
+              />
+              <KpiCard
+                label={viewMode === "weekly" ? "Avg Young Adults" : viewMode === "monthly" ? "Avg Monthly YA" : "Avg Young Adults"}
+                value={formatNumber(demographicKpis.youngAdults)}
+                subtitle={demographicKpis.youngAdultsSubtitle}
+                borderColor="#7C5CBF"
+                icon={<Sparkles className="w-5 h-5" />}
+                change={demographicKpis.youngAdultsChange}
+                changeLabel="vs prior year"
+              />
             </div>
           )}
 

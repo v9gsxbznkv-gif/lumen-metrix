@@ -1631,3 +1631,14 @@
 - [x] Full re-sync completed: 605 rows written to DB with correct room mappings
 - [x] Room totals now match Kids aggregate (e.g., Jan 5: rooms sum = 722 = Kids aggregate 722)
 - [x] Deploy room map fix to production
+
+## Attendance Breakdown Campus Totals (May 28)
+- [ ] Kids breakdown: show total per campus (Canton total, Jasper total)
+- [ ] Kids breakdown: show grand total across all campuses
+- [ ] Students breakdown: show total per campus (Canton total, Jasper total)
+- [ ] Students breakdown: show grand total across all campuses
+
+## Attendance Page Cards (Jun 1)
+- [x] Add Students summary card to Attendance page
+- [x] Add Kids summary card to Attendance page
+- [x] Add Young Adults summary card to Attendance page
