@@ -2,8 +2,12 @@
  * Lumen Metrix — Main Dashboard Layout
  * Desktop: fixed sidebar + content area
  * Mobile: hamburger overlay + full-width content
+ *
+ * URL-based routing: each tab has its own path (e.g., /attendance, /giving).
+ * Sidebar clicks update the URL; direct URL access loads the correct tab.
  */
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useLocation } from "wouter";
 import { useData } from "@/contexts/DataContext";
 import { trpc } from "@/lib/trpc";
 import Sidebar, { type TabId } from "@/components/Sidebar";
@@ -27,6 +31,30 @@ import LumenLogo from "@/components/LumenLogo";
 import LoginPage from "@/pages/LoginPage";
 import { Loader2 } from "lucide-react";
 
+/** Map TabId → URL path slug */
+const TAB_TO_PATH: Record<TabId, string> = {
+  dashboard: "/dashboard",
+  attendance: "/attendance",
+  giving: "/giving",
+  teamMembers: "/team-members",
+  groups: "/groups",
+  assimilation: "/assimilation",
+  campuses: "/campuses",
+  compare: "/compare",
+  health: "/health",
+  weeklyReport: "/weekly-report",
+  annualReport: "/annual-report",
+  reports: "/reports",
+  ai: "/ai",
+  settings: "/settings",
+  dataAudit: "/data-audit",
+};
+
+/** Reverse map: URL path slug → TabId */
+const PATH_TO_TAB: Record<string, TabId> = Object.fromEntries(
+  Object.entries(TAB_TO_PATH).map(([tab, path]) => [path, tab as TabId])
+) as Record<string, TabId>;
+
 const TAB_META: Record<TabId, { title: string; subtitle: string }> = {
   dashboard: { title: "Dashboard", subtitle: "Key metrics at a glance across all campuses" },
   attendance: { title: "Attendance", subtitle: "Weekly, monthly, and annual attendance by campus and demographic" },
@@ -45,12 +73,30 @@ const TAB_META: Record<TabId, { title: string; subtitle: string }> = {
   dataAudit: { title: "Data Audit", subtitle: "Verify dashboard numbers against raw PCO records — admin only" },
 };
 
-export default function Home() {
+interface HomeProps {
+  initialTab?: TabId;
+}
+
+export default function Home({ initialTab = "dashboard" }: HomeProps) {
   const { data, loading, error } = useData();
-  const [activeTab, setActiveTab] = useState<TabId>("dashboard");
+  const [, navigate] = useLocation();
+  const [activeTab, setActiveTab] = useState<TabId>(initialTab);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const utils = trpc.useUtils();
+
+  // Sync activeTab when initialTab prop changes (URL navigation)
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
+
+  // When sidebar tab is clicked, update the URL
+  const handleTabChange = useCallback((tab: TabId) => {
+    setActiveTab(tab);
+    const path = TAB_TO_PATH[tab] || "/dashboard";
+    // Use "/" for dashboard to keep root URL clean
+    navigate(tab === "dashboard" ? "/" : path);
+  }, [navigate]);
 
   // Staff auth — check session cookie via server
   const authCheck = trpc.staffAuth.check.useQuery(undefined, {
@@ -116,7 +162,7 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <Sidebar
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
         onLogout={() => logoutMutation.mutate()}

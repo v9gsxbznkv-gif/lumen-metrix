@@ -17,9 +17,27 @@ function InviteRoute() {
 function Router() {
   return (
     <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/invite"} component={InviteRoute} />
-      <Route path={"/404"} component={NotFound} />
+      {/* Main dashboard routes — each tab gets its own URL */}
+      <Route path="/">{() => <Home initialTab="dashboard" />}</Route>
+      <Route path="/dashboard">{() => <Home initialTab="dashboard" />}</Route>
+      <Route path="/attendance">{() => <Home initialTab="attendance" />}</Route>
+      <Route path="/giving">{() => <Home initialTab="giving" />}</Route>
+      <Route path="/team-members">{() => <Home initialTab="teamMembers" />}</Route>
+      <Route path="/groups">{() => <Home initialTab="groups" />}</Route>
+      <Route path="/assimilation">{() => <Home initialTab="assimilation" />}</Route>
+      <Route path="/campuses">{() => <Home initialTab="campuses" />}</Route>
+      <Route path="/compare">{() => <Home initialTab="compare" />}</Route>
+      <Route path="/health">{() => <Home initialTab="health" />}</Route>
+      <Route path="/weekly-report">{() => <Home initialTab="weeklyReport" />}</Route>
+      <Route path="/annual-report">{() => <Home initialTab="annualReport" />}</Route>
+      <Route path="/reports">{() => <Home initialTab="reports" />}</Route>
+      <Route path="/ai">{() => <Home initialTab="ai" />}</Route>
+      <Route path="/settings">{() => <Home initialTab="settings" />}</Route>
+      <Route path="/data-audit">{() => <Home initialTab="dataAudit" />}</Route>
+
+      {/* Other routes */}
+      <Route path="/invite" component={InviteRoute} />
+      <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -1653,3 +1653,4 @@
 ## Remove Manus Branding (Jun 2)
 - [x] Redirect .manus.space URL to lumenmetrix.com (301 redirect for non-API routes)
 - [x] Remove any Manus branding/references from the app UI (confirmed: none exist in user-facing code)
+- [x] URL-based routing: each tab gets its own URL path (e.g., /dashboard, /attendance, /giving) so pages work as normal website URLs
