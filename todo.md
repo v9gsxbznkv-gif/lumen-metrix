@@ -1642,3 +1642,7 @@
 - [x] Add Students summary card to Attendance page
 - [x] Add Kids summary card to Attendance page
 - [x] Add Young Adults summary card to Attendance page
+
+## Full Sync Timeout Fix (Jun 2)
+- [x] Fix full sync timeout: delegate to runNightlySync (sequential modules) instead of monolithic approach
+- [x] Increase job timeout from 30 to 90 minutes to prevent premature failure marking

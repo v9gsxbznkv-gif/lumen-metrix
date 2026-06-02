@@ -86,44 +86,18 @@ async function runSyncInBackground(
 
     let results;
     if (syncType === "full") {
-      // Full sync = weekly PCO fetch only (2026-01-01 to today).
-      // Monthly aggregates are computed on-the-fly from weekly DB rows — no separate monthly PCO calls.
-      // This eliminates all the hanging PCO API calls (giving, groups, events, people) that were
-      // blocking the full sync. One source of truth: attendance_weekly + giving_weekly.
-      const effectiveDateFrom = dateFrom ?? "2026-01-01";
-      const effectiveDateTo = dateTo ?? new Date().toISOString().split("T")[0];
-      await progress(20, "Starting weekly sync from PCO (2026 data)...");
-      const weeklyResults = await syncAllWeekly(client, effectiveDateFrom, effectiveDateTo, progress, jobId);
-
-      // Phase 2: flush ALL post-PCO DB work via a fresh HTTP request.
-      // The flush endpoint handles: attendance_weekly writes, giving_monthly aggregation,
-      // sync log inserts, and marking the job completed at 100%.
-      // This avoids ALL shared-pool DB calls after the long PCO fetch.
-      try {
-        const port = process.env.PORT || 3000;
-        const flushResp = await fetch(`http://localhost:${port}/api/sync/flush`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ jobId }),
-        });
-        if (flushResp.ok) {
-          const flushData = await flushResp.json() as { ok: boolean; rowsWritten?: number; givingRows?: number };
-          console.log(`[PCO Sync] Flush complete: ${flushData.rowsWritten ?? 0} attendance + ${flushData.givingRows ?? 0} giving rows. Job marked complete.`);
-        } else {
-          const errText = await flushResp.text();
-          console.warn(`[PCO Sync] Flush endpoint returned ${flushResp.status}: ${errText}`);
-          // Flush failed — fall through to the shared-pool path as a best-effort fallback
-          results = [weeklyResults.attendance, weeklyResults.giving, weeklyResults.volunteers];
-        }
-      } catch (flushErr: any) {
-        console.warn(`[PCO Sync] Flush call failed: ${flushErr.message}`);
-        // Flush failed — fall through to the shared-pool path as a best-effort fallback
-        results = [weeklyResults.attendance, weeklyResults.giving, weeklyResults.volunteers];
-      }
-
-      // If flush succeeded (results is still undefined), skip the shared-pool log/complete path.
-      // The flush endpoint already marked the job completed at 100%.
-      if (!results) return;
+      // Full sync = delegate to runNightlySync which runs each module sequentially
+      // and completes reliably (same path as the heartbeat-triggered nightly sync).
+      // This avoids the timeout issues from the old monolithic approach.
+      await progress(20, "Starting full sync (running all modules sequentially)...");
+      await runNightlySync();
+      await updateJob(jobId, {
+        status: "completed",
+        progress: 100,
+        message: "Full sync complete — all modules synced successfully",
+        completedAt: new Date(),
+      });
+      return;
     } else if (syncType === "weekly_all") {
       const attResult = await syncWeeklyAttendance(client, dateFrom, dateTo, progress);
       await progress(50, "Syncing weekly giving...", attResult.recordsProcessed);
@@ -317,8 +291,8 @@ export const pcoRouter = router({
       // Note: Full sync with room-level kids data takes 15-25 min with 5 events + location_event_times + 17 giving chunks.
       if (job.status === "running") {
         const ageMs = Date.now() - job.startedAt.getTime();
-        const THIRTY_MINUTES_MS = 30 * 60 * 1000;
-        if (ageMs > THIRTY_MINUTES_MS) {
+        const NINETY_MINUTES_MS = 90 * 60 * 1000;
+        if (ageMs > NINETY_MINUTES_MS) {
           await updateJob(input.jobId, {
             status: "failed",
             error: "Sync timed out — the server may have restarted mid-sync. Please try again.",
