@@ -46,6 +46,15 @@ async function startServer() {
   } catch (err) {
     console.warn("[Server] Could not start proactive token refresh:", err);
   }
+  // Redirect .manus.space to lumenmetrix.com (keep all Manus branding hidden)
+  app.use((req, res, next) => {
+    const host = req.headers.host || "";
+    if (host.includes("manus.space") && !req.path.startsWith("/api/")) {
+      return res.redirect(301, `https://lumenmetrix.com${req.originalUrl}`);
+    }
+    next();
+  });
+
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
