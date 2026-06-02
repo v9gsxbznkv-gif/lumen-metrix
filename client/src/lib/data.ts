@@ -844,9 +844,14 @@ export function getGivingFromWeekly(
   year: number,
   campus: string
 ): number {
+  // Exclude partial current week for the current year (same as Giving page / dataViews)
+  const currentYear = new Date().getFullYear();
+  const weekCap = year === currentYear ? getLastCompleteISOWeek() : 52;
+
   let total = 0;
   for (const r of data.giving_weekly) {
     if (r.year !== year) continue;
+    if (r.weekNumber > weekCap) continue;
     if (campus === "All Campuses") {
       total += r.total;
     } else if (r.campus === campus) {
