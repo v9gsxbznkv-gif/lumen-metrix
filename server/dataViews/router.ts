@@ -171,6 +171,10 @@ function normalizeAttendanceRows(rows: any[]): NormalizedWeek[] {
   const mainCancelledKeys = new Set<string>();
   const studentCancelledKeys = new Set<string>();
 
+  // Track which week+campus combos have an aggregate "Kids" row
+  // When absent, we fall back to summing room-level "Kids: *" rows
+  const hasAggregateKidsSet = new Set<string>();
+
   // First pass: detect which week+campus combos have HS or MS data
   // to avoid double-counting with "RevStudents Attendance" (which is HS+MS combined)
   // Also track cancelled state per week+campus, split by main vs student
@@ -180,6 +184,10 @@ function normalizeAttendanceRows(rows: any[]): NormalizedWeek[] {
     const weekKey = `${row.year}-${row.weekNumber}-${campus}`;
     if (row.subgroup === "RevStudents HS" || row.subgroup === "RevStudents MS") {
       hasHsMsSet.add(weekKey);
+    }
+    // Track which week+campus combos have an aggregate Kids row
+    if (row.subgroup === "Kids" && !row.cancelled) {
+      hasAggregateKidsSet.add(weekKey);
     }
     // Track cancelled state by target type
     const isStudent = row.subgroup.startsWith("RevStudents") ||
@@ -225,6 +233,16 @@ function normalizeAttendanceRows(rows: any[]): NormalizedWeek[] {
         studentsCancelled: isStudentsCancelled,
       };
       weekMap.set(key, entry);
+    }
+
+    // For room-level Kids rows (Kids: *): only count them if there is NO aggregate
+    // "Kids" row for this week+campus (fallback for campuses like Jasper that PCO
+    // reports only at room level without a rolled-up total).
+    if (row.subgroup.startsWith("Kids:") || row.subgroup.startsWith("Kids ")) {
+      if (!hasAggregateKidsSet.has(key)) {
+        entry.kids += row.headcount;
+      }
+      continue;
     }
 
     switch (category) {
