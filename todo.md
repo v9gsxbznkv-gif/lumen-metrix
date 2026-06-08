@@ -1654,3 +1654,11 @@
 - [x] Redirect .manus.space URL to lumenmetrix.com (301 redirect for non-API routes)
 - [x] Remove any Manus branding/references from the app UI (confirmed: none exist in user-facing code)
 - [x] URL-based routing: each tab gets its own URL path (e.g., /dashboard, /attendance, /giving) so pages work as normal website URLs
+
+## Health Page Attendance Growth Rate Fix (Jun 8)
+- [x] Fix Health page attendance growth rate card: was using monthly data (getAttendanceForMonths) which had gaps due to PCO subgroup rename mid-2025 — inflated growth to ~37.9% instead of correct ~6%
+- [x] Fix Health page YoY Growth Rate chart: same monthly-data bug affected the attGrowth bar for 2026
+- [x] Both now use weekly-range helpers (getAvgAttendanceFromWeeklyRange) capped to same week range for both years — matches OverviewTab pattern
+- [x] Giving growth in chart also switched to weekly-range helpers for consistency
+- [x] Added partial-year notice to growth chart title (e.g., "2026 uses weeks 1–22 vs same weeks in 2025")
+- [x] Added 7 vitest tests for weekly attendance growth rate helpers (all pass; 1 pre-existing groups test failure unrelated)

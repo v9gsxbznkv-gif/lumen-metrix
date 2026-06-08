@@ -9,11 +9,13 @@ import { trpc } from "@/lib/trpc";
 import {
   formatCurrency,
   formatNumber,
-  isPartialYear,
-  getMaxMonth,
-  getAttendanceForMonths,
-  getGivingForMonths,
-  getNextStepsForMonths,
+  getMaxWeek,
+  getWeeklyYoYChange,
+  getAvgAttendanceFromWeekly,
+  getAvgAttendanceFromWeeklyRange,
+  getGivingFromWeekly,
+  getGivingFromWeeklyRange,
+  getYoYChange,
   CAMPUS_COLORS,
 } from "@/lib/data";
 import {
@@ -159,35 +161,34 @@ export default function HealthTab() {
   const growthTrend = useMemo(() => {
     if (!data) return [];
     return filteredYears.map((year, i) => {
-      const partial = isPartialYear(data, year);
-      const maxMonth = getMaxMonth(data, year);
-      const compMonths = Array.from({ length: maxMonth }, (_, k) => k + 1);
+      const maxWeek = getMaxWeek(data, year);
+      const partial = maxWeek < 50;
+      const campus = filters.campus;
 
-      // Attendance: use avg_weekly (already YTD average for partial years).
-      // For prior year, use same-period avg_weekly from monthly data.
-      const currAtt = getAttAvg(data.attendance, year, filters.campus);
+      // Attendance: use weekly data for both years, capped to the same week range.
+      // This is the same apples-to-apples pattern used in OverviewTab.
+      const currAtt = Math.round(getAvgAttendanceFromWeekly(data, year, campus, "Total"));
       let prevAtt: number;
       if (i > 0) {
         const prevYear = filteredYears[i - 1];
         if (partial) {
-          const priorMonthly = getAttendanceForMonths(data, prevYear, filters.campus, compMonths);
-          prevAtt = priorMonthly.avgWeekly;
+          prevAtt = Math.round(getAvgAttendanceFromWeeklyRange(data, prevYear, campus, "Total", maxWeek));
         } else {
-          prevAtt = getAttAvg(data.attendance, prevYear, filters.campus);
+          prevAtt = Math.round(getAvgAttendanceFromWeekly(data, prevYear, campus, "Total"));
         }
       } else {
         prevAtt = 0;
       }
 
-      // Giving: for partial years, compare same-period giving (same months).
+      // Giving: use weekly data for both years, capped to the same week range.
       let currGiv: number;
       let prevGiv: number;
       if (partial && i > 0) {
-        currGiv = getGivingForMonths(data, year, filters.campus, compMonths);
-        prevGiv = getGivingForMonths(data, filteredYears[i - 1], filters.campus, compMonths);
+        currGiv = getGivingFromWeeklyRange(data, year, campus, maxWeek);
+        prevGiv = getGivingFromWeeklyRange(data, filteredYears[i - 1], campus, maxWeek);
       } else {
-        currGiv = getGivTotal(data.giving, year, filters.campus);
-        prevGiv = i > 0 ? getGivTotal(data.giving, filteredYears[i - 1], filters.campus) : 0;
+        currGiv = getGivingFromWeekly(data, year, campus);
+        prevGiv = i > 0 ? getGivingFromWeekly(data, filteredYears[i - 1], campus) : 0;
       }
 
       return {
@@ -207,30 +208,19 @@ export default function HealthTab() {
   const healthScores = useMemo(() => {
     if (!data) return [];
     const vr = data.computed.volunteer_ratio;
-    const gpc = data.computed.giving_per_capita;
 
-    const partial = isPartialYear(data, latestYear);
-    const maxMonth = getMaxMonth(data, latestYear);
-    const compMonths = Array.from({ length: maxMonth }, (_, i) => i + 1);
+    // Use weekly data for attendance growth — same apples-to-apples pattern as OverviewTab.
+    const maxWeek = getMaxWeek(data, latestYear);
+    const partial = maxWeek < 50;
+    const campus = filters.campus;
 
-    // Partial-year-aware growth: compare avg_weekly (YTD average) for same period.
-    // The annual row's avg_weekly already represents the YTD average for partial years,
-    // so comparing avg_weekly directly is an apples-to-apples same-period comparison.
-    // For the prior year, we use the same-period avg_weekly from monthly data.
-    const currAttAvg = getAttAvg(data.attendance, latestYear, filters.campus);
-    let prevAttAvg: number;
-    if (partial) {
-      // Sum monthly totals for same months in prior year, then derive avg_weekly
-      const priorMonthly = getAttendanceForMonths(data, latestYear - 1, filters.campus, compMonths);
-      prevAttAvg = priorMonthly.avgWeekly;
-    } else {
-      prevAttAvg = getAttAvg(data.attendance, latestYear - 1, filters.campus);
-    }
+    const currAttAvg = Math.round(getAvgAttendanceFromWeekly(data, latestYear, campus, "Total"));
+    const prevAttAvg = partial
+      ? Math.round(getAvgAttendanceFromWeeklyRange(data, latestYear - 1, campus, "Total", maxWeek))
+      : Math.round(getAvgAttendanceFromWeekly(data, latestYear - 1, campus, "Total"));
+
     const attGrowth = prevAttAvg > 0 ? ((currAttAvg - prevAttAvg) / prevAttAvg) * 100 : 0;
     const currAtt = currAttAvg;
-
-    const campus =
-      filters.campus === "All Campuses" ? "All Campuses" : filters.campus;
 
     const volMatch = vr.find(
       (v) => v.year === latestYear && v.campus === campus
@@ -267,6 +257,9 @@ export default function HealthTab() {
     // FTG: use monthly data for same-period comparison, summing individual campuses
     // when "All Campuses" is selected (no pre-aggregated All Campuses monthly row).
     const INDIVIDUAL_CAMPUSES = ["Canton", "Jasper", "Online"];
+    // FTG: filter monthly data up to the current week (approximated as months up to maxWeek/4.33)
+    const maxMonth = Math.ceil(maxWeek / 4.33);
+    const compMonths = Array.from({ length: maxMonth }, (_, k) => k + 1);
     const ftgMonthly = data.next_steps_monthly.filter(
       (n) =>
         n.year === latestYear &&
@@ -290,7 +283,7 @@ export default function HealthTab() {
         )
         .reduce((s, n) => s + n.total, 0);
     }
-    const weeks = partial ? Math.round(maxMonth * 4.33) : 52;
+    const weeks = partial ? maxWeek : 52;
     const ftgPerWeek = ftg / weeks;
     const ftgPct = currAtt > 0 ? (ftgPerWeek / currAtt) * 100 : 0;
 
@@ -521,7 +514,17 @@ export default function HealthTab() {
       </div>
 
       <div className="bg-card rounded-lg border border-border/60 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-        <h3 className="section-title mb-3 sm:mb-4">Year-over-Year Growth Rate (%)</h3>
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <h3 className="section-title">Year-over-Year Growth Rate (%)</h3>
+          {(() => {
+            const mw = getMaxWeek(data, latestYear);
+            return mw < 50 ? (
+              <span className="text-[10px] text-muted-foreground italic">
+                {latestYear} uses weeks 1–{mw} vs same weeks in {latestYear - 1}
+              </span>
+            ) : null;
+          })()}
+        </div>
         <ResponsiveContainer width="100%" height={220}>
           <ComposedChart data={growthTrend.slice(1)}>
             <CartesianGrid strokeDasharray="3 3" stroke="#E8E5DE" />
