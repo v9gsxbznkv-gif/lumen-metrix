@@ -71,6 +71,7 @@ async function hasSyncedToday(): Promise<boolean> {
 
 /**
  * Check if the PCO token exists and get its expiry info.
+ * Proactively refreshes the token if it is within the 30-minute buffer window.
  */
 async function getTokenStatus(): Promise<{
   hasToken: boolean;
@@ -84,18 +85,33 @@ async function getTokenStatus(): Promise<{
   const rows = await db.select().from(pcoTokens).limit(1);
   if (rows.length === 0) return { hasToken: false, isExpired: true, expiresAt: null, refreshedNow: false };
 
-  const token = rows[0];
-  const expiresAt = token.expiresAt ? new Date(token.expiresAt).toISOString() : null;
-  const isExpired = token.expiresAt ? new Date(token.expiresAt).getTime() < Date.now() : true;
+  const tokenBefore = rows[0];
+  const expiresAtBefore = tokenBefore.expiresAt ? new Date(tokenBefore.expiresAt).getTime() : 0;
 
-  // Attempt to get a valid token (this will refresh if needed)
+  // Attempt to get a valid token — this will proactively refresh if within 30-min buffer
   const validToken = await getValidAccessToken();
-  const refreshedNow = validToken !== null && isExpired;
+
+  if (validToken === null) {
+    return {
+      hasToken: true,
+      isExpired: true,
+      expiresAt: tokenBefore.expiresAt ? new Date(tokenBefore.expiresAt).toISOString() : null,
+      refreshedNow: false,
+    };
+  }
+
+  // Re-read the token from DB to get the updated expiry after any refresh
+  const updatedRows = await db.select().from(pcoTokens).limit(1);
+  const tokenAfter = updatedRows[0];
+  const expiresAtAfter = tokenAfter.expiresAt ? new Date(tokenAfter.expiresAt).getTime() : 0;
+
+  // refreshedNow is true if the expiry timestamp changed (i.e. a refresh actually happened)
+  const refreshedNow = expiresAtAfter > expiresAtBefore + 60_000; // >1min difference = real refresh
 
   return {
     hasToken: true,
-    isExpired: validToken === null,
-    expiresAt,
+    isExpired: false,
+    expiresAt: tokenAfter.expiresAt ? new Date(tokenAfter.expiresAt).toISOString() : null,
     refreshedNow,
   };
 }

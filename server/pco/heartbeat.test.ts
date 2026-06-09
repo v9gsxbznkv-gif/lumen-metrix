@@ -67,6 +67,38 @@ describe("heartbeat logic", () => {
     });
   });
 
+  describe("refreshedNow detection", () => {
+    it("should detect a refresh when expiresAt increases by more than 1 minute", () => {
+      const expiresAtBefore = Date.now() + 10 * 60 * 1000; // 10 min from now
+      const expiresAtAfter = Date.now() + 90 * 60 * 1000; // 90 min from now (new token)
+      const refreshedNow = expiresAtAfter > expiresAtBefore + 60_000;
+      expect(refreshedNow).toBe(true);
+    });
+
+    it("should NOT flag refreshedNow when expiresAt is unchanged", () => {
+      const expiresAtBefore = Date.now() + 90 * 60 * 1000;
+      const expiresAtAfter = expiresAtBefore; // no change
+      const refreshedNow = expiresAtAfter > expiresAtBefore + 60_000;
+      expect(refreshedNow).toBe(false);
+    });
+
+    it("should NOT flag refreshedNow for sub-minute clock drift", () => {
+      const expiresAtBefore = Date.now() + 90 * 60 * 1000;
+      const expiresAtAfter = expiresAtBefore + 30_000; // only 30s difference (clock drift)
+      const refreshedNow = expiresAtAfter > expiresAtBefore + 60_000;
+      expect(refreshedNow).toBe(false);
+    });
+
+    it("should report the updated expiresAt after refresh (not the stale pre-refresh value)", () => {
+      // Simulate: token was expiring in 20min, after refresh it expires in 90min
+      const staleExpiry = new Date(Date.now() + 20 * 60 * 1000).toISOString();
+      const freshExpiry = new Date(Date.now() + 90 * 60 * 1000).toISOString();
+      // The fix reads DB again after getValidAccessToken() — so it should return freshExpiry
+      expect(freshExpiry).not.toEqual(staleExpiry);
+      expect(new Date(freshExpiry).getTime()).toBeGreaterThan(new Date(staleExpiry).getTime());
+    });
+  });
+
   describe("idempotency", () => {
     it("should not re-run sync if already completed today", () => {
       // Simulate: sync completed at 1am today

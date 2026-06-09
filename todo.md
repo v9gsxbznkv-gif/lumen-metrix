@@ -1662,3 +1662,8 @@
 - [x] Giving growth in chart also switched to weekly-range helpers for consistency
 - [x] Added partial-year notice to growth chart title (e.g., "2026 uses weeks 1–22 vs same weeks in 2025")
 - [x] Added 7 vitest tests for weekly attendance growth rate helpers (all pass; 1 pre-existing groups test failure unrelated)
+
+## PCO Token Auto-Refresh Fix (Jun 9)
+- [x] Fix heartbeat getTokenStatus(): re-read DB after getValidAccessToken() so expiresAt in response reflects the refreshed token (not the stale pre-refresh value)
+- [x] Fix refreshedNow detection: compare pre/post expiresAt timestamps (>1min diff = real refresh) instead of using stale isExpired flag which was always false during proactive refresh
+- [x] Add 4 vitest tests for refreshedNow detection logic (all pass)
