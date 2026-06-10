@@ -119,3 +119,6 @@ client/public/__manus__/version.json
 church_data/
 *.xlsx
 .project-config.json
+.manus/db/*.json
+scripts/check-payment-statuses.mjs
+scripts/direct-giving-sync.mjs
