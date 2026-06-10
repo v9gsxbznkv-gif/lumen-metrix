@@ -11,6 +11,7 @@ import {
   bigint,
   double,
   uniqueIndex,
+  date,
 } from "drizzle-orm/mysql-core";
 
 // ============================================================
@@ -527,7 +528,7 @@ export const dashboardUsers = mysqlTable("dashboard_users", {
   email: varchar("email", { length: 320 }).notNull().unique(),
   name: varchar("name", { length: 255 }).notNull(),
   passwordHash: varchar("passwordHash", { length: 255 }).notNull(),
-  role: mysqlEnum("role", ["admin", "user"]).default("user").notNull(),
+  role: mysqlEnum("role", ["admin", "staff", "member"]).default("staff").notNull(),
   status: mysqlEnum("status", ["active", "disabled"]).default("active").notNull(),
   invitedBy: int("invitedBy"),
   lastLoginAt: timestamp("lastLoginAt"),
@@ -544,7 +545,7 @@ export type InsertDashboardUser = typeof dashboardUsers.$inferInsert;
 export const dashboardInvites = mysqlTable("dashboard_invites", {
   id: int("id").autoincrement().primaryKey(),
   email: varchar("email", { length: 320 }).notNull(),
-  role: mysqlEnum("role", ["admin", "user"]).default("user").notNull(),
+  role: mysqlEnum("role", ["admin", "staff", "member"]).default("staff").notNull(),
   token: varchar("token", { length: 64 }).notNull().unique(),
   invitedBy: int("invitedBy").notNull(),
   status: mysqlEnum("status", ["pending", "accepted", "revoked"]).default("pending").notNull(),
@@ -572,3 +573,172 @@ export const volunteerRoster = mysqlTable("volunteer_roster", {
 
 export type VolunteerRosterRow = typeof volunteerRoster.$inferSelect;
 export type InsertVolunteerRoster = typeof volunteerRoster.$inferInsert;
+
+// ============================================================
+// Calendar: Campuses
+// ============================================================
+export const calendarCampuses = mysqlTable("calendar_campuses", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  color: varchar("color", { length: 7 }).default("#6B7280").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type CalendarCampus = typeof calendarCampuses.$inferSelect;
+
+// ============================================================
+// Calendar: Ministries
+// ============================================================
+export const calendarMinistries = mysqlTable("calendar_ministries", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  color: varchar("color", { length: 7 }).default("#6B7280").notNull(),
+  icon: varchar("icon", { length: 50 }).default("calendar").notNull(),
+  sortOrder: int("sortOrder").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type CalendarMinistry = typeof calendarMinistries.$inferSelect;
+
+// ============================================================
+// Calendar: Staff Members
+// ============================================================
+export const calendarStaffMembers = mysqlTable("calendar_staff_members", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 150 }).notNull(),
+  email: varchar("email", { length: 320 }),
+  campusId: int("campusId").references(() => calendarCampuses.id),
+  role: varchar("role", { length: 100 }),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type CalendarStaffMember = typeof calendarStaffMembers.$inferSelect;
+
+// ============================================================
+// Calendar: Events
+// ============================================================
+export const calendarEvents = mysqlTable("calendar_events", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  campusId: int("campusId").references(() => calendarCampuses.id).notNull(),
+  ministryId: int("ministryId").references(() => calendarMinistries.id).notNull(),
+  location: varchar("location", { length: 255 }),
+  capacity: int("capacity"),
+  startDate: timestamp("startDate").notNull(),
+  endDate: timestamp("endDate").notNull(),
+  isAllDay: boolean("isAllDay").default(false).notNull(),
+  status: mysqlEnum("status", ["draft", "pending_approval", "approved", "rejected", "locked"]).default("draft").notNull(),
+  approvedAt: timestamp("approvedAt"),
+  rejectionReason: text("rejectionReason"),
+  recurrenceGroupId: int("recurrenceGroupId"),
+  color: varchar("color", { length: 7 }),
+  attendeeNotes: text("attendeeNotes"),
+  googleEventId: varchar("googleEventId", { length: 256 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type CalendarEvent = typeof calendarEvents.$inferSelect;
+export type InsertCalendarEvent = typeof calendarEvents.$inferInsert;
+
+// ============================================================
+// Calendar: Conflicts
+// ============================================================
+export const calendarConflicts = mysqlTable("calendar_conflicts", {
+  id: int("id").autoincrement().primaryKey(),
+  eventAId: int("eventAId").references(() => calendarEvents.id).notNull(),
+  eventBId: int("eventBId").references(() => calendarEvents.id),
+  conflictType: mysqlEnum("conflictType", ["same_ministry_same_date", "ministry_overload", "staff_coverage", "room_overlap", "school_holiday"]).notNull(),
+  severity: mysqlEnum("severity", ["info", "warning", "critical"]).notNull(),
+  resolved: boolean("resolved").default(false).notNull(),
+  resolvedBy: int("resolvedBy").references(() => calendarStaffMembers.id),
+  resolvedAt: timestamp("resolvedAt"),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type CalendarConflict = typeof calendarConflicts.$inferSelect;
+
+// ============================================================
+// Calendar: Approval History
+// ============================================================
+export const calendarApprovalHistory = mysqlTable("calendar_approval_history", {
+  id: int("id").autoincrement().primaryKey(),
+  eventId: int("eventId").references(() => calendarEvents.id).notNull(),
+  action: mysqlEnum("action", ["submitted", "approved", "rejected", "changes_requested", "comment", "moved", "locked", "unlocked"]).notNull(),
+  actorId: int("actorId").references(() => calendarStaffMembers.id),
+  actorName: varchar("actorName", { length: 150 }),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type CalendarApprovalHistoryRow = typeof calendarApprovalHistory.$inferSelect;
+
+// ============================================================
+// Calendar: Blackout Dates
+// ============================================================
+export const calendarBlackoutDates = mysqlTable("calendar_blackout_dates", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  startDate: date("startDate").notNull(),
+  endDate: date("endDate").notNull(),
+  campusId: int("campusId").references(() => calendarCampuses.id),
+  severity: mysqlEnum("severity", ["info", "warning", "critical"]).default("warning").notNull(),
+  createdBy: varchar("createdBy", { length: 150 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type CalendarBlackoutDate = typeof calendarBlackoutDates.$inferSelect;
+export type InsertCalendarBlackoutDate = typeof calendarBlackoutDates.$inferInsert;
+
+// ============================================================
+// Google Calendar Sync Log
+// ============================================================
+export const googleCalendarSyncLog = mysqlTable("google_calendar_sync_log", {
+  id: int("id").autoincrement().primaryKey(),
+  eventId: int("eventId").notNull(),
+  googleEventId: varchar("googleEventId", { length: 256 }),
+  calendarId: varchar("calendarId", { length: 256 }),
+  action: mysqlEnum("action", ["created", "updated", "deleted", "failed"]).notNull(),
+  errorMessage: text("errorMessage"),
+  syncedAt: timestamp("syncedAt").defaultNow().notNull(),
+});
+export type GoogleCalendarSyncLog = typeof googleCalendarSyncLog.$inferSelect;
+export type InsertGoogleCalendarSyncLog = typeof googleCalendarSyncLog.$inferInsert;
+
+// ============================================================
+// Calendar: Staff Time Off
+// ============================================================
+export const calendarStaffTimeOff = mysqlTable("calendar_staff_time_off", {
+  id: int("id").autoincrement().primaryKey(),
+  staffId: int("staffId")
+    .references(() => calendarStaffMembers.id)
+    .notNull(),
+  startDate: date("startDate").notNull(),
+  endDate: date("endDate").notNull(),
+  status: mysqlEnum("status", ["pending", "approved", "denied"]).default("pending").notNull(),
+  approvedBy: int("approvedBy").references(() => calendarStaffMembers.id),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type CalendarStaffTimeOff = typeof calendarStaffTimeOff.$inferSelect;
+export type InsertCalendarStaffTimeOff = typeof calendarStaffTimeOff.$inferInsert;
+
+// ============================================================
+// Calendar: Coverage Rules
+// ============================================================
+export const calendarCoverageRules = mysqlTable("calendar_coverage_rules", {
+  id: int("id").autoincrement().primaryKey(),
+  campusId: int("campusId")
+    .references(() => calendarCampuses.id)
+    .notNull(),
+  ministryId: int("ministryId").references(() => calendarMinistries.id),
+  dayOfWeek: int("dayOfWeek"),
+  startTime: varchar("startTime", { length: 10 }),
+  endTime: varchar("endTime", { length: 10 }),
+  minStaff: int("minStaff").default(1).notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type CalendarCoverageRule = typeof calendarCoverageRules.$inferSelect;
+export type InsertCalendarCoverageRule = typeof calendarCoverageRules.$inferInsert;

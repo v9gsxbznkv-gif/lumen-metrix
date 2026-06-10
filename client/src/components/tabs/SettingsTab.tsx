@@ -851,7 +851,7 @@ function GivingEntrySection() {
 // ─── Team Management Section (Admin Only) ───────────────────────────────────
 function TeamManagementSection({ currentUser }: { currentUser: { id: number; email: string; name: string; role: string } | null | undefined }) {
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState<"admin" | "user">("user");
+  const [inviteRole, setInviteRole] = useState<"admin" | "staff" | "member">("staff");
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState("");
 
@@ -961,12 +961,13 @@ function TeamManagementSection({ currentUser }: { currentUser: { id: number; ema
             </div>
             <select
               value={inviteRole}
-              onChange={(e) => setInviteRole(e.target.value as "admin" | "user")}
+              onChange={(e) => setInviteRole(e.target.value as "admin" | "staff" | "member")}
               className="rounded-md px-2 py-2 text-xs bg-background border border-border/60 outline-none focus:border-[#E8913A] transition-colors"
               disabled={inviteMutation.isPending}
             >
-              <option value="user">Team Member</option>
-              <option value="admin">Admin</option>
+              <option value="member">Team Member (Read Only)</option>
+              <option value="staff">Staff (Can Suggest Changes)</option>
+              <option value="admin">Admin (Full Access)</option>
             </select>
             <button
               type="submit"
@@ -1049,9 +1050,9 @@ function TeamManagementSection({ currentUser }: { currentUser: { id: number; ema
                 <div className="flex items-center gap-1 shrink-0">
                   <button
                     onClick={() => {
-                      const newRole = user.role === "admin" ? "user" : "admin";
+                      const newRole = user.role === "admin" ? "staff" : "admin";
                       if (confirm(`${newRole === "admin" ? "Promote" : "Demote"} ${user.name || user.email} to ${newRole}?`)) {
-                        toggleRoleMutation.mutate({ userId: user.id, role: newRole });
+                        toggleRoleMutation.mutate({ userId: user.id, role: newRole as "admin" | "staff" | "member" });
                       }
                     }}
                     disabled={toggleRoleMutation.isPending}

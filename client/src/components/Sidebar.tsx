@@ -31,6 +31,7 @@ import {
   Footprints,
   HeartHandshake,
   ShieldCheck,
+  CalendarDays,
 } from "lucide-react";
 
 export type TabId =
@@ -48,7 +49,8 @@ export type TabId =
   | "reports"
   | "ai"
   | "settings"
-  | "dataAudit";
+  | "dataAudit"
+  | "calendar";
 
 const NAV_ITEMS: { id: TabId; label: string; icon: React.ElementType; section?: string }[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, section: "Overview" },
@@ -66,6 +68,7 @@ const NAV_ITEMS: { id: TabId; label: string; icon: React.ElementType; section?: 
   { id: "ai", label: "AI Analyst", icon: Sparkles },
   { id: "settings", label: "Settings", icon: Settings },
   { id: "dataAudit", label: "Data Audit", icon: ShieldCheck },
+  { id: "calendar", label: "Smart Calendar", icon: CalendarDays, section: "Planning" },
 ];
 
 interface SidebarProps {
@@ -76,7 +79,7 @@ interface SidebarProps {
   onLogout?: () => void;
   mobileOpen: boolean;
   onMobileToggle: () => void;
-  userRole?: "admin" | "user";
+  userRole?: "admin" | "staff" | "member" | "user";
 }
 
 export default function Sidebar({

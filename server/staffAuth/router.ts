@@ -180,7 +180,7 @@ export const staffAuthRouter = router({
 
       // Create user with the role specified in the invite
       const passwordHash = hashSync(input.password, 10);
-      const assignedRole = invite.role || "user";
+      const assignedRole = (invite.role as "admin" | "staff" | "member") || "staff";
       const [result] = await db.insert(dashboardUsers).values({
         email: invite.email.toLowerCase().trim(),
         name: input.name.trim(),
@@ -236,7 +236,7 @@ export const staffAuthRouter = router({
   invite: publicProcedure
     .input(z.object({
       email: z.string().email(),
-      role: z.enum(["admin", "user"]).default("user"),
+      role: z.enum(["admin", "staff", "member"]).default("staff"),
     }))
     .mutation(async ({ ctx, input }) => {
       const session = await getStaffUser(ctx.req.headers.cookie);
@@ -276,7 +276,7 @@ export const staffAuthRouter = router({
       const inviteUrl = `${protocol}://${host}/invite?token=${token}`;
 
       // Send invite email via Resend
-      const roleName = input.role === "admin" ? "Administrator" : "Team Member";
+      const roleName = input.role === "admin" ? "Administrator" : input.role === "staff" ? "Staff" : "Team Member";
       try {
         const resend = new Resend(ENV.resendApiKey);
         await resend.emails.send({
@@ -353,9 +353,9 @@ export const staffAuthRouter = router({
       return { success: true };
     }),
 
-  // Toggle user role between admin/user (admin only)
+  // Toggle user role (admin only)
   toggleRole: publicProcedure
-    .input(z.object({ userId: z.number(), role: z.enum(["admin", "user"]) }))
+    .input(z.object({ userId: z.number(), role: z.enum(["admin", "staff", "member"]) }))
     .mutation(async ({ ctx, input }) => {
       const session = await getStaffUser(ctx.req.headers.cookie);
       if (!session || session.role !== "admin") {

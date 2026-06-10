@@ -34,6 +34,7 @@ function Router() {
       <Route path="/ai">{() => <Home initialTab="ai" />}</Route>
       <Route path="/settings">{() => <Home initialTab="settings" />}</Route>
       <Route path="/data-audit">{() => <Home initialTab="dataAudit" />}</Route>
+      <Route path="/calendar">{() => <Home initialTab="calendar" />}</Route>
 
       {/* Other routes */}
       <Route path="/invite" component={InviteRoute} />

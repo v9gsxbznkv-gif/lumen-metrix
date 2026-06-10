@@ -43,3 +43,39 @@ export const adminProcedure = t.procedure.use(
     });
   }),
 );
+
+// Staff procedure: admin or staff role (can suggest edits, view all events)
+export const staffProcedure = t.procedure.use(
+  t.middleware(async opts => {
+    const { ctx, next } = opts;
+
+    if (!ctx.user || !['admin', 'staff', 'user'].includes(ctx.user.role)) {
+      throw new TRPCError({ code: "FORBIDDEN", message: 'Staff access required' });
+    }
+
+    return next({
+      ctx: {
+        ...ctx,
+        user: ctx.user,
+      },
+    });
+  }),
+);
+
+// Calendar admin procedure: only admin can approve/reject/lock events and manage ministries/campuses
+export const calendarAdminProcedure = t.procedure.use(
+  t.middleware(async opts => {
+    const { ctx, next } = opts;
+
+    if (!ctx.user || ctx.user.role !== 'admin') {
+      throw new TRPCError({ code: "FORBIDDEN", message: 'Calendar admin access required' });
+    }
+
+    return next({
+      ctx: {
+        ...ctx,
+        user: ctx.user,
+      },
+    });
+  }),
+);

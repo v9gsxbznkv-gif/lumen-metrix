@@ -27,6 +27,7 @@ import ReportsTab from "@/components/tabs/ReportsTab";
 import AIAnalystTab from "@/components/tabs/AIAnalystTab";
 import SettingsTab from "@/components/tabs/SettingsTab";
 import DataAudit from "@/pages/DataAudit";
+import CalendarPage from "@/pages/CalendarPage";
 import LumenLogo from "@/components/LumenLogo";
 import LoginPage from "@/pages/LoginPage";
 import { Loader2 } from "lucide-react";
@@ -48,6 +49,7 @@ const TAB_TO_PATH: Record<TabId, string> = {
   ai: "/ai",
   settings: "/settings",
   dataAudit: "/data-audit",
+  calendar: "/calendar",
 };
 
 /** Reverse map: URL path slug → TabId */
@@ -71,6 +73,7 @@ const TAB_META: Record<TabId, { title: string; subtitle: string }> = {
   ai: { title: "AI Analyst", subtitle: "Ask questions about your data in natural language" },
   settings: { title: "Settings", subtitle: "Church profile, data sources, and dashboard configuration" },
   dataAudit: { title: "Data Audit", subtitle: "Verify dashboard numbers against raw PCO records — admin only" },
+  calendar: { title: "Smart Calendar", subtitle: "Multi-campus planning calendar with approval workflow" },
 };
 
 interface HomeProps {
@@ -168,7 +171,7 @@ export default function Home({ initialTab = "dashboard" }: HomeProps) {
         onLogout={() => logoutMutation.mutate()}
         mobileOpen={mobileOpen}
         onMobileToggle={() => setMobileOpen(!mobileOpen)}
-        userRole={currentUser?.role as "admin" | "user" | undefined}
+        userRole={currentUser?.role as "admin" | "staff" | "member" | "user" | undefined}
       />
 
       {/* Main content area — offset by sidebar on desktop, full-width on mobile */}
@@ -199,6 +202,7 @@ export default function Home({ initialTab = "dashboard" }: HomeProps) {
           {activeTab === "ai" && <AIAnalystTab />}
           {activeTab === "settings" && <SettingsTab currentUser={currentUser} />}
           {activeTab === "dataAudit" && <DataAudit />}
+          {activeTab === "calendar" && <CalendarPage />}
         </div>
 
         {/* Footer */}

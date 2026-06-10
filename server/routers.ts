@@ -11,6 +11,7 @@ import { dataViewsRouter } from "./dataViews/router";
 import { demographicsRouter } from "./demographics/router";
 import { staffAuthRouter } from "./staffAuth/router";
 import { auditRouter } from "./audit/router";
+import { calendarRouter } from "./calendar/router";
 
 export const appRouter = router({
   system: systemRouter,
@@ -51,6 +52,9 @@ export const appRouter = router({
 
   // Data Audit — raw records, health flags, cross-tab consistency (admin-only)
   audit: auditRouter,
+
+  // Smart Calendar — multi-campus planning calendar with approval workflow
+  calendar: calendarRouter,
 });
 
 export type AppRouter = typeof appRouter;
